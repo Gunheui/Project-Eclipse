@@ -1,0 +1,87 @@
+# ============================================================
+# Project ECLIPSE — .gitignore
+# repo root = CollectRPG (Unity 프로젝트만 공개, 문서·하네스·전략 비공개)
+# ============================================================
+
+# ---- 비공개: 작업 하네스 · 커리어 전략 · 작업 파일 ----
+CLAUDE.md
+.claude/
+_workspace/
+.serena/
+.mcp.json
+
+# ---- 비공개: 기획·설계·화면정의 문서 전체 (로컬 원본만 유지, 푸시 금지) ----
+Docs/
+
+# ---- 비공개: 외부 아트 에셋 (재배포 금지 라이선스 — Aekashics 등) ----
+# 규칙: 에셋 파일은 제외하되 .meta는 커밋 → Mac 클론 후 같은 경로에
+# 파일만 복사하면 GUID 참조가 그대로 복원된다 (iOS 빌드 파이프라인 전제)
+# 외부 수급 에셋은 반드시 Assets/ExternalArt/ 아래에만 임포트할 것
+Assets/ExternalArt/**
+!Assets/ExternalArt/**/
+!Assets/ExternalArt/**/*.meta
+
+# ---- Unity 표준 (프로젝트가 하위 폴더에 생겨도 매칭되도록 비고정 패턴) ----
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]serSettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+.gradle/
+
+# 안전장치: 에셋 meta는 대응 에셋이 무시될 때만 무시 (공식 Unity.gitignore)
+# ↑ ExternalArt 블록이 파일은 빼고 .meta는 유지하는 규칙과 함께 동작
+!/[Aa]ssets/**/*.meta
+
+# Addressables 빌드 산출물 (W11 — 설정은 커밋, 빌드 결과만 제외)
+ServerData/
+[Aa]ssets/[Aa]ddressable[Aa]ssets[Dd]ata/*/*.bin*
+
+# 크래시 리포트 · 패키지 캐시
+[Cc]rashlytics-build.properties
+[Aa]ssets/[Pp]lugins/[Ee]ditor/JetBrains*
+[Aa]ssets/[Ss]treamingAssets/aa.meta
+[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# ---- IDE · OS ----
+.vs/
+.idea/
+.vscode/
+.consulo/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- 빌드 산출물 ----
+*.apk
+*.aab
+*.ipa
+*.app
+*.unitypackage
+ExportedObj/
+*.xcodeproj/xcuserdata/
+
+# ---- Unity 자동 생성 기타 ----
+sysinfo.txt
+*.stackdump
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
