@@ -1,0 +1,19 @@
+{
+    "name": "Eclipse.Presentation",
+    "rootNamespace": "Eclipse.Presentation",
+    "references": [
+        "Eclipse.Service",
+        "Eclipse.Domain",
+        "Eclipse.Data",
+        "UniTask"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

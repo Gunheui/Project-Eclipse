@@ -13,13 +13,8 @@ _workspace/
 # ---- 비공개: 기획·설계·화면정의 문서 전체 (로컬 원본만 유지, 푸시 금지) ----
 Docs/
 
-# ---- 비공개: 외부 아트 에셋 (재배포 금지 라이선스 — Aekashics 등) ----
-# 규칙: 에셋 파일은 제외하되 .meta는 커밋 → Mac 클론 후 같은 경로에
-# 파일만 복사하면 GUID 참조가 그대로 복원된다 (iOS 빌드 파이프라인 전제)
-# 외부 수급 에셋은 반드시 Assets/ExternalArt/ 아래에만 임포트할 것
-Assets/ExternalArt/**
-!Assets/ExternalArt/**/
-!Assets/ExternalArt/**/*.meta
+# ---- 콘텐츠(아트·오디오) 비커밋 규칙은 파일 하단 "콘텐츠 비커밋" 섹션 참조 ----
+# (ExternalArt 구분 폐지 — 모든 아트는 Assets/Eclipse/Art/ 로 통합, 폴더째 제외)
 
 # ---- Unity 표준 (프로젝트가 하위 폴더에 생겨도 매칭되도록 비고정 패턴) ----
 [Ll]ibrary/
@@ -85,3 +80,27 @@ sysinfo.txt
 *.pidb.meta
 *.pdb.meta
 *.mdb.meta
+
+# ---- 서드파티 관리 폴더 전체 비커밋 (직접 편집하지 않는 폴더) ----
+# DOTween(Asset Store) → Assets/Plugins/ · NuGetForUnity 복원 DLL(R3 코어+의존성) → Assets/Packages/.
+# 매니페스트(Assets/packages.config·NuGet.config)는 폴더 밖 루트라 커밋됨 → 클론 후 복원 가능:
+#   - NuGet 패키지: NuGetForUnity가 packages.config로 자동 복원
+#   - DOTween: Asset Store 재임포트 → DOTween Utility Panel > Setup
+# ※ 아래 규칙은 위 38번 `!/[Aa]ssets/**/*.meta`(meta 되살림)보다 뒤에 와야 meta까지 제외된다.
+Assets/Plugins/
+Assets/Plugins.meta
+Assets/Packages/
+Assets/Packages.meta
+# 루트 Assets/Resources/ 는 현재 DOTween Setup이 만든 DOTweenSettings.asset 전용 폴더 →
+# 폴더째 제외(고아 meta 방지). 게임 리소스는 규약상 Assets/Eclipse/Resources/ 에 둔다(폴더구조.md).
+Assets/Resources/
+Assets/Resources.meta
+
+# ---- 콘텐츠(아트·오디오) 비커밋 — "코드만 올린다" 원칙 ----
+# 무료/외부 라이선스 에셋(Aekashics 배틀러·폰트·SFX 등)은 재배포하지 않는다(리포 경량 + 라이선스 안전).
+# ExternalArt 구분 없이 모든 아트는 Assets/Eclipse/Art/, 오디오는 Assets/Eclipse/Audio/ 에 두고 폴더째 제외.
+# 클론 후 원본 소스에서 같은 경로로 재임포트한다.
+Assets/Eclipse/Art/
+Assets/Eclipse/Art.meta
+Assets/Eclipse/Audio/
+Assets/Eclipse/Audio.meta

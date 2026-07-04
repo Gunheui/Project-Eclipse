@@ -1,0 +1,17 @@
+{
+    "name": "Eclipse.View",
+    "rootNamespace": "Eclipse.View",
+    "references": [
+        "Eclipse.Presentation",
+        "R3.Unity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,23 @@
+{
+    "name": "Eclipse.Core",
+    "rootNamespace": "Eclipse.Core",
+    "references": [
+        "Eclipse.Data",
+        "Eclipse.Domain",
+        "Eclipse.Service",
+        "Eclipse.Presentation",
+        "Eclipse.View",
+        "VContainer",
+        "UniTask",
+        "R3.Unity"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
