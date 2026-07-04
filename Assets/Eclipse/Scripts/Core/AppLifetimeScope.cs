@@ -4,16 +4,15 @@ using VContainer.Unity;
 namespace Eclipse.Core
 {
     /// <summary>
-    /// 해당 프로젝트 LifeTimeScope
+    /// 해당 프로젝트의 루트 라이프타임 스코프
     /// </summary>
-    public class GameLifetimeScope : LifetimeScope
+    public class AppLifetimeScope : LifetimeScope
     {
         protected override void Configure(IContainerBuilder builder)
         {
             base.Configure(builder);
-
-            //Inject 목록
-            builder.RegisterComponentInHierarchy<GameBootstrap>();
+            
+            builder.Register<IAppLogger, ConsoleAppLogger>(Lifetime.Singleton);
         }
     }
 }
