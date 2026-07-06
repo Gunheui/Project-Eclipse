@@ -3,7 +3,10 @@
     "rootNamespace": "Eclipse.View",
     "references": [
         "Eclipse.Presentation",
-        "R3.Unity"
+        "R3.Unity",
+        "VContainer",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

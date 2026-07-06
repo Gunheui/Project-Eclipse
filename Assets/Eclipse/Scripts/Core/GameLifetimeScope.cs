@@ -1,4 +1,6 @@
-﻿using VContainer;
+﻿using Eclipse.Presentation;
+using Eclipse.View;
+using VContainer;
 using VContainer.Unity;
 
 namespace Eclipse.Core
@@ -12,8 +14,11 @@ namespace Eclipse.Core
         {
             base.Configure(builder);
 
+            builder.Register<GoldViewModel>(Lifetime.Singleton);
+            
             //Inject 목록
             builder.RegisterComponentInHierarchy<GameBootstrap>();
+            builder.RegisterComponentInHierarchy<GoldHudView>();
         }
     }
 }
