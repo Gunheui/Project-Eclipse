@@ -1,0 +1,49 @@
+using Eclipse.Data.Enums;
+using UnityEngine;
+
+namespace Eclipse.Data
+{
+    /// <summary>
+    /// 캐릭터 한 명의 정의 데이터. 스탯·스킬·성장곡선·아트를 묶는다.
+    /// 레벨·돌파 등 가변 진행값은 여기 두지 않는다(세이브 데이터 소관).
+    /// </summary>
+    [CreateAssetMenu(menuName = "Eclipse/Characters/Character Data")]
+    public class CharacterSO : ScriptableObject
+    {
+        /// <summary> 참조·조회용 고정 키(표시명과 분리). </summary>
+        public string id;
+
+        /// <summary> UI 표시명(로컬라이즈 대상). </summary>
+        public string displayName;
+
+        /// <summary> 등급(R/SR/SSR) — 가챠 확률·UI 표기 기준. </summary>
+        public Rarity rarity;
+
+        /// <summary> 역할(탱커/딜러/서포터/힐러) — 편성 필터·밸런싱 그룹. </summary>
+        public Role role;
+
+        /// <summary> Lv1 기본 능력치 6종. 레벨 스케일 값은 growthCurve로 계산. </summary>
+        public Stats baseStats;
+
+        /// <summary> 성장 규칙 참조 — 여러 캐릭터가 공유·교체 가능. </summary>
+        public GrowthCurve growthCurve;
+
+        /// <summary> 기본 공격(쿨 0 — 항상 열려 있는 폴백). </summary>
+        public SkillSO basicSkill;
+
+        /// <summary> 일반 스킬(짧은 쿨). </summary>
+        public SkillSO normalSkill;
+
+        /// <summary> 궁극기(긴 쿨). </summary>
+        public SkillSO ultimateSkill;
+
+        /// <summary> 패시브(0~1). 없으면 비워둠(null = 패시브 없음). </summary>
+        public SkillSO passiveSkill;
+
+        /// <summary> 획득 경로(스타터/스토리지급/가챠픽업). </summary>
+        public AcquisitionType acquisitionType;
+
+        /// <summary> 초상화/배틀러 스프라이트 참조. </summary>
+        public Sprite portraitAssetRef;
+    }
+}
