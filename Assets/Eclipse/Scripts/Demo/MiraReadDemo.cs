@@ -3,7 +3,7 @@ using Eclipse.Data;
 using Eclipse.Domain;
 using UnityEngine;
 
-namespace Eclipse.Scripts
+namespace Eclipse.Demo
 {
     public class MiraReadDemo : MonoBehaviour
     {
