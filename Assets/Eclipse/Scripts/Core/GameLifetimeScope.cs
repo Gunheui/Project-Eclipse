@@ -1,5 +1,4 @@
-﻿using Eclipse.Presentation;
-using Eclipse.View;
+﻿using Eclipse.View.Infra;
 using VContainer;
 using VContainer.Unity;
 
@@ -13,12 +12,11 @@ namespace Eclipse.Core
         protected override void Configure(IContainerBuilder builder)
         {
             base.Configure(builder);
-
-            builder.Register<GoldViewModel>(Lifetime.Singleton);
             
             //Inject 목록
             builder.RegisterComponentInHierarchy<GameBootstrap>();
-            builder.RegisterComponentInHierarchy<GoldHudView>();
+            builder.RegisterComponentInHierarchy<ScreenManager>();
+            builder.RegisterComponentInHierarchy<PopupManager>();
         }
     }
 }

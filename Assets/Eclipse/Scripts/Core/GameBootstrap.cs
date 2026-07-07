@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using Cysharp.Threading.Tasks;
+using Eclipse.View.Infra;
+using UnityEngine;
 using VContainer;
 
 namespace Eclipse.Core
@@ -8,11 +10,21 @@ namespace Eclipse.Core
     /// </summary>
     public class GameBootstrap : MonoBehaviour
     {
-        [Inject]
         private IAppLogger _appLogger;
+
+        private ScreenManager _screenManager;
+
+        [Inject]
+        public void Construct(IAppLogger appLogger, ScreenManager screenManager)
+        {
+            _appLogger = appLogger;
+            _screenManager = screenManager;
+        }
 
         private void Start()
         {
+            // 부팅 시 첫 화면을 띄운다.
+            _screenManager.Push(ScreenId.Lobby).Forget();
             _appLogger.Log("Eclipse booted");
         }
     }
