@@ -19,6 +19,7 @@ namespace Eclipse.View
         [SerializeField] private Transform contentRoot;
 
         private CharacterListViewModel _viewModel;
+        private ScreenManager _screenManager;
         private readonly List<CharacterCellView> _cells = new List<CharacterCellView>();
         private CompositeDisposable _subscriptions;
 
@@ -26,10 +27,12 @@ namespace Eclipse.View
         /// ScreenManager가 이 화면 프리팹을 주입 생성할 때 호출한다. OnEnter보다 먼저 실행된다.
         /// </summary>
         /// <param name="viewModel">표시할 캐릭터 목록 ViewModel(컨테이너가 주입).</param>
+        /// <param name="screenManager">셀 탭 시 상세 화면으로 전환하는 데 사용한다.</param>
         [Inject]
-        public void Construct(CharacterListViewModel viewModel)
+        public void Construct(CharacterListViewModel viewModel, ScreenManager screenManager)
         {
             _viewModel = viewModel;
+            _screenManager = screenManager;
         }
 
         /// <summary>
@@ -81,8 +84,20 @@ namespace Eclipse.View
         private void AddCell(CharacterCellViewModel cellViewModel)
         {
             var cell = Instantiate(cellPrefab, contentRoot);
-            cell.Bind(cellViewModel);
+            cell.Bind(cellViewModel, () => OnCellSelected(cell));
             _cells.Add(cell);
+        }
+
+        /// <summary>셀을 탭하면 그 캐릭터를 선택으로 기록하고 상세 화면을 전면에 올린다.</summary>
+        /// <param name="cell">탭된 셀 View. 목록에서의 위치로 선택 인덱스를 정한다.</param>
+        private void OnCellSelected(CharacterCellView cell)
+        {
+            var index = _cells.IndexOf(cell);
+            if (index < 0)
+                return;
+
+            _viewModel.Select(index);
+            _screenManager.Push(ScreenId.CharacterDetail).Forget();
         }
 
         /// <summary>지정 위치의 셀을 목록에서 제거하고 GameObject를 파괴한다.</summary>

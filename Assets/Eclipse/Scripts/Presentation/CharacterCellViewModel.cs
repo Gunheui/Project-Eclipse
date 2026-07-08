@@ -13,6 +13,9 @@ namespace Eclipse.Presentation
     {
         private OwnedCharacter _ownedCharacter;
 
+        /// <summary> 이 셀이 표시하는 보유 캐릭터. 선택 기록 시 목록 VM이 읽어 간다. </summary>
+        public OwnedCharacter Owned => _ownedCharacter;
+
         /// <summary> 표시명(정의에서 읽음). </summary>
         public string DisplayName => _ownedCharacter.Definition.displayName;
 

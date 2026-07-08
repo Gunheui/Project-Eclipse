@@ -35,7 +35,9 @@ namespace Eclipse.Core
             builder.RegisterComponentInHierarchy<PopupManager>();
 
             builder.RegisterInstance(BuildDummySave());
+            builder.Register<NavigationContext>(Lifetime.Singleton);
             builder.Register<CharacterListViewModel>(Lifetime.Singleton);
+            builder.Register<CharacterDetailViewModel>(Lifetime.Transient);
         }
 
         /// <summary>인스펙터의 dummyRoster로 더미 PlayerSave를 만든다.</summary>

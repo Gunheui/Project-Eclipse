@@ -14,10 +14,14 @@ namespace Eclipse.Domain
         /// <summary> 이 계정에서의 현재 레벨. </summary>
         public int Level { get; set; }
 
-        public OwnedCharacter(CharacterSO definition, int level)
+        /// <summary> 돌파 단계(0 = 미돌파). 상한·강화 로직은 성장 시스템 소관. </summary>
+        public int AscensionTier { get; set; }
+
+        public OwnedCharacter(CharacterSO definition, int level, int ascensionTier = 0)
         {
             Definition = definition;
             Level = level;
+            AscensionTier = ascensionTier;
         }
     }
 }

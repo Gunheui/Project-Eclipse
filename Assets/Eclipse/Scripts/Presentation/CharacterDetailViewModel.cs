@@ -1,0 +1,87 @@
+using System;
+using Eclipse.Data;
+using Eclipse.Data.Enums;
+using Eclipse.Domain;
+using UnityEngine;
+
+namespace Eclipse.Presentation
+{
+    /// <summary>
+    /// 캐릭터 상세 화면의 ViewModel. 선택된 캐릭터의 정의·레벨을 읽어
+    /// 표시용 값(현재 스탯·스킬·돌파)을 노출한다.
+    /// 값이 변하지 않는 표시 전용 화면이므로 스트림이 아닌 고정 값으로 노출한다.
+    /// </summary>
+    public class CharacterDetailViewModel : ViewModelBase
+    {
+        private readonly OwnedCharacter _owned;
+        private readonly Stats _currentStats;
+
+        /// <summary> 표시명(정의에서 읽음). </summary>
+        public string DisplayName => _owned.Definition.displayName;
+
+        /// <summary> 등급(정의에서 읽음). </summary>
+        public Rarity Rarity => _owned.Definition.rarity;
+
+        /// <summary> 역할(정의에서 읽음). </summary>
+        public Role Role => _owned.Definition.role;
+
+        /// <summary> 현재 레벨. </summary>
+        public int Level => _owned.Level;
+
+        /// <summary> 돌파 단계(0 = 미돌파). </summary>
+        public int AscensionTier => _owned.AscensionTier;
+
+        /// <summary> 초상 스프라이트(정의에서 읽음). </summary>
+        public Sprite Portrait => _owned.Definition.portraitAssetRef;
+
+        /// <summary>
+        /// 현재 레벨 기준 스탯 6종. HP·ATK·DEF는 성장곡선으로 레벨 스케일,
+        /// SPD·치명확률·치명배율은 기본값 고정. 생성 시점에 한 번 계산해 캐싱한다.
+        /// </summary>
+        public Stats CurrentStats => _currentStats;
+
+        /// <summary> 기본 공격 정의. </summary>
+        public SkillSO BasicSkill => _owned.Definition.basicSkill;
+
+        /// <summary> 일반 스킬 정의. </summary>
+        public SkillSO NormalSkill => _owned.Definition.normalSkill;
+
+        /// <summary> 궁극기 정의. </summary>
+        public SkillSO UltimateSkill => _owned.Definition.ultimateSkill;
+
+        /// <summary> 패시브 정의. 없으면 null. </summary>
+        public SkillSO PassiveSkill => _owned.Definition.passiveSkill;
+
+        /// <summary>
+        /// 내비게이션 보관함에서 선택된 캐릭터를 읽어 상세 표시 값을 구성한다.
+        /// 전제: 생성 전에 NavigationContext.Selected가 설정돼 있어야 한다.
+        /// </summary>
+        public CharacterDetailViewModel(NavigationContext context)
+        {
+            if (context.Selected == null)
+                throw new InvalidOperationException(
+                    "NavigationContext.Selected가 비어 있습니다. 상세 화면을 Push하기 전에 선택 캐릭터를 기록해야 합니다.");
+
+            _owned = context.Selected;
+            _currentStats = BuildCurrentStats(_owned);
+        }
+
+        private static Stats BuildCurrentStats(OwnedCharacter owned)
+        {
+            var definition = owned.Definition;
+            var baseStats = definition.baseStats;
+            var curve = definition.growthCurve;
+            var level = owned.Level;
+
+            return new Stats
+            {
+                hp = Mathf.RoundToInt(curve.StatAtLevel(baseStats.hp, level)),
+                atk = Mathf.RoundToInt(curve.StatAtLevel(baseStats.atk, level)),
+                def = Mathf.RoundToInt(curve.StatAtLevel(baseStats.def, level)),
+                spd = baseStats.spd,
+                critRate = baseStats.critRate,
+                critDamage = baseStats.critDamage,
+            };
+        }
+    }
+}
