@@ -5,6 +5,7 @@ using Eclipse.View.Infra;
 using ObservableCollections;
 using R3;
 using UnityEngine;
+using UnityEngine.UI;
 using VContainer;
 
 namespace Eclipse.View
@@ -17,6 +18,9 @@ namespace Eclipse.View
     {
         [SerializeField] private CharacterCellView cellPrefab;
         [SerializeField] private Transform contentRoot;
+
+        [Header("내비")]
+        [SerializeField] private Button backButton;
 
         private CharacterListViewModel _viewModel;
         private ScreenManager _screenManager;
@@ -52,6 +56,8 @@ namespace Eclipse.View
             _viewModel.CharacterList.ObserveRemove()
                 .Subscribe(e => RemoveCell(e.Index))
                 .AddTo(_subscriptions);
+
+            backButton.onClick.AddListener(() => _screenManager.Pop().Forget());
 
             return UniTask.CompletedTask;
         }

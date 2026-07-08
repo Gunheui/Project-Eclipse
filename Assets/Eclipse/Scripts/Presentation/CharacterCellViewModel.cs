@@ -1,5 +1,8 @@
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using Eclipse.Data.Enums;
 using Eclipse.Domain;
+using Eclipse.Service;
 using R3;
 using UnityEngine;
 
@@ -12,6 +15,7 @@ namespace Eclipse.Presentation
     public class CharacterCellViewModel : ViewModelBase
     {
         private OwnedCharacter _ownedCharacter;
+        private readonly ISpriteProvider _spriteProvider;
 
         /// <summary> 이 셀이 표시하는 보유 캐릭터. 선택 기록 시 목록 VM이 읽어 간다. </summary>
         public OwnedCharacter Owned => _ownedCharacter;
@@ -22,17 +26,19 @@ namespace Eclipse.Presentation
         /// <summary> 등급(정의에서 읽음). </summary>
         public Rarity Rarity => _ownedCharacter.Definition.rarity;
 
-        /// <summary> 초상 스프라이트(정의에서 읽음). </summary>
-        public Sprite Portrait => _ownedCharacter.Definition.portraitAssetRef;
+        /// <summary> 초상 스프라이트를 로드한다. 로딩 방식은 ISpriteProvider가 감춘다. </summary>
+        public UniTask<Sprite> LoadPortraitAsync(CancellationToken ct = default)
+            => _spriteProvider.LoadPortraitAsync(_ownedCharacter.Definition, ct);
 
         private ReactiveProperty<int> _level;
 
         /// <summary> 현재 레벨. View가 구독하는 읽기전용 스트림. </summary>
         public ReadOnlyReactiveProperty<int> Level => _level;
 
-        public CharacterCellViewModel(OwnedCharacter owned)
+        public CharacterCellViewModel(OwnedCharacter owned, ISpriteProvider spriteProvider)
         {
             _ownedCharacter = owned;
+            _spriteProvider = spriteProvider;
             _level = new ReactiveProperty<int>(_ownedCharacter.Level);
         }
 

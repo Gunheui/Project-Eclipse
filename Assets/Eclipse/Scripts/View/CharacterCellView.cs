@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using Eclipse.Presentation;
 using R3;
 using TMPro;
@@ -30,7 +32,7 @@ namespace Eclipse.View
         /// <param name="onSelected">셀을 탭했을 때 호출되는 콜백(선택 처리는 목록 View가 담당).</param>
         public void Bind(CharacterCellViewModel viewModel, Action onSelected)
         {
-            portrait.sprite = viewModel.Portrait;
+            ApplyPortraitAsync(viewModel, this.GetCancellationTokenOnDestroy()).Forget();
             nameText.text = viewModel.DisplayName;
             rarityText.text = $"★{viewModel.Rarity}";
 
@@ -39,6 +41,12 @@ namespace Eclipse.View
                 .AddTo(this);
 
             selectButton.onClick.AddListener(() => onSelected());
+        }
+
+        /// <summary>초상 스프라이트를 로드해 대입한다. 로드가 비동기라도 나머지 바인딩을 막지 않는다.</summary>
+        private async UniTaskVoid ApplyPortraitAsync(CharacterCellViewModel viewModel, CancellationToken ct)
+        {
+            portrait.sprite = await viewModel.LoadPortraitAsync(ct);
         }
     }
 }

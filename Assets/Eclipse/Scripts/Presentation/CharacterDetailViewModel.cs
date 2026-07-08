@@ -1,7 +1,10 @@
 using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using Eclipse.Data;
 using Eclipse.Data.Enums;
 using Eclipse.Domain;
+using Eclipse.Service;
 using UnityEngine;
 
 namespace Eclipse.Presentation
@@ -15,6 +18,7 @@ namespace Eclipse.Presentation
     {
         private readonly OwnedCharacter _owned;
         private readonly Stats _currentStats;
+        private readonly ISpriteProvider _spriteProvider;
 
         /// <summary> 표시명(정의에서 읽음). </summary>
         public string DisplayName => _owned.Definition.displayName;
@@ -31,8 +35,9 @@ namespace Eclipse.Presentation
         /// <summary> 돌파 단계(0 = 미돌파). </summary>
         public int AscensionTier => _owned.AscensionTier;
 
-        /// <summary> 초상 스프라이트(정의에서 읽음). </summary>
-        public Sprite Portrait => _owned.Definition.portraitAssetRef;
+        /// <summary> 초상 스프라이트를 로드한다. 로딩 방식은 ISpriteProvider가 감춘다. </summary>
+        public UniTask<Sprite> LoadPortraitAsync(CancellationToken ct = default)
+            => _spriteProvider.LoadPortraitAsync(_owned.Definition, ct);
 
         /// <summary>
         /// 현재 레벨 기준 스탯 6종. HP·ATK·DEF는 성장곡선으로 레벨 스케일,
@@ -56,13 +61,14 @@ namespace Eclipse.Presentation
         /// 내비게이션 보관함에서 선택된 캐릭터를 읽어 상세 표시 값을 구성한다.
         /// 전제: 생성 전에 NavigationContext.Selected가 설정돼 있어야 한다.
         /// </summary>
-        public CharacterDetailViewModel(NavigationContext context)
+        public CharacterDetailViewModel(NavigationContext context, ISpriteProvider spriteProvider)
         {
             if (context.Selected == null)
                 throw new InvalidOperationException(
                     "NavigationContext.Selected가 비어 있습니다. 상세 화면을 Push하기 전에 선택 캐릭터를 기록해야 합니다.");
 
             _owned = context.Selected;
+            _spriteProvider = spriteProvider;
             _currentStats = BuildCurrentStats(_owned);
         }
 

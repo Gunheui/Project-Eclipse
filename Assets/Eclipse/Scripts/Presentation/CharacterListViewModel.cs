@@ -1,4 +1,5 @@
 using Eclipse.Domain;
+using Eclipse.Service;
 using ObservableCollections;
 
 namespace Eclipse.Presentation
@@ -17,7 +18,7 @@ namespace Eclipse.Presentation
         /// <summary> View가 구독하는 읽기전용 셀 목록. 항목 추가/제거가 이벤트로 흐른다. </summary>
         public IReadOnlyObservableList<CharacterCellViewModel> CharacterList => _characterList;
 
-        public CharacterListViewModel(PlayerSave save, NavigationContext navigationContext)
+        public CharacterListViewModel(PlayerSave save, NavigationContext navigationContext, ISpriteProvider spriteProvider)
         {
             _playerSave = save;
             _navigationContext = navigationContext;
@@ -25,7 +26,7 @@ namespace Eclipse.Presentation
 
             foreach (var character in _playerSave.OwnedCharacters)
             {
-                _characterList.Add(new CharacterCellViewModel(character));
+                _characterList.Add(new CharacterCellViewModel(character, spriteProvider));
             }
         }
 

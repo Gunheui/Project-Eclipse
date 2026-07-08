@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Eclipse.Data;
 using Eclipse.Domain;
 using Eclipse.Presentation;
+using Eclipse.Service;
 using Eclipse.View;
 using Eclipse.View.Infra;
 using UnityEngine;
@@ -37,6 +38,7 @@ namespace Eclipse.Core
             builder.RegisterComponentInHierarchy<CurrencyHudView>();
 
             builder.RegisterInstance(BuildDummySave());
+            builder.Register<ISpriteProvider, DirectSpriteProvider>(Lifetime.Singleton);
             builder.Register<CurrencyWallet>(Lifetime.Singleton);
             builder.Register<NavigationContext>(Lifetime.Singleton);
             builder.Register<LobbyViewModel>(Lifetime.Singleton);

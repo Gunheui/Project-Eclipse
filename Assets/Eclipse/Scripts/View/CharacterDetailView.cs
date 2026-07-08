@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Eclipse.Data;
 using Eclipse.Presentation;
@@ -72,7 +73,7 @@ namespace Eclipse.View
         /// <returns>등장 처리 완료를 알리는 UniTask(연출이 없어 즉시 완료).</returns>
         public UniTask OnEnter()
         {
-            portrait.sprite = _viewModel.Portrait;
+            ApplyPortraitAsync(this.GetCancellationTokenOnDestroy()).Forget();
             nameText.text = _viewModel.DisplayName;
             rarityText.text = $"★ {_viewModel.Rarity}";
             roleText.text = _viewModel.Role.ToString();
@@ -106,6 +107,12 @@ namespace Eclipse.View
         {
             _viewModel.Dispose();
             return UniTask.CompletedTask;
+        }
+
+        /// <summary>초상 스프라이트를 로드해 대입한다. 로드가 비동기라도 나머지 표시를 막지 않는다.</summary>
+        private async UniTaskVoid ApplyPortraitAsync(CancellationToken ct)
+        {
+            portrait.sprite = await _viewModel.LoadPortraitAsync(ct);
         }
 
         /// <summary>한 스킬 슬롯을 채운다. skill이 null이면 슬롯을 숨긴다.</summary>
