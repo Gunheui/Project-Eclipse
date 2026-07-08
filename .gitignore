@@ -108,3 +108,7 @@ Assets/Eclipse/Audio.meta
 # ---- 개인 학습용 폴더 ----
 Assets/Practice/
 Assets/Practice.meta
+
+# ---- MCP 캡처 산물(일회성 스크린샷) 비커밋 ----
+Assets/Screenshots/
+Assets/Screenshots.meta
