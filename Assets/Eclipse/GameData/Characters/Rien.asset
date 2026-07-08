@@ -10,23 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2b1679283f154967b56acc0a2a626bff, type: 3}
-  m_Name: Mira
+  m_Name: Rien
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.CharacterSO
-  id: mira
-  displayName: "\uBBF8\uB77C"
-  rarity: 0
-  role: 3
+  id: rien
+  displayName: "\uB9AC\uC5D4"
+  rarity: 1
+  role: 0
   baseStats:
-    hp: 950
-    atk: 90
-    def: 70
-    spd: 105
+    hp: 1400
+    atk: 80
+    def: 130
+    spd: 80
     critRate: 0.05
     critDamage: 1.5
   growthCurve: {fileID: 11400000, guid: 614de3d95c41d4cc197863e3a88014fe, type: 2}
-  basicSkill: {fileID: 11400000, guid: 86fd09ad446f24efc82fa82b54ae6bf0, type: 2}
-  normalSkill: {fileID: 11400000, guid: d85b5ab1228f842dc8eefc1c13cb7262, type: 2}
-  ultimateSkill: {fileID: 11400000, guid: 8fa54b8c2e0d241129887a3d4e9e0548, type: 2}
-  passiveSkill: {fileID: 11400000, guid: 3ff587b49dcec4ce9868b2ba30613dc0, type: 2}
+  basicSkill: {fileID: 0}
+  normalSkill: {fileID: 0}
+  ultimateSkill: {fileID: 0}
+  passiveSkill: {fileID: 0}
   acquisitionType: 0
-  portraitAssetRef: {fileID: 21300000, guid: 3c2dfabed9a534a0c86dac043ee51f8c, type: 3}
+  portraitAssetRef: {fileID: 21300000, guid: 473c75e1a4a5542f8aa2f3ce55cfec4c, type: 3}

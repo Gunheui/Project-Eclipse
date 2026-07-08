@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b1679283f154967b56acc0a2a626bff, type: 3}
+  m_Name: Sera
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.CharacterSO
+  id: sera
+  displayName: "\uC138\uB77C"
+  rarity: 2
+  role: 1
+  baseStats:
+    hp: 780
+    atk: 160
+    def: 50
+    spd: 100
+    critRate: 0.1
+    critDamage: 1.6
+  growthCurve: {fileID: 11400000, guid: 614de3d95c41d4cc197863e3a88014fe, type: 2}
+  basicSkill: {fileID: 0}
+  normalSkill: {fileID: 0}
+  ultimateSkill: {fileID: 0}
+  passiveSkill: {fileID: 0}
+  acquisitionType: 1
+  portraitAssetRef: {fileID: 21300000, guid: 47ca18ac8825f4e69919de49f91ac343, type: 3}

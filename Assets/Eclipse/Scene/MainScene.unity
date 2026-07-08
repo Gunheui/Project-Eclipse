@@ -194,6 +194,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 24404487}
   m_CullTransparentMesh: 1
+--- !u!1 &35411087
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 35411089}
+  - component: {fileID: 35411088}
+  m_Layer: 0
+  m_Name: test
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &35411088
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 35411087}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fa1b501094447db986d0d3b726ead37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Practice.Practice7.ObservableListPractice
+--- !u!4 &35411089
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 35411087}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 751.96136, y: -2353.3477, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &250828429
 GameObject:
   m_ObjectHideFlags: 0
@@ -547,6 +591,17 @@ MonoBehaviour:
     TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
+  dummyRoster:
+  - character: {fileID: 11400000, guid: 8a55c9e8ddcd84f2bbf78bd6722c7012, type: 2}
+    level: 15
+  - character: {fileID: 11400000, guid: 782a87a98fe504f79941986813fadf09, type: 2}
+    level: 20
+  - character: {fileID: 11400000, guid: 823758449a3e64898bcec9f871b1b822, type: 2}
+    level: 30
+  - character: {fileID: 11400000, guid: 62d92da064f264e7ea14f9f92335d44f, type: 2}
+    level: 8
+  - character: {fileID: 11400000, guid: 9195b66d1507f41cbb9badbabf82bbaf, type: 2}
+    level: 12
 --- !u!4 &1069015700
 Transform:
   m_ObjectHideFlags: 0
@@ -627,7 +682,7 @@ MonoBehaviour:
   - Id: 0
     Prefab: {fileID: 4824339307497042208, guid: 4d5fa1dafcf3b4eeab3be4db096bb9b0, type: 3}
   - Id: 1
-    Prefab: {fileID: 6643772654261863459, guid: 6f82bc5b7703d42e290eccb83d9935f3, type: 3}
+    Prefab: {fileID: 8828994955002065645, guid: 7bd86039f84b1482bbb1daae9827be00, type: 3}
   - Id: 2
     Prefab: {fileID: 491291147265239731, guid: 1456c5fc332714c9a87f7807ab8d361f, type: 3}
 --- !u!4 &1443029401
@@ -725,3 +780,4 @@ SceneRoots:
   - {fileID: 1069015700}
   - {fileID: 1443029401}
   - {fileID: 250828433}
+  - {fileID: 35411089}

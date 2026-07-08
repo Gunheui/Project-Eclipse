@@ -1,0 +1,23 @@
+using Eclipse.Data;
+
+namespace Eclipse.Domain
+{
+    /// <summary>
+    /// 플레이어가 보유한 캐릭터 한 명. 캐릭터 정의(CharacterSO)에 계정별 진행값(레벨)을 얹는다.
+    /// 초상·등급·기본 스탯은 Definition에서 읽고, 레벨만 이 객체가 보유한다.
+    /// </summary>
+    public class OwnedCharacter
+    {
+        /// <summary> 캐릭터 정의(공유·불변). </summary>
+        public CharacterSO Definition { get; }
+
+        /// <summary> 이 계정에서의 현재 레벨. </summary>
+        public int Level { get; set; }
+
+        public OwnedCharacter(CharacterSO definition, int level)
+        {
+            Definition = definition;
+            Level = level;
+        }
+    }
+}

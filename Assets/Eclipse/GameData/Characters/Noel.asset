@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b1679283f154967b56acc0a2a626bff, type: 3}
+  m_Name: Noel
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.CharacterSO
+  id: noel
+  displayName: "\uB178\uC5D8"
+  rarity: 1
+  role: 2
+  baseStats:
+    hp: 850
+    atk: 105
+    def: 70
+    spd: 135
+    critRate: 0.08
+    critDamage: 1.5
+  growthCurve: {fileID: 11400000, guid: 614de3d95c41d4cc197863e3a88014fe, type: 2}
+  basicSkill: {fileID: 0}
+  normalSkill: {fileID: 0}
+  ultimateSkill: {fileID: 0}
+  passiveSkill: {fileID: 0}
+  acquisitionType: 2
+  portraitAssetRef: {fileID: 21300000, guid: 850d5d227eb3043ee85f3fe9abb63ae5, type: 3}
