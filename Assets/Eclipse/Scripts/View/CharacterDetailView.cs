@@ -22,6 +22,7 @@ namespace Eclipse.View
         private struct SkillSlot
         {
             public GameObject root;
+            public Image icon;
             public TMP_Text nameText;
             public TMP_Text cooldownText;
         }
@@ -127,6 +128,7 @@ namespace Eclipse.View
             }
 
             slot.root.SetActive(true);
+            slot.icon.sprite = skill.icon;
             slot.nameText.text = skill.displayName;
             slot.cooldownText.text = skill.cooldownTurns == 0 ? "-" : $"CD {skill.cooldownTurns}";
         }

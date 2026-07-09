@@ -4,6 +4,7 @@ using Eclipse.Presentation;
 using Eclipse.View.Infra;
 using ObservableCollections;
 using R3;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
@@ -21,6 +22,10 @@ namespace Eclipse.View
 
         [Header("내비")]
         [SerializeField] private Button backButton;
+
+        [Header("정렬")]
+        [SerializeField] private Button sortButton;
+        [SerializeField] private TMP_Text sortLabel;
 
         private CharacterListViewModel _viewModel;
         private ScreenManager _screenManager;
@@ -59,6 +64,11 @@ namespace Eclipse.View
 
             backButton.onClick.AddListener(() => _screenManager.Pop().Forget());
 
+            sortButton.onClick.AddListener(() => _viewModel.CycleSort());
+            _viewModel.CurrentSortKey
+                .Subscribe(key => sortLabel.text = $"정렬: {SortLabel(key)}")
+                .AddTo(_subscriptions);
+
             return UniTask.CompletedTask;
         }
 
@@ -75,15 +85,14 @@ namespace Eclipse.View
             return UniTask.CompletedTask;
         }
 
-        /// <summary>더미 검증용: 첫 셀의 레벨을 1 올린다(만렙에서 멈춤). 버튼 OnClick에 연결한다.</summary>
-        public void DebugRaiseFirst()
+        /// <summary>정렬 기준을 사용자에게 보일 한글 라벨로 바꾼다.</summary>
+        private static string SortLabel(CharacterListViewModel.SortKey key) => key switch
         {
-            if (_viewModel.CharacterList.Count == 0)
-                return;
-
-            var current = _viewModel.CharacterList[0].Level.CurrentValue;
-            _viewModel.SetLevel(0, current + 1);
-        }
+            CharacterListViewModel.SortKey.Rarity => "등급",
+            CharacterListViewModel.SortKey.Level => "레벨",
+            CharacterListViewModel.SortKey.Name => "이름",
+            _ => "",
+        };
 
         /// <summary>셀 프리팹을 하나 생성해 contentRoot 끝에 붙이고 ViewModel에 바인딩한다.</summary>
         /// <param name="cellViewModel">새 셀이 표시할 캐릭터 셀 ViewModel.</param>

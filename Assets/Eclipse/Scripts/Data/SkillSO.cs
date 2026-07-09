@@ -21,6 +21,11 @@ namespace Eclipse.Data
         public string displayName;
 
         /// <summary>
+        /// UI 슬롯에 표시할 스킬 아이콘.
+        /// </summary>
+        public Sprite icon;
+
+        /// <summary>
         /// 사용 후 잠기는 쿨(턴). 현재 남은 쿨(currentCooldown)은 SkillRuntime이 보유한다.
         /// </summary>
         public int cooldownTurns;
