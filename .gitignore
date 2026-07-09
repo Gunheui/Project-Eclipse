@@ -91,6 +91,10 @@ Assets/Plugins/
 Assets/Plugins.meta
 Assets/Packages/
 Assets/Packages.meta
+# Modular Game UI Kit(ricimi, Asset Store 유료) → 재배포 금지 라이선스. 스프라이트/프리팹만 수확해
+# 우리 화면에 re-skin(참조는 GUID 유지). 클론 후 Asset Store에서 재임포트 → 같은 GUID로 참조 복원.
+Assets/ModularGameUIKit/
+Assets/ModularGameUIKit.meta
 # 루트 Assets/Resources/ 는 현재 DOTween Setup이 만든 DOTweenSettings.asset 전용 폴더 →
 # 폴더째 제외(고아 meta 방지). 게임 리소스는 규약상 Assets/Eclipse/Resources/ 에 둔다(폴더구조.md).
 Assets/Resources/
