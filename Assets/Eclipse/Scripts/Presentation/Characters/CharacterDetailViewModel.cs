@@ -69,25 +69,7 @@ namespace Eclipse.Presentation
 
             _owned = context.Selected;
             _spriteProvider = spriteProvider;
-            _currentStats = BuildCurrentStats(_owned);
-        }
-
-        private static Stats BuildCurrentStats(OwnedCharacter owned)
-        {
-            var definition = owned.Definition;
-            var baseStats = definition.baseStats;
-            var curve = definition.growthCurve;
-            var level = owned.Level;
-
-            return new Stats
-            {
-                hp = Mathf.RoundToInt(curve.StatAtLevel(baseStats.hp, level)),
-                atk = Mathf.RoundToInt(curve.StatAtLevel(baseStats.atk, level)),
-                def = Mathf.RoundToInt(curve.StatAtLevel(baseStats.def, level)),
-                spd = baseStats.spd,
-                critRate = baseStats.critRate,
-                critDamage = baseStats.critDamage,
-            };
+            _currentStats = CharacterStats.ScaleToLevel(_owned.Definition, _owned.Level);
         }
     }
 }

@@ -1,0 +1,66 @@
+using System;
+using Eclipse.Data;
+
+namespace Eclipse.Domain
+{
+    /// <summary>
+    /// 한 번의 피해를 단일 경로로 계산한다. 모든 계수(방어경감 k·변동폭)는 데이터에서 주입받고
+    /// 코드는 계산 구조만 담는다. 치명·변동 굴림은 IRandomService라 시드 고정 재현이 가능하다.
+    /// 계산은 즉시 끝나며(연출과 분리), 수동·오토가 이 한 경로를 공유한다.
+    /// </summary>
+    public class DamagePipeline
+    {
+        private readonly float _defenseK;
+        
+        // 현실감 있는 데미지 계산을 위해서 난수의 상한과 하한을 추가함.
+        private readonly float _varianceMin;
+        private readonly float _varianceMax;
+        
+        private readonly IRandomService _rng;
+
+        /// <param name="defenseK">비율경감 계수 k — 경감계수 = ATK/(ATK+DEF×k).</param>
+        /// <param name="varianceMin">난수변동 하한(예: 0.95).</param>
+        /// <param name="varianceMax">난수변동 상한(예: 1.05).</param>
+        /// <param name="rng">치명·변동 굴림용 결정적 난수.</param>
+        public DamagePipeline(float defenseK, float varianceMin, float varianceMax, IRandomService rng)
+        {
+            _defenseK = defenseK;
+            _varianceMin = varianceMin;
+            _varianceMax = varianceMax;
+            _rng = rng;
+        }
+
+        /// <summary>
+        /// 공격자가 대상에게 스킬계수 skillPower로 주는 피해를 계산한다.
+        /// </summary>
+        /// <param name="attacker">공격자 스탯(ATK·치명확률·치명배율 참조).</param>
+        /// <param name="target">대상 스탯(DEF 참조).</param>
+        /// <param name="skillPower">스킬계수(기본공격 1.0 등, 스킬 데이터).</param>
+        public DamageResult Compute(Stats attacker, Stats target, float skillPower)
+        {
+            // [보류 H · 명중 판정] 빗나감 도입 시 파이프라인 맨 앞에서 rng로 판정해 miss면 조기 반환:
+            //   if (_rng.NextFloat() >= hitChance) return new DamageResult(0, false, isMiss: true);
+
+            // 1) 기본값 = ATK × 스킬계수
+            float raw = attacker.atk * skillPower;
+
+            // 2) 경감후 = 기본값 × ATK/(ATK + DEF×k) — 비율경감(F-1), DEF 올라도 0으로 수렴 안 함
+            // 공격력이 강할 수록 방어를 좀더 잘 뚫도록 적용함.
+            float mitigation = attacker.atk / (attacker.atk + target.def * _defenseK);
+            float mitigated = raw * mitigation;
+
+            // [보류 I · 속성 상성] 도입 시 여기서 mitigated *= typeMultiplier;
+
+            // 3) 치명적용 = 경감후 × (치명 시 CRIT_D, else 1) — 난수 순서: 치명 먼저
+            bool isCrit = _rng.NextFloat() < attacker.critRate;
+            float critApplied = isCrit ? mitigated * attacker.critDamage : mitigated;
+
+            // 4) 최종 = 치명적용 × 난수변동(min~max), 반올림 후 최소 1 보장
+            float variance = _varianceMin + _rng.NextFloat() * (_varianceMax - _varianceMin);
+            // Math.Round는 반올림시 짝수쪽으로 붙기때문에 AwayFromZero 적용
+            int amount = Math.Max(1, (int)Math.Round(critApplied * variance, MidpointRounding.AwayFromZero));
+
+            return new DamageResult(amount, isCrit);
+        }
+    }
+}
