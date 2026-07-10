@@ -36,12 +36,20 @@ namespace Eclipse.Domain
                 case TargetSelector.LowestHpAlly:
                     return SingleOrEmpty(LowestHp(allies));
                 case TargetSelector.LowestHpEnemy:
-                    return SingleOrEmpty(LowestHp(enemies));
+                    return SingleOrEmpty(LowestHp(TauntFiltered(enemies))); //도발 체크 후 없으면 타겟으로 설정
                 case TargetSelector.HighestAtkEnemy:
-                    return SingleOrEmpty(HighestAtk(enemies));
+                    return SingleOrEmpty(HighestAtk(TauntFiltered(enemies))); //도발 체크 후 없으면 타겟으로 설정
                 default:
                     return Empty;
             }
+        }
+
+        // 도발 중인 생존 적이 하나라도 있으면 그들만 후보로 좁힌다(단일-적 공격이 도발자에게 끌린다).
+        // 없으면 원래 후보를 그대로 돌려준다.
+        private static IReadOnlyList<ICombatant> TauntFiltered(IReadOnlyList<ICombatant> enemies)
+        {
+            var taunters = enemies.Where(u => u.IsAlive && u.IsTaunting).ToList();
+            return taunters.Count > 0 ? taunters : enemies;
         }
 
         // 생존 유닛 중 현재 HP가 가장 낮은 하나. 동률은 슬롯 번호가 낮은 쪽. 없으면 null.

@@ -17,7 +17,7 @@ namespace Eclipse.Data.Enums
         /// <summary> 대상 스탯을 지속 하락. affectedStat = 대상 스탯, value = 하락율(0.3=-30%), duration = 지속 턴. </summary>
         Debuff = 3,
 
-        /// <summary> 대상이 duration 턴 동안 시전자를 우선 공격. value 미사용. </summary>
+        /// <summary> 대상(보통 자기)이 duration 턴 동안 적의 단일-적 공격을 자신에게 끌어온다. value·affectedStat 미사용. </summary>
         Taunt = 4,
 
         /// <summary> 매 턴 피해(damage-over-time). value = 틱당 시전자 ATK 배율, duration = 지속 턴. </summary>

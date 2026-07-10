@@ -7,7 +7,7 @@ namespace Eclipse.Domain
     /// 한 유닛의 스킬 하나를 실행한다. 스킬의 효과 목록을 순회하며 효과마다 대상을 뽑아 적용한다.
     /// 수동·오토·적이 모두 이 경로를 공유한다(행동을 누가 골랐는지만 상위에서 다르다).
     /// 효과 크기 계산은 CombatPipeline에 맡기고, 대상 선택과 효과 적용은 이곳이 담당한다.
-    /// 즉발(데미지·힐)과 지속 효과(버프·디버프·도트·리젠·실드)를 적용한다. 도발은 이후 범위에서 채운다.
+    /// 즉발(데미지·힐)과 지속 효과(버프·디버프·도트·리젠·실드·도발)를 적용한다.
     /// </summary>
     public class SkillExecutor
     {
@@ -79,7 +79,8 @@ namespace Eclipse.Domain
                         break;
 
                     case EffectType.Taunt:
-                        // TODO(3-3): 도발 — 대상의 타겟팅 강제
+                        foreach (var target in targets)
+                            ((IDamageable)target).ApplyEffect(StatusEffect.Taunt(effect.duration));
                         break;
                 }
             }

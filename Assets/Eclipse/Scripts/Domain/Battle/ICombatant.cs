@@ -35,5 +35,11 @@ namespace Eclipse.Domain
 
         /// <summary> 보유 스킬의 런타임(잔여 쿨 포함). </summary>
         IReadOnlyList<SkillRuntime> Skills { get; }
+
+        /// <summary>
+        /// 도발 중인지. 참이면 적의 단일-적 공격이 이 유닛을 우선 대상으로 삼는다.
+        /// 광역 공격과 아군 대상 스킬은 영향받지 않는다.
+        /// </summary>
+        bool IsTaunting { get; }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Eclipse.Data;
 using Eclipse.Data.Enums;
 
@@ -31,6 +32,9 @@ namespace Eclipse.Domain
         /// 붙어 있는 효과가 바뀌면 다음 접근 때 자동으로 최신 값이 나온다.
         /// </summary>
         public Stats EffectiveStats => ComputeEffectiveStats();
+
+        /// <summary> 붙어 있는 효과 중 도발이 있으면 도발중임. </summary>
+        public bool IsTaunting => _effects.Any(e => e.Type == EffectType.Taunt);
 
         /// <summary>
         /// 피해를 적용한다. 실드가 있으면 리스트 순으로 먼저 흡수하고, 막지 못한 나머지만 HP를 깎는다.
@@ -65,6 +69,8 @@ namespace Eclipse.Domain
         {
             if (effect.Type == EffectType.Buff || effect.Type == EffectType.Debuff)
                 _effects.RemoveAll(e => e.Type == effect.Type && e.Stat == effect.Stat); //버프 디퍼프의 경우에는 새로운 효과로 덮어씌우기
+            else if (effect.Type == EffectType.Taunt)
+                _effects.RemoveAll(e => e.Type == EffectType.Taunt); //도발도 하나만 유지, 재적용 시 갱신
             _effects.Add(effect);
         }
 

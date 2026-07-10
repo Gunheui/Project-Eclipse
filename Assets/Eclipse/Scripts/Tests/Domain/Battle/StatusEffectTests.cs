@@ -150,6 +150,78 @@ namespace Eclipse.Tests
             Assert.AreSame(slow2, after.GetNextActor(), "SPD 디버프로 유효 SPD 70 < 90 → 느렸던 유닛이 먼저");
         }
 
+        // --- 도발: 단일-적 타겟을 도발자에게 끌어옴 ---
+
+        [Test]
+        public void 도발_중인_적이_있으면_단일적_공격이_도발자를_친다()
+        {
+            var resolver = new TargetResolver();
+            var attacker = Unit(S(500, 100, 0, 100));
+            var taunter = Unit(S(1000, 100, 0, 100), slot: 0); // 최저HP가 아님(높은 HP)
+            var squishy = Unit(S(100, 100, 0, 100), slot: 1);  // 최저HP
+            ((IDamageable)taunter).ApplyEffect(StatusEffect.Taunt(2));
+
+            var enemies = new List<ICombatant> { taunter, squishy };
+            var targets = resolver.Resolve(TargetSelector.LowestHpEnemy, attacker, new List<ICombatant>(), enemies);
+
+            Assert.AreSame(taunter, targets.Single(), "도발 중이면 최저HP가 아니어도 도발자를 우선");
+        }
+
+        [Test]
+        public void 도발자가_죽으면_단일적_공격이_정상_타겟으로_돌아간다()
+        {
+            var resolver = new TargetResolver();
+            var attacker = Unit(S(500, 100, 0, 100));
+            var taunter = Unit(S(1000, 100, 0, 100), slot: 0);
+            var squishy = Unit(S(100, 100, 0, 100), slot: 1);
+            ((IDamageable)taunter).ApplyEffect(StatusEffect.Taunt(2));
+            ((IDamageable)taunter).ApplyDamage(9999); // 도발자 사망
+
+            var enemies = new List<ICombatant> { taunter, squishy };
+            var targets = resolver.Resolve(TargetSelector.LowestHpEnemy, attacker, new List<ICombatant>(), enemies);
+
+            Assert.AreSame(squishy, targets.Single(), "죽은 도발자는 후보에서 빠져 최저HP로");
+        }
+
+        [Test]
+        public void 광역_공격은_도발과_무관하게_전체를_친다()
+        {
+            var resolver = new TargetResolver();
+            var attacker = Unit(S(500, 100, 0, 100));
+            var taunter = Unit(S(1000, 100, 0, 100), slot: 0);
+            var other = Unit(S(500, 100, 0, 100), slot: 1);
+            ((IDamageable)taunter).ApplyEffect(StatusEffect.Taunt(2));
+
+            var enemies = new List<ICombatant> { taunter, other };
+            var targets = resolver.Resolve(TargetSelector.AllEnemies, attacker, new List<ICombatant>(), enemies);
+
+            Assert.AreEqual(2, targets.Count, "광역기는 도발을 무시하고 전체 타격");
+        }
+
+        [Test]
+        public void 도발은_지속턴이_끝나면_풀린다()
+        {
+            var unit = Unit(S(1000, 100, 0, 100));
+            ((IDamageable)unit).ApplyEffect(StatusEffect.Taunt(2));
+            Assert.IsTrue(unit.IsTaunting);
+
+            unit.TickStatusEffects(); // 2 → 1, 아직 유효
+            Assert.IsTrue(unit.IsTaunting);
+            unit.TickStatusEffects(); // 1 → 0, 만료
+            Assert.IsFalse(unit.IsTaunting, "지속턴 소진 후 도발 풀림");
+        }
+
+        [Test]
+        public void 도발_재적용은_갱신되어_최신_지속턴만_남는다()
+        {
+            var unit = Unit(S(1000, 100, 0, 100));
+            ((IDamageable)unit).ApplyEffect(StatusEffect.Taunt(3));
+            ((IDamageable)unit).ApplyEffect(StatusEffect.Taunt(1)); // 갱신 → 지속턴 1
+
+            unit.TickStatusEffects(); // 1 → 0 만료
+            Assert.IsFalse(unit.IsTaunting, "누적이 아니라 갱신돼 최신(1턴)만 남고 소진");
+        }
+
         // --- 상태효과가 낀 전투도 시드 고정이면 결정적 ---
 
         [Test]

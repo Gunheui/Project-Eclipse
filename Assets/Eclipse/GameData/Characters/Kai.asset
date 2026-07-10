@@ -27,6 +27,5 @@ MonoBehaviour:
   basicSkill: {fileID: 11400000, guid: 02381c3b7e63b4bda846285c24ef50b3, type: 2}
   normalSkill: {fileID: 11400000, guid: e45162adc2b0945f49a783ef2b7733db, type: 2}
   ultimateSkill: {fileID: 11400000, guid: 2dcf932773b4b4090909cc19eaacec7b, type: 2}
-  passiveSkill: {fileID: 11400000, guid: 4fdc1c0a400e14cc9a6957b6b9ce15ff, type: 2}
   acquisitionType: 2
   portraitAssetRef: {fileID: 21300000, guid: 552ddc67a1e904639bfdddf9bc63659c, type: 3}

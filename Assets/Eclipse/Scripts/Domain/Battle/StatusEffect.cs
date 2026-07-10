@@ -69,8 +69,15 @@ namespace Eclipse.Domain
         /// <summary> 피해를 흡수하는 실드 효과를 만든다. </summary>
         /// <param name="absorb">흡수 가능한 총 피해량(1 이상, 적용 시점 스냅샷).</param>
         /// <param name="duration">지속턴(양수) 또는 -1(상시).</param>
-        public static StatusEffect Shield(int absorb, int duration) 
+        public static StatusEffect Shield(int absorb, int duration)
             => new StatusEffect(EffectType.Shield, StatType.None, 0, 0, absorb, duration);
+
+        /// <summary>
+        /// 이 효과를 지닌 유닛이 적의 단일-적 공격을 자신에게 끌어오는 도발 상태를 만든다(자기 대상).
+        /// </summary>
+        /// <param name="duration">지속턴(양수) 또는 -1(상시).</param>
+        public static StatusEffect Taunt(int duration)
+            => new StatusEffect(EffectType.Taunt, StatType.None, 0, 0, 0, duration);
 
         /// <summary>
         /// 들어온 피해를 실드로 흡수하고, 실드로 다 막지 못한 나머지 피해를 반환한다.

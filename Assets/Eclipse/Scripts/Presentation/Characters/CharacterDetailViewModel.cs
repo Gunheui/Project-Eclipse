@@ -54,9 +54,6 @@ namespace Eclipse.Presentation
         /// <summary> 궁극기 정의. </summary>
         public SkillSO UltimateSkill => _owned.Definition.ultimateSkill;
 
-        /// <summary> 패시브 정의. 없으면 null. </summary>
-        public SkillSO PassiveSkill => _owned.Definition.passiveSkill;
-
         /// <summary>
         /// 내비게이션 보관함에서 선택된 캐릭터를 읽어 상세 표시 값을 구성한다.
         /// 전제: 생성 전에 NavigationContext.Selected가 설정돼 있어야 한다.

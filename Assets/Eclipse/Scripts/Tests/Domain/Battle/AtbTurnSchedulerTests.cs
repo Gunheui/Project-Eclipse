@@ -19,6 +19,7 @@ namespace Eclipse.Tests
             public int CurrentHp { get; set; } = 1;
             public bool IsAlive => CurrentHp > 0;
             public IReadOnlyList<SkillRuntime> Skills => System.Array.Empty<SkillRuntime>();
+            public bool IsTaunting => false;
 
             public FakeCombatant(string name, Team team, int slot, int spd)
             {

@@ -47,7 +47,6 @@ namespace Eclipse.View
         [SerializeField] private SkillSlot basicSlot;
         [SerializeField] private SkillSlot normalSlot;
         [SerializeField] private SkillSlot ultimateSlot;
-        [SerializeField] private SkillSlot passiveSlot;
 
         [Header("내비")]
         [SerializeField] private Button backButton;
@@ -92,7 +91,6 @@ namespace Eclipse.View
             BindSkill(basicSlot, _viewModel.BasicSkill);
             BindSkill(normalSlot, _viewModel.NormalSkill);
             BindSkill(ultimateSlot, _viewModel.UltimateSkill);
-            BindSkill(passiveSlot, _viewModel.PassiveSkill);
 
             backButton.onClick.AddListener(() => _screenManager.Pop().Forget());
 

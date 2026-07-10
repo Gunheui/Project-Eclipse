@@ -28,9 +28,6 @@ namespace Eclipse.Data
         /// <summary> 궁극기. 없으면 null. </summary>
         public SkillSO ultimateSkill;
 
-        /// <summary> 패시브. 없으면 null. </summary>
-        public SkillSO passiveSkill;
-
         /// <summary> 전장에 표시할 배틀러 스프라이트. </summary>
         public Sprite battlerAssetRef;
     }

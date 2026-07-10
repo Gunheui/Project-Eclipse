@@ -37,9 +37,6 @@ namespace Eclipse.Data
         /// <summary> 궁극기(긴 쿨). </summary>
         public SkillSO ultimateSkill;
 
-        /// <summary> 패시브(0~1). 없으면 비워둠(null = 패시브 없음). </summary>
-        public SkillSO passiveSkill;
-
         /// <summary> 획득 경로(스타터/스토리지급/가챠픽업). </summary>
         public AcquisitionType acquisitionType;
 
