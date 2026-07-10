@@ -36,5 +36,24 @@ namespace Eclipse.Domain
         /// <returns>회복 HP(1 이상).</returns>
         public int ComputeHeal(Stats attacker, float power)
             => Math.Max(1, (int)Math.Round(attacker.atk * power, MidpointRounding.AwayFromZero));
+
+        /// <summary>
+        /// 도트·리젠의 틱당 HP 변화량을 계산한다(시전자 ATK × 배율, 방어경감·치명·난수 없음, 최소 1).
+        /// 적용 시점에 한 번 계산해 효과에 스냅샷하므로 시드 고정 없이도 결정적이다.
+        /// </summary>
+        /// <param name="caster">시전자 유효 스탯.</param>
+        /// <param name="power">틱 배율(시전자 ATK에 곱해지는 값).</param>
+        /// <returns>틱당 HP 변화량(1 이상).</returns>
+        public int ComputeTickAmount(Stats caster, float power)
+            => Math.Max(1, (int)Math.Round(caster.atk * power, MidpointRounding.AwayFromZero));
+
+        /// <summary>
+        /// 실드가 흡수할 총 피해량을 계산한다(대상 최대 HP × 비율, 최소 1).
+        /// </summary>
+        /// <param name="maxHp">실드를 받는 대상의 최대 HP.</param>
+        /// <param name="ratio">최대 HP 대비 흡수 비율(0.3 = 30%).</param>
+        /// <returns>흡수 가능한 총 피해량(1 이상).</returns>
+        public int ComputeShield(int maxHp, float ratio)
+            => Math.Max(1, (int)Math.Round(maxHp * ratio, MidpointRounding.AwayFromZero));
     }
 }

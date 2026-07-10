@@ -20,10 +20,12 @@ namespace Eclipse.Domain
         int SlotIndex { get; }
 
         /// <summary>
-        /// 버프·디버프가 반영된 현재 유효 스탯. 정렬·데미지는 이 값을 읽는다.
-        /// 지금은 기본 스탯과 같고, 수정자 적용은 이후 범위에서 붙는다.
+        /// 버프·디버프가 반영된 현재 유효 스탯. 정렬·데미지는 이 값을 읽는다(기본 스탯이 아니라 이 값).
         /// </summary>
         Stats EffectiveStats { get; }
+
+        /// <summary> 최대 HP. HP 바 비율·실드 흡수량 산출의 기준이며 전투 중 변하지 않는다. </summary>
+        int MaxHp { get; }
 
         /// <summary> 현재 HP. </summary>
         int CurrentHp { get; }

@@ -15,6 +15,7 @@ namespace Eclipse.Tests
             public Team Team { get; }
             public int SlotIndex { get; }
             public Stats EffectiveStats { get; }
+            public int MaxHp => 1;
             public int CurrentHp { get; set; } = 1;
             public bool IsAlive => CurrentHp > 0;
             public IReadOnlyList<SkillRuntime> Skills => System.Array.Empty<SkillRuntime>();

@@ -49,15 +49,23 @@ namespace Eclipse.Domain
             var actor = _scheduler.GetNextActor();
             if (actor == null) return Evaluate();
 
-            // 턴 시작: 행동자 자기 스킬의 남은 쿨을 1 줄인다.
-            foreach (var skill in actor.Skills)
-                skill.Tick();
+            // 턴 시작: 자기 도트·리젠 적용, 붙어 있는 효과의 지속턴 감소, 만료 정리.
+            // 이 전투의 행동자는 항상 BattleUnit이다(스케줄러는 읽기용 ICombatant만 반환).
+            ((BattleUnit)actor).TickStatusEffects();
 
-            var chosen = SelectSkill(actor);
-            if (chosen != null)
+            // 도트로 쓰러졌으면 행동하지 않고 턴만 정산한다.
+            if (actor.IsAlive)
             {
-                chosen.TryUse();
-                _executor.Execute(actor, chosen, AlliesOf(actor), EnemiesOf(actor));
+                // 행동자 자기 스킬의 남은 쿨을 1 줄인다.
+                foreach (var skill in actor.Skills)
+                    skill.Tick();
+
+                var chosen = SelectSkill(actor);
+                if (chosen != null)
+                {
+                    chosen.TryUse();
+                    _executor.Execute(actor, chosen, AlliesOf(actor), EnemiesOf(actor));
+                }
             }
 
             _scheduler.OnActionResolved(actor);

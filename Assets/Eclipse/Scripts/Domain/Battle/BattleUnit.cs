@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Eclipse.Data;
+using Eclipse.Data.Enums;
 
 namespace Eclipse.Domain
 {
@@ -13,24 +14,39 @@ namespace Eclipse.Domain
     {
         private readonly Stats _baseStats;
         private readonly List<SkillRuntime> _skills;
+        private readonly List<StatusEffect> _effects = new();
         private readonly int _maxHp;
 
         public string DisplayName { get; }
         public Team Team { get; }
         public int SlotIndex { get; }
 
-        /// <summary> 버프·디버프 반영 유효 스탯. 지금은 기본 스탯 스냅샷과 같다(수정자 적용은 이후 범위). </summary>
-        public Stats EffectiveStats => _baseStats;
-
+        public int MaxHp => _maxHp;
         public int CurrentHp { get; private set; }
         public bool IsAlive => CurrentHp > 0;
         public IReadOnlyList<SkillRuntime> Skills => _skills;
 
-        /// <summary> 피해를 적용해 HP를 줄인다. HP는 0 밑으로 내려가지 않는다. </summary>
+        /// <summary>
+        /// 버프·디버프가 반영된 현재 유효 스탯. 정렬·데미지·힐은 이 값을 읽는다(기본 스탯이 아니라 이 값).
+        /// 붙어 있는 효과가 바뀌면 다음 접근 때 자동으로 최신 값이 나온다.
+        /// </summary>
+        public Stats EffectiveStats => ComputeEffectiveStats();
+
+        /// <summary>
+        /// 피해를 적용한다. 실드가 있으면 리스트 순으로 먼저 흡수하고, 막지 못한 나머지만 HP를 깎는다.
+        /// HP는 0 밑으로 내려가지 않는다. 흡수량이 0이 된 실드는 이 유닛의 자기 턴 틱에서 제거된다.
+        /// </summary>
         /// <param name="amount">깎을 HP(0 이상 전제).</param>
         public void ApplyDamage(int amount)
         {
-            CurrentHp = Math.Max(0, CurrentHp - amount);
+            int remaining = amount;
+            foreach (var e in _effects) //효과중 쉴드 찾기
+            {
+                if (remaining <= 0) break; //남은 데미지가 0이면 탈출
+                if (e.Type == EffectType.Shield)
+                    remaining = e.AbsorbDamage(remaining); //쉴드에서 데미지가 까이고 나머지 값이 반환
+            }
+            CurrentHp = Math.Max(0, CurrentHp - remaining);
         }
 
         /// <summary> 회복을 적용해 HP를 늘린다. HP는 최대 HP를 넘지 않는다. </summary>
@@ -38,6 +54,39 @@ namespace Eclipse.Domain
         public void Heal(int amount)
         {
             CurrentHp = Math.Min(_maxHp, CurrentHp + amount);
+        }
+
+        /// <summary>
+        /// 지속 효과를 부착한다. 버프·디버프는 같은 스탯의 기존 효과를 대체(refresh)하고,
+        /// 도트·리젠·실드는 독립 인스턴스로 누적한다.
+        /// </summary>
+        /// <param name="effect">부착할 효과(세기는 이미 적용 시점 값으로 확정돼 있음).</param>
+        public void ApplyEffect(StatusEffect effect)
+        {
+            if (effect.Type == EffectType.Buff || effect.Type == EffectType.Debuff)
+                _effects.RemoveAll(e => e.Type == effect.Type && e.Stat == effect.Stat); //버프 디퍼프의 경우에는 새로운 효과로 덮어씌우기
+            _effects.Add(effect);
+        }
+
+        /// <summary>
+        /// 이 유닛의 자기 턴에 호출한다. 붙어 있는 도트·리젠을 HP에 적용하고, 모든 효과의 지속턴을 1 줄인 뒤,
+        /// 만료된 효과(지속턴 0)와 소진된 실드를 제거한다. 도트는 ApplyDamage를 거치므로 자기 실드에 먼저 흡수된다.
+        /// </summary>
+        public void TickStatusEffects()
+        {
+            foreach (var e in _effects)
+            {
+                switch (e.Type)
+                {
+                    case EffectType.Dot: ApplyDamage(e.TickAmount); break;
+                    case EffectType.Regen: Heal(e.TickAmount); break;
+                }
+            }
+
+            foreach (var e in _effects)
+                e.TickDuration();
+
+            _effects.RemoveAll(e => e.IsExpired);
         }
 
         private BattleUnit(string displayName, Team team, int slotIndex, Stats baseStats, List<SkillRuntime> skills)
@@ -73,6 +122,41 @@ namespace Eclipse.Domain
         {
             var skills = BuildSkills(enemy.basicSkill, enemy.normalSkill, enemy.ultimateSkill);
             return new BattleUnit(enemy.displayName, Team.Enemy, slotIndex, enemy.baseStats, skills);
+        }
+
+        // 붙어 있는 버프·디버프를 기본 스탯에 접어 유효 스탯을 낸다.
+        // 스탯별 배수 = 1 + 버프율 합 − 디버프율 합(percent-add). atk·spd는 1 미만,
+        // def·치명 계열은 0 미만으로 내려가지 않는다(spd는 게이지 나눗셈 분모라 0 금지).
+        // 최대 HP는 수정자 대상이 아니라 기본값을 유지한다.
+        private Stats ComputeEffectiveStats()
+        {
+            float atkM = 1f, defM = 1f, spdM = 1f, crM = 1f, cdM = 1f;
+            foreach (var e in _effects) // 현재 적용된 효과 각각 적용
+            {
+                if (e.Type != EffectType.Buff && e.Type != EffectType.Debuff) continue;
+                float delta = e.Type == EffectType.Buff ? e.Value : -e.Value; //버프면 더하고 디버프면 뺌
+                switch (e.Stat)
+                {
+                    case StatType.Atk: atkM += delta; break;
+                    case StatType.Def: defM += delta; break;
+                    case StatType.Spd: spdM += delta; break;
+                    
+                    // 크리 계열도 같은 배수 규칙을 따른다. 현재 크리를 바꾸는 스킬이 없어 이 두 분기는 미사용.
+                    // 도입 시 주의: 크리율은 확률이라 기본 0이면 배수로 안 오르고 상한도 없다 → 가산 모델·[0,1] 클램프 재검토.
+                    case StatType.CritRate: crM += delta; break;
+                    case StatType.CritDamage: cdM += delta; break;
+                }
+            }
+
+            return new Stats
+            {
+                hp = _baseStats.hp,
+                atk = Math.Max(1, (int)Math.Round(_baseStats.atk * atkM, MidpointRounding.AwayFromZero)),
+                def = Math.Max(0, (int)Math.Round(_baseStats.def * defM, MidpointRounding.AwayFromZero)),
+                spd = Math.Max(1, (int)Math.Round(_baseStats.spd * spdM, MidpointRounding.AwayFromZero)),
+                critRate = Math.Max(0f, _baseStats.critRate * crM),
+                critDamage = Math.Max(0f, _baseStats.critDamage * cdM),
+            };
         }
 
         // null이 아닌 슬롯만 런타임으로 감싼다(적은 슬롯이 비어 있을 수 있다).
