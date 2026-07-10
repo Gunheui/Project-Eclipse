@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7465757b0460e47d782f2fbdd57ce020, type: 3}
+  m_Name: Beast
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.EnemySO
+  id: enemy_beast
+  displayName: "\uC57C\uC218\uBCD1"
+  baseStats:
+    hp: 700
+    atk: 120
+    def: 45
+    spd: 100
+    critRate: 0.1
+    critDamage: 1.5
+  basicSkill: {fileID: 11400000, guid: a2e1aef5073874263b71b9a4e6cd83f2, type: 2}
+  normalSkill: {fileID: 0}
+  ultimateSkill: {fileID: 0}
+  passiveSkill: {fileID: 0}
+  battlerAssetRef: {fileID: 0}

@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5640282a8b8e413eaa0459e7c3d1c11c, type: 3}
-  m_Name: Mira_passive
+  m_Name: Sera_basic
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.SkillSO
-  id: mira_passive
-  displayName: "\uC548\uC2DD"
-  icon: {fileID: 21300000, guid: b7f488a228e884092b6d6d8b127958fc, type: 3}
+  id: sera_basic
+  displayName: "\uB9C8\uB825\uD0C4"
+  icon: {fileID: 21300000, guid: 5f7acf5aaa6b646b0a1ffdef962e4c78, type: 3}
   cooldownTurns: 0
   effects:
-  - type: 7
-    target: 2
-    value: 0.3
+  - type: 0
+    target: 3
+    value: 0.9
     affectedStat: 0
-    duration: -1
+    duration: 0

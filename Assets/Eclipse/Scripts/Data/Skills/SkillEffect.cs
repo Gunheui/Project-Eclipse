@@ -22,13 +22,18 @@ namespace Eclipse.Data
         public TargetSelector target;
 
         /// <summary>
-        /// 효과의 세기. type에 따라 의미가 달라진다
-        /// (데미지=SkillPower, 힐=HealPower, 버프/디버프=변화율 등).
+        /// 효과의 세기. 의미는 type별로 다르다(EffectType 주석 참조):
+        /// Damage/Heal/Dot/Regen = 배율, Buff/Debuff = 변화율, Shield = 최대 HP 비율.
         /// </summary>
         public float value;
 
         /// <summary>
-        /// 효과 지속 턴 수 (0 = 즉발).
+        /// Buff·Debuff가 변경할 스탯. 그 외 타입은 None.
+        /// </summary>
+        public StatType affectedStat;
+
+        /// <summary>
+        /// 효과 지속 턴 수 (0 = 즉발, 양수 = 지속 턴, -1 = 상시/만료 없음).
         /// </summary>
         public int duration;
     }

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.SkillSO
   id: mira_basic
   displayName: "\uC815\uD654\uC758 \uBE5B"
-  icon: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  icon: {fileID: 21300000, guid: d9bd941775d7647bca035b8d97be3e1f, type: 3}
   cooldownTurns: 0
   effects:
   - type: 0

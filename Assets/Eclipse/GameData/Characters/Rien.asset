@@ -24,9 +24,9 @@ MonoBehaviour:
     critRate: 0.05
     critDamage: 1.5
   growthCurve: {fileID: 11400000, guid: 614de3d95c41d4cc197863e3a88014fe, type: 2}
-  basicSkill: {fileID: 0}
-  normalSkill: {fileID: 0}
-  ultimateSkill: {fileID: 0}
-  passiveSkill: {fileID: 0}
+  basicSkill: {fileID: 11400000, guid: ed82e77004de64c23b40d94a4a892ffc, type: 2}
+  normalSkill: {fileID: 11400000, guid: e7804a8a08c4a43a19a4b2ab77e8a5bb, type: 2}
+  ultimateSkill: {fileID: 11400000, guid: 1f049b14e769441ce8f08305989ba2c5, type: 2}
+  passiveSkill: {fileID: 11400000, guid: f537041202ad4413aa5dd5fe1b9cefe1, type: 2}
   acquisitionType: 0
   portraitAssetRef: {fileID: 21300000, guid: 473c75e1a4a5542f8aa2f3ce55cfec4c, type: 3}
