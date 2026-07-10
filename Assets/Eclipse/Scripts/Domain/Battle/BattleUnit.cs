@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Eclipse.Data;
 
@@ -8,10 +9,11 @@ namespace Eclipse.Domain
     /// 현재 HP·스킬 잔여 쿨 등 전투 중 변하는 상태를 보유한다.
     /// 정의는 여러 유닛이 공유하고, 이 런타임 상태는 유닛별로 독립이다.
     /// </summary>
-    public class BattleUnit : ICombatant
+    public class BattleUnit : ICombatant, IDamageable
     {
         private readonly Stats _baseStats;
         private readonly List<SkillRuntime> _skills;
+        private readonly int _maxHp;
 
         public string DisplayName { get; }
         public Team Team { get; }
@@ -24,6 +26,20 @@ namespace Eclipse.Domain
         public bool IsAlive => CurrentHp > 0;
         public IReadOnlyList<SkillRuntime> Skills => _skills;
 
+        /// <summary> 피해를 적용해 HP를 줄인다. HP는 0 밑으로 내려가지 않는다. </summary>
+        /// <param name="amount">깎을 HP(0 이상 전제).</param>
+        public void ApplyDamage(int amount)
+        {
+            CurrentHp = Math.Max(0, CurrentHp - amount);
+        }
+
+        /// <summary> 회복을 적용해 HP를 늘린다. HP는 최대 HP를 넘지 않는다. </summary>
+        /// <param name="amount">채울 HP(0 이상 전제).</param>
+        public void Heal(int amount)
+        {
+            CurrentHp = Math.Min(_maxHp, CurrentHp + amount);
+        }
+
         private BattleUnit(string displayName, Team team, int slotIndex, Stats baseStats, List<SkillRuntime> skills)
         {
             DisplayName = displayName;
@@ -31,7 +47,8 @@ namespace Eclipse.Domain
             SlotIndex = slotIndex;
             _baseStats = baseStats;
             _skills = skills;
-            CurrentHp = baseStats.hp;
+            _maxHp = baseStats.hp;
+            CurrentHp = _maxHp;
         }
 
         /// <summary>

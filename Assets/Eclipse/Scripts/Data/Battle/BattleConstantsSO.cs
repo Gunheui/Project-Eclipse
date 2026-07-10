@@ -17,5 +17,8 @@ namespace Eclipse.Data
 
         [Tooltip("데미지 난수변동 상한 (예: 1.05 = +5%).")]
         public float varianceMax = 1.05f;
+
+        [Tooltip("전장 누적 행동 상한. 이 횟수를 넘으면 미클리어(패배)로 종료 — 무한 루프 방지.")]
+        public int globalActionCap = 200;
     }
 }

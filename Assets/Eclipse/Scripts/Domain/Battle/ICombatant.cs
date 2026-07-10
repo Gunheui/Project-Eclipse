@@ -4,9 +4,9 @@ using Eclipse.Data;
 namespace Eclipse.Domain
 {
     /// <summary>
-    /// 전투에 참여하는 유닛의 공통 계약. 아군(캐릭터)과 적이 같은 계약으로 다뤄진다.
+    /// 전투에 참여하는 유닛의 상태를 읽는 인터페이스. 아군(캐릭터)과 적이 같은 인터페이스로 다뤄진다.
     /// 턴 스케줄러·데미지 파이프라인은 정의 타입(CharacterSO/EnemySO)을 몰라도
-    /// 이 계약만으로 동작한다.
+    /// 이 인터페이스만으로 동작한다.
     /// </summary>
     public interface ICombatant
     {
