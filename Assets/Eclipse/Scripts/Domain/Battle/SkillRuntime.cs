@@ -16,9 +16,12 @@ namespace Eclipse.Domain
         /// <summary> 쿨이 다 돌아 사용 가능한 상태인지. </summary>
         public bool IsReady => CurrentCooldown == 0;
 
-        public SkillRuntime(SkillSO skill)
+        /// <param name="skill">감쌀 스킬 정의(공유·불변).</param>
+        /// <param name="initialCooldown">전투 시작 시 걸어둘 잔여 쿨(턴). 0이면 시작부터 사용 가능.</param>
+        public SkillRuntime(SkillSO skill, int initialCooldown = 0)
         {
             Skill = skill;
+            CurrentCooldown = initialCooldown;
         }
 
         /// <summary>

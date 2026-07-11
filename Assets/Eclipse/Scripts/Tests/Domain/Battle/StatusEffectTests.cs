@@ -257,7 +257,9 @@ namespace Eclipse.Tests
                 var scheduler = new AtbTurnScheduler(allies.Concat(enemies));
                 var pipeline = new DamagePipeline(1f, 0.95f, 1.05f, new SeededRandom(777));
                 var executor = new SkillExecutor(new CombatPipeline(pipeline), new TargetResolver());
-                return new BattleEngine(allies, enemies, scheduler, executor, 200);
+                // 아군 오토·적 AI가 같은 규칙 정책을 공유(임계 40%·힐 on). 정책은 무상태라 한 인스턴스를 양편에 넘겨도 무방.
+                var provider = new RuleBasedActionProvider(0.4f, useHealRule: true);
+                return new BattleEngine(allies, enemies, scheduler, executor, provider, provider, 200);
             }
 
             var e1 = Build(); var o1 = e1.Run();

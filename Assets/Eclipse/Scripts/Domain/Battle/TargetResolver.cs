@@ -44,6 +44,35 @@ namespace Eclipse.Domain
             }
         }
 
+        /// <summary>
+        /// 수동 지정 대상을 반영해 대상 목록을 반환한다. 지정 대상은 단일-적 selector에만,
+        /// 그리고 도발 중인 적이 없을 때만 적용된다(도발이 지정보다 우선). 그 밖의 경우는
+        /// selector 기본 규칙으로 폴백한다: 지정 없음/지정 대상 사망/적 목록 밖/광역·아군 selector.
+        /// </summary>
+        /// <param name="chosenTarget">플레이어가 찍은 대상. null이면 selector가 대상을 정한다.</param>
+        public IReadOnlyList<ICombatant> Resolve(
+            TargetSelector selector, ICombatant actor,
+            IReadOnlyList<ICombatant> allies, IReadOnlyList<ICombatant> enemies,
+            ICombatant chosenTarget)
+        {
+            if (chosenTarget != null
+                && IsSingleEnemySelector(selector)
+                && chosenTarget.IsAlive
+                && enemies.Contains(chosenTarget)
+                && !AnyTaunting(enemies))
+            {
+                return new[] { chosenTarget };
+            }
+
+            return Resolve(selector, actor, allies, enemies);
+        }
+
+        private static bool IsSingleEnemySelector(TargetSelector selector)
+            => selector == TargetSelector.LowestHpEnemy || selector == TargetSelector.HighestAtkEnemy;
+
+        private static bool AnyTaunting(IReadOnlyList<ICombatant> enemies)
+            => enemies.Any(u => u.IsAlive && u.IsTaunting);
+
         // 도발 중인 생존 적이 하나라도 있으면 그들만 후보로 좁힌다(단일-적 공격이 도발자에게 끌린다).
         // 없으면 원래 후보를 그대로 돌려준다.
         private static IReadOnlyList<ICombatant> TauntFiltered(IReadOnlyList<ICombatant> enemies)

@@ -48,12 +48,15 @@ namespace Eclipse.Tests
             return BattleUnit.FromEnemy(so, slot);
         }
 
+        // 아군 오토와 적 AI가 같은 규칙 정책을 공유한다(임계 40%·힐 on). 편별로 인스턴스만 따로 넣는다.
+        private static IActionProvider RuleProvider() => new RuleBasedActionProvider(0.4f, useHealRule: true);
+
         private static BattleEngine Engine(List<BattleUnit> allies, List<BattleUnit> enemies, int seed, int cap)
         {
             var scheduler = new AtbTurnScheduler(allies.Concat(enemies));
             var pipeline = new DamagePipeline(1f, 0.95f, 1.05f, new SeededRandom(seed));
             var executor = new SkillExecutor(new CombatPipeline(pipeline), new TargetResolver());
-            return new BattleEngine(allies, enemies, scheduler, executor, cap);
+            return new BattleEngine(allies, enemies, scheduler, executor, RuleProvider(), RuleProvider(), cap);
         }
 
         // --- 완주 + 승패 판정 (DoD #1 선행) ---
@@ -135,6 +138,31 @@ namespace Eclipse.Tests
 
             Assert.AreEqual(o1, o2, "같은 시드·편성은 같은 승패");
             Assert.AreEqual(e1.ActionCount, e2.ActionCount, "같은 시드·편성은 같은 행동 수");
+        }
+
+        // --- 시작 쿨 비대칭 (적만 액티브 쿨 걸고 시작) ---
+
+        [Test]
+        public void 적_액티브는_쿨_걸고_시작하고_아군은_바로_사용가능()
+        {
+            var ally = Ally("A", 0, S(100, 10, 0, 100),
+                Skill("b", 0, Dmg(1f, TargetSelector.LowestHpEnemy)),
+                Skill("na", 2, Dmg(1f, TargetSelector.LowestHpEnemy)));
+
+            var eso = ScriptableObject.CreateInstance<EnemySO>();
+            eso.displayName = "E"; eso.baseStats = S(100, 10, 0, 100);
+            eso.basicSkill = Skill("eb", 0, Dmg(1f, TargetSelector.LowestHpEnemy));
+            eso.normalSkill = Skill("en", 2, Dmg(1f, TargetSelector.LowestHpEnemy));
+            var enemy = BattleUnit.FromEnemy(eso, 0);
+
+            // 아군: 기본·일반 모두 시작부터 준비.
+            Assert.IsTrue(ally.Skills[0].IsReady);
+            Assert.IsTrue(ally.Skills[1].IsReady, "아군 액티브는 1턴부터 사용가능");
+
+            // 적: 기본은 열려 있고(쿨 0), 일반은 자기 쿨만큼 잠긴 채 시작.
+            Assert.IsTrue(enemy.Skills[0].IsReady, "적 기본공격은 쿨 0이라 항상 열림");
+            Assert.IsFalse(enemy.Skills[1].IsReady, "적 액티브는 쿨 걸고 시작");
+            Assert.AreEqual(2, enemy.Skills[1].CurrentCooldown);
         }
     }
 }

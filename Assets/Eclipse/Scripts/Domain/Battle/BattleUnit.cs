@@ -115,7 +115,7 @@ namespace Eclipse.Domain
         {
             var def = owned.Definition;
             var stats = CharacterStats.ScaleToLevel(def, owned.Level);
-            var skills = BuildSkills(def.basicSkill, def.normalSkill, def.ultimateSkill);
+            var skills = BuildSkills(false, def.basicSkill, def.normalSkill, def.ultimateSkill);
             return new BattleUnit(def.displayName, Team.Ally, slotIndex, stats, skills);
         }
 
@@ -126,7 +126,7 @@ namespace Eclipse.Domain
         /// <param name="slotIndex">편성 슬롯 번호(0부터).</param>
         public static BattleUnit FromEnemy(EnemySO enemy, int slotIndex)
         {
-            var skills = BuildSkills(enemy.basicSkill, enemy.normalSkill, enemy.ultimateSkill);
+            var skills = BuildSkills(true, enemy.basicSkill, enemy.normalSkill, enemy.ultimateSkill);
             return new BattleUnit(enemy.displayName, Team.Enemy, slotIndex, enemy.baseStats, skills);
         }
 
@@ -166,11 +166,12 @@ namespace Eclipse.Domain
         }
 
         // null이 아닌 슬롯만 런타임으로 감싼다(적은 슬롯이 비어 있을 수 있다).
-        private static List<SkillRuntime> BuildSkills(params SkillSO[] slots)
+        // startOnCooldown이면 각 액티브를 자기 쿨만큼 잠근 채 시작한다(기본공격은 쿨 0이라 그대로 열림).
+        private static List<SkillRuntime> BuildSkills(bool startOnCooldown, params SkillSO[] slots)
         {
             var list = new List<SkillRuntime>();
             foreach (var s in slots)
-                if (s != null) list.Add(new SkillRuntime(s));
+                if (s != null) list.Add(new SkillRuntime(s, startOnCooldown ? s.cooldownTurns : 0));
             return list;
         }
     }

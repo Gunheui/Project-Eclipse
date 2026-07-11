@@ -26,15 +26,16 @@ namespace Eclipse.Domain
         /// </summary>
         /// <param name="actor">스킬을 쓰는 유닛. 데미지·힐 세기의 기준 스탯을 제공한다.</param>
         /// <param name="skill">실행할 스킬의 런타임(정의를 통해 효과 목록을 읽는다).</param>
+        /// <param name="chosenTarget">수동 지정 대상. null이면 효과별 TargetSelector가 대상을 정한다.</param>
         /// <param name="allies">행동자 편의 유닛 목록.</param>
         /// <param name="enemies">상대 편의 유닛 목록.</param>
         public void Execute(
-            ICombatant actor, SkillRuntime skill,
+            ICombatant actor, SkillRuntime skill, ICombatant chosenTarget,
             IReadOnlyList<ICombatant> allies, IReadOnlyList<ICombatant> enemies)
         {
             foreach (var effect in skill.Skill.effects)
             {
-                var targets = _targeting.Resolve(effect.target, actor, allies, enemies);
+                var targets = _targeting.Resolve(effect.target, actor, allies, enemies, chosenTarget);
 
                 switch (effect.type)
                 {

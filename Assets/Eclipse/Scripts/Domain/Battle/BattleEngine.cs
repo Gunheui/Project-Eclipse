@@ -14,6 +14,8 @@ namespace Eclipse.Domain
         private readonly List<BattleUnit> _enemies;
         private readonly ITurnScheduler _scheduler;
         private readonly SkillExecutor _executor;
+        private readonly IActionProvider _allyProvider;
+        private readonly IActionProvider _enemyProvider;
         private readonly int _actionCap;
 
         private int _actionCount;
@@ -22,15 +24,20 @@ namespace Eclipse.Domain
         /// <param name="enemies">적 유닛.</param>
         /// <param name="scheduler">양편 유닛으로 구성된 턴 스케줄러.</param>
         /// <param name="executor">스킬 효과 적용기.</param>
+        /// <param name="allyProvider">아군 유닛의 행동 결정 주체(오토 또는 수동).</param>
+        /// <param name="enemyProvider">적 유닛의 행동 결정 주체(적 AI).</param>
         /// <param name="actionCap">전장 누적 행동 상한. 넘으면 미클리어(패배) 처리한다.</param>
         public BattleEngine(
             List<BattleUnit> allies, List<BattleUnit> enemies,
-            ITurnScheduler scheduler, SkillExecutor executor, int actionCap)
+            ITurnScheduler scheduler, SkillExecutor executor,
+            IActionProvider allyProvider, IActionProvider enemyProvider, int actionCap)
         {
             _allies = allies;
             _enemies = enemies;
             _scheduler = scheduler;
             _executor = executor;
+            _allyProvider = allyProvider;
+            _enemyProvider = enemyProvider;
             _actionCap = actionCap;
         }
 
@@ -60,11 +67,11 @@ namespace Eclipse.Domain
                 foreach (var skill in actor.Skills)
                     skill.Tick();
 
-                var chosen = SelectSkill(actor);
-                if (chosen != null)
+                var action = ProviderFor(actor).Decide(actor, AlliesOf(actor), EnemiesOf(actor));
+                if (action.Skill != null)
                 {
-                    chosen.TryUse();
-                    _executor.Execute(actor, chosen, AlliesOf(actor), EnemiesOf(actor));
+                    action.Skill.TryUse();
+                    _executor.Execute(actor, action.Skill, action.Target, AlliesOf(actor), EnemiesOf(actor));
                 }
             }
 
@@ -86,15 +93,9 @@ namespace Eclipse.Domain
             return outcome;
         }
 
-        // 준비된 스킬 중 가장 상위 슬롯(궁 → 일반 → 기본)을 고른다.
-        // 기본공격은 쿨 0이라 항상 준비돼 있어 "빈 턴 없음"을 보장한다.
-        private static SkillRuntime SelectSkill(ICombatant actor)
-        {
-            for (int i = actor.Skills.Count - 1; i >= 0; i--)
-                if (actor.Skills[i].IsReady)
-                    return actor.Skills[i];
-            return null;
-        }
+        // 행동자의 편에 따라 행동 결정 주체를 고른다.
+        private IActionProvider ProviderFor(ICombatant actor)
+            => actor.Team == Team.Ally ? _allyProvider : _enemyProvider;
 
         private BattleOutcome Evaluate()
         {
