@@ -47,26 +47,35 @@ namespace Eclipse.View.Infra
         /// <typeparam name="TResult">팝업이 돌려주는 응답 타입.</typeparam>
         public async UniTask<TResult> Show<TResult>(PopupId id)
         {
-            if (_stack.Count == 0)
-                dim.SetActive(true);
+            if (!_prefabs.TryGetValue(id, out var prefab))
+                throw new InvalidOperationException($"PopupManager: '{id}'에 등록된 프리팹이 없습니다. entries 배선을 확인하세요.");
 
-            var prefab = _prefabs[id];
             var go = _resolver.Instantiate(prefab, popupRoot);
             var popup = go.GetComponent<IPopup<TResult>>();
+            if (popup == null)
+            {
+                Destroy(go);
+                throw new InvalidOperationException($"PopupManager: 프리팹 '{prefab.name}'에 IPopup<{typeof(TResult).Name}> 구현이 없습니다.");
+            }
 
             _stack.Add(popup);
-            await popup.Open();
+            if (_stack.Count == 1)
+                dim.SetActive(true);
 
-            var result = await popup.Result;
-
-            await popup.Close();
-            _stack.Remove(popup);
-            Destroy(go);
-
-            if (_stack.Count == 0)
-                dim.SetActive(false);
-
-            return result;
+            try
+            {
+                await popup.Open();
+                var result = await popup.Result;
+                await popup.Close();
+                return result;
+            }
+            finally
+            {
+                _stack.Remove(popup);
+                Destroy(go);
+                if (_stack.Count == 0)
+                    dim.SetActive(false);
+            }
         }
     }
 }

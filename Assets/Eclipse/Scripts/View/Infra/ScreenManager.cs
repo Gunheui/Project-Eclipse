@@ -42,6 +42,9 @@ namespace Eclipse.View.Infra
         private readonly List<StackEntry> _stack = new List<StackEntry>();
 
         private IObjectResolver _resolver;
+        
+        // 현재 UI 실행 진행중인지 확인하는 변수
+        private bool _isTransitioning;
 
         [Inject]
         public void Construct(IObjectResolver resolver)
@@ -57,35 +60,77 @@ namespace Eclipse.View.Infra
 
         /// <summary>
         /// 화면을 전면에 올린다. 이미 스택에 있으면 그 위를 전부 되감아 기존 인스턴스로 복귀한다.
+        /// 전환이 진행 중이면 호출을 무시한다(연타로 화면이 겹치는 것을 막는다).
         /// </summary>
         public async UniTask Push(ScreenId id)
         {
-            if (Contains(id))
-            {
-                while (_stack.Count > 0 && _stack[^1].Id != id)
-                    await Pop();
+            if (_isTransitioning)
                 return;
+
+            _isTransitioning = true;
+            try
+            {
+                if (Contains(id))
+                {
+                    while (_stack.Count > 0 && _stack[^1].Id != id)
+                        await TearDownTop();
+                    return;
+                }
+
+                if (!_prefabs.TryGetValue(id, out var prefab))
+                    throw new InvalidOperationException($"ScreenManager: '{id}'에 등록된 프리팹이 없습니다. entries 배선을 확인하세요.");
+
+                var go = _resolver.Instantiate(prefab, screenRoot);
+                var screen = go.GetComponent<IScreen>();
+                if (screen == null)
+                {
+                    Destroy(go);
+                    throw new InvalidOperationException($"ScreenManager: 프리팹 '{prefab.name}'에 IScreen 구현이 없습니다.");
+                }
+
+                _stack.Add(new StackEntry(id, go, screen));
+                await screen.OnEnter();
             }
-
-            var prefab = _prefabs[id];
-            var go = _resolver.Instantiate(prefab, screenRoot);
-            var screen = go.GetComponent<IScreen>();
-
-            _stack.Add(new StackEntry(id, go, screen));
-            await screen.OnEnter();
+            finally
+            {
+                _isTransitioning = false;
+            }
         }
 
-        /// <summary>최상단 화면을 되돌린다. 루트 화면은 되돌리지 않는다.</summary>
+        /// <summary>
+        /// 최상단 화면을 되돌린다. 루트 화면은 되돌리지 않는다.
+        /// 전환이 진행 중이면 호출을 무시한다.
+        /// </summary>
         public async UniTask Pop()
         {
-            if (_stack.Count <= 1)
+            if (_isTransitioning || _stack.Count <= 1)
                 return;
 
+            _isTransitioning = true;
+            try
+            {
+                await TearDownTop();
+            }
+            finally
+            {
+                _isTransitioning = false;
+            }
+        }
+
+        /// <summary>최상단 화면을 스택에서 빼고 파괴한다. OnExit가 예외를 던져도 파괴는 보장된다.</summary>
+        private async UniTask TearDownTop()
+        {
             var top = _stack[^1];
             _stack.RemoveAt(_stack.Count - 1);
 
-            await top.Screen.OnExit();
-            Destroy(top.Go);
+            try
+            {
+                await top.Screen.OnExit();
+            }
+            finally
+            {
+                Destroy(top.Go);
+            }
         }
 
         private bool Contains(ScreenId id)
