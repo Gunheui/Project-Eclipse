@@ -37,6 +37,10 @@ namespace Eclipse.View
             characterButton.OnClickAsObservable()
                 .Subscribe(_ => _screens.Push(ScreenId.CharacterList).Forget())
                 .AddTo(this);
+
+            battleButton.OnClickAsObservable()
+                .Subscribe(_ => _viewModel.EnterBattleAsync().Forget())
+                .AddTo(this);
         }
 
         /// <summary>화면 진입 시 호출된다. 뷰모델 플래그로 각 메뉴의 활성 상태를 설정한다.</summary>

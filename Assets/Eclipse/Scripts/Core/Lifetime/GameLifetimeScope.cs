@@ -1,32 +1,17 @@
-using System;
-using System.Collections.Generic;
-using Eclipse.Data;
-using Eclipse.Domain;
 using Eclipse.Presentation;
-using Eclipse.Service;
 using Eclipse.View;
 using Eclipse.View.Infra;
-using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
 namespace Eclipse.Core
 {
     /// <summary>
-    /// 해당 프로젝트 LifeTimeScope
+    /// 아웃게임(MainScene) 씬 스코프. 씬 안에서만 사는 UI 매니저·ViewModel을 등록한다.
+    /// 씬 전환에도 유지되는 상태는 부모인 AppLifetimeScope가 보유한다.
     /// </summary>
     public class GameLifetimeScope : LifetimeScope
     {
-        // 더미 보유 캐릭터 한 항목(정의 + 시작 레벨). 인스펙터에서 채운다.
-        [Serializable]
-        private struct RosterEntry
-        {
-            public CharacterSO character;
-            public int level;
-        }
-
-        [SerializeField] private RosterEntry[] dummyRoster;
-
         protected override void Configure(IContainerBuilder builder)
         {
             base.Configure(builder);
@@ -37,22 +22,9 @@ namespace Eclipse.Core
             builder.RegisterComponentInHierarchy<PopupManager>();
             builder.RegisterComponentInHierarchy<CurrencyHudView>();
 
-            builder.RegisterInstance(BuildDummySave());
-            builder.Register<ISpriteProvider, DirectSpriteProvider>(Lifetime.Singleton);
-            builder.Register<CurrencyWallet>(Lifetime.Singleton);
-            builder.Register<NavigationContext>(Lifetime.Singleton);
             builder.Register<LobbyViewModel>(Lifetime.Singleton);
             builder.Register<CharacterListViewModel>(Lifetime.Singleton);
             builder.Register<CharacterDetailViewModel>(Lifetime.Transient);
-        }
-
-        /// <summary>인스펙터의 dummyRoster로 더미 PlayerSave를 만든다.</summary>
-        private PlayerSave BuildDummySave()
-        {
-            var owned = new List<OwnedCharacter>();
-            foreach (var entry in dummyRoster)
-                owned.Add(new OwnedCharacter(entry.character, entry.level));
-            return new PlayerSave(owned);
         }
     }
 }
