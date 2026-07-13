@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using Eclipse.Data;
 using Eclipse.Data.Enums;
 
@@ -30,24 +32,26 @@ namespace Eclipse.Domain
         /// <param name="actor">행동할 유닛.</param>
         /// <param name="allies">행동자 편의 유닛 목록(힐 발동 판정에 쓴다).</param>
         /// <param name="enemies">상대 편의 유닛 목록.</param>
-        /// <returns>사용할 스킬을 담은 행동(대상 미지정).</returns>
-        public BattleAction Decide(
+        /// <param name="ct">사용하지 않는다(규칙 판정은 대기 없이 즉시 완료된다). 계약 호환을 위해 받는다.</param>
+        /// <returns>사용할 스킬을 담은 행동(대상 미지정). 즉시 완료된 태스크로 반환한다.</returns>
+        public UniTask<BattleAction> DecideAsync(
             ICombatant actor,
             IReadOnlyList<ICombatant> allies,
-            IReadOnlyList<ICombatant> enemies)
+            IReadOnlyList<ICombatant> enemies,
+            CancellationToken ct)
         {
             var skills = actor.Skills;
 
             if (_useHealRule && AnyAllyBelowThreshold(allies)) // 1. 힐 사용을 해야할 경우
             {
                 var heal = ReadyHealSkill(skills);
-                if (heal != null) return new BattleAction(heal); // 힐 스킬이 있으면 실행
+                if (heal != null) return UniTask.FromResult(new BattleAction(heal)); // 힐 스킬이 있으면 실행
             }
 
             var strong = StrongestReadyOffensive(skills); // 강한 공격 스킬 순 (궁극기 -> 액티브 -> 기본공격)
-            if (strong != null) return new BattleAction(strong); // 공격
+            if (strong != null) return UniTask.FromResult(new BattleAction(strong)); // 공격
 
-            return new BattleAction(BasicSkill(skills)); // 없으면 기본 스킬
+            return UniTask.FromResult(new BattleAction(BasicSkill(skills))); // 없으면 기본 스킬
         }
 
         private bool AnyAllyBelowThreshold(IReadOnlyList<ICombatant> allies)

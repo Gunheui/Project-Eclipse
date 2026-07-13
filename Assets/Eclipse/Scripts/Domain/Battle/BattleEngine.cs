@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 
 namespace Eclipse.Domain
 {
@@ -48,8 +50,9 @@ namespace Eclipse.Domain
         /// 다음 행동자 한 명의 턴을 처리하고 처리 후의 전투 상태를 반환한다.
         /// 행동자 스킬 쿨 감소·스킬 실행·게이지 정산·행동 카운터 증가가 이 안에서 일어난다.
         /// </summary>
+        /// <param name="ct">행동 결정 대기 취소 토큰. 수동 입력을 기다리는 중 전투를 끊을 때 쓴다.</param>
         /// <returns>이 턴 처리 후의 전투 상태(진행/승리/패배).</returns>
-        public BattleOutcome AdvanceTurn()
+        public async UniTask<BattleOutcome> AdvanceTurnAsync(CancellationToken ct)
         {
             // 정상 진행 중이라면 스케줄러는 항상 생존 유닛을 준다.
             // null은 살아있는 유닛이 없는 퇴화 상태이므로 현재 생존 상황으로 판정한다.
@@ -67,7 +70,8 @@ namespace Eclipse.Domain
                 foreach (var skill in actor.Skills)
                     skill.Tick();
 
-                var action = ProviderFor(actor).Decide(actor, AlliesOf(actor), EnemiesOf(actor));
+                // 수동 프로바이더는 여기서 플레이어 입력이 올 때까지 대기한다(오토·적은 즉시 완료).
+                var action = await ProviderFor(actor).DecideAsync(actor, AlliesOf(actor), EnemiesOf(actor), ct);
                 if (action.Skill != null)
                 {
                     action.Skill.TryUse();
@@ -82,14 +86,16 @@ namespace Eclipse.Domain
         }
 
         /// <summary>
-        /// 전투가 끝날 때까지 턴을 반복 처리한다.
+        /// 전투가 끝날 때까지 턴을 반복 처리한다. 오토·헤드리스 진행용이며, UI가 매 턴 상태를
+        /// 갱신해야 하는 경우엔 대신 AdvanceTurnAsync를 턴 단위로 호출한다.
         /// </summary>
+        /// <param name="ct">행동 결정 대기 취소 토큰.</param>
         /// <returns>최종 전투 상태(승리 또는 패배).</returns>
-        public BattleOutcome Run()
+        public async UniTask<BattleOutcome> RunAsync(CancellationToken ct)
         {
             var outcome = BattleOutcome.Ongoing;
             while (outcome == BattleOutcome.Ongoing)
-                outcome = AdvanceTurn();
+                outcome = await AdvanceTurnAsync(ct);
             return outcome;
         }
 

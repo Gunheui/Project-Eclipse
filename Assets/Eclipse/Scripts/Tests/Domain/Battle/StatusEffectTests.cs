@@ -1,10 +1,14 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using Eclipse.Data;
 using Eclipse.Data.Enums;
 using Eclipse.Domain;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace Eclipse.Tests
 {
@@ -224,8 +228,8 @@ namespace Eclipse.Tests
 
         // --- 상태효과가 낀 전투도 시드 고정이면 결정적 ---
 
-        [Test]
-        public void 도트_스킬_전투도_같은_시드면_같은_결과()
+        [UnityTest]
+        public IEnumerator 도트_스킬_전투도_같은_시드면_같은_결과() => UniTask.ToCoroutine(async () =>
         {
             SkillSO Skill()
             {
@@ -262,11 +266,11 @@ namespace Eclipse.Tests
                 return new BattleEngine(allies, enemies, scheduler, executor, provider, provider, 200);
             }
 
-            var e1 = Build(); var o1 = e1.Run();
-            var e2 = Build(); var o2 = e2.Run();
+            var e1 = Build(); var o1 = await e1.RunAsync(CancellationToken.None);
+            var e2 = Build(); var o2 = await e2.RunAsync(CancellationToken.None);
 
             Assert.AreEqual(o1, o2, "같은 시드·편성은 같은 승패");
             Assert.AreEqual(e1.ActionCount, e2.ActionCount, "같은 시드·편성은 같은 행동 수");
-        }
+        });
     }
 }

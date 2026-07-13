@@ -2,7 +2,8 @@
     "name": "Eclipse.Domain",
     "rootNamespace": "Eclipse.Domain",
     "references": [
-        "Eclipse.Data"
+        "Eclipse.Data",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
