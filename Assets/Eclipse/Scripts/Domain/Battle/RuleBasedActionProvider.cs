@@ -34,7 +34,7 @@ namespace Eclipse.Domain
         /// <param name="enemies">상대 편의 유닛 목록.</param>
         /// <param name="ct">사용하지 않는다(규칙 판정은 대기 없이 즉시 완료된다). 계약 호환을 위해 받는다.</param>
         /// <returns>사용할 스킬을 담은 행동(대상 미지정). 즉시 완료된 태스크로 반환한다.</returns>
-        public UniTask<BattleAction> DecideAsync(
+        public UniTask<BattleAction> ChooseActionAsync(
             ICombatant actor,
             IReadOnlyList<ICombatant> allies,
             IReadOnlyList<ICombatant> enemies,

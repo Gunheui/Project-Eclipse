@@ -36,7 +36,7 @@ namespace Eclipse.Domain
         /// <param name="attacker">공격자 스탯(ATK·치명확률·치명배율 참조).</param>
         /// <param name="target">대상 스탯(DEF 참조).</param>
         /// <param name="skillPower">스킬계수(기본공격 1.0 등, 스킬 데이터).</param>
-        public DamageResult Compute(Stats attacker, Stats target, float skillPower)
+        public DamageResult ComputeDamage(Stats attacker, Stats target, float skillPower)
         {
             // [보류 H · 명중 판정] 빗나감 도입 시 파이프라인 맨 앞에서 rng로 판정해 miss면 조기 반환:
             //   if (_rng.NextFloat() >= hitChance) return new DamageResult(0, false, isMiss: true);

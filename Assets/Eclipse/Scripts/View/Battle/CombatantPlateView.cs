@@ -7,10 +7,10 @@ using UnityEngine.UI;
 namespace Eclipse.View
 {
     /// <summary>
-    /// 전투 HUD의 유닛 명판 하나. 대응하는 <see cref="BattleUnitViewModel"/>의 이름·HP·생존을 표시한다.
+    /// 전투 HUD의 유닛 명판 하나. 대응하는 <see cref="CombatantViewModel"/>의 이름·HP·생존을 표시한다.
     /// 명판은 씬에 고정 배치되며 전투 시작 시 Bind로 한 번 연결된다.
     /// </summary>
-    public class BattleUnitPlateView : MonoBehaviour
+    public class CombatantPlateView : MonoBehaviour
     {
         [SerializeField] private Image hpFill;
         [SerializeField] private TMP_Text nameLabel;
@@ -23,7 +23,7 @@ namespace Eclipse.View
         /// 이 명판을 한 유닛 VM에 연결한다. 이전 구독은 정리하고, 이름·HP 바·생존 흐리기를 새로 바인딩한다.
         /// </summary>
         /// <param name="unit">이 명판이 표시할 유닛 VM.</param>
-        public void Bind(BattleUnitViewModel unit)
+        public void Bind(CombatantViewModel unit)
         {
             _bindings.Clear();
             gameObject.SetActive(true);

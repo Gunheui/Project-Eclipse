@@ -22,7 +22,7 @@ namespace Eclipse.Presentation
             _auto = autoFallback;
         }
 
-        /// <summary> 오토 전투 여부. true면 DecideAsync가 규칙에 위임해 즉시 완료된다. </summary>
+        /// <summary> 오토 전투 여부. true면 ChooseActionAsync가 규칙에 위임해 즉시 완료된다. </summary>
         public bool AutoMode { get; set; }
 
         /// <summary> 지금 플레이어 입력을 기다리는 행동자. 대기 중이 아니면 null. </summary>
@@ -43,13 +43,13 @@ namespace Eclipse.Presentation
         /// <param name="enemies">상대 편의 유닛 목록.</param>
         /// <param name="ct">대기 취소 토큰. 취소되면 대기가 끊기고 태스크가 취소로 완료된다.</param>
         /// <returns>플레이어(또는 규칙)가 고른 스킬·대상을 담은 행동.</returns>
-        public UniTask<BattleAction> DecideAsync(
+        public UniTask<BattleAction> ChooseActionAsync(
             ICombatant actor,
             IReadOnlyList<ICombatant> allies,
             IReadOnlyList<ICombatant> enemies,
             CancellationToken ct)
         {
-            if (AutoMode) return _auto.DecideAsync(actor, allies, enemies, ct);
+            if (AutoMode) return _auto.ChooseActionAsync(actor, allies, enemies, ct);
 
             PendingActor = actor;
             _pending = new UniTaskCompletionSource<BattleAction>();
@@ -74,7 +74,7 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 플레이어가 스킬·대상을 골랐을 때 호출한다. 대기 중이던 DecideAsync를 그 행동으로 완료시킨다.
+        /// 플레이어가 스킬·대상을 골랐을 때 호출한다. 대기 중이던 ChooseActionAsync를 그 행동으로 완료시킨다.
         /// 대기 중이 아니면(오토이거나 행동자 턴이 아니면) 아무 일도 하지 않는다.
         /// </summary>
         /// <param name="skill">사용할 스킬.</param>

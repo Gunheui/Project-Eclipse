@@ -20,13 +20,13 @@ namespace Eclipse.Tests
             => new Stats { hp = hp, atk = atk, def = def, spd = spd, critRate = cr, critDamage = cd };
 
         // 스킬 없이 스탯만 가진 아군 유닛(상태효과 단위 테스트용).
-        private static BattleUnit Unit(Stats stats, int slot = 0)
+        private static Combatant Unit(Stats stats, int slot = 0)
         {
             var so = ScriptableObject.CreateInstance<CharacterSO>();
             so.displayName = "U";
             so.baseStats = stats;
             so.growthCurve = ScriptableObject.CreateInstance<GrowthCurve>(); // Lv1이라 스케일 없음
-            return BattleUnit.FromCharacter(new OwnedCharacter(so, 1), slot);
+            return Combatant.FromCharacter(new OwnedCharacter(so, 1), slot);
         }
 
         // --- 버프·디버프: 유효 스탯 반영 ---
@@ -249,15 +249,15 @@ namespace Eclipse.Tests
                 so.displayName = "A"; so.baseStats = S(500, 100, 20, 110, 0.3f, 2f);
                 so.growthCurve = ScriptableObject.CreateInstance<GrowthCurve>();
                 so.basicSkill = Skill();
-                var ally = BattleUnit.FromCharacter(new OwnedCharacter(so, 1), 0);
+                var ally = Combatant.FromCharacter(new OwnedCharacter(so, 1), 0);
 
                 var eso = ScriptableObject.CreateInstance<EnemySO>();
                 eso.displayName = "E"; eso.baseStats = S(400, 80, 10, 100);
                 eso.basicSkill = Skill();
-                var enemy = BattleUnit.FromEnemy(eso, 0);
+                var enemy = Combatant.FromEnemy(eso, 0);
 
-                var allies = new List<BattleUnit> { ally };
-                var enemies = new List<BattleUnit> { enemy };
+                var allies = new List<Combatant> { ally };
+                var enemies = new List<Combatant> { enemy };
                 var scheduler = new AtbTurnScheduler(allies.Concat(enemies));
                 var pipeline = new DamagePipeline(1f, 0.95f, 1.05f, new SeededRandom(777));
                 var executor = new SkillExecutor(new CombatPipeline(pipeline), new TargetResolver());

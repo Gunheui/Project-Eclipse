@@ -5,7 +5,7 @@ namespace Eclipse.Domain
 {
     /// <summary>
     /// 캐릭터 정의와 레벨로부터 현재 스탯을 계산하는 도메인 서비스.
-    /// 표시(상세 화면)와 전투(BattleUnit)가 같은 공식을 공유한다.
+    /// 표시(상세 화면)와 전투(Combatant)가 같은 공식을 공유한다.
     /// </summary>
     public static class CharacterStats
     {

@@ -24,4 +24,4 @@ MonoBehaviour:
   basicSkill: {fileID: 11400000, guid: a2e1aef5073874263b71b9a4e6cd83f2, type: 2}
   normalSkill: {fileID: 0}
   ultimateSkill: {fileID: 0}
-  battlerAssetRef: {fileID: 0}
+  battlerAssetRef: {fileID: -4770610673548522563, guid: ec7aa8ff929794709a690e9eb7671402, type: 3}

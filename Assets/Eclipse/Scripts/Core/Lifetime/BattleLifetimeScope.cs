@@ -56,18 +56,25 @@ namespace Eclipse.Core
             var save = container.Resolve<PlayerSave>();
 
             // TODO: 편성(파티 구성) UI가 생기면 로스터 앞 4명이 아니라 선택된 파티로 교체한다.
-            var allies = save.OwnedCharacters
-                .Take(PartySize)
-                .Select((owned, slot) => BattleUnit.FromCharacter(owned, slot))
+            var ownedParty = save.OwnedCharacters.Take(PartySize).ToList();
+            var enemyParty = enemies.Take(PartySize).ToList();
+
+            var allies = ownedParty
+                .Select((owned, slot) => Combatant.FromCharacter(owned, slot))
                 .ToList();
-            var enemyUnits = enemies
-                .Take(PartySize)
-                .Select((so, slot) => BattleUnit.FromEnemy(so, slot))
+            var enemyUnits = enemyParty
+                .Select((so, slot) => Combatant.FromEnemy(so, slot))
                 .ToList();
+
+            // 배틀러 스프라이트는 도메인이 아닌 정의 SO에서 뽑아 VM 경계로 넘긴다(아군 초상·적 배틀러).
+            var allyBattlers = ownedParty.Select(owned => owned.Definition.portraitAssetRef).ToList();
+            var enemyBattlers = enemyParty.Select(so => so.battlerAssetRef).ToList();
 
             return new BattleViewModel(
                 allies,
                 enemyUnits,
+                allyBattlers,
+                enemyBattlers,
                 container.Resolve<SkillExecutor>(),
                 battleConstants.globalActionCap,
                 startAuto,

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ using Eclipse.Domain;
 using Eclipse.Presentation;
 using Eclipse.Service;
 using NUnit.Framework;
+using R3;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -34,23 +36,23 @@ namespace Eclipse.Tests
             return s;
         }
 
-        private static BattleUnit Ally(string name, int slot, Stats stats)
+        private static Combatant Ally(string name, int slot, Stats stats)
         {
             var so = ScriptableObject.CreateInstance<CharacterSO>();
             so.displayName = name;
             so.baseStats = stats;
             so.growthCurve = ScriptableObject.CreateInstance<GrowthCurve>();
             so.basicSkill = Skill(name + "_b", 0, 1f);
-            return BattleUnit.FromCharacter(new OwnedCharacter(so, 1), slot);
+            return Combatant.FromCharacter(new OwnedCharacter(so, 1), slot);
         }
 
-        private static BattleUnit Enemy(string name, int slot, Stats stats)
+        private static Combatant Enemy(string name, int slot, Stats stats)
         {
             var so = ScriptableObject.CreateInstance<EnemySO>();
             so.displayName = name;
             so.baseStats = stats;
             so.basicSkill = Skill(name + "_b", 0, 1f);
-            return BattleUnit.FromEnemy(so, slot);
+            return Combatant.FromEnemy(so, slot);
         }
 
         private static SkillExecutor Executor(int seed)
@@ -62,9 +64,10 @@ namespace Eclipse.Tests
             public UniTask ToMainAsync() => UniTask.CompletedTask;
         }
 
-        private static BattleViewModel Vm(BattleUnit ally, BattleUnit enemy, bool startAuto)
+        private static BattleViewModel Vm(Combatant ally, Combatant enemy, bool startAuto)
             => new BattleViewModel(
-                new List<BattleUnit> { ally }, new List<BattleUnit> { enemy },
+                new List<Combatant> { ally }, new List<Combatant> { enemy },
+                new Sprite[] { null }, new Sprite[] { null },
                 Executor(1), actionCap: 200, startAuto: startAuto, new FakeSceneFlow());
 
         // --- 수동 프로바이더: Submit 전엔 대기, Submit하면 그 행동으로 완료 ---
@@ -76,7 +79,7 @@ namespace Eclipse.Tests
             var enemy = Enemy("E", 0, S(1000, 10, 0, 90));
             var provider = new ManualActionProvider(new RuleBasedActionProvider(0.4f, useHealRule: true)) { AutoMode = false };
 
-            var task = provider.DecideAsync(actor, new List<ICombatant> { actor }, new List<ICombatant> { enemy }, CancellationToken.None);
+            var task = provider.ChooseActionAsync(actor, new List<ICombatant> { actor }, new List<ICombatant> { enemy }, CancellationToken.None);
             Assert.AreEqual(UniTaskStatus.Pending, task.Status, "Submit 전에는 완료되지 않는다");
             Assert.AreSame(actor, provider.PendingActor, "대기 중인 행동자가 노출된다");
 
@@ -97,7 +100,7 @@ namespace Eclipse.Tests
             var enemy = Enemy("E", 0, S(1000, 10, 0, 90));
             var provider = new ManualActionProvider(new RuleBasedActionProvider(0.4f, useHealRule: true)) { AutoMode = true };
 
-            var action = await provider.DecideAsync(actor, new List<ICombatant> { actor }, new List<ICombatant> { enemy }, CancellationToken.None);
+            var action = await provider.ChooseActionAsync(actor, new List<ICombatant> { actor }, new List<ICombatant> { enemy }, CancellationToken.None);
 
             Assert.AreSame(actor.Skills[0], action.Skill, "규칙이 기본공격을 고른다");
         });
@@ -111,15 +114,15 @@ namespace Eclipse.Tests
             var enemy = Enemy("적", 0, S(3000, 10, 0, 50));
             var vm = Vm(ally, enemy, startAuto: false);
 
-            vm.StartAsync(CancellationToken.None).Forget(); // 첫 아군 턴에서 입력 대기까지 동기 진행
+            vm.RunBattleAsync(null, CancellationToken.None).Forget(); // 첫 아군 턴에서 입력 대기까지 동기 진행
 
-            Assert.IsNotNull(vm.ActingUnit.CurrentValue, "수동 아군 턴이면 ActingUnit이 세워진다");
-            Assert.AreSame(vm.Units.First(u => u.IsAlly), vm.ActingUnit.CurrentValue, "행동자는 아군 명판");
+            Assert.IsNotNull(vm.ActingCombatant.CurrentValue, "수동 아군 턴이면 ActingCombatant이 세워진다");
+            Assert.AreSame(vm.Combatants.First(u => u.IsAlly), vm.ActingCombatant.CurrentValue, "행동자는 아군 명판");
 
             int hpBefore = enemy.CurrentHp;
             int actionsBefore = vm.ActionCount.CurrentValue;
-            var acting = vm.ActingUnit.CurrentValue;
-            var enemyPlate = vm.Units.First(u => !u.IsAlly);
+            var acting = vm.ActingCombatant.CurrentValue;
+            var enemyPlate = vm.Combatants.First(u => !u.IsAlly);
 
             vm.Submit(acting.Skills[0], enemyPlate); // 기본공격으로 적 타격
 
@@ -139,12 +142,83 @@ namespace Eclipse.Tests
             var enemy = Enemy("약졸", 0, S(200, 10, 0, 100));
             var vm = Vm(ally, enemy, startAuto: true);
 
-            await vm.StartAsync(CancellationToken.None); // 오토라 대기 없이 완주
+            await vm.RunBattleAsync(null, CancellationToken.None); // 오토라 대기 없이 완주
 
             Assert.AreEqual(BattleResult.Victory, vm.Result.CurrentValue);
             Assert.Greater(vm.ActionCount.CurrentValue, 0);
 
             vm.Dispose();
+        });
+
+        // --- 배속 불변 회귀: 연출 시간이 달라도 같은 시드면 전투 결과가 완전히 동일 (DoD#4) ---
+        // 배속이 흐르는 유일한 통로는 RunBattleAsync의 playTurnAnimation(연출 대기)이고, speed는 Domain에
+        // 존재하지 않는다. 같은 전투를 이 연출 콜백만 바꿔 여러 번 돌려 결과 지문이 동일함을 못박는다.
+
+        // 한 판의 결정적 지문: 최종 결과·행동 수 + 턴마다 찍은 전 유닛 HP 스냅샷.
+        private sealed class BattleTrace
+        {
+            public BattleResult Result;
+            public int ActionCount;
+            public readonly List<int[]> HpPerTurn = new();
+        }
+
+        // 연출 seam(배속이 흐르는 유일한 통로)을 흉내내는 가짜 턴 애니메이션. cost만큼 인위적 부하를
+        // 태우고 동기 완료한다. 도메인 상태엔 닿지 않으므로(핸들을 받지도 돌려주지도 않음) cost가
+        // 얼마든 도메인 트레이스는 불변이어야 한다. 실기의 배속은 이 콜백이 소비하는 시간을 나눌 뿐이다.
+        private static Func<CancellationToken, UniTask> FakeAnimation(int cost)
+            => ct =>
+            {
+                for (int i = 0; i < cost; i++)
+                    ct.ThrowIfCancellationRequested();
+                return UniTask.CompletedTask;
+            };
+
+        // 오토 전투 한 판을 끝까지 돌리고 지문을 수집한다. playTurnAnimation이 배속에 해당하는 seam.
+        private static async UniTask<BattleTrace> RunAutoBattleAsync(
+            int seed, Func<CancellationToken, UniTask> playTurnAnimation)
+        {
+            var ally = Ally("아군", 0, S(2000, 300, 20, 150));
+            var enemy = Enemy("적", 0, S(1500, 120, 10, 120));
+            var vm = new BattleViewModel(
+                new List<Combatant> { ally }, new List<Combatant> { enemy },
+                new Sprite[] { null }, new Sprite[] { null },
+                Executor(seed), actionCap: 200, startAuto: true, new FakeSceneFlow());
+
+            var trace = new BattleTrace();
+            // ActionCount는 턴마다 갱신(증가)되므로 턴 신호 대용. 그때의 전 유닛 HP를 함께 찍는다.
+            using var sub = vm.ActionCount.Subscribe(_ =>
+                trace.HpPerTurn.Add(vm.Combatants.Select(u => u.CurrentHp.CurrentValue).ToArray()));
+
+            await vm.RunBattleAsync(playTurnAnimation, CancellationToken.None);
+
+            trace.Result = vm.Result.CurrentValue;
+            trace.ActionCount = vm.ActionCount.CurrentValue;
+            vm.Dispose();
+            return trace;
+        }
+
+        private static void AssertSameTrace(BattleTrace expected, BattleTrace actual, string speedLabel)
+        {
+            Assert.AreEqual(expected.Result, actual.Result, $"{speedLabel}: 결과가 같다");
+            Assert.AreEqual(expected.ActionCount, actual.ActionCount, $"{speedLabel}: 행동 수가 같다");
+            Assert.AreEqual(expected.HpPerTurn.Count, actual.HpPerTurn.Count, $"{speedLabel}: 턴 수가 같다");
+            for (int t = 0; t < expected.HpPerTurn.Count; t++)
+                CollectionAssert.AreEqual(expected.HpPerTurn[t], actual.HpPerTurn[t],
+                    $"{speedLabel}: {t}번째 턴 HP 스냅샷이 같다");
+        }
+
+        [UnityTest]
+        public IEnumerator 배속이_달라도_같은_시드면_전투_결과가_불변() => UniTask.ToCoroutine(async () =>
+        {
+            const int seed = 4242;
+
+            var instant = await RunAutoBattleAsync(seed, playTurnAnimation: null); // 연출 없음(무한 배속)
+            var oneX = await RunAutoBattleAsync(seed, FakeAnimation(cost: 4));      // 1x(연출 부하 큼)
+            var twoX = await RunAutoBattleAsync(seed, FakeAnimation(cost: 2));      // 2x(연출 부하 작음)
+
+            // 세 경우 모두 지문이 완전 일치 → 데미지·크리·행동 순서가 연출 seam에 불변임을 못박는다.
+            AssertSameTrace(instant, oneX, "1x");
+            AssertSameTrace(instant, twoX, "2x");
         });
     }
 }

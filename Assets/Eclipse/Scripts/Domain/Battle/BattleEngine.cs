@@ -12,8 +12,8 @@ namespace Eclipse.Domain
     /// </summary>
     public class BattleEngine
     {
-        private readonly List<BattleUnit> _allies;
-        private readonly List<BattleUnit> _enemies;
+        private readonly List<Combatant> _allies;
+        private readonly List<Combatant> _enemies;
         private readonly ITurnScheduler _scheduler;
         private readonly SkillExecutor _executor;
         private readonly IActionProvider _allyProvider;
@@ -30,7 +30,7 @@ namespace Eclipse.Domain
         /// <param name="enemyProvider">적 유닛의 행동 결정 주체(적 AI).</param>
         /// <param name="actionCap">전장 누적 행동 상한. 넘으면 미클리어(패배) 처리한다.</param>
         public BattleEngine(
-            List<BattleUnit> allies, List<BattleUnit> enemies,
+            List<Combatant> allies, List<Combatant> enemies,
             ITurnScheduler scheduler, SkillExecutor executor,
             IActionProvider allyProvider, IActionProvider enemyProvider, int actionCap)
         {
@@ -46,6 +46,9 @@ namespace Eclipse.Domain
         /// <summary> 지금까지 실행된 누적 행동 수. </summary>
         public int ActionCount => _actionCount;
 
+        /// <summary> 직전에 행동한 유닛. 연출이 시전 주체를 아는 데 쓴다. 아직 한 턴도 안 지났으면 null. </summary>
+        public ICombatant LastActor { get; private set; }
+
         /// <summary>
         /// 다음 행동자 한 명의 턴을 처리하고 처리 후의 전투 상태를 반환한다.
         /// 행동자 스킬 쿨 감소·스킬 실행·게이지 정산·행동 카운터 증가가 이 안에서 일어난다.
@@ -58,24 +61,21 @@ namespace Eclipse.Domain
             // null은 살아있는 유닛이 없는 퇴화 상태이므로 현재 생존 상황으로 판정한다.
             var actor = _scheduler.GetNextActor();
             if (actor == null) return Evaluate();
+            LastActor = actor;
 
-            // 턴 시작: 자기 도트·리젠 적용, 붙어 있는 효과의 지속턴 감소, 만료 정리.
-            // 이 전투의 행동자는 항상 BattleUnit이다(스케줄러는 읽기용 ICombatant만 반환).
-            ((BattleUnit)actor).TickStatusEffects();
+            // 턴 시작 정산: 자기 도트·리젠 적용, 효과 지속턴 감소·만료 정리, 생존 시 스킬 쿨 감소.
+            // 이 전투의 행동자는 항상 Combatant이다(스케줄러는 읽기용 ICombatant만 반환).
+            ((Combatant)actor).OnTurnStart();
 
             // 도트로 쓰러졌으면 행동하지 않고 턴만 정산한다.
             if (actor.IsAlive)
             {
-                // 행동자 자기 스킬의 남은 쿨을 1 줄인다.
-                foreach (var skill in actor.Skills)
-                    skill.Tick();
-
                 // 수동 프로바이더는 여기서 플레이어 입력이 올 때까지 대기한다(오토·적은 즉시 완료).
-                var action = await ProviderFor(actor).DecideAsync(actor, AlliesOf(actor), EnemiesOf(actor), ct);
+                var action = await ProviderFor(actor).ChooseActionAsync(actor, AlliesOf(actor), EnemiesOf(actor), ct);
                 if (action.Skill != null)
                 {
                     action.Skill.TryUse();
-                    _executor.Execute(actor, action.Skill, action.Target, AlliesOf(actor), EnemiesOf(actor));
+                    _executor.ApplySkill(actor, action.Skill, action.Target, AlliesOf(actor), EnemiesOf(actor));
                 }
             }
 
@@ -111,7 +111,7 @@ namespace Eclipse.Domain
             return BattleOutcome.Ongoing;
         }
 
-        // 행동자 관점의 아군/적 목록. IReadOnlyList 공변성으로 BattleUnit 목록을 그대로 넘긴다.
+        // 행동자 관점의 아군/적 목록. IReadOnlyList 공변성으로 Combatant 목록을 그대로 넘긴다.
         private IReadOnlyList<ICombatant> AlliesOf(ICombatant actor)
             => actor.Team == Team.Ally ? (IReadOnlyList<ICombatant>)_allies : _enemies;
 

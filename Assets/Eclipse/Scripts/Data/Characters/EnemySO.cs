@@ -5,7 +5,7 @@ namespace Eclipse.Data
     /// <summary>
     /// 적 유닛의 정의 데이터. 스테이지에 배치되는 고정 스탯과 스킬 슬롯을 담는다.
     /// 성장곡선·등급·획득 경로가 없다는 점에서 <see cref="CharacterSO"/>와 구분되며,
-    /// 전투 런타임(BattleUnit)은 아군 정의와 공유한다. AI 프로파일은 스테이지가 지정한다.
+    /// 전투 런타임(Combatant)은 아군 정의와 공유한다. AI 프로파일은 스테이지가 지정한다.
     /// </summary>
     [CreateAssetMenu(menuName = "Eclipse/Characters/Enemy Data")]
     public class EnemySO : ScriptableObject

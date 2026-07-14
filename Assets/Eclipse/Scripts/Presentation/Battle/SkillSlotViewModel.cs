@@ -35,7 +35,7 @@ namespace Eclipse.Presentation
         /// <summary> 지금 사용 가능한지. 버튼 활성/비활성 바인딩용. 턴마다 갱신. </summary>
         public ReadOnlyReactiveProperty<bool> IsReady { get; }
 
-        /// <summary> 파생 프로퍼티의 구독을 해지한다. 소유자(BattleUnitViewModel)가 호출한다. </summary>
+        /// <summary> 파생 프로퍼티의 구독을 해지한다. 소유자(CombatantViewModel)가 호출한다. </summary>
         public void Dispose()
         {
             Cooldown.Dispose();

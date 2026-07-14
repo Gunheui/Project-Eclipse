@@ -8,7 +8,9 @@
         "VContainer",
         "UnityEngine.UI",
         "Unity.TextMeshPro",
-        "UniTask"
+        "UniTask",
+        "DOTween.Modules",
+        "UniTask.DOTween"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

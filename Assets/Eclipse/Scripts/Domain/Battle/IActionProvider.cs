@@ -20,7 +20,7 @@ namespace Eclipse.Domain
         /// <param name="enemies">상대 편의 유닛 목록.</param>
         /// <param name="ct">대기 취소 토큰(전투 이탈·씬 언로드 시 대기를 끊는다).</param>
         /// <returns>사용할 스킬과 (있으면) 지정 대상. 쓸 스킬이 없으면 Skill이 null.</returns>
-        UniTask<BattleAction> DecideAsync(
+        UniTask<BattleAction> ChooseActionAsync(
             ICombatant actor,
             IReadOnlyList<ICombatant> allies,
             IReadOnlyList<ICombatant> enemies,

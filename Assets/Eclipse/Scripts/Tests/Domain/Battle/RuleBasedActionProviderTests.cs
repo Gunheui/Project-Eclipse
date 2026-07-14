@@ -57,7 +57,7 @@ namespace Eclipse.Tests
             var actor = Unit(hp: 30, maxHp: 100, basic, heal); // 30% < 40% 임계
             var provider = new RuleBasedActionProvider(0.4f, useHealRule: true);
 
-            var action = await provider.DecideAsync(actor, new List<ICombatant> { actor }, NoEnemies, CancellationToken.None);
+            var action = await provider.ChooseActionAsync(actor, new List<ICombatant> { actor }, NoEnemies, CancellationToken.None);
 
             Assert.AreSame(heal, action.Skill);
         });
@@ -71,7 +71,7 @@ namespace Eclipse.Tests
             var actor = Unit(hp: 100, maxHp: 100, basic, normal, heal); // 위급 아님
             var provider = new RuleBasedActionProvider(0.4f, useHealRule: true);
 
-            var action = await provider.DecideAsync(actor, new List<ICombatant> { actor }, NoEnemies, CancellationToken.None);
+            var action = await provider.ChooseActionAsync(actor, new List<ICombatant> { actor }, NoEnemies, CancellationToken.None);
 
             Assert.AreSame(normal, action.Skill); // 힐(슬롯 상위)이 아니라 공격 액티브
         });
@@ -84,7 +84,7 @@ namespace Eclipse.Tests
             var actor = Unit(hp: 100, maxHp: 100, basic, normal);
             var provider = new RuleBasedActionProvider(0.4f, useHealRule: true);
 
-            var action = await provider.DecideAsync(actor, new List<ICombatant> { actor }, NoEnemies, CancellationToken.None);
+            var action = await provider.ChooseActionAsync(actor, new List<ICombatant> { actor }, NoEnemies, CancellationToken.None);
 
             Assert.AreSame(basic, action.Skill);
         });
@@ -97,7 +97,7 @@ namespace Eclipse.Tests
             var actor = Unit(hp: 10, maxHp: 100, basic, heal); // 위급하지만
             var provider = new RuleBasedActionProvider(0.4f, useHealRule: false); // 힐 규칙 off
 
-            var action = await provider.DecideAsync(actor, new List<ICombatant> { actor }, NoEnemies, CancellationToken.None);
+            var action = await provider.ChooseActionAsync(actor, new List<ICombatant> { actor }, NoEnemies, CancellationToken.None);
 
             Assert.AreSame(basic, action.Skill); // 힐 아님
         });
@@ -109,7 +109,7 @@ namespace Eclipse.Tests
             var actor = Unit(hp: 100, maxHp: 100, basic);
             var provider = new RuleBasedActionProvider(0.4f, useHealRule: true);
 
-            var action = await provider.DecideAsync(actor, new List<ICombatant> { actor }, NoEnemies, CancellationToken.None);
+            var action = await provider.ChooseActionAsync(actor, new List<ICombatant> { actor }, NoEnemies, CancellationToken.None);
 
             Assert.IsNull(action.Target); // 오토는 대상 미지정 → selector가 결정
         });

@@ -37,7 +37,7 @@ namespace Eclipse.Domain
         }
 
         /// <summary> 라운드마다 호출해 남은 쿨을 1 줄인다(0 밑으로는 내려가지 않음). </summary>
-        public void Tick()
+        public void ReduceCooldown()
         {
             if (IsReady) return;
             

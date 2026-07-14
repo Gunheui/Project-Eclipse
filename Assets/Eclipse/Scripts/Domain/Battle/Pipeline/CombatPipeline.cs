@@ -26,7 +26,7 @@ namespace Eclipse.Domain
         /// <param name="power">스킬 배율(공격자 ATK에 곱해지는 값).</param>
         /// <returns>최종 피해량·치명 여부를 담은 결과.</returns>
         public DamageResult ComputeDamage(Stats attacker, Stats target, float power)
-            => _damage.Compute(attacker, target, power);
+            => _damage.ComputeDamage(attacker, target, power);
 
         /// <summary>
         /// 시전자 ATK와 배율로 회복량을 계산한다(경감·치명·변동 없음, 최소 1).

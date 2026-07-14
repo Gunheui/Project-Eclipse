@@ -32,7 +32,7 @@ namespace Eclipse.Tests
             return s;
         }
 
-        private static BattleUnit Ally(string name, int slot, Stats stats, SkillSO basic, SkillSO normal = null)
+        private static Combatant Ally(string name, int slot, Stats stats, SkillSO basic, SkillSO normal = null)
         {
             var so = ScriptableObject.CreateInstance<CharacterSO>();
             so.displayName = name;
@@ -40,22 +40,22 @@ namespace Eclipse.Tests
             so.growthCurve = ScriptableObject.CreateInstance<GrowthCurve>(); // Lv1이라 스케일 없음
             so.basicSkill = basic;
             so.normalSkill = normal;
-            return BattleUnit.FromCharacter(new OwnedCharacter(so, 1), slot);
+            return Combatant.FromCharacter(new OwnedCharacter(so, 1), slot);
         }
 
-        private static BattleUnit Enemy(string name, int slot, Stats stats, SkillSO basic)
+        private static Combatant Enemy(string name, int slot, Stats stats, SkillSO basic)
         {
             var so = ScriptableObject.CreateInstance<EnemySO>();
             so.displayName = name;
             so.baseStats = stats;
             so.basicSkill = basic;
-            return BattleUnit.FromEnemy(so, slot);
+            return Combatant.FromEnemy(so, slot);
         }
 
         // 아군 오토와 적 AI가 같은 규칙 정책을 공유한다(임계 40%·힐 on). 편별로 인스턴스만 따로 넣는다.
         private static IActionProvider RuleProvider() => new RuleBasedActionProvider(0.4f, useHealRule: true);
 
-        private static BattleEngine Engine(List<BattleUnit> allies, List<BattleUnit> enemies, int seed, int cap)
+        private static BattleEngine Engine(List<Combatant> allies, List<Combatant> enemies, int seed, int cap)
         {
             var scheduler = new AtbTurnScheduler(allies.Concat(enemies));
             var pipeline = new DamagePipeline(1f, 0.95f, 1.05f, new SeededRandom(seed));
@@ -68,8 +68,8 @@ namespace Eclipse.Tests
         [UnityTest]
         public IEnumerator 강한_파티는_행동상한_내_승리() => UniTask.ToCoroutine(async () =>
         {
-            var allies = new List<BattleUnit> { Ally("전사", 0, S(2000, 500, 0, 100), Skill("b", 0, Dmg(1f, TargetSelector.LowestHpEnemy))) };
-            var enemies = new List<BattleUnit> { Enemy("고블린", 0, S(100, 10, 0, 90), Skill("eb", 0, Dmg(1f, TargetSelector.LowestHpEnemy))) };
+            var allies = new List<Combatant> { Ally("전사", 0, S(2000, 500, 0, 100), Skill("b", 0, Dmg(1f, TargetSelector.LowestHpEnemy))) };
+            var enemies = new List<Combatant> { Enemy("고블린", 0, S(100, 10, 0, 90), Skill("eb", 0, Dmg(1f, TargetSelector.LowestHpEnemy))) };
             var engine = Engine(allies, enemies, seed: 1, cap: 200);
 
             Assert.AreEqual(BattleOutcome.Victory, await engine.RunAsync(CancellationToken.None));
@@ -79,8 +79,8 @@ namespace Eclipse.Tests
         [UnityTest]
         public IEnumerator 약한_파티는_전멸로_패배() => UniTask.ToCoroutine(async () =>
         {
-            var allies = new List<BattleUnit> { Ally("견습", 0, S(100, 10, 0, 90), Skill("b", 0, Dmg(1f, TargetSelector.LowestHpEnemy))) };
-            var enemies = new List<BattleUnit> { Enemy("오우거", 0, S(2000, 500, 0, 100), Skill("eb", 0, Dmg(1f, TargetSelector.LowestHpEnemy))) };
+            var allies = new List<Combatant> { Ally("견습", 0, S(100, 10, 0, 90), Skill("b", 0, Dmg(1f, TargetSelector.LowestHpEnemy))) };
+            var enemies = new List<Combatant> { Enemy("오우거", 0, S(2000, 500, 0, 100), Skill("eb", 0, Dmg(1f, TargetSelector.LowestHpEnemy))) };
             var engine = Engine(allies, enemies, seed: 1, cap: 200);
 
             Assert.AreEqual(BattleOutcome.Defeat, await engine.RunAsync(CancellationToken.None));
@@ -89,8 +89,8 @@ namespace Eclipse.Tests
         [UnityTest]
         public IEnumerator 아무도_못죽이면_행동상한_초과로_패배() => UniTask.ToCoroutine(async () =>
         {
-            var allies = new List<BattleUnit> { Ally("벽A", 0, S(100000, 1, 0, 100), Skill("b", 0, Dmg(0.0001f, TargetSelector.LowestHpEnemy))) };
-            var enemies = new List<BattleUnit> { Enemy("벽B", 0, S(100000, 1, 0, 100), Skill("eb", 0, Dmg(0.0001f, TargetSelector.LowestHpEnemy))) };
+            var allies = new List<Combatant> { Ally("벽A", 0, S(100000, 1, 0, 100), Skill("b", 0, Dmg(0.0001f, TargetSelector.LowestHpEnemy))) };
+            var enemies = new List<Combatant> { Enemy("벽B", 0, S(100000, 1, 0, 100), Skill("eb", 0, Dmg(0.0001f, TargetSelector.LowestHpEnemy))) };
             var engine = Engine(allies, enemies, seed: 1, cap: 5);
 
             Assert.AreEqual(BattleOutcome.Defeat, await engine.RunAsync(CancellationToken.None));
@@ -108,7 +108,7 @@ namespace Eclipse.Tests
             var basicSkill = Skill("b", 0, Dmg(0.0001f, TargetSelector.LowestHpEnemy));
             var ally = Ally("힐러", 0, S(100000, 100, 0, 10000), basicSkill, normalSkill);
             var enemy = Enemy("벽", 0, S(1000000, 1, 0, 1), Skill("eb", 0, Dmg(0.0001f, TargetSelector.LowestHpEnemy)));
-            var engine = Engine(new List<BattleUnit> { ally }, new List<BattleUnit> { enemy }, seed: 1, cap: 1000);
+            var engine = Engine(new List<Combatant> { ally }, new List<Combatant> { enemy }, seed: 1, cap: 1000);
 
             var basic = ally.Skills[0];  // 쿨 0
             var normal = ally.Skills[1]; // 쿨 2
@@ -132,8 +132,8 @@ namespace Eclipse.Tests
         [UnityTest]
         public IEnumerator 같은_시드_같은_편성은_같은_결과와_행동수() => UniTask.ToCoroutine(async () =>
         {
-            List<BattleUnit> Allies() => new List<BattleUnit> { Ally("A", 0, S(500, 100, 20, 110, cr: 0.3f, cd: 2f), Skill("b", 0, Dmg(1f, TargetSelector.LowestHpEnemy))) };
-            List<BattleUnit> Enemies() => new List<BattleUnit> { Enemy("E", 0, S(400, 80, 10, 100, cr: 0.3f, cd: 2f), Skill("eb", 0, Dmg(1f, TargetSelector.LowestHpEnemy))) };
+            List<Combatant> Allies() => new List<Combatant> { Ally("A", 0, S(500, 100, 20, 110, cr: 0.3f, cd: 2f), Skill("b", 0, Dmg(1f, TargetSelector.LowestHpEnemy))) };
+            List<Combatant> Enemies() => new List<Combatant> { Enemy("E", 0, S(400, 80, 10, 100, cr: 0.3f, cd: 2f), Skill("eb", 0, Dmg(1f, TargetSelector.LowestHpEnemy))) };
 
             var e1 = Engine(Allies(), Enemies(), seed: 777, cap: 200);
             var o1 = await e1.RunAsync(CancellationToken.None);
@@ -157,7 +157,7 @@ namespace Eclipse.Tests
             eso.displayName = "E"; eso.baseStats = S(100, 10, 0, 100);
             eso.basicSkill = Skill("eb", 0, Dmg(1f, TargetSelector.LowestHpEnemy));
             eso.normalSkill = Skill("en", 2, Dmg(1f, TargetSelector.LowestHpEnemy));
-            var enemy = BattleUnit.FromEnemy(eso, 0);
+            var enemy = Combatant.FromEnemy(eso, 0);
 
             // 아군: 기본·일반 모두 시작부터 준비.
             Assert.IsTrue(ally.Skills[0].IsReady);

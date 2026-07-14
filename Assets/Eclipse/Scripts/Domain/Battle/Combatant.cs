@@ -11,7 +11,7 @@ namespace Eclipse.Domain
     /// 현재 HP·스킬 잔여 쿨 등 전투 중 변하는 상태를 보유한다.
     /// 정의는 여러 유닛이 공유하고, 이 런타임 상태는 유닛별로 독립이다.
     /// </summary>
-    public class BattleUnit : ICombatant, IDamageable
+    public class Combatant : ICombatant, IDamageable
     {
         private readonly Stats _baseStats;
         private readonly List<SkillRuntime> _skills;
@@ -75,6 +75,19 @@ namespace Eclipse.Domain
         }
 
         /// <summary>
+        /// 이 유닛의 자기 턴이 시작될 때 호출한다. 도트·리젠·지속턴 정산(TickStatusEffects)을 먼저 하고,
+        /// 그 정산으로 쓰러지지 않았다면 보유 스킬의 잔여 쿨을 1씩 줄인다.
+        /// 도트로 죽은 턴에는 스킬 쿨을 감소시키지 않는다(행동하지 못하므로).
+        /// </summary>
+        public void OnTurnStart()
+        {
+            TickStatusEffects();
+            if (!IsAlive) return;
+            foreach (var skill in _skills)
+                skill.ReduceCooldown();
+        }
+
+        /// <summary>
         /// 이 유닛의 자기 턴에 호출한다. 붙어 있는 도트·리젠을 HP에 적용하고, 모든 효과의 지속턴을 1 줄인 뒤,
         /// 만료된 효과(지속턴 0)와 소진된 실드를 제거한다. 도트는 ApplyDamage를 거치므로 자기 실드에 먼저 흡수된다.
         /// </summary>
@@ -95,7 +108,7 @@ namespace Eclipse.Domain
             _effects.RemoveAll(e => e.IsExpired);
         }
 
-        private BattleUnit(string displayName, Team team, int slotIndex, Stats baseStats, List<SkillRuntime> skills)
+        private Combatant(string displayName, Team team, int slotIndex, Stats baseStats, List<SkillRuntime> skills)
         {
             DisplayName = displayName;
             Team = team;
@@ -111,12 +124,12 @@ namespace Eclipse.Domain
         /// </summary>
         /// <param name="owned">보유 캐릭터(정의·레벨).</param>
         /// <param name="slotIndex">편성 슬롯 번호(0부터).</param>
-        public static BattleUnit FromCharacter(OwnedCharacter owned, int slotIndex)
+        public static Combatant FromCharacter(OwnedCharacter owned, int slotIndex)
         {
             var def = owned.Definition;
             var stats = CharacterStats.ScaleToLevel(def, owned.Level);
             var skills = BuildSkills(false, def.basicSkill, def.normalSkill, def.ultimateSkill);
-            return new BattleUnit(def.displayName, Team.Ally, slotIndex, stats, skills);
+            return new Combatant(def.displayName, Team.Ally, slotIndex, stats, skills);
         }
 
         /// <summary>
@@ -124,33 +137,29 @@ namespace Eclipse.Domain
         /// </summary>
         /// <param name="enemy">적 정의.</param>
         /// <param name="slotIndex">편성 슬롯 번호(0부터).</param>
-        public static BattleUnit FromEnemy(EnemySO enemy, int slotIndex)
+        public static Combatant FromEnemy(EnemySO enemy, int slotIndex)
         {
             var skills = BuildSkills(true, enemy.basicSkill, enemy.normalSkill, enemy.ultimateSkill);
-            return new BattleUnit(enemy.displayName, Team.Enemy, slotIndex, enemy.baseStats, skills);
+            return new Combatant(enemy.displayName, Team.Enemy, slotIndex, enemy.baseStats, skills);
         }
 
         // 붙어 있는 버프·디버프를 기본 스탯에 접어 유효 스탯을 낸다.
         // 스탯별 배수 = 1 + 버프율 합 − 디버프율 합(percent-add). atk·spd는 1 미만,
-        // def·치명 계열은 0 미만으로 내려가지 않는다(spd는 게이지 나눗셈 분모라 0 금지).
-        // 최대 HP는 수정자 대상이 아니라 기본값을 유지한다.
+        // def는 0 미만으로 내려가지 않는다(spd는 게이지 나눗셈 분모라 0 금지).
+        // 최대 HP·치명 계열은 수정자 대상이 아니라 기본값을 그대로 쓴다.
         private Stats ComputeEffectiveStats()
         {
-            float atkM = 1f, defM = 1f, spdM = 1f, crM = 1f, cdM = 1f;
+            float atkM = 1f, defM = 1f, spdM = 1f;
             foreach (var e in _effects) // 현재 적용된 효과 각각 적용
             {
                 if (e.Type != EffectType.Buff && e.Type != EffectType.Debuff) continue;
                 float delta = e.Type == EffectType.Buff ? e.Value : -e.Value; //버프면 더하고 디버프면 뺌
+                // 버프·디버프가 수정하는 스탯은 atk·def·spd뿐이다. 크리·hp를 대상으로 한 효과는 지원하지 않아 무시된다.
                 switch (e.Stat)
                 {
                     case StatType.Atk: atkM += delta; break;
                     case StatType.Def: defM += delta; break;
                     case StatType.Spd: spdM += delta; break;
-                    
-                    // 크리 계열도 같은 배수 규칙을 따른다. 현재 크리를 바꾸는 스킬이 없어 이 두 분기는 미사용.
-                    // 도입 시 주의: 크리율은 확률이라 기본 0이면 배수로 안 오르고 상한도 없다 → 가산 모델·[0,1] 클램프 재검토.
-                    case StatType.CritRate: crM += delta; break;
-                    case StatType.CritDamage: cdM += delta; break;
                 }
             }
 
@@ -160,8 +169,8 @@ namespace Eclipse.Domain
                 atk = Math.Max(1, (int)Math.Round(_baseStats.atk * atkM, MidpointRounding.AwayFromZero)),
                 def = Math.Max(0, (int)Math.Round(_baseStats.def * defM, MidpointRounding.AwayFromZero)),
                 spd = Math.Max(1, (int)Math.Round(_baseStats.spd * spdM, MidpointRounding.AwayFromZero)),
-                critRate = Math.Max(0f, _baseStats.critRate * crM),
-                critDamage = Math.Max(0f, _baseStats.critDamage * cdM),
+                critRate = _baseStats.critRate,
+                critDamage = _baseStats.critDamage,
             };
         }
 

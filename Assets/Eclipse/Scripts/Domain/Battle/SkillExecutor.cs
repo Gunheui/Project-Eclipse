@@ -29,7 +29,7 @@ namespace Eclipse.Domain
         /// <param name="chosenTarget">수동 지정 대상. null이면 효과별 TargetSelector가 대상을 정한다.</param>
         /// <param name="allies">행동자 편의 유닛 목록.</param>
         /// <param name="enemies">상대 편의 유닛 목록.</param>
-        public void Execute(
+        public void ApplySkill(
             ICombatant actor, SkillRuntime skill, ICombatant chosenTarget,
             IReadOnlyList<ICombatant> allies, IReadOnlyList<ICombatant> enemies)
         {

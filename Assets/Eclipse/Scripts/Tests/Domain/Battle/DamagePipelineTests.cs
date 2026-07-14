@@ -33,7 +33,7 @@ namespace Eclipse.Tests
         {
             // 175 × 175/(175+60) = 175 × 0.7447 = 130.3 → 반올림 130 (05 §3 검산)
             var result = Pipeline(new FixedRandom(NoCritAvg))
-                .Compute(Attacker(175, 0.30f, 2.0f), Target(60), 1.0f);
+                .ComputeDamage(Attacker(175, 0.30f, 2.0f), Target(60), 1.0f);
 
             Assert.AreEqual(130, result.Amount);
             Assert.IsFalse(result.IsCrit);
@@ -44,7 +44,7 @@ namespace Eclipse.Tests
         {
             // 치명 굴림 0.0 < 0.30 → 크리. 130.3 × 2.0 = 260.6 → 261
             var result = Pipeline(new FixedRandom(0.0f, 0.5f))
-                .Compute(Attacker(175, 0.30f, 2.0f), Target(60), 1.0f);
+                .ComputeDamage(Attacker(175, 0.30f, 2.0f), Target(60), 1.0f);
 
             Assert.AreEqual(261, result.Amount);
             Assert.IsTrue(result.IsCrit);
@@ -55,7 +55,7 @@ namespace Eclipse.Tests
         {
             // 80 × 80/(80+60) = 80 × 0.5714 = 45.7 → 46 (05 §3 검산)
             var result = Pipeline(new FixedRandom(NoCritAvg))
-                .Compute(Attacker(80, 0.05f, 1.5f), Target(60), 1.0f);
+                .ComputeDamage(Attacker(80, 0.05f, 1.5f), Target(60), 1.0f);
 
             Assert.AreEqual(46, result.Amount);
         }
@@ -64,9 +64,9 @@ namespace Eclipse.Tests
         public void DEF가_높을수록_데미지가_준다()
         {
             var low = Pipeline(new FixedRandom(NoCritAvg))
-                .Compute(Attacker(175, 0f, 1.5f), Target(60), 1.0f).Amount;
+                .ComputeDamage(Attacker(175, 0f, 1.5f), Target(60), 1.0f).Amount;
             var high = Pipeline(new FixedRandom(NoCritAvg))
-                .Compute(Attacker(175, 0f, 1.5f), Target(200), 1.0f).Amount;
+                .ComputeDamage(Attacker(175, 0f, 1.5f), Target(200), 1.0f).Amount;
 
             Assert.Less(high, low, "비율경감이면 DEF가 오를수록 데미지가 줄어야 한다");
         }
@@ -78,9 +78,9 @@ namespace Eclipse.Tests
             // skillPower=1·변동1.0이면 데미지/ATK ≈ 경감계수 → 관통율을 ATK별로 비교해 검증.
             const int lowAtk = 80, highAtk = 175;
             int lowDmg = Pipeline(new FixedRandom(NoCritAvg))
-                .Compute(Attacker(lowAtk, 0f, 1.5f), Target(100), 1.0f).Amount;
+                .ComputeDamage(Attacker(lowAtk, 0f, 1.5f), Target(100), 1.0f).Amount;
             int highDmg = Pipeline(new FixedRandom(NoCritAvg))
-                .Compute(Attacker(highAtk, 0f, 1.5f), Target(100), 1.0f).Amount;
+                .ComputeDamage(Attacker(highAtk, 0f, 1.5f), Target(100), 1.0f).Amount;
 
             float lowPen = (float)lowDmg / lowAtk;   // ≈ 0.44
             float highPen = (float)highDmg / highAtk; // ≈ 0.64
@@ -92,7 +92,7 @@ namespace Eclipse.Tests
         {
             // 저ATK vs 고DEF: 1 × 1/(1+1000) ≈ 0.001 → 반올림 0 → 클램프 1
             var result = Pipeline(new FixedRandom(NoCritAvg))
-                .Compute(Attacker(1, 0f, 1.5f), Target(1000), 1.0f);
+                .ComputeDamage(Attacker(1, 0f, 1.5f), Target(1000), 1.0f);
 
             Assert.AreEqual(1, result.Amount);
         }
@@ -107,8 +107,8 @@ namespace Eclipse.Tests
 
             for (int i = 0; i < 50; i++)
             {
-                var ra = a.Compute(atk, def, 1.0f);
-                var rb = b.Compute(atk, def, 1.0f);
+                var ra = a.ComputeDamage(atk, def, 1.0f);
+                var rb = b.ComputeDamage(atk, def, 1.0f);
                 Assert.AreEqual(ra.Amount, rb.Amount, "i={0} 데미지 불일치", i);
                 Assert.AreEqual(ra.IsCrit, rb.IsCrit, "i={0} 크리 판정 불일치", i);
             }
