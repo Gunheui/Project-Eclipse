@@ -16,14 +16,31 @@ namespace Eclipse.Presentation
         private readonly IActionProvider _auto;
         private UniTaskCompletionSource<BattleAction> _pending;
 
+        // 수동 대기 중 Auto가 켜질 때 오토 규칙에 위임하려면 필요한 컨텍스트. 대기 진입 시 보관한다.
+        private IReadOnlyList<ICombatant> _pendingAllies;
+        private IReadOnlyList<ICombatant> _pendingEnemies;
+        private CancellationToken _pendingCt;
+        private bool _autoMode;
+
         /// <param name="autoFallback">AutoMode일 때 결정을 위임할 규칙 기반 프로바이더.</param>
         public ManualActionProvider(IActionProvider autoFallback)
         {
             _auto = autoFallback;
         }
 
-        /// <summary> 오토 전투 여부. true면 ChooseActionAsync가 규칙에 위임해 즉시 완료된다. </summary>
-        public bool AutoMode { get; set; }
+        /// <summary>
+        /// 오토 전투 여부. true면 ChooseActionAsync가 규칙에 위임해 즉시 완료된다.
+        /// 대기 중인 수동 턴이 있을 때 켜지면 그 턴도 즉시 오토 결정으로 해제한다.
+        /// </summary>
+        public bool AutoMode
+        {
+            get => _autoMode;
+            set
+            {
+                _autoMode = value;
+                if (value) ResolvePendingWithAuto();
+            }
+        }
 
         /// <summary> 지금 플레이어 입력을 기다리는 행동자. 대기 중이 아니면 null. </summary>
         public ICombatant PendingActor { get; private set; }
@@ -43,31 +60,29 @@ namespace Eclipse.Presentation
         /// <param name="enemies">상대 편의 유닛 목록.</param>
         /// <param name="ct">대기 취소 토큰. 취소되면 대기가 끊기고 태스크가 취소로 완료된다.</param>
         /// <returns>플레이어(또는 규칙)가 고른 스킬·대상을 담은 행동.</returns>
-        public UniTask<BattleAction> ChooseActionAsync(
+        public async UniTask<BattleAction> ChooseActionAsync(
             ICombatant actor,
             IReadOnlyList<ICombatant> allies,
             IReadOnlyList<ICombatant> enemies,
             CancellationToken ct)
         {
-            if (AutoMode) return _auto.ChooseActionAsync(actor, allies, enemies, ct);
+            if (AutoMode) return await _auto.ChooseActionAsync(actor, allies, enemies, ct);
 
             PendingActor = actor;
+            _pendingAllies = allies;
+            _pendingEnemies = enemies;
+            _pendingCt = ct;
             _pending = new UniTaskCompletionSource<BattleAction>();
-            var reg = ct.Register(() => _pending?.TrySetCanceled(ct));
-            InputRequested?.Invoke(actor);
-            return AwaitInput(reg);
-        }
 
-        // 입력이 오거나 취소될 때까지 대기하고, 어떤 경우든 대기 상태를 정리한다.
-        private async UniTask<BattleAction> AwaitInput(CancellationTokenRegistration reg)
-        {
+            // 취소되면(씬 이탈 등) 대기를 끊는다. using이라 메서드가 끝날 때 예약이 자동 해지된다.
+            using var reg = ct.Register(() => _pending?.TrySetCanceled(ct));
+            InputRequested?.Invoke(actor); // 현재 인풋 중이다 라고 이벤트 실행
             try
             {
-                return await _pending.Task;
+                return await _pending.Task; // Submit(또는 오토 위임)이 결과를 넣을 때까지 여기서 멈춘다.
             }
             finally
             {
-                reg.Dispose();
                 PendingActor = null;
                 _pending = null;
             }
@@ -82,6 +97,25 @@ namespace Eclipse.Presentation
         public void Submit(SkillRuntime skill, ICombatant target = null)
         {
             _pending?.TrySetResult(new BattleAction(skill, target));
+        }
+
+        // Auto가 켜지는 순간 대기 중인 수동 턴을 오토 규칙 결정으로 즉시 완료시킨다. 대기가 없으면 무시한다.
+        private void ResolvePendingWithAuto()
+        {
+            if (_pending == null) return;
+            ForwardAutoDecision(_pending, PendingActor, _pendingAllies, _pendingEnemies, _pendingCt).Forget();
+        }
+
+        // 오토 규칙에 이번 턴 결정을 위임하고 그 결과로 대기를 완료한다(_auto는 즉시 완료됨).
+        private async UniTaskVoid ForwardAutoDecision(
+            UniTaskCompletionSource<BattleAction> pending,
+            ICombatant actor,
+            IReadOnlyList<ICombatant> allies,
+            IReadOnlyList<ICombatant> enemies,
+            CancellationToken ct)
+        {
+            var action = await _auto.ChooseActionAsync(actor, allies, enemies, ct);
+            pending.TrySetResult(action);
         }
     }
 }

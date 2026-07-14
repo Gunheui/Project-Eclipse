@@ -7,13 +7,14 @@ using UnityEngine.UI;
 namespace Eclipse.View
 {
     /// <summary>
-    /// 전투 HUD의 유닛 명판 하나. 대응하는 <see cref="CombatantViewModel"/>의 이름·HP·생존을 표시한다.
-    /// 명판은 씬에 고정 배치되며 전투 시작 시 Bind로 한 번 연결된다.
+    /// 유닛 명판 하나. 대응하는 <see cref="CombatantViewModel"/>의 이름·HP(바+숫자)·생존을 표시한다.
+    /// 명판은 각 배틀러 머리 위(월드 스페이스)에 붙어 함께 움직이며 전투 시작 시 Bind로 한 번 연결된다.
     /// </summary>
     public class CombatantPlateView : MonoBehaviour
     {
         [SerializeField] private Image hpFill;
         [SerializeField] private TMP_Text nameLabel;
+        [SerializeField] private TMP_Text hpLabel;
         [SerializeField] private CanvasGroup canvasGroup;
         [SerializeField] private GameObject actingMarker;
 
@@ -31,11 +32,18 @@ namespace Eclipse.View
             SetActing(false);
 
             unit.CurrentHp
-                .Subscribe(hp => hpFill.fillAmount = unit.MaxHp > 0 ? (float)hp / unit.MaxHp : 0f)
+                .Subscribe(hp => OnHpChanged(hp, unit.MaxHp))
                 .AddTo(_bindings);
             unit.IsAlive
                 .Subscribe(alive => { if (canvasGroup != null) canvasGroup.alpha = alive ? 1f : 0.35f; })
                 .AddTo(_bindings);
+        }
+
+        // HP 바 fill과 "현재/최대" 숫자 라벨을 함께 갱신한다.
+        private void OnHpChanged(int hp, int maxHp)
+        {
+            hpFill.fillAmount = maxHp > 0 ? (float)hp / maxHp : 0f;
+            if (hpLabel != null) hpLabel.text = $"{hp}/{maxHp}";
         }
 
         /// <summary>대응 유닛이 없는 빈 명판을 숨긴다.</summary>

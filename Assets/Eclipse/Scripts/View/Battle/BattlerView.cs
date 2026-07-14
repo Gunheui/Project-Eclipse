@@ -15,6 +15,7 @@ namespace Eclipse.View
     /// </summary>
     public class BattlerView : MonoBehaviour
     {
+        [SerializeField] private Transform visualRoot;
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private FloatingText floatingTextPrefab;
         [SerializeField] private SpriteEffectPlayer effectPlayerPrefab;
@@ -41,7 +42,8 @@ namespace Eclipse.View
             _bindings.Clear();
             gameObject.SetActive(true);
             _speed = speed ?? (() => 1);
-            _home = transform.localPosition;
+            if (visualRoot == null) visualRoot = transform;
+            _home = visualRoot.localPosition;
             _facingRight = unit.IsAlly;
             _prevHp = unit.CurrentHp.CurrentValue;
             if (spriteRenderer != null) spriteRenderer.sprite = unit.BattlerSprite;
@@ -100,7 +102,7 @@ namespace Eclipse.View
         {
             SpawnFloatingText(amount, isHeal: false);
             float dur = 0.3f / _speed();
-            return transform
+            return visualRoot
                 .DOShakePosition(dur, strength: 0.25f, vibrato: 18, randomness: 90, snapping: false, fadeOut: true)
                 .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
         }
@@ -119,8 +121,8 @@ namespace Eclipse.View
             float dur = 0.25f / _speed();
             float lunge = _facingRight ? 0.5f : -0.5f;
             return DOTween.Sequence()
-                .Append(transform.DOLocalMoveX(_home.x + lunge, dur * 0.4f).SetEase(Ease.OutQuad))
-                .Append(transform.DOLocalMoveX(_home.x, dur * 0.6f).SetEase(Ease.InQuad))
+                .Append(visualRoot.DOLocalMoveX(_home.x + lunge, dur * 0.4f).SetEase(Ease.OutQuad))
+                .Append(visualRoot.DOLocalMoveX(_home.x, dur * 0.6f).SetEase(Ease.InQuad))
                 .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
         }
 
@@ -128,14 +130,14 @@ namespace Eclipse.View
         private UniTask SpawnEffect(EffectSpec spec)
         {
             if (spec == null || effectPlayerPrefab == null) return UniTask.CompletedTask;
-            var player = Instantiate(effectPlayerPrefab, transform.position, Quaternion.identity, transform.parent);
+            var player = Instantiate(effectPlayerPrefab, visualRoot.position, Quaternion.identity, transform.parent);
             return player.Play(spec, _speed(), this.GetCancellationTokenOnDestroy());
         }
 
         private void SpawnFloatingText(int amount, bool isHeal)
         {
             if (floatingTextPrefab == null) return;
-            var ft = Instantiate(floatingTextPrefab, transform.position, Quaternion.identity, transform.parent);
+            var ft = Instantiate(floatingTextPrefab, visualRoot.position, Quaternion.identity, transform.parent);
             ft.Show(amount, isHeal, _speed());
         }
 
