@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Eclipse.Data;
 using Eclipse.Domain;
 using R3;
 using UnityEngine;
@@ -15,8 +16,11 @@ namespace Eclipse.Presentation
         // 이 명판이 표시하는 도메인 유닛(HP·스킬 상태의 원천). Submit 시 타겟으로 되돌려 넘긴다.
         internal Combatant Model { get; }
 
-        // 이 유닛이 자기 턴에 행동했음을 알리는 신호. 배틀러가 구독해 시전 연출을 재생한다.
-        private readonly Subject<Unit> _acted = new();
+        // 이 유닛이 자기 턴에 행동했음을 알리는 신호(사용한 스킬을 실어 나른다). 배틀러가 구독해 시전 연출을 재생한다.
+        private readonly Subject<SkillSO> _acted = new();
+
+        // 이 유닛이 스킬 대상이 됐음을 알리는 신호(원인 스킬을 실어 나른다). 배틀러가 구독해 피격 연출을 재생한다.
+        private readonly Subject<SkillSO> _hit = new();
 
         /// <param name="model">이 명판이 표시할 도메인 유닛.</param>
         /// <param name="stateChanged">뷰가 상태를 다시 읽어야 할 때 발화하는 신호. 이 신호에 맞춰 HP를 다시 읽는다.</param>
@@ -57,8 +61,11 @@ namespace Eclipse.Presentation
         /// <summary> 생존 여부. 사망 연출·명판 흐리기 바인딩용. 턴마다 갱신. </summary>
         public ReadOnlyReactiveProperty<bool> IsAlive { get; }
 
-        /// <summary> 이 유닛이 행동할 때 한 번 발화. 배틀러 시전 연출 트리거. </summary>
-        public Observable<Unit> Acted => _acted;
+        /// <summary> 이 유닛이 행동할 때 사용 스킬과 함께 발화. 배틀러 시전 연출 트리거. </summary>
+        public Observable<SkillSO> Acted => _acted;
+
+        /// <summary> 이 유닛이 스킬 대상이 될 때 원인 스킬과 함께 발화. 배틀러 피격 연출 트리거. </summary>
+        public Observable<SkillSO> Hit => _hit;
 
         /// <summary> 이 유닛의 스킬 슬롯들(기본+액티브). 행동자일 때 스킬 버튼으로 쓴다. </summary>
         public IReadOnlyList<SkillSlotViewModel> Skills { get; }
@@ -67,7 +74,15 @@ namespace Eclipse.Presentation
         /// Acted 신호를 발화한다. 이번 턴 행동자에 대해 BattleViewModel이 호출하며,
         /// Acted를 구독한 배틀러가 시전 연출을 재생한다.
         /// </summary>
-        internal void RaiseActed() => _acted.OnNext(Unit.Default);
+        /// <param name="skill">이번 턴에 사용한 스킬(시전 이펙트 선택에 쓴다).</param>
+        internal void RaiseActed(SkillSO skill) => _acted.OnNext(skill);
+
+        /// <summary>
+        /// Hit 신호를 발화한다. 이번 턴 스킬 대상마다 BattleViewModel이 호출하며,
+        /// Hit를 구독한 배틀러가 피격 연출을 재생한다.
+        /// </summary>
+        /// <param name="skill">이 대상을 맞힌 스킬(피격 이펙트 선택에 쓴다).</param>
+        internal void RaiseHit(SkillSO skill) => _hit.OnNext(skill);
 
         /// <summary> 파생 프로퍼티와 스킬 슬롯의 구독을 해지한다. 소유자(BattleViewModel)가 호출한다. </summary>
         public void Dispose()
@@ -75,6 +90,7 @@ namespace Eclipse.Presentation
             CurrentHp.Dispose();
             IsAlive.Dispose();
             _acted.Dispose();
+            _hit.Dispose();
             foreach (var slot in Skills) slot.Dispose();
         }
     }

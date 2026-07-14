@@ -29,13 +29,19 @@ namespace Eclipse.Domain
         /// <param name="chosenTarget">수동 지정 대상. null이면 효과별 TargetSelector가 대상을 정한다.</param>
         /// <param name="allies">행동자 편의 유닛 목록.</param>
         /// <param name="enemies">상대 편의 유닛 목록.</param>
-        public void ApplySkill(
+        /// <returns>이 스킬로 영향받은 대상들(중복 제거). 연출이 피격 이펙트를 붙일 대상으로 쓴다.</returns>
+        public IReadOnlyList<ICombatant> ApplySkill(
             ICombatant actor, SkillRuntime skill, ICombatant chosenTarget,
             IReadOnlyList<ICombatant> allies, IReadOnlyList<ICombatant> enemies)
         {
+            var affected = new List<ICombatant>();
+
             foreach (var effect in skill.Skill.effects)
             {
                 var targets = _targeting.Resolve(effect.target, actor, allies, enemies, chosenTarget);
+
+                foreach (var target in targets)
+                    if (!affected.Contains(target)) affected.Add(target);
 
                 switch (effect.type)
                 {
@@ -85,6 +91,8 @@ namespace Eclipse.Domain
                         break;
                 }
             }
+
+            return affected;
         }
     }
 }

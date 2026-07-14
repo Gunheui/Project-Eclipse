@@ -1,0 +1,35 @@
+using System;
+using System.Collections.Generic;
+using Eclipse.Data;
+
+namespace Eclipse.Domain
+{
+    /// <summary>
+    /// 직전 턴에 실제로 벌어진 일(행동자·사용 스킬·영향 대상). 연출이 시전/피격 이펙트를 붙이는 데 쓴다.
+    /// 스킬을 안 쓴 턴(도트 사망 등)은 Skill이 null, Targets가 빈 목록.
+    /// </summary>
+    public readonly struct TurnResult
+    {
+        /// <summary> 이 턴에 행동한 유닛. </summary>
+        public ICombatant Actor { get; }
+
+        /// <summary> 이 턴에 사용된 스킬. 안 썼으면 null. </summary>
+        public SkillSO Skill { get; }
+
+        /// <summary> 이 스킬로 영향받은 대상들. 없으면 빈 목록. </summary>
+        public IReadOnlyList<ICombatant> Targets { get; }
+
+        public TurnResult(ICombatant actor, SkillSO skill, IReadOnlyList<ICombatant> targets)
+        {
+            Actor = actor;
+            Skill = skill;
+            Targets = targets ?? Array.Empty<ICombatant>();
+        }
+
+        /// <summary> 이 턴에 스킬을 실제로 사용했는지. </summary>
+        public bool UsedSkill => Skill != null;
+
+        /// <summary> 아직 아무 턴도 없거나 스킬을 안 쓴 상태를 나타내는 빈 결과. </summary>
+        public static readonly TurnResult None = new(null, null, Array.Empty<ICombatant>());
+    }
+}

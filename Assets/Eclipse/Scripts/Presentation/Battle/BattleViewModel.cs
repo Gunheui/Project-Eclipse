@@ -144,11 +144,18 @@ namespace Eclipse.Presentation
             _stateChanged.OnNext(Unit.Default);
         }
 
-        // 방금 행동한 유닛의 명판 VM에 Acted를 발화시켜 시전 연출을 트리거한다.
+        // 방금 행동한 유닛에 Acted(시전 연출), 이번 스킬 대상마다 Hit(피격 연출)을 발화시킨다.
+        // 스킬을 안 쓴 턴(도트 사망 등)은 UsedSkill이 false라 아무 연출도 트리거하지 않는다.
         private void NotifyActor()
         {
-            var actor = Combatants.FirstOrDefault(u => u.Model == _engine.LastActor);
-            actor?.RaiseActed();
+            var turn = _engine.LastTurn;
+            if (!turn.UsedSkill) return;
+
+            var actor = Combatants.FirstOrDefault(u => u.Model == turn.Actor);
+            actor?.RaiseActed(turn.Skill);
+
+            foreach (var target in turn.Targets)
+                Combatants.FirstOrDefault(u => u.Model == target)?.RaiseHit(turn.Skill);
         }
 
         private static BattleResult Map(BattleOutcome outcome) => outcome switch

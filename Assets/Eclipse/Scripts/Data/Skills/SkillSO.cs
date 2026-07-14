@@ -34,5 +34,15 @@ namespace Eclipse.Data
         /// 이 스킬이 일으키는 효과 목록 (효과마다 타겟·세기가 따로).
         /// </summary>
         public List<SkillEffect> effects;
+
+        /// <summary>
+        /// 시전 시 행동자 위치에 재생할 이펙트. 없으면 null(연출 없이 기존 돌진만).
+        /// </summary>
+        public EffectSpec castEffect;
+
+        /// <summary>
+        /// 피격/적용 시 대상 위치에 재생할 이펙트. 없으면 null(연출 없이 기존 흔들림·숫자만).
+        /// </summary>
+        public EffectSpec impactEffect;
     }
 }

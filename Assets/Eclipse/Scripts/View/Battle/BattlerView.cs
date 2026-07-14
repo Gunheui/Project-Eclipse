@@ -1,6 +1,7 @@
 using System;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using Eclipse.Data;
 using Eclipse.Presentation;
 using R3;
 using UnityEngine;
@@ -16,6 +17,7 @@ namespace Eclipse.View
     {
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private FloatingText floatingTextPrefab;
+        [SerializeField] private SpriteEffectPlayer effectPlayerPrefab;
 
         private readonly CompositeDisposable _bindings = new();
 
@@ -49,9 +51,14 @@ namespace Eclipse.View
                 .Subscribe(OnHpChanged)
                 .AddTo(_bindings);
 
-            // 이 유닛이 행동하면 시전 돌진.
+            // 이 유닛이 행동하면 시전 돌진 + 시전 이펙트.
             unit.Acted
-                .Subscribe(_ => _animation = PlayCastAsync().Preserve())
+                .Subscribe(skill => AddAnimation(PlayCastAsync(skill)))
+                .AddTo(_bindings);
+
+            // 이 유닛이 스킬 대상이 되면 피격 이펙트(흔들림·숫자는 HP 변화가 따로 처리).
+            unit.Hit
+                .Subscribe(skill => AddAnimation(SpawnEffect(skill != null ? skill.impactEffect : null)))
                 .AddTo(_bindings);
 
             // 사망 시 렌더러를 끈다.
@@ -74,8 +81,18 @@ namespace Eclipse.View
         {
             int delta = hp - _prevHp;
             _prevHp = hp;
-            if (delta < 0) _animation = PlayHitAsync(-delta).Preserve();
+            if (delta < 0) AddAnimation(PlayHitAsync(-delta));
             else if (delta > 0) SpawnFloatingText(delta, isHeal: true);
+        }
+
+        // 이번 턴의 하위 연출을 합류시킨다. 한 배틀러가 같은 턴에 여러 신호(시전·피격·HP변화)를 받아도
+        // 마지막 것이 앞선 것을 덮지 않도록 WhenAll로 묶는다. 직전 턴 연출은 루프가 이미 기다려 완료됐으므로
+        // 완료 상태면 새로 시작하고, 진행 중(같은 턴)이면 합친다.
+        private void AddAnimation(UniTask next)
+        {
+            _animation = _animation.Status.IsCompleted()
+                ? next.Preserve()
+                : UniTask.WhenAll(_animation, next).Preserve();
         }
 
         // 피격: 데미지 숫자를 띄우고 짧게 흔들린다. 반환 태스크는 흔들림이 끝나면 완료된다.
@@ -88,8 +105,16 @@ namespace Eclipse.View
                 .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
         }
 
-        // 시전: 대면 방향으로 살짝 돌진했다 제자리로. 반환 태스크는 복귀가 끝나면 완료된다.
-        private UniTask PlayCastAsync()
+        // 시전: 대면 방향 돌진 + (있으면) 시전 이펙트를 함께 재생한다. 둘 다 끝나면 완료된다.
+        private UniTask PlayCastAsync(SkillSO skill)
+        {
+            var lunge = PlayLungeAsync();
+            var effect = SpawnEffect(skill != null ? skill.castEffect : null);
+            return UniTask.WhenAll(lunge, effect);
+        }
+
+        // 대면 방향으로 살짝 돌진했다 제자리로. 반환 태스크는 복귀가 끝나면 완료된다.
+        private UniTask PlayLungeAsync()
         {
             float dur = 0.25f / _speed();
             float lunge = _facingRight ? 0.5f : -0.5f;
@@ -97,6 +122,14 @@ namespace Eclipse.View
                 .Append(transform.DOLocalMoveX(_home.x + lunge, dur * 0.4f).SetEase(Ease.OutQuad))
                 .Append(transform.DOLocalMoveX(_home.x, dur * 0.6f).SetEase(Ease.InQuad))
                 .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
+        }
+
+        // 이펙트 스펙을 이 배틀러 위치에 스폰해 재생한다. 스펙·프리팹이 없으면 즉시 완료.
+        private UniTask SpawnEffect(EffectSpec spec)
+        {
+            if (spec == null || effectPlayerPrefab == null) return UniTask.CompletedTask;
+            var player = Instantiate(effectPlayerPrefab, transform.position, Quaternion.identity, transform.parent);
+            return player.Play(spec, _speed(), this.GetCancellationTokenOnDestroy());
         }
 
         private void SpawnFloatingText(int amount, bool isHeal)

@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Eclipse.Data;
 
 namespace Eclipse.Domain
 {
@@ -46,8 +48,8 @@ namespace Eclipse.Domain
         /// <summary> 지금까지 실행된 누적 행동 수. </summary>
         public int ActionCount => _actionCount;
 
-        /// <summary> 직전에 행동한 유닛. 연출이 시전 주체를 아는 데 쓴다. 아직 한 턴도 안 지났으면 null. </summary>
-        public ICombatant LastActor { get; private set; }
+        /// <summary> 직전 턴에 벌어진 일(행동자·스킬·대상). 연출이 시전/피격 이펙트에 쓴다. 아직 한 턴도 안 지났으면 None. </summary>
+        public TurnResult LastTurn { get; private set; } = TurnResult.None;
 
         /// <summary>
         /// 다음 행동자 한 명의 턴을 처리하고 처리 후의 전투 상태를 반환한다.
@@ -61,11 +63,14 @@ namespace Eclipse.Domain
             // null은 살아있는 유닛이 없는 퇴화 상태이므로 현재 생존 상황으로 판정한다.
             var actor = _scheduler.GetNextActor();
             if (actor == null) return Evaluate();
-            LastActor = actor;
 
             // 턴 시작 정산: 자기 도트·리젠 적용, 효과 지속턴 감소·만료 정리, 생존 시 스킬 쿨 감소.
             // 이 전투의 행동자는 항상 Combatant이다(스케줄러는 읽기용 ICombatant만 반환).
             ((Combatant)actor).OnTurnStart();
+
+            // 이번 턴에 실제로 쓴 스킬·영향 대상(스킬을 안 쓰면 null/빈 목록으로 남는다).
+            SkillSO usedSkill = null;
+            IReadOnlyList<ICombatant> targets = Array.Empty<ICombatant>();
 
             // 도트로 쓰러졌으면 행동하지 않고 턴만 정산한다.
             if (actor.IsAlive)
@@ -75,9 +80,13 @@ namespace Eclipse.Domain
                 if (action.Skill != null)
                 {
                     action.Skill.TryUse();
-                    _executor.ApplySkill(actor, action.Skill, action.Target, AlliesOf(actor), EnemiesOf(actor));
+                    usedSkill = action.Skill.Skill;
+                    targets = _executor.ApplySkill(actor, action.Skill, action.Target, AlliesOf(actor), EnemiesOf(actor));
                 }
             }
+
+            // 이번 턴에 벌어진 일을 연출용으로 한데 기록한다.
+            LastTurn = new TurnResult(actor, usedSkill, targets);
 
             _scheduler.OnActionResolved(actor);
             _actionCount++;
