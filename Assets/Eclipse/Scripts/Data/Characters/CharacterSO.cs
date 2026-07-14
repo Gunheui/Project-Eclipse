@@ -42,5 +42,8 @@ namespace Eclipse.Data
 
         /// <summary> 초상화/배틀러 스프라이트 참조. </summary>
         public Sprite portraitAssetRef;
+
+        /// <summary> 턴 순서 타임라인용 얼굴 아이콘(정사각 크롭). 비면 portraitAssetRef로 폴백. </summary>
+        public Sprite faceIconAssetRef;
     }
 }

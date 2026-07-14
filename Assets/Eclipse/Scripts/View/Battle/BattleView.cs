@@ -32,6 +32,9 @@ namespace Eclipse.View
         [SerializeField] private TMP_Text[] skillCooldownLabels;
         [SerializeField] private Image[] skillIcons;
 
+        [Header("Turn timeline")]
+        [SerializeField] private TurnTimelineView turnTimeline;
+
         [Header("Controls")]
         [SerializeField] private Button exitButton;
         [SerializeField] private Button autoButton;
@@ -58,6 +61,7 @@ namespace Eclipse.View
             BindPlates();
             BindControls();
             BindSkillButtons();
+            if (turnTimeline != null) turnTimeline.Bind(_viewModel);
 
             // 바인딩을 모두 건 뒤에 루프를 시작한다. 화면이 파괴되면 토큰이 취소돼 루프가 끊긴다.
             // PlayTurnAnimationAsync를 넘겨, 루프가 매 턴 배틀러 연출이 끝날 때까지 기다리게 한다.

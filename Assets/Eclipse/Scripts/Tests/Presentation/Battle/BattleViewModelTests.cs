@@ -64,10 +64,12 @@ namespace Eclipse.Tests
             public UniTask ToMainAsync() => UniTask.CompletedTask;
         }
 
+        // 아트는 스케줄러·엔진과 무관하므로 스프라이트 없이 유닛만 실어 보낸다.
+        private static BattleUnitEntry Entry(Combatant unit) => new BattleUnitEntry(unit, null, null);
+
         private static BattleViewModel Vm(Combatant ally, Combatant enemy, bool startAuto)
             => new BattleViewModel(
-                new List<Combatant> { ally }, new List<Combatant> { enemy },
-                new Sprite[] { null }, new Sprite[] { null },
+                new[] { Entry(ally) }, new[] { Entry(enemy) },
                 Executor(1), actionCap: 200, startAuto: startAuto, new FakeSceneFlow());
 
         // --- 수동 프로바이더: Submit 전엔 대기, Submit하면 그 행동으로 완료 ---
@@ -180,8 +182,7 @@ namespace Eclipse.Tests
             var ally = Ally("아군", 0, S(2000, 300, 20, 150));
             var enemy = Enemy("적", 0, S(1500, 120, 10, 120));
             var vm = new BattleViewModel(
-                new List<Combatant> { ally }, new List<Combatant> { enemy },
-                new Sprite[] { null }, new Sprite[] { null },
+                new[] { Entry(ally) }, new[] { Entry(enemy) },
                 Executor(seed), actionCap: 200, startAuto: true, new FakeSceneFlow());
 
             var trace = new BattleTrace();

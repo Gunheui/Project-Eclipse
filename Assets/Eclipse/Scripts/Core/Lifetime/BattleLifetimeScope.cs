@@ -59,22 +59,25 @@ namespace Eclipse.Core
             var ownedParty = save.OwnedCharacters.Take(PartySize).ToList();
             var enemyParty = enemies.Take(PartySize).ToList();
 
-            var allies = ownedParty
-                .Select((owned, slot) => Combatant.FromCharacter(owned, slot))
+            // 유닛과 그 유닛의 아트를 함께 만들어 넘긴다. 아트는 도메인이 아닌 정의 SO에서 뽑는다.
+            // 타임라인 아이콘은 아군=얼굴 크롭, 적=소형 배틀러 스프라이트 그대로. 아군 얼굴이 비면 그 칸은
+            // 비어 그려진다 — 전신 초상으로 대신 채우면 데이터 누락이 감춰지므로 폴백하지 않는다.
+            var allyEntries = ownedParty
+                .Select((owned, slot) => new BattleUnitEntry(
+                    Combatant.FromCharacter(owned, slot),
+                    owned.Definition.portraitAssetRef,
+                    owned.Definition.faceIconAssetRef))
                 .ToList();
-            var enemyUnits = enemyParty
-                .Select((so, slot) => Combatant.FromEnemy(so, slot))
+            var enemyEntries = enemyParty
+                .Select((so, slot) => new BattleUnitEntry(
+                    Combatant.FromEnemy(so, slot),
+                    so.battlerAssetRef,
+                    so.battlerAssetRef))
                 .ToList();
-
-            // 배틀러 스프라이트는 도메인이 아닌 정의 SO에서 뽑아 VM 경계로 넘긴다(아군 초상·적 배틀러).
-            var allyBattlers = ownedParty.Select(owned => owned.Definition.portraitAssetRef).ToList();
-            var enemyBattlers = enemyParty.Select(so => so.battlerAssetRef).ToList();
 
             return new BattleViewModel(
-                allies,
-                enemyUnits,
-                allyBattlers,
-                enemyBattlers,
+                allyEntries,
+                enemyEntries,
                 container.Resolve<SkillExecutor>(),
                 battleConstants.globalActionCap,
                 startAuto,

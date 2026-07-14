@@ -132,5 +132,32 @@ namespace Eclipse.Tests
             //    전진(remActor) 없이 이미 도달해 있던 B가 바로 뽑혀야 한다.
             Assert.AreEqual("B", scheduler.GetNextActor().DisplayName);
         }
+
+        [Test]
+        public void PreviewOrder는_실제_진행_순서와_일치()
+        {
+            var roster = Roster();
+            var expected = Sequence(new AtbTurnScheduler(roster), 12);
+            var preview = new AtbTurnScheduler(roster).PreviewOrder(12).Select(a => a.DisplayName).ToList();
+            Assert.AreEqual(expected, preview);
+        }
+
+        [Test]
+        public void PreviewOrder는_실제_게이지를_바꾸지_않는다()
+        {
+            var scheduler = new AtbTurnScheduler(Roster());
+            var previewFirst = scheduler.PreviewOrder(3)[0].DisplayName;
+
+            // 예보를 여러 번 호출해도 실제 진행에는 영향이 없어야 한다(사본 위에서만 계산).
+            scheduler.PreviewOrder(7);
+            Assert.AreEqual(previewFirst, scheduler.GetNextActor().DisplayName,
+                "예보가 실제 게이지를 건드렸다면 다음 행동자가 달라진다");
+        }
+
+        [Test]
+        public void PreviewOrder_0이하는_빈_목록()
+        {
+            Assert.IsEmpty(new AtbTurnScheduler(Roster()).PreviewOrder(0));
+        }
     }
 }

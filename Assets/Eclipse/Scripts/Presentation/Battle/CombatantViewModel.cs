@@ -25,10 +25,12 @@ namespace Eclipse.Presentation
         /// <param name="model">이 명판이 표시할 도메인 유닛.</param>
         /// <param name="stateChanged">뷰가 상태를 다시 읽어야 할 때 발화하는 신호. 이 신호에 맞춰 HP를 다시 읽는다.</param>
         /// <param name="battler">전장에 세울 배틀러 스프라이트(아군 초상·적 배틀러). 없으면 null.</param>
-        public CombatantViewModel(Combatant model, Observable<Unit> stateChanged, Sprite battler = null)
+        /// <param name="timelineIcon">턴 순서 타임라인에 쓸 아이콘(아군 얼굴 크롭·적 배틀러). 없으면 null.</param>
+        public CombatantViewModel(Combatant model, Observable<Unit> stateChanged, Sprite battler = null, Sprite timelineIcon = null)
         {
             Model = model;
             BattlerSprite = battler;
+            TimelineIcon = timelineIcon;
             CurrentHp = stateChanged
                 .Select(_ => model.CurrentHp)
                 .ToReadOnlyReactiveProperty(model.CurrentHp);
@@ -54,6 +56,9 @@ namespace Eclipse.Presentation
 
         /// <summary> 전장에 세울 배틀러 스프라이트. 아트는 프레젠테이션 경계에서 실려 온다(도메인은 아트를 모름). </summary>
         public Sprite BattlerSprite { get; }
+
+        /// <summary> 턴 순서 타임라인 아이콘. 아군은 얼굴 크롭, 적은 배틀러 스프라이트. </summary>
+        public Sprite TimelineIcon { get; }
 
         /// <summary> 현재 HP. HP 바 바인딩용. 턴마다 갱신. </summary>
         public ReadOnlyReactiveProperty<int> CurrentHp { get; }

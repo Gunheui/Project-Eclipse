@@ -20,6 +20,13 @@ namespace Eclipse.Presentation
     /// </summary>
     public sealed class BattleViewModel : ViewModelBase
     {
+        // 다가올 행동 순서 예보의 원천. 엔진과 같은 인스턴스를 공유해 실제 진행 상태를 그대로 조회한다.
+        // 계약으로만 소비하므로 순서 규칙(ATB↔라운드제)을 갈아끼워도 타임라인은 그대로 따라온다.
+        private readonly ITurnScheduler _scheduler;
+
+        /// <summary> 타임라인에 미리 보여줄 다가올 행동 수. 표시줄의 칸 수와 맞춰야 한다. </summary>
+        public const int TimelineSlots = 5;
+
         private readonly BattleEngine _engine;
         private readonly ManualActionProvider _manualProvider;
         private readonly ISceneFlow _sceneFlow;
@@ -35,19 +42,15 @@ namespace Eclipse.Presentation
 
         private BattleOutcome _outcome = BattleOutcome.Ongoing;
 
-        /// <param name="allies">아군 파티 유닛(로스터에서 구성).</param>
-        /// <param name="enemies">적 유닛(스테이지 구성).</param>
-        /// <param name="allyBattlers">아군 배틀러 스프라이트. allies와 같은 순서.</param>
-        /// <param name="enemyBattlers">적 배틀러 스프라이트. enemies와 같은 순서.</param>
+        /// <param name="allies">아군 파티(유닛+아트, 로스터에서 구성).</param>
+        /// <param name="enemies">적(유닛+아트, 스테이지 구성).</param>
         /// <param name="executor">스킬 효과 적용기(씬 스코프 주입).</param>
         /// <param name="actionCap">전장 누적 행동 상한.</param>
         /// <param name="startAuto">시작 시 오토 전투 여부.</param>
         /// <param name="sceneFlow">전투 종료·이탈 시 씬 전환 창구.</param>
         public BattleViewModel(
-            List<Combatant> allies,
-            List<Combatant> enemies,
-            IReadOnlyList<Sprite> allyBattlers,
-            IReadOnlyList<Sprite> enemyBattlers,
+            IReadOnlyList<BattleUnitEntry> allies,
+            IReadOnlyList<BattleUnitEntry> enemies,
             SkillExecutor executor,
             int actionCap,
             bool startAuto,
@@ -60,13 +63,17 @@ namespace Eclipse.Presentation
             _manualProvider = new ManualActionProvider(autoRule) { AutoMode = startAuto };
             var enemyAi = new RuleBasedActionProvider(0.4f, useHealRule: true);
 
+            // 도메인(엔진·스케줄러)은 아트를 모르므로 유닛만 뽑아 넘긴다. 순서는 아군 먼저, 그다음 적.
             var all = allies.Concat(enemies).ToList();
-            var scheduler = new AtbTurnScheduler(all);
-            _engine = new BattleEngine(allies, enemies, scheduler, executor, _manualProvider, enemyAi, actionCap);
+            var allyUnits = allies.Select(e => e.Unit).ToList();
+            var enemyUnits = enemies.Select(e => e.Unit).ToList();
 
-            // 배틀러 스프라이트도 유닛과 같은 순서로 이어붙여 짝을 맞춘다(아군 먼저, 그다음 적).
-            var allBattlers = allyBattlers.Concat(enemyBattlers).ToList();
-            Combatants = all.Zip(allBattlers, (u, battler) => new CombatantViewModel(u, _stateChanged, battler)).ToList();
+            _scheduler = new AtbTurnScheduler(allyUnits.Concat(enemyUnits));
+            _engine = new BattleEngine(allyUnits, enemyUnits, _scheduler, executor, _manualProvider, enemyAi, actionCap);
+
+            Combatants = all
+                .Select(e => new CombatantViewModel(e.Unit, _stateChanged, e.Battler, e.TimelineIcon))
+                .ToList();
 
             // 행동 수·결과는 턴 신호에서 파생. 유닛 HP·쿨(CombatantViewModel/SkillSlotViewModel)도 같은 신호에서 파생.
             ActionCount = _stateChanged
@@ -75,6 +82,12 @@ namespace Eclipse.Presentation
             Result = _stateChanged
                 .Select(_ => Map(_outcome))
                 .ToReadOnlyReactiveProperty(BattleResult.InProgress);
+
+            // 다가올 행동 순서도 같은 턴 신호에서 파생(스케줄러 예보를 명판 VM으로 옮김).
+            var openingOrder = MapOrder(_scheduler.PreviewOrder(TimelineSlots)); // 첫 턴 전 화면에 세울 시작 편성 예보
+            UpcomingTurns = _stateChanged
+                .Select(_ => MapOrder(_scheduler.PreviewOrder(TimelineSlots)))
+                .ToReadOnlyReactiveProperty(openingOrder);
 
             _autoMode = new ReactiveProperty<bool>(startAuto);
             _autoMode.Subscribe(on => _manualProvider.AutoMode = on).AddTo(_subscriptions);
@@ -91,6 +104,9 @@ namespace Eclipse.Presentation
 
         /// <summary> 전투 결과(진행/승리/패배). 턴마다 갱신. </summary>
         public ReadOnlyReactiveProperty<BattleResult> Result { get; }
+
+        /// <summary> 다가올 행동 순서(다음 N명, 0번=다음 차례). 타임라인 바인딩용. 턴마다 갱신. 같은 유닛이 반복될 수 있다. </summary>
+        public ReadOnlyReactiveProperty<IReadOnlyList<CombatantViewModel>> UpcomingTurns { get; }
 
         /// <summary> 지금 입력을 기다리는 아군 유닛. 대기 중이 아니거나 오토면 null. </summary>
         public ReadOnlyReactiveProperty<CombatantViewModel> ActingCombatant => _actingCombatant;
@@ -158,6 +174,11 @@ namespace Eclipse.Presentation
                 Combatants.FirstOrDefault(u => u.Model == target)?.RaiseHit(turn.Skill);
         }
 
+        // 스케줄러가 돌려준 도메인 유닛 순서를 대응 명판 VM 순서로 옮긴다. 스케줄러와 명판이 같은 유닛 목록에서
+        // 만들어지므로 매칭은 항상 성공한다(실패하면 조립이 깨진 것이라 조용히 넘기지 않고 드러낸다).
+        private IReadOnlyList<CombatantViewModel> MapOrder(IReadOnlyList<ICombatant> order)
+            => order.Select(actor => Combatants.First(u => u.Model == actor)).ToList();
+
         private static BattleResult Map(BattleOutcome outcome) => outcome switch
         {
             BattleOutcome.Victory => BattleResult.Victory,
@@ -178,6 +199,7 @@ namespace Eclipse.Presentation
             foreach (var unit in Combatants) unit.Dispose();
             ActionCount.Dispose();
             Result.Dispose();
+            UpcomingTurns.Dispose();
             _actingCombatant.Dispose();
             _autoMode.Dispose();
             _stateChanged.Dispose();

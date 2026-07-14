@@ -29,3 +29,4 @@ MonoBehaviour:
   ultimateSkill: {fileID: 11400000, guid: 8fa54b8c2e0d241129887a3d4e9e0548, type: 2}
   acquisitionType: 0
   portraitAssetRef: {fileID: 21300000, guid: 3c2dfabed9a534a0c86dac043ee51f8c, type: 3}
+  faceIconAssetRef: {fileID: 21300000, guid: 95d057f2365424f6d8c29dbc456b6826, type: 3}

@@ -47,19 +47,7 @@ namespace Eclipse.Domain
         {
             var alive = _units.Where(u => u.IsAlive).ToList();
             if (alive.Count == 0) return null;
-
-            // 다음 행동자 = 임계값에 먼저 도달하는(잔여거리/SPD가 최소인) 유닛.
-            // 동시 도달·동률은 ArrivesBefore가 SPD → 아군 우선 → 슬롯 순으로 완전 결정적으로 가른다.
-            var actor = alive.Aggregate((best, u) => ArrivesBefore(u, best) ? u : best);
-
-            // 전원 게이지를 행동자의 도달 시점까지 한 번에 전진시킨다. 행동자는 임계값에 정확히 안착하고
-            // (spd*rem/spd = rem), 다른 유닛은 그 시점의 진척만큼만 오른다(1 미만 floor 오차는 스케일로 흡수).
-            long remActor = Remaining(actor);
-            if (remActor > 0)
-                foreach (var u in alive)
-                    _gauge[u] += u.EffectiveStats.spd * remActor / actor.EffectiveStats.spd;
-
-            return actor;
+            return Advance(_gauge, alive);
         }
 
         /// <summary>
@@ -72,17 +60,63 @@ namespace Eclipse.Domain
             _gauge[actor] -= Threshold;
         }
 
+        /// <summary>
+        /// 실제 상태를 바꾸지 않고 다음 <paramref name="count"/>명의 행동 순서를 예보한다. 현재 게이지 사본 위에서
+        /// 진행 로직(전진 → 이월)을 그대로 재생하므로 순서는 실제 진행과 정확히 일치한다. 예보 구간 내 사망·스탯
+        /// 변화는 가정하지 않는 스냅샷이며, 같은 유닛이 여러 번 등장할 수 있다(빠른 유닛). 생존 유닛이 없으면 빈 목록.
+        /// </summary>
+        /// <param name="count">예보할 행동 수(≤0이면 빈 목록).</param>
+        public IReadOnlyList<ICombatant> PreviewOrder(int count)
+        {
+            var order = new List<ICombatant>(Math.Max(0, count));
+            var alive = _units.Where(u => u.IsAlive).ToList();
+            if (count <= 0 || alive.Count == 0) return order;
+
+            var gauge = new Dictionary<ICombatant, long>(_gauge); // 사본 — 실제 _gauge는 불변
+            for (int i = 0; i < count; i++)
+            {
+                var actor = Advance(gauge, alive);
+                order.Add(actor);
+                gauge[actor] -= Threshold; // OnActionResolved와 동일한 이월
+            }
+            return order;
+        }
+
+        // 다음 행동자 = 임계값에 먼저 도달하는(잔여거리/SPD가 최소인) 유닛. 전원 게이지를 그 도달 시점까지 한 번에
+        // 전진시키고(행동자는 임계값에 정확히 안착, 다른 유닛은 그만큼만 상승) 행동자를 돌려준다.
+        // 동시 도달·동률은 ArrivesBefore가 결정적으로 가른다.
+        //
+        // ※ 인자로 받은 gauge를 직접 전진시킨다(변경). 어느 맵을 넘기느냐가 이 호출의 의미를 정한다 —
+        //   실제 진행은 _gauge를, 예보는 사본을 넘긴다. 조회 경로에서 _gauge를 넘기면 전투 순서가 조용히 망가진다.
+        //   static이라 이 함수 자체는 _gauge에 접근할 수 없다(실수 여지를 인자 선택 한 곳으로 좁힌다).
+        private static ICombatant Advance(IDictionary<ICombatant, long> gauge, IReadOnlyList<ICombatant> alive)
+        {
+            var actor = alive.Aggregate((best, u) => ArrivesBefore(gauge, u, best) ? u : best);
+
+            long remActor = Remaining(gauge, actor);
+            if (remActor > 0)
+            {
+                // EffectiveStats는 접근할 때마다 버프·디버프를 다시 접는다 — 루프 안에서 행동자 것을 매번 새로 계산하지 않게 미리 뽑는다.
+                int actorSpd = actor.EffectiveStats.spd;
+                foreach (var u in alive)
+                    gauge[u] += u.EffectiveStats.spd * remActor / actorSpd;
+            }
+
+            return actor;
+        }
+
         // 임계값까지 남은 게이지 거리. 이미 도달·초과했으면 0(도달 시각 0 → 즉시 행동).
-        private long Remaining(ICombatant u) => Math.Max(0, Threshold - _gauge[u]);
+        private static long Remaining(IDictionary<ICombatant, long> gauge, ICombatant u) => Math.Max(0, Threshold - gauge[u]);
 
         // x가 y보다 먼저 도달하는가. 도달 시각 rem/spd 비교를 나눗셈 없이 교차곱(rem_x*spd_y < rem_y*spd_x)으로
         // 정확히 판정하고, 동시 도달이면 SPD 내림차순 → 아군 우선(Team) → 슬롯 오름차순으로 가른다(랜덤 없음).
-        private bool ArrivesBefore(ICombatant x, ICombatant y)
+        private static bool ArrivesBefore(IDictionary<ICombatant, long> gauge, ICombatant x, ICombatant y)
         {
-            long lhs = Remaining(x) * y.EffectiveStats.spd;
-            long rhs = Remaining(y) * x.EffectiveStats.spd;
+            int sx = x.EffectiveStats.spd, sy = y.EffectiveStats.spd; // 접근마다 재계산되는 프로퍼티라 한 번만 읽는다
+            long lhs = Remaining(gauge, x) * sy;
+            long rhs = Remaining(gauge, y) * sx;
             if (lhs != rhs) return lhs < rhs;
-            if (x.EffectiveStats.spd != y.EffectiveStats.spd) return x.EffectiveStats.spd > y.EffectiveStats.spd;
+            if (sx != sy) return sx > sy;
             if (x.Team != y.Team) return x.Team < y.Team;
             return x.SlotIndex < y.SlotIndex;
         }
