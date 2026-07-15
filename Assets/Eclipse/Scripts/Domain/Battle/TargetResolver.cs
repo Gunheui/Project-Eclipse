@@ -46,8 +46,10 @@ namespace Eclipse.Domain
 
         /// <summary>
         /// 수동 지정 대상을 반영해 대상 목록을 반환한다. 지정 대상은 단일-적 selector에만,
-        /// 그리고 도발 중인 적이 없을 때만 적용된다(도발이 지정보다 우선). 그 밖의 경우는
-        /// selector 기본 규칙으로 폴백한다: 지정 없음/지정 대상 사망/적 목록 밖/광역·아군 selector.
+        /// 그리고 <see cref="ValidManualTargets"/>에 든 대상일 때만 적용된다 — 도발 중인 적이 있으면
+        /// 도발자 중에서만 고를 수 있다(도발이 대상 범위를 좁히되, 그 안에서는 지정을 존중한다).
+        /// 그 밖의 경우는 selector 기본 규칙으로 폴백한다: 지정 없음/지정 대상 사망/적 목록 밖/
+        /// 도발 중 비도발자 지정/광역·아군 selector.
         /// </summary>
         /// <param name="chosenTarget">플레이어가 찍은 대상. null이면 selector가 대상을 정한다.</param>
         public IReadOnlyList<ICombatant> Resolve(
@@ -59,7 +61,7 @@ namespace Eclipse.Domain
                 && IsSingleEnemySelector(selector)
                 && chosenTarget.IsAlive
                 && enemies.Contains(chosenTarget)
-                && !AnyTaunting(enemies))
+                && (chosenTarget.IsTaunting || !AnyTaunting(enemies)))
             {
                 return new[] { chosenTarget };
             }
@@ -67,7 +69,23 @@ namespace Eclipse.Domain
             return Resolve(selector, actor, allies, enemies);
         }
 
-        private static bool IsSingleEnemySelector(TargetSelector selector)
+        /// <summary>
+        /// 플레이어가 단일-적 스킬로 직접 지정할 수 있는 후보. 생존한 적만 두되, 도발 중인 적이 있으면
+        /// 그들로 좁힌다. <see cref="Resolve"/>의 지정 존중 조건과 같은 규칙이라 여기 든 대상을 찍으면
+        /// 반드시 그 대상이 맞는다 — 조준 UI가 이 목록만 선택 가능으로 칠하면 화면과 판정이 일치한다.
+        /// </summary>
+        /// <param name="enemies">행동자 기준 상대 편의 유닛 목록.</param>
+        /// <returns>지정 가능한 적 목록. 생존한 적이 없으면 빈 목록.</returns>
+        public IReadOnlyList<ICombatant> ValidManualTargets(IReadOnlyList<ICombatant> enemies)
+        {
+            var alive = enemies.Where(u => u.IsAlive).ToList();
+            return TauntFiltered(alive);
+        }
+
+        /// <summary> 지정 대상 오버라이드가 적용되는 selector인지(단일-적 규칙만 해당). </summary>
+        /// <param name="selector">스킬 효과의 대상 선택 규칙.</param>
+        /// <returns>단일-적 selector면 true. 광역·아군·자기면 false(지정이 무시된다).</returns>
+        public static bool IsSingleEnemySelector(TargetSelector selector)
             => selector == TargetSelector.LowestHpEnemy || selector == TargetSelector.HighestAtkEnemy;
 
         private static bool AnyTaunting(IReadOnlyList<ICombatant> enemies)

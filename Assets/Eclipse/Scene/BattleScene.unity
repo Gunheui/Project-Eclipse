@@ -129,6 +129,7 @@ GameObject:
   m_Component:
   - component: {fileID: 25445465}
   - component: {fileID: 25445463}
+  - component: {fileID: 25445466}
   m_Layer: 0
   m_Name: Battler
   m_TagString: Untagged
@@ -152,6 +153,7 @@ MonoBehaviour:
   spriteRenderer: {fileID: 1334129548}
   floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
+  tapArea: {fileID: 25445466}
 --- !u!4 &25445465
 Transform:
   m_ObjectHideFlags: 0
@@ -169,6 +171,52 @@ Transform:
   - {fileID: 235098730}
   m_Father: {fileID: 1825455416}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!61 &25445466
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 25445462}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
 --- !u!1 &43060656
 GameObject:
   m_ObjectHideFlags: 0
@@ -329,10 +377,18 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4920041541965836940, guid: 346f212370c3942f3ad686276d57e4fa, type: 2}
+    - target: {fileID: 5609751582360447328, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 6644977556489138818, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4920041541965836940, guid: 346f212370c3942f3ad686276d57e4fa, type: 2}
+    - target: {fileID: 6644977556489138818, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -364,6 +420,7 @@ GameObject:
   m_Component:
   - component: {fileID: 118229266}
   - component: {fileID: 118229268}
+  - component: {fileID: 118229269}
   m_Layer: 0
   m_Name: Battler
   m_TagString: Untagged
@@ -404,6 +461,53 @@ MonoBehaviour:
   spriteRenderer: {fileID: 1809642860}
   floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
+  tapArea: {fileID: 118229269}
+--- !u!61 &118229269
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 118229265}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
 --- !u!1 &143613337
 GameObject:
   m_ObjectHideFlags: 0
@@ -543,10 +647,18 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4920041541965836940, guid: 346f212370c3942f3ad686276d57e4fa, type: 2}
+    - target: {fileID: 5609751582360447328, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 6644977556489138818, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4920041541965836940, guid: 346f212370c3942f3ad686276d57e4fa, type: 2}
+    - target: {fileID: 6644977556489138818, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -654,6 +766,7 @@ GameObject:
   m_Component:
   - component: {fileID: 211906974}
   - component: {fileID: 211906976}
+  - component: {fileID: 211906977}
   m_Layer: 0
   m_Name: Battler
   m_TagString: Untagged
@@ -694,6 +807,53 @@ MonoBehaviour:
   spriteRenderer: {fileID: 1483048546}
   floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
+  tapArea: {fileID: 211906977}
+--- !u!61 &211906977
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 211906973}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
 --- !u!1 &220312489
 GameObject:
   m_ObjectHideFlags: 0
@@ -1117,6 +1277,7 @@ GameObject:
   m_Component:
   - component: {fileID: 329805833}
   - component: {fileID: 329805835}
+  - component: {fileID: 329805836}
   m_Layer: 0
   m_Name: Battler
   m_TagString: Untagged
@@ -1157,6 +1318,53 @@ MonoBehaviour:
   spriteRenderer: {fileID: 1033100491}
   floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
+  tapArea: {fileID: 329805836}
+--- !u!61 &329805836
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 329805832}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
 --- !u!1 &355781742
 GameObject:
   m_ObjectHideFlags: 0
@@ -1247,7 +1455,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 773a9d866c1244209beadea9c6494a4b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1339,7 +1547,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 773a9d866c1244209beadea9c6494a4b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1539,6 +1747,7 @@ GameObject:
   m_Component:
   - component: {fileID: 512440237}
   - component: {fileID: 512440239}
+  - component: {fileID: 512440240}
   m_Layer: 0
   m_Name: Battler
   m_TagString: Untagged
@@ -1579,6 +1788,53 @@ MonoBehaviour:
   spriteRenderer: {fileID: 1637223984}
   floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
+  tapArea: {fileID: 512440240}
+--- !u!61 &512440240
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 512440236}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
 --- !u!1 &547823346
 GameObject:
   m_ObjectHideFlags: 0
@@ -1920,10 +2176,18 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4920041541965836940, guid: 346f212370c3942f3ad686276d57e4fa, type: 2}
+    - target: {fileID: 5609751582360447328, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 6644977556489138818, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4920041541965836940, guid: 346f212370c3942f3ad686276d57e4fa, type: 2}
+    - target: {fileID: 6644977556489138818, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2333,10 +2597,18 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4920041541965836940, guid: 346f212370c3942f3ad686276d57e4fa, type: 2}
+    - target: {fileID: 5609751582360447328, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 6644977556489138818, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4920041541965836940, guid: 346f212370c3942f3ad686276d57e4fa, type: 2}
+    - target: {fileID: 6644977556489138818, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2541,10 +2813,18 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4920041541965836940, guid: 346f212370c3942f3ad686276d57e4fa, type: 2}
+    - target: {fileID: 5609751582360447328, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 6644977556489138818, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4920041541965836940, guid: 346f212370c3942f3ad686276d57e4fa, type: 2}
+    - target: {fileID: 6644977556489138818, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2674,10 +2954,18 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4920041541965836940, guid: 346f212370c3942f3ad686276d57e4fa, type: 2}
+    - target: {fileID: 5609751582360447328, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 6644977556489138818, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4920041541965836940, guid: 346f212370c3942f3ad686276d57e4fa, type: 2}
+    - target: {fileID: 6644977556489138818, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3046,6 +3334,7 @@ GameObject:
   - component: {fileID: 957696598}
   - component: {fileID: 957696597}
   - component: {fileID: 957696596}
+  - component: {fileID: 957696599}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -3127,6 +3416,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &957696599
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 957696595}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56666c5a40171f54783dd416a44f42bf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.EventSystems.Physics2DRaycaster
+  m_EventMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_MaxRayIntersections: 0
 --- !u!1 &978807903
 GameObject:
   m_ObjectHideFlags: 0
@@ -3255,10 +3560,18 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4920041541965836940, guid: 346f212370c3942f3ad686276d57e4fa, type: 2}
+    - target: {fileID: 5609751582360447328, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 6644977556489138818, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4920041541965836940, guid: 346f212370c3942f3ad686276d57e4fa, type: 2}
+    - target: {fileID: 6644977556489138818, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3290,6 +3603,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1024357040}
   - component: {fileID: 1024357042}
+  - component: {fileID: 1024357043}
   m_Layer: 0
   m_Name: Battler
   m_TagString: Untagged
@@ -3330,6 +3644,53 @@ MonoBehaviour:
   spriteRenderer: {fileID: 361273743}
   floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
+  tapArea: {fileID: 1024357043}
+--- !u!61 &1024357043
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1024357039}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
 --- !u!1 &1033100489
 GameObject:
   m_ObjectHideFlags: 0
@@ -3388,7 +3749,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 773a9d866c1244209beadea9c6494a4b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -3572,6 +3933,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1230606752}
   - component: {fileID: 1230606754}
+  - component: {fileID: 1230606755}
   m_Layer: 0
   m_Name: Battler
   m_TagString: Untagged
@@ -3612,6 +3974,53 @@ MonoBehaviour:
   spriteRenderer: {fileID: 389734318}
   floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
+  tapArea: {fileID: 1230606755}
+--- !u!61 &1230606755
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1230606751}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
 --- !u!1 &1274596516
 GameObject:
   m_ObjectHideFlags: 0
@@ -3654,6 +4063,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1324563526}
   - component: {fileID: 1324563528}
+  - component: {fileID: 1324563529}
   m_Layer: 0
   m_Name: Battler
   m_TagString: Untagged
@@ -3694,6 +4104,53 @@ MonoBehaviour:
   spriteRenderer: {fileID: 1969793860}
   floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
+  tapArea: {fileID: 1324563529}
+--- !u!61 &1324563529
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1324563525}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1, y: 1}
+  m_EdgeRadius: 0
 --- !u!1 &1334129546
 GameObject:
   m_ObjectHideFlags: 0
@@ -3752,7 +4209,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 773a9d866c1244209beadea9c6494a4b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -4206,10 +4663,18 @@ PrefabInstance:
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4920041541965836940, guid: 346f212370c3942f3ad686276d57e4fa, type: 2}
+    - target: {fileID: 5609751582360447328, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 6644977556489138818, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
       propertyPath: m_sharedMaterial
       value: 
       objectReference: {fileID: -4920041541965836940, guid: 346f212370c3942f3ad686276d57e4fa, type: 2}
+    - target: {fileID: 6644977556489138818, guid: 20ec28209e51a477bbb5e558f1e45bcf, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -4444,7 +4909,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 773a9d866c1244209beadea9c6494a4b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -4935,7 +5400,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 773a9d866c1244209beadea9c6494a4b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -5608,7 +6073,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 773a9d866c1244209beadea9c6494a4b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -6221,7 +6686,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 773a9d866c1244209beadea9c6494a4b, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

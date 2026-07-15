@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
@@ -49,6 +50,10 @@ namespace Eclipse.View
         // 연출 배속(1 또는 2). View 소유 — 계산엔 무관하고 배틀러 트윈·턴 대기 시간만 나눈다.
         private int _speedMultiplier = 1;
 
+        // 조준 모드 상태. 스킬 탭으로 대기 중인 스킬과 그때 계산한 유효 타겟 집합. null이면 조준 중이 아니다.
+        private SkillSlotViewModel _pendingSkill;
+        private IReadOnlyList<CombatantViewModel> _validTargets;
+
         [Inject]
         public void Construct(BattleViewModel viewModel)
         {
@@ -80,7 +85,7 @@ namespace Eclipse.View
             for (int slot = 0; slot < battlers.Length; slot++)
             {
                 var unit = FindUnit(isAlly, slot);
-                if (unit != null) battlers[slot].Bind(unit, () => _speedMultiplier);
+                if (unit != null) battlers[slot].Bind(unit, () => _speedMultiplier, OnUnitTapped);
                 else battlers[slot].Clear();
             }
         }
@@ -104,7 +109,7 @@ namespace Eclipse.View
             for (int slot = 0; slot < plates.Length; slot++)
             {
                 var unit = FindUnit(isAlly, slot);
-                if (unit != null) plates[slot].Bind(unit);
+                if (unit != null) plates[slot].Bind(unit, OnUnitTapped);
                 else plates[slot].Clear();
             }
         }
@@ -133,7 +138,11 @@ namespace Eclipse.View
                 .Subscribe(_ => _viewModel.AutoMode.Value = !_viewModel.AutoMode.Value)
                 .AddTo(this);
             _viewModel.AutoMode
-                .Subscribe(on => { if (autoLabel != null) autoLabel.text = on ? "AUTO ●" : "AUTO ○"; })
+                .Subscribe(on =>
+                {
+                    if (on) ExitTargeting(); // 오토 전환 시 조준 UI 정리(대기 턴은 엔진이 오토 결정으로 해제)
+                    if (autoLabel != null) autoLabel.text = on ? "AUTO ●" : "AUTO ○";
+                })
                 .AddTo(this);
 
             exitButton.OnClickAsObservable()
@@ -179,6 +188,7 @@ namespace Eclipse.View
         // 행동자가 정해지면 그 유닛의 스킬로 버튼을 채우고 명판을 강조한다. null이면(적 턴·오토) 버튼을 잠근다.
         private void OnActingCombatantChanged(CombatantViewModel unit)
         {
+            ExitTargeting(); // 행동자가 바뀌면(턴 종료·적 턴·오토) 이전 조준 상태를 정리한다
             HighlightActing(unit);
 
             for (int i = 0; i < skillButtons.Length; i++)
@@ -212,7 +222,62 @@ namespace Eclipse.View
             var slot = unit.Skills[index];
             if (!slot.IsReady.CurrentValue) return;
 
-            _viewModel.Submit(slot);
+            // 광역·힐·자기 스킬은 지정 대상이 무시되므로 즉시 시전.
+            if (!slot.NeedsManualTarget)
+            {
+                ExitTargeting();
+                _viewModel.Submit(slot);
+                return;
+            }
+
+            // 유효 타겟 판정은 도메인 규칙(도발 포함)을 VM 통해 그대로 받는다 — View는 칠하기만 한다.
+            var valid = _viewModel.ValidManualTargets(unit);
+            if (valid.Count == 0) { ExitTargeting(); _viewModel.Submit(slot); return; } // 후보 없으면 셀렉터 폴백에 맡긴다
+            if (valid.Count == 1)                                       // 후보가 하나뿐이면 조준 생략하고 바로 지정
+            {
+                ExitTargeting();
+                _viewModel.Submit(slot, valid[0]);
+                return;
+            }
+
+            EnterTargeting(slot, valid);
+        }
+
+        // 스킬 탭으로 조준 모드에 들어간다. 유효 타겟을 기억하고 배틀러에 대상 상태를 칠한다.
+        // 스킬을 다시(혹은 다른 스킬로) 탭하면 유효 집합을 새로 계산해 상태가 갱신된다.
+        private void EnterTargeting(SkillSlotViewModel skill, IReadOnlyList<CombatantViewModel> valid)
+        {
+            _pendingSkill = skill;
+            _validTargets = valid;
+            foreach (var u in _viewModel.Combatants)
+                FindBattler(u)?.SetTargetState(valid.Contains(u) ? TargetState.Selectable : TargetState.Ineligible);
+        }
+
+        // 조준 모드를 빠져나오고 모든 배틀러를 평상시 상태로 되돌린다. 조준 중이 아니어도 호출 안전(멱등).
+        private void ExitTargeting()
+        {
+            _pendingSkill = null;
+            _validTargets = null;
+            foreach (var u in _viewModel.Combatants)
+                FindBattler(u)?.SetTargetState(TargetState.None);
+        }
+
+        // 배틀러 몸통·명판 탭의 공통 처리. 조준 중이고 유효 타겟일 때만 그 대상으로 스킬을 제출한다.
+        private void OnUnitTapped(CombatantViewModel unit)
+        {
+            if (_pendingSkill == null) return;                                  // 조준 중이 아니면 무시
+            if (_validTargets == null || !_validTargets.Contains(unit)) return; // 선택 불가 대상 무시
+
+            var skill = _pendingSkill;
+            ExitTargeting();
+            _viewModel.Submit(skill, unit);
+        }
+
+        // 유닛에 대응하는 배틀러를 소속·슬롯으로 찾는다. 대응이 없으면 null(빈 슬롯).
+        private BattlerView FindBattler(CombatantViewModel unit)
+        {
+            var battlers = unit.IsAlly ? allyBattlers : enemyBattlers;
+            return unit.SlotIndex < battlers.Length ? battlers[unit.SlotIndex] : null;
         }
 
         private void HighlightActing(CombatantViewModel unit)

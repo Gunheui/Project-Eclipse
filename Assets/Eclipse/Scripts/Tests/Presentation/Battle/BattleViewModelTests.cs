@@ -135,6 +135,35 @@ namespace Eclipse.Tests
             vm.Dispose();
         });
 
+        // --- VM 수동 지정: 찍은 대상이 자동 기본(최저HP)을 덮어써 그 적을 맞힌다 ---
+
+        [UnityTest]
+        public IEnumerator 수동_지정_대상이_자동기본이_아닌_찍은_적을_맞힌다() => UniTask.ToCoroutine(async () =>
+        {
+            var ally = Ally("아군", 0, S(5000, 300, 0, 200)); // 가장 빠름 → 먼저 행동
+            var low = Enemy("저HP", 0, S(1000, 10, 0, 50));   // LowestHpEnemy 자동 기본이 고를 대상
+            var high = Enemy("고HP", 1, S(3000, 10, 0, 40));
+            var vm = new BattleViewModel(
+                new[] { Entry(ally) }, new[] { Entry(low), Entry(high) },
+                Executor(1), actionCap: 200, startAuto: false, new FakeSceneFlow());
+
+            vm.RunBattleAsync(null, CancellationToken.None).Forget(); // 첫 아군 턴 입력 대기까지 진행
+
+            var acting = vm.ActingCombatant.CurrentValue;
+            Assert.IsNotNull(acting, "수동 아군 턴이면 ActingCombatant이 세워진다");
+            var highPlate = vm.Combatants.First(u => !u.IsAlly && u.SlotIndex == 1);
+
+            int lowBefore = low.CurrentHp;
+            int highBefore = high.CurrentHp;
+
+            vm.Submit(acting.Skills[0], highPlate); // 자동 기본(저HP)이 아니라 고HP를 지정
+
+            Assert.Less(high.CurrentHp, highBefore, "지정한 고HP 적이 맞았다");
+            Assert.AreEqual(lowBefore, low.CurrentHp, "자동 기본 대상(저HP)은 맞지 않았다");
+
+            vm.Dispose();
+        });
+
         // --- VM 오토 구동: 강한 파티는 완주해 승리로 끝난다 ---
 
         [UnityTest]

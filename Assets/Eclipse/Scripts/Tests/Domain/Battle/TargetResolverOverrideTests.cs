@@ -42,7 +42,7 @@ namespace Eclipse.Tests
         }
 
         [Test]
-        public void 도발중인_적이_있으면_지정을_무시하고_도발자를_친다()
+        public void 도발중인_적이_있으면_비도발자_지정을_무시하고_도발자를_친다()
         {
             var resolver = new TargetResolver();
             var taunter = E(0, 80, taunting: true);
@@ -51,7 +51,69 @@ namespace Eclipse.Tests
 
             var result = resolver.Resolve(TargetSelector.LowestHpEnemy, actor: chosen, NoAllies, enemies, chosen);
 
-            Assert.AreSame(taunter, result[0]); // 도발 > 수동 지정
+            Assert.AreSame(taunter, result[0]); // 도발 > 비도발자 수동 지정
+        }
+
+        [Test]
+        public void 도발자가_여럿이면_지정한_도발자를_친다()
+        {
+            var resolver = new TargetResolver();
+            var lowTaunter = E(0, 30, taunting: true);    // 폴백이면 최저HP라 이쪽이 맞는다
+            var chosenTaunter = E(1, 90, taunting: true);
+            var enemies = new List<ICombatant> { lowTaunter, chosenTaunter };
+
+            var result = resolver.Resolve(TargetSelector.LowestHpEnemy, actor: lowTaunter, NoAllies, enemies, chosenTaunter);
+
+            Assert.AreSame(chosenTaunter, result[0]); // 도발이 범위를 좁히되 그 안에서는 지정을 존중
+        }
+
+        [Test]
+        public void 유효_수동타겟은_도발자가_있으면_도발자만()
+        {
+            var resolver = new TargetResolver();
+            var taunter = E(0, 80, taunting: true);
+            var normal = E(1, 50);
+            var dead = E(2, 0);
+            var enemies = new List<ICombatant> { taunter, normal, dead };
+
+            var valid = resolver.ValidManualTargets(enemies);
+
+            Assert.AreEqual(1, valid.Count);
+            Assert.AreSame(taunter, valid[0]);
+        }
+
+        [Test]
+        public void 유효_수동타겟은_도발자가_없으면_생존한_적_전부()
+        {
+            var resolver = new TargetResolver();
+            var a = E(0, 80);
+            var b = E(1, 50);
+            var dead = E(2, 0);
+            var enemies = new List<ICombatant> { a, b, dead };
+
+            var valid = resolver.ValidManualTargets(enemies);
+
+            Assert.AreEqual(2, valid.Count);
+            Assert.IsTrue(valid.Contains(a) && valid.Contains(b));
+            Assert.IsFalse(valid.Contains(dead), "죽은 적은 지정 후보가 아니다");
+        }
+
+        // 조준 UI가 칠하는 후보(ValidManualTargets)를 찍으면 반드시 그 대상이 맞아야 한다 —
+        // 화면과 판정이 어긋나지 않음을 계약으로 못박는다.
+        [Test]
+        public void 유효_수동타겟은_모두_지정이_존중된다()
+        {
+            var resolver = new TargetResolver();
+            var t1 = E(0, 30, taunting: true);
+            var t2 = E(1, 90, taunting: true);
+            var normal = E(2, 10);
+            var enemies = new List<ICombatant> { t1, t2, normal };
+
+            foreach (var candidate in resolver.ValidManualTargets(enemies))
+            {
+                var result = resolver.Resolve(TargetSelector.LowestHpEnemy, actor: t1, NoAllies, enemies, candidate);
+                Assert.AreSame(candidate, result[0], "후보로 제시된 대상은 찍으면 그대로 맞아야 한다");
+            }
         }
 
         [Test]
