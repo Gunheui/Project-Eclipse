@@ -4,7 +4,6 @@ using R3;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 namespace Eclipse.View
 {
@@ -15,13 +14,23 @@ namespace Eclipse.View
     /// </summary>
     public class CombatantPlateView : MonoBehaviour, IPointerClickHandler
     {
-        [SerializeField] private Image hpFill;
+        // HP 채움을 왼쪽부터 드러내는 마스크 영역(RectMask2D). 폭을 체력 비율만큼 줄여 채움을 표시한다.
+        // 안쪽 HpFill 이미지는 Sliced라 어떤 폭에서도 모서리가 왜곡되지 않는다.
+        [SerializeField] private RectTransform hpFillMask;
         [SerializeField] private TMP_Text nameLabel;
         [SerializeField] private TMP_Text hpLabel;
         [SerializeField] private CanvasGroup canvasGroup;
         [SerializeField] private GameObject actingMarker;
 
         private readonly CompositeDisposable _bindings = new();
+
+        // 체력 100% 기준 마스크 폭. Awake에서 초기 sizeDelta.x로 캡처해 비율 계산의 기준으로 쓴다.
+        private float _hpFillFullWidth;
+
+        private void Awake()
+        {
+            if (hpFillMask != null) _hpFillFullWidth = hpFillMask.sizeDelta.x;
+        }
 
         // 이 명판이 표시 중인 유닛과 탭 통지처. Bind에서 세우고 Clear에서 지워 바인딩과 수명을 맞춘다.
         private CombatantViewModel _unit;
@@ -49,10 +58,16 @@ namespace Eclipse.View
                 .AddTo(_bindings);
         }
 
-        // HP 바 fill과 "현재/최대" 숫자 라벨을 함께 갱신한다.
+        // HP 바 채움(마스크 폭)과 "현재/최대" 숫자 라벨을 함께 갱신한다.
         private void OnHpChanged(int hp, int maxHp)
         {
-            hpFill.fillAmount = maxHp > 0 ? (float)hp / maxHp : 0f;
+            float fraction = maxHp > 0 ? (float)hp / maxHp : 0f;
+            if (hpFillMask != null)
+            {
+                var size = hpFillMask.sizeDelta;
+                size.x = _hpFillFullWidth * fraction;
+                hpFillMask.sizeDelta = size;
+            }
             if (hpLabel != null) hpLabel.text = $"{hp}/{maxHp}";
         }
 
