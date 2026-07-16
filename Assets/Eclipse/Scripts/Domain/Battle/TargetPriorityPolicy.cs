@@ -54,11 +54,11 @@ namespace Eclipse.Domain
             if (candidates.Count == 0) return null;
             if (candidates.Count == 1) return candidates[0];
 
-            // 막타 층(아군 프로파일만): 어떤 굴림에도 처치되는 후보가 있으면 그 중 하나.
-            if (_profile.UseLethalRung)
+            // 막타 층: 어떤 굴림에도 처치되는 후보가 있으면 LethalChance로 그 중 하나(아군=항상, 적=부분 확률).
+            if (_profile.LethalChance > 0f)
             {
                 var lethal = LethalTarget(actor, primary.Value.value, candidates);
-                if (lethal != null) return lethal;
+                if (lethal != null && ShouldTakeLethal()) return lethal;
             }
 
             // [이음새·스킬조건] 스킬별 타겟 조건 훅. 현재 no-op.
@@ -87,6 +87,12 @@ namespace Eclipse.Domain
                 .OrderBy(EffectiveHp)
                 .ThenBy(t => t.SlotIndex)
                 .FirstOrDefault();
+
+        // 처치 가능한 대상을 실제로 마무리할지 LethalChance로 굴린다. 실패하면 호출부가 기저 층으로 내려간다.
+        // 확률 1(아군 오토)이면 굴리지 않고 통과시킨다 — 난수를 소비하지 않아야 막타 층 도입 전과 굴림 수열이
+        // 같아지고, 기존 시드 재현(같은 시드 = 같은 타겟)이 깨지지 않는다.
+        private bool ShouldTakeLethal()
+            => _profile.LethalChance >= 1f || _rng.NextFloat() < _profile.LethalChance;
 
         // 현재 실드값을 포함한 전체 체력
         private static int EffectiveHp(ICombatant unit) => unit.CurrentHp + unit.ShieldAbsorb;

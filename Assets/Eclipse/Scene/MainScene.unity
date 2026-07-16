@@ -2482,15 +2482,15 @@ MonoBehaviour:
   autoInjectGameObjects: []
   dummyRoster:
   - character: {fileID: 11400000, guid: 8a55c9e8ddcd84f2bbf78bd6722c7012, type: 2}
-    level: 15
+    level: 1
   - character: {fileID: 11400000, guid: 782a87a98fe504f79941986813fadf09, type: 2}
-    level: 20
+    level: 1
   - character: {fileID: 11400000, guid: 823758449a3e64898bcec9f871b1b822, type: 2}
-    level: 30
+    level: 1
   - character: {fileID: 11400000, guid: 62d92da064f264e7ea14f9f92335d44f, type: 2}
-    level: 8
+    level: 1
   - character: {fileID: 11400000, guid: 9195b66d1507f41cbb9badbabf82bbaf, type: 2}
-    level: 12
+    level: 1
 --- !u!4 &1069015700
 Transform:
   m_ObjectHideFlags: 0

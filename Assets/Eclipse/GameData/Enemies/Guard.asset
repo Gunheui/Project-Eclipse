@@ -15,9 +15,9 @@ MonoBehaviour:
   id: enemy_guard
   displayName: "\uC911\uAC11\uBCD1"
   baseStats:
-    hp: 1100
-    atk: 90
-    def: 90
+    hp: 1600
+    atk: 250
+    def: 120
     spd: 70
     critRate: 0.05
     critDamage: 1.5

@@ -15,8 +15,8 @@ MonoBehaviour:
   id: enemy_beast
   displayName: "\uC57C\uC218\uBCD1"
   baseStats:
-    hp: 700
-    atk: 120
+    hp: 1300
+    atk: 250
     def: 45
     spd: 100
     critRate: 0.1

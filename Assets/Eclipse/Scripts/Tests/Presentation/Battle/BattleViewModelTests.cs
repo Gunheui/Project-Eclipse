@@ -74,7 +74,7 @@ namespace Eclipse.Tests
 
             var manualProvider = new ManualActionProvider(
                 RuleBasedActionProvider.AllyAuto(targeting, combat, targetRng)) { AutoMode = startAuto };
-            var enemyAi = RuleBasedActionProvider.EnemyAi(targeting, combat, targetRng, 0.5f);
+            var enemyAi = RuleBasedActionProvider.EnemyAi(targeting, combat, targetRng, 0.6f, 0.5f);
 
             var scheduler = new AtbTurnScheduler(allies.Concat(enemies));
             var engine = new BattleEngine(allies.ToList(), enemies.ToList(), scheduler,

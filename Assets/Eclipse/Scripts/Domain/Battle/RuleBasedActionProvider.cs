@@ -46,14 +46,17 @@ namespace Eclipse.Domain
 
         /// <summary>
         /// 적 AI 프로바이더. 스킬 선택 규칙은 아군 오토와 공유하되 타겟 정책만 달리한다 —
-        /// 적 AI = 저HP 약가중 시드 랜덤(일부러 완벽하지 않게).
+        /// 적 AI = 부분 확률 막타 + 저HP 약가중 시드 랜덤(일부러 완벽하지 않게).
         /// </summary>
         /// <param name="rng">타겟 선택 전용 난수. <see cref="AllyAuto"/>와 같은 인스턴스를 넘긴다.</param>
+        /// <param name="lethalChance">막타 층 채택 확률(0=막타 안 침, 1=아군 오토와 동일).</param>
         /// <param name="lowHpBias">저HP 가중치(0=무작위, 1=최저HP 확정).</param>
         public static RuleBasedActionProvider EnemyAi(
-                TargetResolver targeting, CombatPipeline combat, IRandomService rng, float lowHpBias)
+                TargetResolver targeting, CombatPipeline combat, IRandomService rng,
+                float lethalChance, float lowHpBias)
             => new(HealHpThreshold, useHealRule: true,
-                   new TargetPriorityPolicy(targeting, combat, rng, TargetPolicyProfile.EnemyAi(lowHpBias)));
+                   new TargetPriorityPolicy(targeting, combat, rng,
+                       TargetPolicyProfile.EnemyAi(lethalChance, lowHpBias)));
 
         /// <summary>
         /// 우선순위 규칙으로 스킬을 고르고, 단일-적 스킬이면 정책이 고른 주 타겟을 함께 담아 행동을 만든다.

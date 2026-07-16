@@ -19,6 +19,8 @@ MonoBehaviour:
   effects:
   - type: 0
     target: 3
-    value: 1
+    value: 1.5
     affectedStat: 0
     duration: 0
+  castEffect: {fileID: 0}
+  impactEffect: {fileID: 0}

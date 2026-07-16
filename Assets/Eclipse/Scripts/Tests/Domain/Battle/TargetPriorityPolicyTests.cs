@@ -54,9 +54,9 @@ namespace Eclipse.Tests
             => new TargetPriorityPolicy(new TargetResolver(), Combat(seed),
                 new SeededRandom(BattleSeed.ForTargeting(seed)), profile);
 
-        // 적 프로파일. 기본값은 프로덕션 튜닝값(BattleConstantsSO 기본)과 같은 0.5.
-        private static TargetPolicyProfile EnemyAi(float lowHpBias = 0.5f)
-            => TargetPolicyProfile.EnemyAi(lowHpBias);
+        // 적 프로파일. 기본값은 프로덕션 튜닝값(BattleConstantsSO 기본)과 같은 0.6 / 0.5.
+        private static TargetPolicyProfile EnemyAi(float lethalChance = 0.6f, float lowHpBias = 0.5f)
+            => TargetPolicyProfile.EnemyAi(lethalChance, lowHpBias);
 
         private static readonly IReadOnlyList<ICombatant> NoAllies = new List<ICombatant>();
 
@@ -116,7 +116,7 @@ namespace Eclipse.Tests
             Assert.AreSame(killable, target); // 막타 > 최저 HP비율
 
             // 대조군: 같은 픽스처에서 막타 층만 끄면 기저가 weaker를 고른다(위 결과가 막타 층 덕임을 못박는다).
-            var noLethal = new TargetPolicyProfile(false, TargetBaseTier.AllyLowestHpBucket, 0f);
+            var noLethal = new TargetPolicyProfile(0f, TargetBaseTier.AllyLowestHpBucket, 0f);
             var baseTarget = Policy(noLethal)
                 .ChoosePrimaryTarget(actor, SingleEnemyDamage(power: 1f), NoAllies, enemies);
 
@@ -195,10 +195,57 @@ namespace Eclipse.Tests
                 $"저HP 편향이 뒤집혔다(다친 {woundedPicks} vs 멀쩡 {healthyPicks})");
         }
 
+        // 적 막타는 확률 층이라 "항상"도 "전혀"도 아니다. 표본을 시드 0..199로 고정해 통계적이지만 결정적이다.
+        [Test]
+        public void 적_막타층은_처치가능한_대상을_확률적으로_고른다()
+        {
+            // atk 100·power 1 → 예상 하한 ≈ 95. killable(HP 50)만 확정 처치.
+            // 기저 층은 bias 0(균등)으로 꺼 둬, killable 편중이 오직 막타 층에서만 나오게 한다.
+            var actor = Actor(atk: 100);
+            int lethalPicks = 0;
+
+            for (int seed = 0; seed < 200; seed++)
+            {
+                var killable = Enemy(0, 50, 1000);   // 막타 가능
+                var healthy = Enemy(1, 1000, 1000);  // 막타 불가
+                var enemies = new List<ICombatant> { killable, healthy };
+
+                var target = Policy(EnemyAi(lethalChance: 0.6f, lowHpBias: 0f), seed)
+                    .ChoosePrimaryTarget(actor, SingleEnemyDamage(), NoAllies, enemies);
+                if (ReferenceEquals(target, killable)) lethalPicks++;
+            }
+
+            // 기대 = 0.6(막타) + 0.4×0.5(기저 균등) = 80%. 양쪽 경계만 못박고 정확한 비율은 요구하지 않는다.
+            Assert.Greater(lethalPicks, 120, $"막타 층이 사실상 꺼져 있다(처치 {lethalPicks}/200)");
+            Assert.Less(lethalPicks, 200, $"확률이어야 하는데 매번 막타를 친다(처치 {lethalPicks}/200)");
+        }
+
+        [Test]
+        public void 적_막타확률이_0이면_처치가능한_대상을_우선하지_않는다()
+        {
+            // 확률 0 = 막타 층 미사용(기존 적 AI 동작). 기저 균등이라 멀쩡한 대상도 뽑혀야 한다.
+            var actor = Actor(atk: 100);
+            int healthyPicks = 0;
+
+            for (int seed = 0; seed < 200; seed++)
+            {
+                var killable = Enemy(0, 50, 1000);
+                var healthy = Enemy(1, 1000, 1000);
+                var enemies = new List<ICombatant> { killable, healthy };
+
+                var target = Policy(EnemyAi(lethalChance: 0f, lowHpBias: 0f), seed)
+                    .ChoosePrimaryTarget(actor, SingleEnemyDamage(), NoAllies, enemies);
+                if (ReferenceEquals(target, healthy)) healthyPicks++;
+            }
+
+            Assert.Greater(healthyPicks, 60, $"막타 확률 0인데 처치 대상으로 쏠렸다(멀쩡 {healthyPicks}/200)");
+        }
+
         [Test]
         public void 적_가중치가_0이면_HP와_무관하게_고른다()
         {
             // bias 0 = 완전 균등. 다친 대상이 있어도 항상 그쪽으로 쏠리지 않아야 한다.
+            // wounded(HP 1)는 막타 대상이라 막타 층을 꺼야 기저 층만 측정된다.
             var actor = Actor(atk: 100);
             int healthyPicks = 0;
 
@@ -208,7 +255,7 @@ namespace Eclipse.Tests
                 var healthy = Enemy(1, 1000, 1000);
                 var enemies = new List<ICombatant> { wounded, healthy };
 
-                var target = Policy(EnemyAi(lowHpBias: 0f), seed)
+                var target = Policy(EnemyAi(lethalChance: 0f, lowHpBias: 0f), seed)
                     .ChoosePrimaryTarget(actor, SingleEnemyDamage(), NoAllies, enemies);
                 if (ReferenceEquals(target, healthy)) healthyPicks++;
             }

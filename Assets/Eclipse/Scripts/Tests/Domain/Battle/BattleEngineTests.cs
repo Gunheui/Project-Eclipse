@@ -63,7 +63,7 @@ namespace Eclipse.Tests
             // 타겟 난수는 데미지 난수와 분리된 스트림. 아군/적이 같은 리졸버·미리보기·타겟 난수를 공유하되 프로파일만 다르다.
             var targetRng = new SeededRandom(BattleSeed.ForTargeting(seed));
             var allyProvider = RuleBasedActionProvider.AllyAuto(targeting, combat, targetRng);
-            var enemyProvider = RuleBasedActionProvider.EnemyAi(targeting, combat, targetRng, 0.5f);
+            var enemyProvider = RuleBasedActionProvider.EnemyAi(targeting, combat, targetRng, 0.6f, 0.5f);
 
             return new BattleEngine(allies, enemies, scheduler, executor, allyProvider, enemyProvider, cap);
         }

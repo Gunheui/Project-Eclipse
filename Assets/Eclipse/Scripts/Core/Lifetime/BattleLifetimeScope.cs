@@ -82,7 +82,8 @@ namespace Eclipse.Core
             // 아군·적 오토는 타겟 난수 스트림을 공유한다(굴림 순서 = 시드 재현의 근거).
             var autoRule = RuleBasedActionProvider.AllyAuto(targeting, combat, targetRng);
             var manualProvider = new ManualActionProvider(autoRule) { AutoMode = startAuto };
-            var enemyAi = RuleBasedActionProvider.EnemyAi(targeting, combat, targetRng, battleConstants.enemyLowHpBias);
+            var enemyAi = RuleBasedActionProvider.EnemyAi(targeting, combat, targetRng,
+                battleConstants.enemyLethalChance, battleConstants.enemyLowHpBias);
 
             // 도메인(엔진·스케줄러)은 아트를 모르므로 유닛만 뽑아 넘긴다. 순서는 아군 먼저, 그다음 적.
             var allyUnits = allyEntries.Select(e => e.Unit).ToList();
