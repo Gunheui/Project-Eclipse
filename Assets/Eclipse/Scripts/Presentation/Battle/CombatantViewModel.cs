@@ -37,6 +37,9 @@ namespace Eclipse.Presentation
             IsAlive = stateChanged
                 .Select(_ => model.IsAlive)
                 .ToReadOnlyReactiveProperty(model.IsAlive);
+            ShieldAbsorb = stateChanged
+                .Select(_ => model.ShieldAbsorb)
+                .ToReadOnlyReactiveProperty(model.ShieldAbsorb);
             Skills = model.Skills
                 .Select(s => new SkillSlotViewModel(s, stateChanged))
                 .ToList();
@@ -66,6 +69,9 @@ namespace Eclipse.Presentation
         /// <summary> 생존 여부. 사망 연출·명판 흐리기 바인딩용. 턴마다 갱신. </summary>
         public ReadOnlyReactiveProperty<bool> IsAlive { get; }
 
+        /// <summary> 남은 실드 흡수량 합. HP 바의 실드 구간 바인딩용. 턴마다 갱신. </summary>
+        public ReadOnlyReactiveProperty<int> ShieldAbsorb { get; }
+
         /// <summary> 이 유닛이 행동할 때 사용 스킬과 함께 발화. 배틀러 시전 연출 트리거. </summary>
         public Observable<SkillSO> Acted => _acted;
 
@@ -94,6 +100,7 @@ namespace Eclipse.Presentation
         {
             CurrentHp.Dispose();
             IsAlive.Dispose();
+            ShieldAbsorb.Dispose();
             _acted.Dispose();
             _hit.Dispose();
             foreach (var slot in Skills) slot.Dispose();
