@@ -17,7 +17,8 @@ namespace Eclipse.Data
         public EffectType type;
 
         /// <summary>
-        /// 이 효과가 적용될 대상 선택 규칙 (자기 / 최저HP 아군 / 최고ATK 적 등).
+        /// 이 효과가 적용될 대상 범위(스코프) (자기 / 단일·광역 아군 / 단일·광역 적).
+        /// 단일 스코프에서 구체적으로 누구를 고를지는 타겟 우선순위 정책이 정한다.
         /// </summary>
         public TargetSelector target;
 

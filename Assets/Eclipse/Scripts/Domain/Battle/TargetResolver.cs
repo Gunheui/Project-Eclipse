@@ -5,8 +5,10 @@ using Eclipse.Data.Enums;
 namespace Eclipse.Domain
 {
     /// <summary>
-    /// 스킬 효과의 TargetSelector를 실제 대상 유닛 목록으로 바꾼다.
+    /// 스킬 효과의 TargetSelector(스코프)를 실제 대상 유닛 목록으로 바꾼다.
     /// 생존한 유닛만 고르고, 단일 대상의 동률은 슬롯 번호가 낮은 쪽을 택해 항상 같은 결과를 낸다.
+    /// 범위 해석·도발 필터·수동 후보 산출만 담당한다 — 단일-적의 "누구를 고르나"는
+    /// TargetPriorityPolicy가 정해 BattleAction.Target으로 넘긴다(여기 기본값은 방어적 폴백).
     /// allies/enemies는 행동자 관점의 아군/적 목록이다.
     /// </summary>
     public class TargetResolver
@@ -33,12 +35,13 @@ namespace Eclipse.Domain
                     return allies.Where(u => u.IsAlive).ToList();
                 case TargetSelector.AllEnemies:
                     return enemies.Where(u => u.IsAlive).ToList();
-                case TargetSelector.LowestHpAlly:
+                case TargetSelector.SingleAlly:
+                    // 아군 단일 = 최저 HP 아군(힐은 전술 선택이 아니라 기본값을 리졸버가 소유).
                     return SingleOrEmpty(LowestHp(allies));
-                case TargetSelector.LowestHpEnemy:
-                    return SingleOrEmpty(LowestHp(TauntFiltered(enemies))); //도발 체크 후 없으면 타겟으로 설정
-                case TargetSelector.HighestAtkEnemy:
-                    return SingleOrEmpty(HighestAtk(TauntFiltered(enemies))); //도발 체크 후 없으면 타겟으로 설정
+                case TargetSelector.SingleEnemy:
+                    // 정책이 Target을 안 준 경우의 방어적 폴백 = 도발 필터 후 슬롯 낮은 순(dumb).
+                    // 실제 전투 경로는 항상 정책이 고른 Target을 chosenTarget으로 넘겨 이 기본값을 덮는다.
+                    return SingleOrEmpty(FirstAliveBySlot(TauntFiltered(enemies)));
                 default:
                     return Empty;
             }
@@ -58,7 +61,7 @@ namespace Eclipse.Domain
             ICombatant chosenTarget)
         {
             if (chosenTarget != null
-                && IsSingleEnemySelector(selector)
+                && IsSingleEnemy(selector)
                 && chosenTarget.IsAlive
                 && enemies.Contains(chosenTarget)
                 && (chosenTarget.IsTaunting || !AnyTaunting(enemies)))
@@ -82,11 +85,11 @@ namespace Eclipse.Domain
             return TauntFiltered(alive);
         }
 
-        /// <summary> 지정 대상 오버라이드가 적용되는 selector인지(단일-적 규칙만 해당). </summary>
-        /// <param name="selector">스킬 효과의 대상 선택 규칙.</param>
-        /// <returns>단일-적 selector면 true. 광역·아군·자기면 false(지정이 무시된다).</returns>
-        public static bool IsSingleEnemySelector(TargetSelector selector)
-            => selector == TargetSelector.LowestHpEnemy || selector == TargetSelector.HighestAtkEnemy;
+        /// <summary> 지정 대상 오버라이드가 적용되는 스코프인지(단일-적만 해당). </summary>
+        /// <param name="selector">스킬 효과의 대상 스코프.</param>
+        /// <returns>단일-적 스코프면 true. 광역·아군·자기면 false(지정이 무시된다).</returns>
+        public static bool IsSingleEnemy(TargetSelector selector)
+            => selector == TargetSelector.SingleEnemy;
 
         private static bool AnyTaunting(IReadOnlyList<ICombatant> enemies)
             => enemies.Any(u => u.IsAlive && u.IsTaunting);
@@ -106,11 +109,10 @@ namespace Eclipse.Domain
                     .ThenBy(u => u.SlotIndex) //경합일때 슬롯번호 낮은 쪽
                     .FirstOrDefault();
 
-        // 생존 유닛 중 유효 ATK가 가장 높은 하나. 동률은 슬롯 번호가 낮은 쪽. 없으면 null.
-        private static ICombatant HighestAtk(IReadOnlyList<ICombatant> units)
+        // 생존 유닛 중 슬롯 번호가 가장 낮은 하나. SingleEnemy 폴백 기본값(dumb). 없으면 null.
+        private static ICombatant FirstAliveBySlot(IReadOnlyList<ICombatant> units)
             => units.Where(u => u.IsAlive)
-                    .OrderByDescending(u => u.EffectiveStats.atk) // 공격력 내림차순
-                    .ThenBy(u => u.SlotIndex) // 경합일 때 슬롯번호 낮은 순
+                    .OrderBy(u => u.SlotIndex)
                     .FirstOrDefault();
 
         private static IReadOnlyList<ICombatant> SingleOrEmpty(ICombatant unit)

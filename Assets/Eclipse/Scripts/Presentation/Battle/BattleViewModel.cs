@@ -31,8 +31,8 @@ namespace Eclipse.Presentation
         private readonly ManualActionProvider _manualProvider;
         private readonly ISceneFlow _sceneFlow;
 
-        // 조준 UI 후보 산출용. 대상 규칙의 단일 출처는 도메인이며 VM은 그 결과를 명판으로 옮기기만 한다.
-        private readonly TargetResolver _targeting = new();
+        // 조준 UI 후보 산출용(수동 후보). 오토 타겟 정책과 같은 리졸버 인스턴스를 공유한다.
+        private readonly TargetResolver _targeting;
 
         // 뷰가 상태를 다시 읽어야 할 때 발화하는 신호(턴 종료 + 스킬 선택 시).
         // 유닛 HP·스킬 쿨·행동 수·결과가 모두 여기에서 구독됨.
@@ -47,32 +47,28 @@ namespace Eclipse.Presentation
 
         /// <param name="allies">아군 파티(유닛+아트, 로스터에서 구성).</param>
         /// <param name="enemies">적(유닛+아트, 스테이지 구성).</param>
-        /// <param name="executor">스킬 효과 적용기(씬 스코프 주입).</param>
-        /// <param name="actionCap">전장 누적 행동 상한.</param>
-        /// <param name="startAuto">시작 시 오토 전투 여부.</param>
+        /// <param name="engine">조립 완료된 전투 엔진(턴 구동). 정책·프로바이더·스케줄러와 함께 컴포지션 루트에서 조립된다.</param>
+        /// <param name="scheduler">엔진과 공유하는 턴 스케줄러. 다가올 행동 순서 예보(PreviewOrder)의 원천.</param>
+        /// <param name="manualProvider">수동/오토 입력 프로바이더. AutoMode 초기값과 입력 대기 신호(InputRequested)를 제공한다.</param>
+        /// <param name="targeting">범위 해석·수동 후보 리졸버. 오토 타겟 정책과 같은 인스턴스를 공유한다.</param>
         /// <param name="sceneFlow">전투 종료·이탈 시 씬 전환 창구.</param>
         public BattleViewModel(
             IReadOnlyList<BattleUnitEntry> allies,
             IReadOnlyList<BattleUnitEntry> enemies,
-            SkillExecutor executor,
-            int actionCap,
-            bool startAuto,
+            BattleEngine engine,
+            ITurnScheduler scheduler,
+            ManualActionProvider manualProvider,
+            TargetResolver targeting,
             ISceneFlow sceneFlow)
         {
+            _engine = engine;
+            _scheduler = scheduler;
+            _manualProvider = manualProvider;
             _sceneFlow = sceneFlow;
+            _targeting = targeting;
 
-            // 아군 = 오토↔수동 겸용 프로바이더, 적 = AI. 둘 다 같은 규칙 정책을 공유(임계 40%·힐 on).
-            var autoRule = new RuleBasedActionProvider(0.4f, useHealRule: true);
-            _manualProvider = new ManualActionProvider(autoRule) { AutoMode = startAuto };
-            var enemyAi = new RuleBasedActionProvider(0.4f, useHealRule: true);
-
-            // 도메인(엔진·스케줄러)은 아트를 모르므로 유닛만 뽑아 넘긴다. 순서는 아군 먼저, 그다음 적.
+            // 명판은 아트를 포함하므로 엔트리 그대로 쓴다. 순서는 아군 먼저, 그다음 적(스케줄러 입력 순과 동일).
             var all = allies.Concat(enemies).ToList();
-            var allyUnits = allies.Select(e => e.Unit).ToList();
-            var enemyUnits = enemies.Select(e => e.Unit).ToList();
-
-            _scheduler = new AtbTurnScheduler(allyUnits.Concat(enemyUnits));
-            _engine = new BattleEngine(allyUnits, enemyUnits, _scheduler, executor, _manualProvider, enemyAi, actionCap);
 
             Combatants = all
                 .Select(e => new CombatantViewModel(e.Unit, _stateChanged, e.Battler, e.TimelineIcon))
@@ -92,7 +88,7 @@ namespace Eclipse.Presentation
                 .Select(_ => MapOrder(_scheduler.PreviewOrder(TimelineSlots)))
                 .ToReadOnlyReactiveProperty(openingOrder);
 
-            _autoMode = new ReactiveProperty<bool>(startAuto);
+            _autoMode = new ReactiveProperty<bool>(_manualProvider.AutoMode);
             _autoMode.Subscribe(on => _manualProvider.AutoMode = on).AddTo(_subscriptions);
 
             // 수동 아군 턴이 열려 입력 대기에 들어가면 그 유닛을 ActingCombatant으로 세운다(스킬 버튼 활성화용).

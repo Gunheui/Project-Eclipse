@@ -38,17 +38,17 @@ namespace Eclipse.Presentation
         public ReadOnlyReactiveProperty<bool> IsReady { get; }
 
         /// <summary>
-        /// 이 스킬이 플레이어의 수동 대상 지정을 활용하는지. 효과 중 단일-적 셀렉터(최저HP/최고ATK 적)가
+        /// 이 스킬이 플레이어의 수동 대상 지정을 활용하는지. 효과 중 단일-적 스코프가
         /// 하나라도 있으면 true. true면 View가 스킬 탭 시 조준 모드로 들어가 대상을 받고, false면(광역·힐·자기)
         /// 지정 대상이 어차피 무시되므로 즉시 시전한다. 전투 내내 불변.
         /// </summary>
         public bool NeedsManualTarget { get; }
 
-        // 효과 중 단일-적 셀렉터가 하나라도 있는지. 수동 지정이 실제로 반영되는 스킬(단일 적 공격)을 가린다.
-        // 광역·아군·자기 셀렉터만 있는 스킬은 지정 대상이 무시되므로 조준 UI를 띄우지 않는다.
-        // 판정은 도메인 규칙을 그대로 호출한다(셀렉터 집합이 늘어도 여기가 조용히 어긋나지 않게).
+        // 효과 중 단일-적 스코프가 하나라도 있는지. 수동 지정이 실제로 반영되는 스킬(단일 적 공격)을 가린다.
+        // 광역·아군·자기 스코프만 있는 스킬은 지정 대상이 무시되므로 조준 UI를 띄우지 않는다.
+        // 판정은 도메인 규칙을 그대로 호출한다(스코프 집합이 늘어도 여기가 조용히 어긋나지 않게).
         private static bool HasSingleEnemyEffect(SkillSO skill)
-            => skill.effects.Any(e => TargetResolver.IsSingleEnemySelector(e.target));
+            => skill.effects.Any(e => TargetResolver.IsSingleEnemy(e.target));
 
         /// <summary> 파생 프로퍼티의 구독을 해지한다. 소유자(CombatantViewModel)가 호출한다. </summary>
         public void Dispose()

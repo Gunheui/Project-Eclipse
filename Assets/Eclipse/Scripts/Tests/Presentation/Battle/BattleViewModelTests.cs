@@ -31,7 +31,7 @@ namespace Eclipse.Tests
             s.cooldownTurns = cooldown;
             s.effects = new List<SkillEffect>
             {
-                new SkillEffect { type = EffectType.Damage, target = TargetSelector.LowestHpEnemy, value = power }
+                new SkillEffect { type = EffectType.Damage, target = TargetSelector.SingleEnemy, value = power }
             };
             return s;
         }
@@ -55,9 +55,6 @@ namespace Eclipse.Tests
             return Combatant.FromEnemy(so, slot);
         }
 
-        private static SkillExecutor Executor(int seed)
-            => new SkillExecutor(new CombatPipeline(new DamagePipeline(1f, 0.95f, 1.05f, new SeededRandom(seed))), new TargetResolver());
-
         private sealed class FakeSceneFlow : ISceneFlow
         {
             public UniTask ToBattleAsync() => UniTask.CompletedTask;
@@ -67,10 +64,37 @@ namespace Eclipse.Tests
         // 아트는 스케줄러·엔진과 무관하므로 스프라이트 없이 유닛만 실어 보낸다.
         private static BattleUnitEntry Entry(Combatant unit) => new BattleUnitEntry(unit, null, null);
 
+        // 엔진·스케줄러·프로바이더를 프로덕션(BattleLifetimeScope)과 같은 배선으로 조립한 VM. 타겟난수는 데미지난수와 분리된 스트림.
+        private static BattleViewModel BuildVm(Combatant[] allies, Combatant[] enemies, int seed, bool startAuto)
+        {
+            var targeting = new TargetResolver();
+            var combat = new CombatPipeline(new DamagePipeline(1f, 0.95f, 1.05f, new SeededRandom(seed)));
+            var executor = new SkillExecutor(combat, targeting);
+            var targetRng = new SeededRandom(BattleSeed.ForTargeting(seed));
+
+            var manualProvider = new ManualActionProvider(
+                RuleBasedActionProvider.AllyAuto(targeting, combat, targetRng)) { AutoMode = startAuto };
+            var enemyAi = RuleBasedActionProvider.EnemyAi(targeting, combat, targetRng, 0.5f);
+
+            var scheduler = new AtbTurnScheduler(allies.Concat(enemies));
+            var engine = new BattleEngine(allies.ToList(), enemies.ToList(), scheduler,
+                executor, manualProvider, enemyAi, actionCap: 200);
+
+            return new BattleViewModel(
+                allies.Select(Entry).ToArray(), enemies.Select(Entry).ToArray(),
+                engine, scheduler, manualProvider, targeting, new FakeSceneFlow());
+        }
+
         private static BattleViewModel Vm(Combatant ally, Combatant enemy, bool startAuto)
-            => new BattleViewModel(
-                new[] { Entry(ally) }, new[] { Entry(enemy) },
-                Executor(1), actionCap: 200, startAuto: startAuto, new FakeSceneFlow());
+            => BuildVm(new[] { ally }, new[] { enemy }, seed: 1, startAuto);
+
+        // AutoMode 위임용 규칙 프로바이더(아군 프로파일). 타겟 정책까지 실제로 배선한다.
+        private static RuleBasedActionProvider AutoRule(int seed = 1)
+        {
+            var targeting = new TargetResolver();
+            var combat = new CombatPipeline(new DamagePipeline(1f, 0.95f, 1.05f, new SeededRandom(seed)));
+            return RuleBasedActionProvider.AllyAuto(targeting, combat, new SeededRandom(BattleSeed.ForTargeting(seed)));
+        }
 
         // --- 수동 프로바이더: Submit 전엔 대기, Submit하면 그 행동으로 완료 ---
 
@@ -79,7 +103,7 @@ namespace Eclipse.Tests
         {
             var actor = Ally("A", 0, S(1000, 100, 0, 100));
             var enemy = Enemy("E", 0, S(1000, 10, 0, 90));
-            var provider = new ManualActionProvider(new RuleBasedActionProvider(0.4f, useHealRule: true)) { AutoMode = false };
+            var provider = new ManualActionProvider(AutoRule()) { AutoMode = false };
 
             var task = provider.ChooseActionAsync(actor, new List<ICombatant> { actor }, new List<ICombatant> { enemy }, CancellationToken.None);
             Assert.AreEqual(UniTaskStatus.Pending, task.Status, "Submit 전에는 완료되지 않는다");
@@ -100,7 +124,7 @@ namespace Eclipse.Tests
         {
             var actor = Ally("A", 0, S(1000, 100, 0, 100));
             var enemy = Enemy("E", 0, S(1000, 10, 0, 90));
-            var provider = new ManualActionProvider(new RuleBasedActionProvider(0.4f, useHealRule: true)) { AutoMode = true };
+            var provider = new ManualActionProvider(AutoRule()) { AutoMode = true };
 
             var action = await provider.ChooseActionAsync(actor, new List<ICombatant> { actor }, new List<ICombatant> { enemy }, CancellationToken.None);
 
@@ -135,17 +159,15 @@ namespace Eclipse.Tests
             vm.Dispose();
         });
 
-        // --- VM 수동 지정: 찍은 대상이 자동 기본(최저HP)을 덮어써 그 적을 맞힌다 ---
+        // --- VM 수동 지정: 찍은 대상이 자동 기본(슬롯순)을 덮어써 그 적을 맞힌다 ---
 
         [UnityTest]
         public IEnumerator 수동_지정_대상이_자동기본이_아닌_찍은_적을_맞힌다() => UniTask.ToCoroutine(async () =>
         {
             var ally = Ally("아군", 0, S(5000, 300, 0, 200)); // 가장 빠름 → 먼저 행동
-            var low = Enemy("저HP", 0, S(1000, 10, 0, 50));   // LowestHpEnemy 자동 기본이 고를 대상
-            var high = Enemy("고HP", 1, S(3000, 10, 0, 40));
-            var vm = new BattleViewModel(
-                new[] { Entry(ally) }, new[] { Entry(low), Entry(high) },
-                Executor(1), actionCap: 200, startAuto: false, new FakeSceneFlow());
+            var low = Enemy("저HP", 0, S(1000, 10, 0, 50));   // 슬롯 앞 — 자동 기본 폴백이 고를 자리
+            var high = Enemy("고HP", 1, S(3000, 10, 0, 40));  // 슬롯 뒤 — 수동으로 이쪽을 지정
+            var vm = BuildVm(new[] { ally }, new[] { low, high }, seed: 1, startAuto: false);
 
             vm.RunBattleAsync(null, CancellationToken.None).Forget(); // 첫 아군 턴 입력 대기까지 진행
 
@@ -210,9 +232,7 @@ namespace Eclipse.Tests
         {
             var ally = Ally("아군", 0, S(2000, 300, 20, 150));
             var enemy = Enemy("적", 0, S(1500, 120, 10, 120));
-            var vm = new BattleViewModel(
-                new[] { Entry(ally) }, new[] { Entry(enemy) },
-                Executor(seed), actionCap: 200, startAuto: true, new FakeSceneFlow());
+            var vm = BuildVm(new[] { ally }, new[] { enemy }, seed, startAuto: true);
 
             var trace = new BattleTrace();
             // ActionCount는 턴마다 갱신(증가)되므로 턴 신호 대용. 그때의 전 유닛 HP를 함께 찍는다.

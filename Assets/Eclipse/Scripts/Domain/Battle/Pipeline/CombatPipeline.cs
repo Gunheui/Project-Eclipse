@@ -29,6 +29,17 @@ namespace Eclipse.Domain
             => _damage.ComputeDamage(attacker, target, power);
 
         /// <summary>
+        /// 난수 없이 피해 하한을 추정한다(치명 없음·변동 하한). 이 값이 대상 현재 HP 이상이면 확정 처치.
+        /// 오토 타겟 정책의 막타(lethal) 판정 전용 — 실제 데미지 난수 수열을 소비하지 않는다.
+        /// </summary>
+        /// <param name="attacker">공격자 유효 스탯.</param>
+        /// <param name="target">대상 유효 스탯.</param>
+        /// <param name="power">스킬 배율(공격자 ATK에 곱해지는 값).</param>
+        /// <returns>최악 굴림 기준 피해 하한(1 이상).</returns>
+        public int PreviewDamage(Stats attacker, Stats target, float power)
+            => _damage.EstimateMinDamage(attacker, target, power);
+
+        /// <summary>
         /// 시전자 ATK와 배율로 회복량을 계산한다(경감·치명·변동 없음, 최소 1).
         /// </summary>
         /// <param name="attacker">시전자 유효 스탯.</param>

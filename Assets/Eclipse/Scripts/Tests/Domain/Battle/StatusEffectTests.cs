@@ -161,14 +161,14 @@ namespace Eclipse.Tests
         {
             var resolver = new TargetResolver();
             var attacker = Unit(S(500, 100, 0, 100));
-            var taunter = Unit(S(1000, 100, 0, 100), slot: 0); // 최저HP가 아님(높은 HP)
-            var squishy = Unit(S(100, 100, 0, 100), slot: 1);  // 최저HP
+            var taunter = Unit(S(1000, 100, 0, 100), slot: 1); // 슬롯 뒤(폴백 슬롯순이면 안 뽑힐 자리)
+            var squishy = Unit(S(100, 100, 0, 100), slot: 0);  // 슬롯 앞
             ((IDamageable)taunter).ApplyEffect(StatusEffect.Taunt(2));
 
             var enemies = new List<ICombatant> { taunter, squishy };
-            var targets = resolver.Resolve(TargetSelector.LowestHpEnemy, attacker, new List<ICombatant>(), enemies);
+            var targets = resolver.Resolve(TargetSelector.SingleEnemy, attacker, new List<ICombatant>(), enemies);
 
-            Assert.AreSame(taunter, targets.Single(), "도발 중이면 최저HP가 아니어도 도발자를 우선");
+            Assert.AreSame(taunter, targets.Single(), "도발 중이면 슬롯 앞 유닛이 있어도 도발자를 우선");
         }
 
         [Test]
@@ -182,9 +182,9 @@ namespace Eclipse.Tests
             ((IDamageable)taunter).ApplyDamage(9999); // 도발자 사망
 
             var enemies = new List<ICombatant> { taunter, squishy };
-            var targets = resolver.Resolve(TargetSelector.LowestHpEnemy, attacker, new List<ICombatant>(), enemies);
+            var targets = resolver.Resolve(TargetSelector.SingleEnemy, attacker, new List<ICombatant>(), enemies);
 
-            Assert.AreSame(squishy, targets.Single(), "죽은 도발자는 후보에서 빠져 최저HP로");
+            Assert.AreSame(squishy, targets.Single(), "죽은 도발자는 후보에서 빠져 생존 적으로");
         }
 
         [Test]
@@ -237,8 +237,8 @@ namespace Eclipse.Tests
                 s.id = "atk_dot"; s.displayName = "독칼"; s.cooldownTurns = 0;
                 s.effects = new List<SkillEffect>
                 {
-                    new SkillEffect { type = EffectType.Damage, target = TargetSelector.LowestHpEnemy, value = 0.8f },
-                    new SkillEffect { type = EffectType.Dot, target = TargetSelector.LowestHpEnemy, value = 0.3f, duration = 3 },
+                    new SkillEffect { type = EffectType.Damage, target = TargetSelector.SingleEnemy, value = 0.8f },
+                    new SkillEffect { type = EffectType.Dot, target = TargetSelector.SingleEnemy, value = 0.3f, duration = 3 },
                 };
                 return s;
             }
@@ -260,9 +260,12 @@ namespace Eclipse.Tests
                 var enemies = new List<Combatant> { enemy };
                 var scheduler = new AtbTurnScheduler(allies.Concat(enemies));
                 var pipeline = new DamagePipeline(1f, 0.95f, 1.05f, new SeededRandom(777));
-                var executor = new SkillExecutor(new CombatPipeline(pipeline), new TargetResolver());
-                // 아군 오토·적 AI가 같은 규칙 정책을 공유(임계 40%·힐 on). 정책은 무상태라 한 인스턴스를 양편에 넘겨도 무방.
-                var provider = new RuleBasedActionProvider(0.4f, useHealRule: true);
+                var combat = new CombatPipeline(pipeline);
+                var targeting = new TargetResolver();
+                var executor = new SkillExecutor(combat, targeting);
+                // 1v1 결정성 테스트라 타겟 선택은 후보가 하나뿐(난수 미소비). 양편에 같은 프로파일을 넘겨도 결과가 같다.
+                var targetRng = new SeededRandom(BattleSeed.ForTargeting(777));
+                var provider = RuleBasedActionProvider.AllyAuto(targeting, combat, targetRng);
                 return new BattleEngine(allies, enemies, scheduler, executor, provider, provider, 200);
             }
 

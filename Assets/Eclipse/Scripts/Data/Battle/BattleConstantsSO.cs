@@ -20,5 +20,9 @@ namespace Eclipse.Data
 
         [Tooltip("전장 누적 행동 상한. 이 횟수를 넘으면 미클리어(패배)로 종료 — 무한 루프 방지.")]
         public int globalActionCap = 200;
+
+        [Tooltip("적 AI가 다친 대상을 노리는 강도. 가중치 = 1 + 이 값 × (1 − HP비율). " +
+                 "0 = HP 무관 완전 균등, 클수록 저HP 집중(난이도 상승). 하드 저격을 피하려는 값이라 과하게 올리지 말 것.")]
+        public float enemyLowHpBias = 0.5f;
     }
 }

@@ -31,11 +31,11 @@ namespace Eclipse.Tests
         public void 지정대상이_단일적_셀렉터면_그_대상을_친다()
         {
             var resolver = new TargetResolver();
-            var low = E(0, 10);   // 원래 LowestHpEnemy가 고를 대상
+            var low = E(0, 10);
             var chosen = E(1, 50);
             var enemies = new List<ICombatant> { low, chosen };
 
-            var result = resolver.Resolve(TargetSelector.LowestHpEnemy, actor: chosen, NoAllies, enemies, chosen);
+            var result = resolver.Resolve(TargetSelector.SingleEnemy, actor: chosen, NoAllies, enemies, chosen);
 
             Assert.AreEqual(1, result.Count);
             Assert.AreSame(chosen, result[0]); // 지정이 최저HP 규칙을 덮는다
@@ -49,7 +49,7 @@ namespace Eclipse.Tests
             var chosen = E(1, 50);
             var enemies = new List<ICombatant> { taunter, chosen };
 
-            var result = resolver.Resolve(TargetSelector.LowestHpEnemy, actor: chosen, NoAllies, enemies, chosen);
+            var result = resolver.Resolve(TargetSelector.SingleEnemy, actor: chosen, NoAllies, enemies, chosen);
 
             Assert.AreSame(taunter, result[0]); // 도발 > 비도발자 수동 지정
         }
@@ -58,11 +58,11 @@ namespace Eclipse.Tests
         public void 도발자가_여럿이면_지정한_도발자를_친다()
         {
             var resolver = new TargetResolver();
-            var lowTaunter = E(0, 30, taunting: true);    // 폴백이면 최저HP라 이쪽이 맞는다
+            var lowTaunter = E(0, 30, taunting: true);    // 폴백이면 슬롯 앞이라 이쪽이 맞는다
             var chosenTaunter = E(1, 90, taunting: true);
             var enemies = new List<ICombatant> { lowTaunter, chosenTaunter };
 
-            var result = resolver.Resolve(TargetSelector.LowestHpEnemy, actor: lowTaunter, NoAllies, enemies, chosenTaunter);
+            var result = resolver.Resolve(TargetSelector.SingleEnemy, actor: lowTaunter, NoAllies, enemies, chosenTaunter);
 
             Assert.AreSame(chosenTaunter, result[0]); // 도발이 범위를 좁히되 그 안에서는 지정을 존중
         }
@@ -111,7 +111,7 @@ namespace Eclipse.Tests
 
             foreach (var candidate in resolver.ValidManualTargets(enemies))
             {
-                var result = resolver.Resolve(TargetSelector.LowestHpEnemy, actor: t1, NoAllies, enemies, candidate);
+                var result = resolver.Resolve(TargetSelector.SingleEnemy, actor: t1, NoAllies, enemies, candidate);
                 Assert.AreSame(candidate, result[0], "후보로 제시된 대상은 찍으면 그대로 맞아야 한다");
             }
         }
@@ -124,22 +124,23 @@ namespace Eclipse.Tests
             var dead = E(1, 0);
             var enemies = new List<ICombatant> { alive, dead };
 
-            var result = resolver.Resolve(TargetSelector.LowestHpEnemy, actor: alive, NoAllies, enemies, dead);
+            var result = resolver.Resolve(TargetSelector.SingleEnemy, actor: alive, NoAllies, enemies, dead);
 
-            Assert.AreSame(alive, result[0]); // 죽은 지정 대신 최저HP 생존
+            Assert.AreSame(alive, result[0]); // 죽은 지정 대신 생존 적(슬롯순)
         }
 
         [Test]
-        public void 지정이_null이면_셀렉터가_대상을_정한다()
+        public void 지정이_null이면_셀렉터_기본값은_슬롯순_대상이다()
         {
             var resolver = new TargetResolver();
-            var low = E(0, 10);
-            var high = E(1, 50);
-            var enemies = new List<ICombatant> { low, high };
+            var front = E(0, 50); // 슬롯 앞 · HP 높음
+            var lowHp = E(1, 10); // 슬롯 뒤 · HP 낮음
+            var enemies = new List<ICombatant> { front, lowHp };
 
-            var result = resolver.Resolve(TargetSelector.LowestHpEnemy, actor: low, NoAllies, enemies, null);
+            var result = resolver.Resolve(TargetSelector.SingleEnemy, actor: front, NoAllies, enemies, null);
 
-            Assert.AreSame(low, result[0]);
+            // SingleEnemy 폴백은 최저HP가 아니라 슬롯 낮은 쪽(dumb) — 정책이 Target을 줄 때만 그 위를 덮는다.
+            Assert.AreSame(front, result[0]);
         }
 
         [Test]

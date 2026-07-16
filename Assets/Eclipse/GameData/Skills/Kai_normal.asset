@@ -18,7 +18,7 @@ MonoBehaviour:
   cooldownTurns: 2
   effects:
   - type: 0
-    target: 4
+    target: 3
     value: 1.8
     affectedStat: 0
     duration: 0
