@@ -80,13 +80,16 @@ namespace Eclipse.Domain
             return null;
         }
 
-        // 어떤 굴림에도(치명 없음·변동 하한) 처치되는 후보 중 현재 HP가 가장 낮은 하나. 동률은 슬롯 낮은 쪽. 없으면 null.
+        // 어떤 굴림에도(치명 없음·변동 하한) 처치되는 후보 중 유효 HP가 가장 낮은 하나. 동률은 슬롯 낮은 쪽. 없으면 null.
         private ICombatant LethalTarget(ICombatant actor, float skillPower, IReadOnlyList<ICombatant> candidates)
             => candidates
-                .Where(t => _combat.PreviewDamage(actor.EffectiveStats, t.EffectiveStats, skillPower) >= t.CurrentHp)
-                .OrderBy(t => t.CurrentHp)
+                .Where(t => _combat.PreviewDamage(actor.EffectiveStats, t.EffectiveStats, skillPower) >= EffectiveHp(t))
+                .OrderBy(EffectiveHp)
                 .ThenBy(t => t.SlotIndex)
                 .FirstOrDefault();
+
+        // 현재 실드값을 포함한 전체 체력
+        private static int EffectiveHp(ICombatant unit) => unit.CurrentHp + unit.ShieldAbsorb;
 
         // 최저 HP비율 후보(동률 버킷)에서 시드 난수로 하나. 전원 풀피면 버킷=전체라 무작위 타겟이 된다.
         private ICombatant LowestHpBucketPick(IReadOnlyList<ICombatant> candidates)

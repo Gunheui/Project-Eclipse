@@ -42,6 +42,7 @@ namespace Eclipse.Tests
             public bool IsAlive => CurrentHp > 0;
             public IReadOnlyList<SkillRuntime> Skills { get; set; }
             public bool IsTaunting { get; set; }
+            public int ShieldAbsorb { get; set; }
         }
 
         private static Combatant Unit(int hp, int maxHp, params SkillRuntime[] skills)

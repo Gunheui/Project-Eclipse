@@ -36,6 +36,9 @@ namespace Eclipse.Domain
         /// <summary> 붙어 있는 효과 중 도발이 있으면 도발중임. </summary>
         public bool IsTaunting => _effects.Any(e => e.Type == EffectType.Taunt);
 
+        /// <summary> 붙어 있는 실드들의 남은 흡수량 합. ApplyDamage가 HP보다 먼저 깎는 양과 같다. </summary>
+        public int ShieldAbsorb => _effects.Where(e => e.Type == EffectType.Shield).Sum(e => e.RemainingAbsorb);
+
         /// <summary>
         /// 피해를 적용한다. 실드가 있으면 리스트 순으로 먼저 흡수하고, 막지 못한 나머지만 HP를 깎는다.
         /// HP는 0 밑으로 내려가지 않는다. 흡수량이 0이 된 실드는 이 유닛의 자기 턴 틱에서 제거된다.

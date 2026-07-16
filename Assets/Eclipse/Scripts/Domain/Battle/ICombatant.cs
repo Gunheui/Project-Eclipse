@@ -33,6 +33,12 @@ namespace Eclipse.Domain
         /// <summary> 생존 여부(HP &gt; 0). </summary>
         bool IsAlive { get; }
 
+        /// <summary>
+        /// 붙어 있는 실드들의 남은 흡수량 합(실드가 없으면 0). 피해는 HP에 닿기 전에 이 값에 먼저 흡수되므로,
+        /// 처치 판정은 현재 HP가 아니라 CurrentHp + 이 값을 기준으로 해야 한다.
+        /// </summary>
+        int ShieldAbsorb { get; }
+
         /// <summary> 보유 스킬의 런타임(잔여 쿨 포함). </summary>
         IReadOnlyList<SkillRuntime> Skills { get; }
 

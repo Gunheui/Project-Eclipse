@@ -21,13 +21,14 @@ namespace Eclipse.Tests
             public bool IsAlive => CurrentHp > 0;
             public IReadOnlyList<SkillRuntime> Skills { get; set; }
             public bool IsTaunting { get; set; }
+            public int ShieldAbsorb { get; set; }
         }
 
-        private static Combatant Enemy(int slot, int hp, int maxHp, int atk = 0, bool taunting = false)
+        private static Combatant Enemy(int slot, int hp, int maxHp, int atk = 0, bool taunting = false, int shield = 0)
             => new Combatant
             {
                 Team = Team.Enemy, SlotIndex = slot, CurrentHp = hp, MaxHp = maxHp,
-                EffectiveStats = new Stats { atk = atk }, IsTaunting = taunting
+                EffectiveStats = new Stats { atk = atk }, IsTaunting = taunting, ShieldAbsorb = shield
             };
 
         private static Combatant Actor(int atk)
@@ -120,6 +121,24 @@ namespace Eclipse.Tests
                 .ChoosePrimaryTarget(actor, SingleEnemyDamage(power: 1f), NoAllies, enemies);
 
             Assert.AreSame(weaker, baseTarget);
+        }
+
+        [Test]
+        public void 아군_막타층은_실드에_막혀_죽지_않는_적을_처치가능으로_보지_않는다()
+        {
+            // atk 100·power 1 → 예상 하한 ≈ 95.
+            // shielded: HP 50이라 HP만 보면 처치 가능해 보이지만 실드 60까지 뚫어야 해 유효 HP 110 → 실제로는 못 죽인다.
+            // killable: 실드 없이 HP 90 → 95로 확정 처치.
+            // 실드를 무시하면 HP가 더 낮은 shielded를 골라 한 턴을 버린다.
+            var actor = Actor(atk: 100);
+            var shielded = Enemy(0, 50, 100, shield: 60);
+            var killable = Enemy(1, 90, 100);
+            var enemies = new List<ICombatant> { shielded, killable };
+
+            var target = Policy(TargetPolicyProfile.AllyAuto)
+                .ChoosePrimaryTarget(actor, SingleEnemyDamage(power: 1f), NoAllies, enemies);
+
+            Assert.AreSame(killable, target);
         }
 
         [Test]
