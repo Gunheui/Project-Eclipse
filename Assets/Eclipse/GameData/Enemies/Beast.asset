@@ -18,7 +18,7 @@ MonoBehaviour:
     hp: 1300
     atk: 250
     def: 45
-    spd: 100
+    spd: 105
     critRate: 0.1
     critDamage: 1.5
   basicSkill: {fileID: 11400000, guid: a2e1aef5073874263b71b9a4e6cd83f2, type: 2}

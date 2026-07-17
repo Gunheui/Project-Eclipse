@@ -21,6 +21,12 @@ namespace Eclipse.Data
         public string displayName;
 
         /// <summary>
+        /// 스킬 툴팁에 보여줄 설명문 (로컬라이즈 대상).
+        /// </summary>
+        [TextArea]
+        public string description;
+
+        /// <summary>
         /// UI 슬롯에 표시할 스킬 아이콘.
         /// </summary>
         public Sprite icon;

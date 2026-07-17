@@ -32,6 +32,8 @@ namespace Eclipse.View
         [SerializeField] private GameObject[] skillCooldownOverlays;
         [SerializeField] private TMP_Text[] skillCooldownLabels;
         [SerializeField] private Image[] skillIcons;
+        [SerializeField] private SkillTooltipTrigger[] skillTooltipTriggers;
+        [SerializeField] private SkillTooltip skillTooltip;
 
         [Header("Turn timeline")]
         [SerializeField] private TurnTimelineView turnTimeline;
@@ -189,6 +191,7 @@ namespace Eclipse.View
         private void OnActingCombatantChanged(CombatantViewModel unit)
         {
             ExitTargeting(); // 행동자가 바뀌면(턴 종료·적 턴·오토) 이전 조준 상태를 정리한다
+            if (skillTooltip != null) skillTooltip.Hide(); // 떠 있던 툴팁도 함께 정리(잔상 방지)
             HighlightActing(unit);
 
             for (int i = 0; i < skillButtons.Length; i++)
@@ -201,6 +204,7 @@ namespace Eclipse.View
                         skillLabels[i].text = slot.Skill.displayName;
                     if (skillIcons != null && i < skillIcons.Length && slot.Skill.icon != null)
                         skillIcons[i].sprite = slot.Skill.icon;
+                    SetTooltipContent(i, slot.Skill.displayName, slot.Skill.description);
 
                     bool ready = slot.IsReady.CurrentValue;
                     skillButtons[i].interactable = ready;
@@ -208,14 +212,30 @@ namespace Eclipse.View
                 }
                 else
                 {
+                    SetTooltipContent(i, null, null);
                     skillButtons[i].interactable = false;
                     ShowCooldown(i, 0, show: false);
                 }
             }
         }
 
+        // 스킬 툴팁 슬롯에 표시할 스킬명·설명을 채운다. 대응 트리거가 없으면(빈 슬롯) 조용히 넘어간다.
+        private void SetTooltipContent(int index, string skillName, string description)
+        {
+            if (skillTooltipTriggers == null || index >= skillTooltipTriggers.Length) return;
+            var trigger = skillTooltipTriggers[index];
+            if (trigger == null) return;
+            trigger.SkillName = skillName;
+            trigger.Description = description;
+        }
+
         private void OnSkillClicked(int index)
         {
+            // 툴팁을 보려 꾹 눌렀다 뗀 경우(롱프레스)엔 그 릴리즈로 딸려오는 시전을 한 번 건너뛴다.
+            if (skillTooltipTriggers != null && index < skillTooltipTriggers.Length
+                && skillTooltipTriggers[index] != null && skillTooltipTriggers[index].ConsumeLongPress())
+                return;
+
             var unit = _viewModel.ActingCombatant.CurrentValue;
             if (unit == null || index >= unit.Skills.Count) return;
 

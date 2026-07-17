@@ -14,6 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.SkillSO
   id: rien_ultimate
   displayName: "\uBD88\uAD74\uC758 \uBCBD"
+  description: "\uC790\uC2E0\uC5D0\uAC8C \uCD5C\uB300 \uCCB4\uB825\uC758 30%\uC5D0
+    \uD574\uB2F9\uD558\uB294 \uBCF4\uD638\uB9C9\uC744 \uB450\uB974\uACE0, 2\uD134
+    \uB3D9\uC548 \uBAA8\uB4E0 \uC544\uAD70\uC758 \uBC29\uC5B4\uB825\uC744 25% \uB192\uC778\uB2E4.
+    (\uC7AC\uC0AC\uC6A9 5\uD134)"
   icon: {fileID: 21300000, guid: 16cb6aa0208ed456a9ed8878e5cdae31, type: 3}
   cooldownTurns: 5
   effects:
@@ -27,3 +31,5 @@ MonoBehaviour:
     value: 0.25
     affectedStat: 3
     duration: 2
+  castEffect: {fileID: 0}
+  impactEffect: {fileID: 0}

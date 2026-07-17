@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.SkillSO
   id: enemy_basic
   displayName: "\uD560\uD034\uAE30"
+  description: "\uC801 \uD558\uB098\uC5D0\uAC8C \uACF5\uACA9\uB825\uC758 150%\uB85C
+    \uD53C\uD574\uB97C \uC785\uD78C\uB2E4."
   icon: {fileID: 0}
   cooldownTurns: 0
   effects:

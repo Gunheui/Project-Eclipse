@@ -217,18 +217,32 @@ namespace Eclipse.View
                 .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
         }
 
+        // 연출은 배틀러 자신이 아니라 부모 앵커 밑에 스폰한다(사망으로 배틀러가 숨어도 연출은 남아야 하므로).
+        // 그 앵커가 파괴되는 중이면 스폰할 수 없다 — 씬 종료·사망 정리 도중 뒤늦게 도착한 신호가 여기로 온다.
+        // 스폰 가능한 부모를 주고, 불가능하면 null.
+        private Transform SpawnParentOrNull()
+        {
+            var parent = transform.parent;
+            if (parent == null || parent.gameObject.IsDestroying()) return null;
+            return gameObject.IsDestroying() ? null : parent;
+        }
+
         // 이펙트 스펙을 이 배틀러 위치에 스폰해 재생한다. 스펙·프리팹이 없으면 즉시 완료.
         private UniTask SpawnEffect(EffectSpec spec)
         {
             if (spec == null || effectPlayerPrefab == null) return UniTask.CompletedTask;
-            var player = Instantiate(effectPlayerPrefab, visualRoot.position, Quaternion.identity, transform.parent);
+            var parent = SpawnParentOrNull();
+            if (parent == null) return UniTask.CompletedTask;
+            var player = Instantiate(effectPlayerPrefab, visualRoot.position, Quaternion.identity, parent);
             return player.Play(spec, _speed(), this.GetCancellationTokenOnDestroy());
         }
 
         private void SpawnFloatingText(int amount, bool isHeal)
         {
             if (floatingTextPrefab == null) return;
-            var ft = Instantiate(floatingTextPrefab, visualRoot.position, Quaternion.identity, transform.parent);
+            var parent = SpawnParentOrNull();
+            if (parent == null) return;
+            var ft = Instantiate(floatingTextPrefab, visualRoot.position, Quaternion.identity, parent);
             ft.Show(amount, isHeal, _speed());
         }
 

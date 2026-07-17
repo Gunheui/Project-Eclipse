@@ -14,10 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.SkillSO
   id: mira_normal
   displayName: "\uCE58\uC720\uC758 \uC190\uAE38"
+  description: "\uC544\uAD70 \uD558\uB098\uC758 \uCCB4\uB825\uC744 \uACF5\uACA9\uB825\uC758
+    300%\uB9CC\uD07C \uD68C\uBCF5\uC2DC\uD0A8\uB2E4. (\uC7AC\uC0AC\uC6A9 2\uD134)"
   icon: {fileID: 21300000, guid: facbca94cee71459fbd9472d7354bc05, type: 3}
   cooldownTurns: 2
   effects:
   - type: 1
     target: 1
     value: 3
+    affectedStat: 0
     duration: 0
+  castEffect: {fileID: 0}
+  impactEffect: {fileID: 0}
