@@ -14,14 +14,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.EffectSpec
   layers:
   - sprite: {fileID: -6498607054045572640, guid: 5237383d6986d49aca7e2e24622fc2e9, type: 3}
-    offset: {x: 0.5, y: 0.25}
+    offset: {x: 0.5, y: 1}
     startDelay: 0
     duration: 0.22
-    startScale: {x: 0.25, y: 0.35}
-    endScale: {x: 0.55, y: 0.4}
+    startScale: {x: 0.45, y: 0.5}
+    endScale: {x: 0.7, y: 0.6}
     spinDegPerSec: 0
     moveBy: {x: 0.6, y: 0}
-    tint: {r: 0.75, g: 0.85, b: 1, a: 1}
+    tint: {r: 0.35, g: 0.8, b: 1, a: 1}
     endAlpha: 0
     ease: 1
     sortingOrder: 20

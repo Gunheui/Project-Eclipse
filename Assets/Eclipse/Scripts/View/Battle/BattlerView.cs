@@ -37,9 +37,11 @@ namespace Eclipse.View
         // 선택 불가(Ineligible) 대상 스프라이트에 곱하는 색. 채도는 유지하고 밝기만 낮춰 어둡게 보이게 한다.
         private static readonly Color DimColor = new(0.35f, 0.35f, 0.35f, 1f);
 
-        // 유효 타겟 아웃라인(적군 계열 #D06A61). 두께는 월드 단위 — 스프라이트 PPU가 달라도(아군 315·적 100)
-        // 화면상 굵기가 같도록 셰이더에 넘길 때 PPU로 환산한다.
+        // 유효 타겟 아웃라인. 적 공격 조준=적군 계열 #D06A61, 아군 힐/버프 조준=아군 계열 녹색 #4E9B7A
+        // (아군 HP바와 같은 색 — 힐 대상이 공격 대상처럼 보이지 않게). 두께는 월드 단위 — 스프라이트 PPU가
+        // 달라도(아군 315·적 100) 화면상 굵기가 같도록 셰이더에 넘길 때 PPU로 환산한다.
         private static readonly Color SelectableOutline = new(0.816f, 0.416f, 0.380f, 1f);
+        private static readonly Color AllyOutline = new(0.306f, 0.608f, 0.478f, 1f);
         private const float SelectableOutlineWorldThickness = 0.03f;
 
         // Eclipse/SpriteOutlineURP2D의 아웃라인 프로퍼티. MaterialPropertyBlock으로 배틀러마다 따로 덮어쓴다.
@@ -131,11 +133,12 @@ namespace Eclipse.View
         /// 선택 불가(Ineligible)는 스프라이트를 어둡게 한다. None이면 평상시(밝기 원복·아웃라인 off)로 되돌린다.
         /// </summary>
         /// <param name="state">이 배틀러의 대상 상태(None/Selectable/Ineligible).</param>
-        public void SetTargetState(TargetState state)
+        /// <param name="allyTarget">유효 타겟(Selectable) 아웃라인을 아군색(녹색)으로 칠할지. false면 적색.</param>
+        public void SetTargetState(TargetState state, bool allyTarget = false)
         {
             if (spriteRenderer == null) return;
             spriteRenderer.color = state == TargetState.Ineligible ? DimColor : Color.white;
-            ApplyOutline(state == TargetState.Selectable);
+            ApplyOutline(state == TargetState.Selectable, allyTarget);
         }
 
         // 탭 영역을 방금 바인딩한 스프라이트 크기에 맞춘다. 스프라이트는 런타임에 정해지고 유닛마다
@@ -155,14 +158,14 @@ namespace Eclipse.View
         }
 
         // 아웃라인을 이 배틀러에만 켠다. 머티리얼이 Eclipse/SpriteOutlineURP2D가 아니면 이 프로퍼티들은 무시된다.
-        private void ApplyOutline(bool on)
+        private void ApplyOutline(bool on, bool allyTarget)
         {
             _mpb ??= new MaterialPropertyBlock();
             spriteRenderer.GetPropertyBlock(_mpb);
             _mpb.SetFloat(OutlineEnabledId, on ? 1f : 0f);
             if (on)
             {
-                _mpb.SetColor(OutlineColorId, SelectableOutline);
+                _mpb.SetColor(OutlineColorId, allyTarget ? AllyOutline : SelectableOutline);
                 // 셰이더 두께 단위는 소스 텍셀이므로 월드 두께에 PPU를 곱해 환산한다.
                 float ppu = spriteRenderer.sprite != null ? spriteRenderer.sprite.pixelsPerUnit : 100f;
                 _mpb.SetFloat(OutlineThicknessId, SelectableOutlineWorldThickness * ppu);

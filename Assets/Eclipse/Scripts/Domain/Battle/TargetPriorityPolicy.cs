@@ -8,7 +8,7 @@ namespace Eclipse.Domain
     /// <summary>
     /// 단일-적 데미지 스킬의 주 타겟을 계층형 우선순위 사다리로 고른다. 아군 오토와 적 AI가 이 한 클래스를
     /// 공유하고, 활성 층·기저 규칙은 <see cref="TargetPolicyProfile"/>로만 달라진다.
-    /// 후보 출처는 <see cref="TargetResolver.ValidManualTargets"/>(생존 + 도발 필터)라 수동 지정과 같은 규칙을
+    /// 후보 출처는 <see cref="TargetResolver.ValidEnemyTargets"/>(생존 + 도발 필터)라 수동 지정과 같은 규칙을
     /// 타므로 "고른 대상 = 맞는 대상" 계약이 오토에도 성립한다. 난수는 데미지와 분리된 타겟 전용 스트림을 쓴다
     /// (같은 시드 → 같은 선택, 재현 유지).
     /// </summary>
@@ -50,7 +50,7 @@ namespace Eclipse.Domain
             if (primary == null) return null;
 
             // 도발 층: ValidManualTargets가 생존 적을 도발자로 좁혀 준다(도발이 없으면 생존 적 전체).
-            var candidates = _targeting.ValidManualTargets(enemies);
+            var candidates = _targeting.ValidEnemyTargets(enemies);
             if (candidates.Count == 0) return null;
             if (candidates.Count == 1) return candidates[0];
 

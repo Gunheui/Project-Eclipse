@@ -149,17 +149,20 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 행동자가 단일-적 스킬로 직접 지정할 수 있는 대상 명판. 도발 규칙이 반영된다(도발 중인 적이
-        /// 있으면 그들만). 여기 든 대상을 <see cref="Submit"/>에 넘기면 반드시 그 대상이 맞는다 —
-        /// 조준 UI는 이 목록만 선택 가능으로 칠하면 된다.
+        /// 행동자가 이 스킬로 직접 지정할 수 있는 대상 명판. 아군 힐/버프(단일-아군)면 자기 편에서,
+        /// 그 외(단일-적)면 상대 편에서 도메인 규칙(적은 도발 반영)을 그대로 받아 후보를 낸다. 여기 든 대상을
+        /// <see cref="Submit"/>에 넘기면 반드시 그 대상이 맞는다 — 조준 UI는 이 목록만 선택 가능으로 칠하면 된다.
         /// </summary>
-        /// <param name="actor">지금 행동하는 유닛(이 유닛 기준의 상대 편을 후보로 삼는다).</param>
-        /// <returns>지정 가능한 대상 명판. 생존한 상대가 없으면 빈 목록.</returns>
-        public IReadOnlyList<CombatantViewModel> ValidManualTargets(CombatantViewModel actor)
+        /// <param name="actor">지금 행동하는 유닛(이 유닛 기준의 아군/상대 편을 후보로 삼는다).</param>
+        /// <param name="skill">조준할 스킬 슬롯(대상 팀을 정한다).</param>
+        /// <returns>지정 가능한 대상 명판. 생존한 대상이 없으면 빈 목록.</returns>
+        public IReadOnlyList<CombatantViewModel> ValidManualTargets(CombatantViewModel actor, SkillSlotViewModel skill)
         {
-            var opponents = Combatants.Where(u => u.IsAlly != actor.IsAlly).ToList();
-            var valid = _targeting.ValidManualTargets(opponents.Select(u => (ICombatant)u.Model).ToList());
-            return opponents.Where(u => valid.Contains(u.Model)).ToList();
+            bool toAllies = skill.ManualTargetsAllies;
+            var pool = Combatants.Where(u => (u.IsAlly == actor.IsAlly) == toAllies).ToList();
+            var models = pool.Select(u => (ICombatant)u.Model).ToList();
+            var valid = toAllies ? _targeting.ValidAllyTargets(models) : _targeting.ValidEnemyTargets(models);
+            return pool.Where(u => valid.Contains(u.Model)).ToList();
         }
 
         /// <summary> 전투 씬을 떠나 메인 씬으로 돌아간다. </summary>

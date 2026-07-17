@@ -26,7 +26,11 @@ namespace Eclipse.Tests
         private static Combatant E(int slot, int hp, bool taunting = false)
             => new Combatant { Team = Team.Enemy, SlotIndex = slot, CurrentHp = hp, MaxHp = 100, IsTaunting = taunting };
 
+        private static Combatant A(int slot, int hp)
+            => new Combatant { Team = Team.Ally, SlotIndex = slot, CurrentHp = hp, MaxHp = 100 };
+
         private static readonly IReadOnlyList<ICombatant> NoAllies = new List<ICombatant>();
+        private static readonly IReadOnlyList<ICombatant> NoEnemies = new List<ICombatant>();
 
         [Test]
         public void 지정대상이_단일적_셀렉터면_그_대상을_친다()
@@ -77,7 +81,7 @@ namespace Eclipse.Tests
             var dead = E(2, 0);
             var enemies = new List<ICombatant> { taunter, normal, dead };
 
-            var valid = resolver.ValidManualTargets(enemies);
+            var valid = resolver.ValidEnemyTargets(enemies);
 
             Assert.AreEqual(1, valid.Count);
             Assert.AreSame(taunter, valid[0]);
@@ -92,7 +96,7 @@ namespace Eclipse.Tests
             var dead = E(2, 0);
             var enemies = new List<ICombatant> { a, b, dead };
 
-            var valid = resolver.ValidManualTargets(enemies);
+            var valid = resolver.ValidEnemyTargets(enemies);
 
             Assert.AreEqual(2, valid.Count);
             Assert.IsTrue(valid.Contains(a) && valid.Contains(b));
@@ -110,7 +114,7 @@ namespace Eclipse.Tests
             var normal = E(2, 10);
             var enemies = new List<ICombatant> { t1, t2, normal };
 
-            foreach (var candidate in resolver.ValidManualTargets(enemies))
+            foreach (var candidate in resolver.ValidEnemyTargets(enemies))
             {
                 var result = resolver.Resolve(TargetSelector.SingleEnemy, actor: t1, NoAllies, enemies, candidate);
                 Assert.AreSame(candidate, result[0], "후보로 제시된 대상은 찍으면 그대로 맞아야 한다");
@@ -142,6 +146,79 @@ namespace Eclipse.Tests
 
             // SingleEnemy 폴백은 최저HP가 아니라 슬롯 낮은 쪽(dumb) — 정책이 Target을 줄 때만 그 위를 덮는다.
             Assert.AreSame(front, result[0]);
+        }
+
+        [Test]
+        public void 지정대상이_단일아군_셀렉터면_그_아군을_친다()
+        {
+            var resolver = new TargetResolver();
+            var low = A(0, 10);      // 최저HP — 기본값이면 이쪽
+            var chosen = A(1, 80);
+            var allies = new List<ICombatant> { low, chosen };
+
+            var result = resolver.Resolve(TargetSelector.SingleAlly, actor: chosen, allies, NoEnemies, chosen);
+
+            Assert.AreEqual(1, result.Count);
+            Assert.AreSame(chosen, result[0]); // 지정이 최저HP 기본값을 덮는다(힐 대상 직접 선택)
+        }
+
+        [Test]
+        public void 단일아군_지정대상이_죽었으면_최저HP_아군으로_폴백한다()
+        {
+            var resolver = new TargetResolver();
+            var low = A(0, 10);
+            var dead = A(1, 0);
+            var allies = new List<ICombatant> { low, dead };
+
+            var result = resolver.Resolve(TargetSelector.SingleAlly, actor: low, allies, NoEnemies, dead);
+
+            Assert.AreSame(low, result[0]); // 죽은 지정 대신 최저HP 생존 아군
+        }
+
+        [Test]
+        public void 단일아군_지정대상이_아군목록에_없으면_폴백한다()
+        {
+            var resolver = new TargetResolver();
+            var ally = A(0, 10);
+            var enemy = E(0, 50);
+            var allies = new List<ICombatant> { ally };
+            var enemies = new List<ICombatant> { enemy };
+
+            var result = resolver.Resolve(TargetSelector.SingleAlly, actor: ally, allies, enemies, enemy);
+
+            Assert.AreSame(ally, result[0]); // 적을 아군 스킬 대상으로 지정해도 무시하고 아군 기본값
+        }
+
+        [Test]
+        public void 유효_아군타겟은_생존한_아군_전부()
+        {
+            var resolver = new TargetResolver();
+            var a = A(0, 80);
+            var b = A(1, 10);
+            var dead = A(2, 0);
+            var allies = new List<ICombatant> { a, b, dead };
+
+            var valid = resolver.ValidAllyTargets(allies);
+
+            Assert.AreEqual(2, valid.Count);
+            Assert.IsTrue(valid.Contains(a) && valid.Contains(b));
+            Assert.IsFalse(valid.Contains(dead), "죽은 아군은 힐/버프 지정 후보가 아니다");
+        }
+
+        // 조준 UI가 칠하는 아군 후보를 찍으면 반드시 그 대상이 맞아야 한다(화면 = 판정 계약).
+        [Test]
+        public void 유효_아군타겟은_모두_지정이_존중된다()
+        {
+            var resolver = new TargetResolver();
+            var a = A(0, 80);
+            var b = A(1, 10);
+            var allies = new List<ICombatant> { a, b };
+
+            foreach (var candidate in resolver.ValidAllyTargets(allies))
+            {
+                var result = resolver.Resolve(TargetSelector.SingleAlly, actor: a, allies, NoEnemies, candidate);
+                Assert.AreSame(candidate, result[0], "아군 후보로 제시된 대상은 찍으면 그대로 맞아야 한다");
+            }
         }
 
         [Test]

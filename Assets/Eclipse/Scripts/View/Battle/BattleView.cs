@@ -250,8 +250,8 @@ namespace Eclipse.View
                 return;
             }
 
-            // 유효 타겟 판정은 도메인 규칙(도발 포함)을 VM 통해 그대로 받는다 — View는 칠하기만 한다.
-            var valid = _viewModel.ValidManualTargets(unit);
+            // 유효 타겟 판정은 도메인 규칙(적=도발/아군=생존)을 VM 통해 그대로 받는다 — View는 칠하기만 한다.
+            var valid = _viewModel.ValidManualTargets(unit, slot);
             if (valid.Count == 0) { ExitTargeting(); _viewModel.Submit(slot); return; } // 후보 없으면 셀렉터 폴백에 맡긴다
             if (valid.Count == 1)                                       // 후보가 하나뿐이면 조준 생략하고 바로 지정
             {
@@ -269,8 +269,11 @@ namespace Eclipse.View
         {
             _pendingSkill = skill;
             _validTargets = valid;
+            // 아군 힐/버프 조준은 녹색, 적 공격 조준은 빨강 아웃라인(색 선택은 BattlerView가 소유).
             foreach (var u in _viewModel.Combatants)
-                FindBattler(u)?.SetTargetState(valid.Contains(u) ? TargetState.Selectable : TargetState.Ineligible);
+                FindBattler(u)?.SetTargetState(
+                    valid.Contains(u) ? TargetState.Selectable : TargetState.Ineligible,
+                    skill.ManualTargetsAllies);
         }
 
         // 조준 모드를 빠져나오고 모든 배틀러를 평상시 상태로 되돌린다. 조준 중이 아니어도 호출 안전(멱등).

@@ -48,11 +48,12 @@ namespace Eclipse.Domain
         }
 
         /// <summary>
-        /// 수동 지정 대상을 반영해 대상 목록을 반환한다. 지정 대상은 단일-적 selector에만,
-        /// 그리고 <see cref="ValidManualTargets"/>에 든 대상일 때만 적용된다 — 도발 중인 적이 있으면
-        /// 도발자 중에서만 고를 수 있다(도발이 대상 범위를 좁히되, 그 안에서는 지정을 존중한다).
-        /// 그 밖의 경우는 selector 기본 규칙으로 폴백한다: 지정 없음/지정 대상 사망/적 목록 밖/
-        /// 도발 중 비도발자 지정/광역·아군 selector.
+        /// 수동 지정 대상을 반영해 대상 목록을 반환한다. 지정은 단일-적·단일-아군 selector에만,
+        /// 그리고 각 <see cref="ValidEnemyTargets"/>/<see cref="ValidAllyTargets"/>에 든 대상일 때만 적용된다.
+        /// 단일-적은 도발 중인 적이 있으면 도발자 중에서만(도발이 범위를 좁히되 그 안에서는 지정 존중),
+        /// 단일-아군은 살아있는 아군이면 그대로 존중한다(힐/버프엔 도발 상당 규칙 없음).
+        /// 그 밖의 경우는 selector 기본 규칙으로 폴백한다: 지정 없음/지정 대상 사망/목록 밖/
+        /// 도발 중 비도발자 지정/광역·자기 selector.
         /// </summary>
         /// <param name="chosenTarget">플레이어가 찍은 대상. null이면 selector가 대상을 정한다.</param>
         public IReadOnlyList<ICombatant> Resolve(
@@ -60,13 +61,21 @@ namespace Eclipse.Domain
             IReadOnlyList<ICombatant> allies, IReadOnlyList<ICombatant> enemies,
             ICombatant chosenTarget)
         {
-            if (chosenTarget != null
-                && IsSingleEnemy(selector)
-                && chosenTarget.IsAlive
-                && enemies.Contains(chosenTarget)
-                && (chosenTarget.IsTaunting || !AnyTaunting(enemies)))
+            if (chosenTarget != null && chosenTarget.IsAlive)
             {
-                return new[] { chosenTarget };
+                // 단일-적: 도발 필터를 지키되 그 안에서는 지정을 존중.
+                if (IsSingleEnemy(selector)
+                    && enemies.Contains(chosenTarget)
+                    && (chosenTarget.IsTaunting || !AnyTaunting(enemies)))
+                {
+                    return new[] { chosenTarget };
+                }
+
+                // 단일-아군(힐/버프): 살아있는 아군이면 지정을 존중. 도발 상당 규칙 없음.
+                if (IsSingleAlly(selector) && allies.Contains(chosenTarget))
+                {
+                    return new[] { chosenTarget };
+                }
             }
 
             return Resolve(selector, actor, allies, enemies);
@@ -79,17 +88,33 @@ namespace Eclipse.Domain
         /// </summary>
         /// <param name="enemies">행동자 기준 상대 편의 유닛 목록.</param>
         /// <returns>지정 가능한 적 목록. 생존한 적이 없으면 빈 목록.</returns>
-        public IReadOnlyList<ICombatant> ValidManualTargets(IReadOnlyList<ICombatant> enemies)
+        public IReadOnlyList<ICombatant> ValidEnemyTargets(IReadOnlyList<ICombatant> enemies)
         {
             var alive = enemies.Where(u => u.IsAlive).ToList();
             return TauntFiltered(alive);
         }
+
+        /// <summary>
+        /// 플레이어가 단일-아군 스킬(힐/버프)로 직접 지정할 수 있는 후보 = 생존한 아군. 도발 상당 규칙이 없어
+        /// 단순 생존 필터다. <see cref="Resolve"/>의 아군 지정 존중 조건과 같은 규칙이라 여기 든 대상을 찍으면
+        /// 반드시 그 대상이 맞는다(조준 UI가 이 목록만 선택 가능으로 칠하면 화면과 판정이 일치).
+        /// </summary>
+        /// <param name="allies">행동자 편의 유닛 목록(행동자 자신 포함).</param>
+        /// <returns>지정 가능한 아군 목록. 생존한 아군이 없으면 빈 목록.</returns>
+        public IReadOnlyList<ICombatant> ValidAllyTargets(IReadOnlyList<ICombatant> allies)
+            => allies.Where(u => u.IsAlive).ToList();
 
         /// <summary> 지정 대상 오버라이드가 적용되는 스코프인지(단일-적만 해당). </summary>
         /// <param name="selector">스킬 효과의 대상 스코프.</param>
         /// <returns>단일-적 스코프면 true. 광역·아군·자기면 false(지정이 무시된다).</returns>
         public static bool IsSingleEnemy(TargetSelector selector)
             => selector == TargetSelector.SingleEnemy;
+
+        /// <summary> 지정 대상 오버라이드가 적용되는 아군 스코프인지(단일-아군만 해당). </summary>
+        /// <param name="selector">스킬 효과의 대상 스코프.</param>
+        /// <returns>단일-아군 스코프면 true. 광역·적·자기면 false.</returns>
+        public static bool IsSingleAlly(TargetSelector selector)
+            => selector == TargetSelector.SingleAlly;
 
         private static bool AnyTaunting(IReadOnlyList<ICombatant> enemies)
             => enemies.Any(u => u.IsAlive && u.IsTaunting);
