@@ -1,8 +1,5 @@
-using System.Linq;
 using Eclipse.Data;
 using Eclipse.Domain;
-using Eclipse.Presentation;
-using Eclipse.Service;
 using Eclipse.View;
 using UnityEngine;
 using VContainer;
@@ -48,62 +45,12 @@ namespace Eclipse.Core
             builder.Register<TargetResolver>(Lifetime.Scoped);
             builder.Register<SkillExecutor>(Lifetime.Scoped);
 
-            builder.Register(CreateBattleViewModel, Lifetime.Scoped);
-        }
-
-        // 아군은 루트 스코프의 세이브 로스터에서, 적은 인스펙터 편성에서 전투 유닛을 만들어 뷰모델을 조립한다.
-        private BattleViewModel CreateBattleViewModel(IObjectResolver container)
-        {
-            var save = container.Resolve<PlayerSave>();
-
-            // TODO: 편성(파티 구성) UI가 생기면 로스터 앞 4명이 아니라 선택된 파티로 교체한다.
-            var ownedParty = save.OwnedCharacters.Take(PartySize).ToList();
-            var enemyParty = enemies.Take(PartySize).ToList();
-
-            // 유닛과 그 유닛의 아트를 함께 만들어 넘긴다. 아트는 도메인이 아닌 정의 SO에서 뽑는다.
-            // 타임라인 아이콘은 아군=얼굴 크롭, 적=소형 배틀러 스프라이트 그대로. 아군 얼굴이 비면 그 칸은
-            // 비어 그려진다 — 전신 초상으로 대신 채우면 데이터 누락이 감춰지므로 폴백하지 않는다.
-            var allyEntries = ownedParty
-                .Select((owned, slot) => new BattleUnitEntry(
-                    Combatant.FromCharacter(owned, slot),
-                    owned.Definition.portraitAssetRef,
-                    owned.Definition.faceIconAssetRef))
-                .ToList();
-            var enemyEntries = enemyParty
-                .Select((so, slot) => new BattleUnitEntry(
-                    Combatant.FromEnemy(so, slot),
-                    so.battlerAssetRef,
-                    so.battlerAssetRef))
-                .ToList();
-
-            var targeting = container.Resolve<TargetResolver>();
-            var combat = container.Resolve<CombatPipeline>();
-            // 아군·적은 각자 독립 타겟 스트림을 쓴다. 둘 다 battleSeed에서 결정론적으로 파생되므로
-            // 재현성은 유지되고, 한쪽의 난수 소비량이 반대쪽 선택을 밀던 결합만 사라진다.
-            var allyTargetRng = new SeededRandom(BattleSeed.For(battleSeed, BattleSeed.Stream.AllyTargeting));
-            var enemyTargetRng = new SeededRandom(BattleSeed.For(battleSeed, BattleSeed.Stream.EnemyTargeting));
-
-            var autoRule = RuleBasedActionProvider.AllyAuto(targeting, combat, allyTargetRng);
-            var manualProvider = new ManualActionProvider(autoRule) { AutoMode = startAuto };
-            var enemyAi = RuleBasedActionProvider.EnemyAi(targeting, combat, enemyTargetRng,
-                battleConstants.enemyLethalChance, battleConstants.enemyLowHpBias);
-
-            // 도메인(엔진·스케줄러)은 아트를 모르므로 유닛만 뽑아 넘긴다. 순서는 아군 먼저, 그다음 적.
-            var allyUnits = allyEntries.Select(e => e.Unit).ToList();
-            var enemyUnits = enemyEntries.Select(e => e.Unit).ToList();
-
-            var scheduler = new AtbTurnScheduler(allyUnits.Concat(enemyUnits));
-            var engine = new BattleEngine(allyUnits, enemyUnits, scheduler,
-                container.Resolve<SkillExecutor>(), manualProvider, enemyAi, battleConstants.globalActionCap);
-
-            return new BattleViewModel(
-                allyEntries,
-                enemyEntries,
-                engine,
-                scheduler,
-                manualProvider,
-                targeting,
-                container.Resolve<ISceneFlow>());
+            // 전투 조립은 팩토리가 소유한다. 스코프는 팩토리를 등록하고, 인스펙터 값(적 편성·시드·오토·파티 인원)만
+            // 넘겨 뷰모델을 위임 생성한다.
+            builder.Register<BattleFactory>(Lifetime.Scoped);
+            builder.Register(
+                c => c.Resolve<BattleFactory>().Create(enemies, battleSeed, startAuto, PartySize),
+                Lifetime.Scoped);
         }
     }
 }
