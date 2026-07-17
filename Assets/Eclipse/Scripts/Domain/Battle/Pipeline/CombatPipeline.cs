@@ -35,7 +35,7 @@ namespace Eclipse.Domain
         /// <param name="attacker">공격자 유효 스탯.</param>
         /// <param name="target">대상 유효 스탯.</param>
         /// <param name="power">스킬 배율(공격자 ATK에 곱해지는 값).</param>
-        /// <returns>최악 굴림 기준 피해 하한(1 이상).</returns>
+        /// <returns>최악 난수 기준 피해 하한(1 이상).</returns>
         public int PreviewDamage(Stats attacker, Stats target, float power)
             => _damage.EstimateMinDamage(attacker, target, power);
 

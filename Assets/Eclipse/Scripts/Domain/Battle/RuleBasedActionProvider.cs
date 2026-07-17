@@ -38,7 +38,7 @@ namespace Eclipse.Domain
         /// 프로파일을 달리한다 — 아군 오토 = 막타 + 최저HP 버킷 시드 추첨.
         /// </summary>
         /// <param name="rng">타겟 선택 전용 난수. 데미지 난수와 분리된 스트림을 넘겨야 하며,
-        /// 적 AI와 같은 인스턴스를 공유해야 굴림 순서(=시드 재현)가 유지된다.</param>
+        /// 적 AI와도 별도 인스턴스를 써야 한쪽 난수 소비량이 반대쪽 선택을 밀지 않는다.</param>
         public static RuleBasedActionProvider AllyAuto(
                 TargetResolver targeting, CombatPipeline combat, IRandomService rng)
             => new(HealHpThreshold, useHealRule: true,
@@ -48,7 +48,7 @@ namespace Eclipse.Domain
         /// 적 AI 프로바이더. 스킬 선택 규칙은 아군 오토와 공유하되 타겟 정책만 달리한다 —
         /// 적 AI = 부분 확률 막타 + 저HP 약가중 시드 랜덤(일부러 완벽하지 않게).
         /// </summary>
-        /// <param name="rng">타겟 선택 전용 난수. <see cref="AllyAuto"/>와 같은 인스턴스를 넘긴다.</param>
+        /// <param name="rng">타겟 선택 전용 난수. <see cref="AllyAuto"/>와 별도 인스턴스(별도 스트림)를 넘긴다.</param>
         /// <param name="lethalChance">막타 층 채택 확률(0=막타 안 침, 1=아군 오토와 동일).</param>
         /// <param name="lowHpBias">저HP 가중치(0=무작위, 1=최저HP 확정).</param>
         public static RuleBasedActionProvider EnemyAi(

@@ -52,7 +52,7 @@ namespace Eclipse.Tests
 
         private static TargetPriorityPolicy Policy(TargetPolicyProfile profile, int seed = 1)
             => new TargetPriorityPolicy(new TargetResolver(), Combat(seed),
-                new SeededRandom(BattleSeed.ForTargeting(seed)), profile);
+                new SeededRandom(BattleSeed.For(seed, BattleSeed.Stream.AllyTargeting)), profile);
 
         // 적 프로파일. 기본값은 프로덕션 튜닝값(BattleConstantsSO 기본)과 같은 0.6 / 0.5.
         private static TargetPolicyProfile EnemyAi(float lethalChance = 0.6f, float lowHpBias = 0.5f)
@@ -272,7 +272,7 @@ namespace Eclipse.Tests
             var combat = Combat(seed: 7);
             int preview = combat.PreviewDamage(attacker, target, 1f);
 
-            // 미리보기 후에도 실제 굴림 수열이 밀리지 않아야 한다: 같은 시드의 새 파이프라인과 결과가 일치.
+            // 미리보기 후에도 실제 난수 수열이 밀리지 않아야 한다: 같은 시드의 새 파이프라인과 결과가 일치.
             var fresh = Combat(seed: 7);
             for (int i = 0; i < 20; i++)
             {
@@ -281,6 +281,52 @@ namespace Eclipse.Tests
                 Assert.AreEqual(expected, rolled, "PreviewDamage가 난수 수열을 소비하면 안 된다");
                 Assert.LessOrEqual(preview, rolled, "미리보기는 실제 피해의 하한이어야 한다");
             }
+        }
+
+        // 아군이 먼저 행동해 자기 스트림에서 난수를 소비한 뒤, 적이 자기 스트림에서 대상을 고른다.
+        // allyCandidates=1이면 아군은 0회(조기 리턴), 2면 기저 균등추첨으로 1회 소비한다(tiny power라 막타 층은 난수 소비 없이 통과).
+        private static int EnemyPickAfterAlly(IRandomService allyRng, IRandomService enemyRng, int allyCandidates)
+        {
+            var actor = Actor(atk: 100);
+            var ally = new TargetPriorityPolicy(new TargetResolver(), Combat(), allyRng, TargetPolicyProfile.AllyAuto);
+            var enemy = new TargetPriorityPolicy(new TargetResolver(), Combat(), enemyRng, EnemyAi());
+
+            var allyTargets = new List<ICombatant>();
+            for (int i = 0; i < allyCandidates; i++) allyTargets.Add(Enemy(i, 100, 1000)); // 동률 최저HP
+            ally.ChoosePrimaryTarget(actor, SingleEnemyDamage(power: 0.0001f), NoAllies, allyTargets);
+
+            var enemyTargets = new List<ICombatant> { Enemy(0, 1000, 1000), Enemy(1, 500, 1000), Enemy(2, 100, 1000) };
+            return ((Combatant)enemy.ChoosePrimaryTarget(actor, SingleEnemyDamage(), NoAllies, enemyTargets)).SlotIndex;
+        }
+
+        // MAR-56 회귀: 아군/적이 타겟 난수 스트림을 분리해야 아군의 난수 소비량이 적 선택을 밀지 않는다.
+        [Test]
+        public void 아군_타겟_난수소비가_적_선택을_바꾸지_않는다()
+        {
+            // 본문: 스트림 분리 시 아군 난수 소비량(0 vs 1)과 무관하게 적 선택 불변 — 모든 시드에서.
+            for (int seed = 0; seed < 200; seed++)
+            {
+                int a = EnemyPickAfterAlly(
+                    new SeededRandom(BattleSeed.For(seed, BattleSeed.Stream.AllyTargeting)),
+                    new SeededRandom(BattleSeed.For(seed, BattleSeed.Stream.EnemyTargeting)), allyCandidates: 1);
+                int b = EnemyPickAfterAlly(
+                    new SeededRandom(BattleSeed.For(seed, BattleSeed.Stream.AllyTargeting)),
+                    new SeededRandom(BattleSeed.For(seed, BattleSeed.Stream.EnemyTargeting)), allyCandidates: 2);
+                Assert.AreEqual(a, b, $"seed {seed}: 아군 난수 소비량이 적 선택을 바꿨다(스트림 결합)");
+            }
+
+            // 대조군: 한 인스턴스를 공유하면(구 설계) 아군 난수 소비량이 적 선택을 바꾸는 시드가 존재해야
+            // 위 본문이 지키는 '결합' 자체가 실재함을 못박는다. 200시드면 사실상 확정적으로 하나는 갈린다.
+            bool coupled = false;
+            for (int seed = 0; seed < 200 && !coupled; seed++)
+            {
+                var shared0 = new SeededRandom(seed);
+                var shared1 = new SeededRandom(seed);
+                if (EnemyPickAfterAlly(shared0, shared0, allyCandidates: 1)
+                    != EnemyPickAfterAlly(shared1, shared1, allyCandidates: 2))
+                    coupled = true;
+            }
+            Assert.IsTrue(coupled, "공유 스트림이면 아군 난수 소비량이 적 선택을 바꿔야 한다(대조군)");
         }
     }
 }

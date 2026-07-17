@@ -264,7 +264,7 @@ namespace Eclipse.Tests
                 var targeting = new TargetResolver();
                 var executor = new SkillExecutor(combat, targeting);
                 // 1v1 결정성 테스트라 타겟 선택은 후보가 하나뿐(난수 미소비). 양편에 같은 프로파일을 넘겨도 결과가 같다.
-                var targetRng = new SeededRandom(BattleSeed.ForTargeting(777));
+                var targetRng = new SeededRandom(BattleSeed.For(777, BattleSeed.Stream.AllyTargeting));
                 var provider = RuleBasedActionProvider.AllyAuto(targeting, combat, targetRng);
                 return new BattleEngine(allies, enemies, scheduler, executor, provider, provider, 200);
             }

@@ -22,7 +22,7 @@ namespace Eclipse.Data
         public int globalActionCap = 200;
 
         [Tooltip("적 AI가 처치 가능한 대상을 실제로 마무리할 확률. 1 = 아군 오토처럼 항상 막타, 0 = 막타 층 미사용. " +
-                 "굴림에 실패하면 저HP 가중랜덤으로 내려간다 — 힐러가 살릴 여지를 남기려는 값.")]
+                 "확률 판정에 실패하면 저HP 가중랜덤으로 내려간다 — 힐러가 살릴 여지를 남기려는 값.")]
         [Range(0f, 1f)]
         public float enemyLethalChance = 0.6f;
 

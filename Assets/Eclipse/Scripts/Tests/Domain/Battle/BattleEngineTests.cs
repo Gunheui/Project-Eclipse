@@ -60,10 +60,11 @@ namespace Eclipse.Tests
             var targeting = new TargetResolver();
             var executor = new SkillExecutor(combat, targeting);
 
-            // 타겟 난수는 데미지 난수와 분리된 스트림. 아군/적이 같은 리졸버·미리보기·타겟 난수를 공유하되 프로파일만 다르다.
-            var targetRng = new SeededRandom(BattleSeed.ForTargeting(seed));
-            var allyProvider = RuleBasedActionProvider.AllyAuto(targeting, combat, targetRng);
-            var enemyProvider = RuleBasedActionProvider.EnemyAi(targeting, combat, targetRng, 0.6f, 0.5f);
+            // 타겟 난수는 데미지 난수와 분리된 스트림. 아군/적은 리졸버·미리보기는 공유하되 타겟 난수는 각자 독립 스트림이다.
+            var allyProvider = RuleBasedActionProvider.AllyAuto(targeting, combat,
+                new SeededRandom(BattleSeed.For(seed, BattleSeed.Stream.AllyTargeting)));
+            var enemyProvider = RuleBasedActionProvider.EnemyAi(targeting, combat,
+                new SeededRandom(BattleSeed.For(seed, BattleSeed.Stream.EnemyTargeting)), 0.6f, 0.5f);
 
             return new BattleEngine(allies, enemies, scheduler, executor, allyProvider, enemyProvider, cap);
         }

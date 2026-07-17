@@ -37,7 +37,8 @@ namespace Eclipse.Core
             builder.RegisterComponentInHierarchy<BattleView>();
 
             builder.RegisterInstance(battleConstants);
-            builder.Register<IRandomService>(_ => new SeededRandom(battleSeed), Lifetime.Scoped);
+            builder.Register<IRandomService>(
+                _ => new SeededRandom(BattleSeed.For(battleSeed, BattleSeed.Stream.Damage)), Lifetime.Scoped);
             builder.Register(container => new DamagePipeline(
                 battleConstants.defenseK,
                 battleConstants.varianceMin,
@@ -77,12 +78,14 @@ namespace Eclipse.Core
 
             var targeting = container.Resolve<TargetResolver>();
             var combat = container.Resolve<CombatPipeline>();
-            var targetRng = new SeededRandom(BattleSeed.ForTargeting(battleSeed));
+            // 아군·적은 각자 독립 타겟 스트림을 쓴다. 둘 다 battleSeed에서 결정론적으로 파생되므로
+            // 재현성은 유지되고, 한쪽의 난수 소비량이 반대쪽 선택을 밀던 결합만 사라진다.
+            var allyTargetRng = new SeededRandom(BattleSeed.For(battleSeed, BattleSeed.Stream.AllyTargeting));
+            var enemyTargetRng = new SeededRandom(BattleSeed.For(battleSeed, BattleSeed.Stream.EnemyTargeting));
 
-            // 아군·적 오토는 타겟 난수 스트림을 공유한다(굴림 순서 = 시드 재현의 근거).
-            var autoRule = RuleBasedActionProvider.AllyAuto(targeting, combat, targetRng);
+            var autoRule = RuleBasedActionProvider.AllyAuto(targeting, combat, allyTargetRng);
             var manualProvider = new ManualActionProvider(autoRule) { AutoMode = startAuto };
-            var enemyAi = RuleBasedActionProvider.EnemyAi(targeting, combat, targetRng,
+            var enemyAi = RuleBasedActionProvider.EnemyAi(targeting, combat, enemyTargetRng,
                 battleConstants.enemyLethalChance, battleConstants.enemyLowHpBias);
 
             // 도메인(엔진·스케줄러)은 아트를 모르므로 유닛만 뽑아 넘긴다. 순서는 아군 먼저, 그다음 적.

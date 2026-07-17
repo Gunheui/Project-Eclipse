@@ -7,7 +7,7 @@ namespace Eclipse.Tests
     public class DamagePipelineTests
     {
         // 미리 정한 값을 순서대로(부족하면 순환) 돌려주는 결정적 난수 스텁.
-        // NextFloat 호출 순서 = [치명 굴림, 변동 굴림]이라, 이 두 값으로 결과를 완전히 고정한다.
+        // NextFloat 호출 순서 = [치명 난수, 변동 난수]라, 이 두 값으로 결과를 완전히 고정한다.
         //   첫 값 0.0 → 강제 크리(0.0<critRate) / 0.99 → 강제 비크리 · 둘째 값 0.5 → 변동 1.0(평균).
         private sealed class FixedRandom : IRandomService
         {
@@ -42,7 +42,7 @@ namespace Eclipse.Tests
         [Test]
         public void 카이_기본공격_치명시_261()
         {
-            // 치명 굴림 0.0 < 0.30 → 크리. 130.3 × 2.0 = 260.6 → 261
+            // 치명 난수 0.0 < 0.30 → 크리. 130.3 × 2.0 = 260.6 → 261
             var result = Pipeline(new FixedRandom(0.0f, 0.5f))
                 .ComputeDamage(Attacker(175, 0.30f, 2.0f), Target(60), 1.0f);
 

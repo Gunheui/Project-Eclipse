@@ -5,7 +5,7 @@ namespace Eclipse.Domain
 {
     /// <summary>
     /// 한 번의 피해를 단일 경로로 계산한다. 모든 계수(방어경감 k·변동폭)는 데이터에서 주입받고
-    /// 코드는 계산 구조만 담는다. 치명·변동 굴림은 IRandomService라 시드 고정 재현이 가능하다.
+    /// 코드는 계산 구조만 담는다. 치명·변동 난수는 IRandomService라 시드 고정 재현이 가능하다.
     /// 계산은 즉시 끝나며(연출과 분리), 수동·오토가 이 한 경로를 공유한다.
     /// </summary>
     public class DamagePipeline
@@ -21,7 +21,7 @@ namespace Eclipse.Domain
         /// <param name="defenseK">비율경감 계수 k — 경감계수 = ATK/(ATK+DEF×k).</param>
         /// <param name="varianceMin">난수변동 하한(예: 0.95).</param>
         /// <param name="varianceMax">난수변동 상한(예: 1.05).</param>
-        /// <param name="rng">치명·변동 굴림용 결정적 난수.</param>
+        /// <param name="rng">치명·변동용 결정적 난수.</param>
         public DamagePipeline(float defenseK, float varianceMin, float varianceMax, IRandomService rng)
         {
             _defenseK = defenseK;
@@ -49,8 +49,8 @@ namespace Eclipse.Domain
         }
 
         /// <summary>
-        /// 난수를 소비하지 않는 피해 하한 추정 — 최악 굴림(치명 없음 + 변동 하한)을 <see cref="Compute"/>에 넣은 값.
-        /// 어떤 굴림에도 이 값 이상은 나오므로, 이 값이 대상 현재 HP 이상이면 "확정 처치"다(오탐 없음).
+        /// 난수를 소비하지 않는 피해 하한 추정 — 최악 난수(치명 없음 + 변동 하한)를 <see cref="Compute"/>에 넣은 값.
+        /// 어떤 난수에도 이 값 이상은 나오므로, 이 값이 대상 현재 HP 이상이면 "확정 처치"다(오탐 없음).
         /// 오토 타겟 정책의 막타(lethal) 판정 전용 — <see cref="_rng"/>를 건드리지 않아 실제 실행 수열에 영향이 없다.
         /// [이음새·실드lethal] 대상 실드 잔량은 반영하지 않는다(ICombatant에 노출 없음). 실드가 있으면 과대 추정될 수 있으나
         /// lethal은 최적화 층이라 오판은 차선 타겟일 뿐 버그가 아니다.
@@ -58,12 +58,12 @@ namespace Eclipse.Domain
         /// <param name="attacker">공격자 스탯(ATK 참조).</param>
         /// <param name="target">대상 스탯(DEF 참조).</param>
         /// <param name="skillPower">스킬계수(스킬 데이터).</param>
-        /// <returns>최악 굴림 기준 피해 하한(1 이상).</returns>
+        /// <returns>최악 난수 기준 피해 하한(1 이상).</returns>
         public int EstimateMinDamage(Stats attacker, Stats target, float skillPower)
             => Compute(attacker, target, skillPower, isCrit: false, variance: _varianceMin);
 
         /// <summary>
-        /// 피해 공식 본체 — 굴림 결과를 주입받아 계산만 한다(난수 비소비).
+        /// 피해 공식 본체 — 난수 결과를 주입받아 계산만 한다(난수 비소비).
         /// 실제 피해와 하한 추정이 이 한 함수를 공유하므로 공식이 갈라지지 않는다.
         /// </summary>
         /// <param name="isCrit">치명 적용 여부(하한 추정은 false).</param>

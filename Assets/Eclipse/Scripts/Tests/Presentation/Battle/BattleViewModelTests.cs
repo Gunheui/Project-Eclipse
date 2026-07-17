@@ -70,11 +70,12 @@ namespace Eclipse.Tests
             var targeting = new TargetResolver();
             var combat = new CombatPipeline(new DamagePipeline(1f, 0.95f, 1.05f, new SeededRandom(seed)));
             var executor = new SkillExecutor(combat, targeting);
-            var targetRng = new SeededRandom(BattleSeed.ForTargeting(seed));
+            var allyTargetRng = new SeededRandom(BattleSeed.For(seed, BattleSeed.Stream.AllyTargeting));
+            var enemyTargetRng = new SeededRandom(BattleSeed.For(seed, BattleSeed.Stream.EnemyTargeting));
 
             var manualProvider = new ManualActionProvider(
-                RuleBasedActionProvider.AllyAuto(targeting, combat, targetRng)) { AutoMode = startAuto };
-            var enemyAi = RuleBasedActionProvider.EnemyAi(targeting, combat, targetRng, 0.6f, 0.5f);
+                RuleBasedActionProvider.AllyAuto(targeting, combat, allyTargetRng)) { AutoMode = startAuto };
+            var enemyAi = RuleBasedActionProvider.EnemyAi(targeting, combat, enemyTargetRng, 0.6f, 0.5f);
 
             var scheduler = new AtbTurnScheduler(allies.Concat(enemies));
             var engine = new BattleEngine(allies.ToList(), enemies.ToList(), scheduler,
@@ -93,7 +94,8 @@ namespace Eclipse.Tests
         {
             var targeting = new TargetResolver();
             var combat = new CombatPipeline(new DamagePipeline(1f, 0.95f, 1.05f, new SeededRandom(seed)));
-            return RuleBasedActionProvider.AllyAuto(targeting, combat, new SeededRandom(BattleSeed.ForTargeting(seed)));
+            return RuleBasedActionProvider.AllyAuto(targeting, combat,
+                new SeededRandom(BattleSeed.For(seed, BattleSeed.Stream.AllyTargeting)));
         }
 
         // --- 수동 프로바이더: Submit 전엔 대기, Submit하면 그 행동으로 완료 ---

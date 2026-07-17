@@ -54,7 +54,7 @@ namespace Eclipse.Domain
             if (candidates.Count == 0) return null;
             if (candidates.Count == 1) return candidates[0];
 
-            // 막타 층: 어떤 굴림에도 처치되는 후보가 있으면 LethalChance로 그 중 하나(아군=항상, 적=부분 확률).
+            // 막타 층: 어떤 난수값에도 처치되는 후보가 있으면 LethalChance로 그 중 하나(아군=항상, 적=부분 확률).
             if (_profile.LethalChance > 0f)
             {
                 var lethal = LethalTarget(actor, primary.Value.value, candidates);
@@ -80,7 +80,7 @@ namespace Eclipse.Domain
             return null;
         }
 
-        // 어떤 굴림에도(치명 없음·변동 하한) 처치되는 후보 중 유효 HP가 가장 낮은 하나. 동률은 슬롯 낮은 쪽. 없으면 null.
+        // 어떤 난수값에도(치명 없음·변동 하한) 처치되는 후보 중 유효 HP가 가장 낮은 하나. 동률은 슬롯 낮은 쪽. 없으면 null.
         private ICombatant LethalTarget(ICombatant actor, float skillPower, IReadOnlyList<ICombatant> candidates)
             => candidates
                 .Where(t => _combat.PreviewDamage(actor.EffectiveStats, t.EffectiveStats, skillPower) >= EffectiveHp(t))
@@ -88,8 +88,8 @@ namespace Eclipse.Domain
                 .ThenBy(t => t.SlotIndex)
                 .FirstOrDefault();
 
-        // 처치 가능한 대상을 실제로 마무리할지 LethalChance로 굴린다. 실패하면 호출부가 기저 층으로 내려간다.
-        // 확률 1(아군 오토)이면 굴리지 않고 통과시킨다 — 난수를 소비하지 않아야 막타 층 도입 전과 굴림 수열이
+        // 처치 가능한 대상을 실제로 마무리할지 LethalChance로 난수를 소비해 판정한다. 실패하면 호출부가 기저 층으로 내려간다.
+        // 확률 1(아군 오토)이면 난수를 소비하지 않고 통과시킨다 — 난수 소비가 없어야 막타 층 도입 전과 난수 수열이
         // 같아지고, 기존 시드 재현(같은 시드 = 같은 타겟)이 깨지지 않는다.
         private bool ShouldTakeLethal()
             => _profile.LethalChance >= 1f || _rng.NextFloat() < _profile.LethalChance;
