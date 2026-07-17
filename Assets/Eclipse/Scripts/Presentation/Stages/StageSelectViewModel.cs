@@ -1,41 +1,37 @@
 using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using Eclipse.Data;
-using R3;
+using Eclipse.Service;
 
 namespace Eclipse.Presentation
 {
     /// <summary>
-    /// 스테이지 선택 화면의 상태. 고정된 스테이지 목록을 노출하고, 현재 선택된 스테이지 하나를
-    /// 관측 가능한 값으로 흘린다. View가 이 값을 구독해 셀 강조·편성 버튼 활성을 갱신한다.
+    /// 스테이지 선택 화면의 상태. 고정된 스테이지 목록을 노출하고, 셀 탭 시 전투 씬으로 진입시킨다.
     /// </summary>
     public sealed class StageSelectViewModel : ViewModelBase
     {
-        private readonly ReactiveProperty<StageSO> _selectedStage = new ReactiveProperty<StageSO>(null);
+        private readonly ISceneFlow _sceneFlow;
+        private bool _entering;
 
         /// <summary> 화면에 표시할 스테이지 목록. 순서·내용 고정(런타임 변경 없음). </summary>
         public IReadOnlyList<StageSO> Stages { get; }
 
-        /// <summary> 현재 선택된 스테이지. 초기값 null(미선택). View가 구독해 강조·버튼 활성을 정한다. </summary>
-        public ReadOnlyReactiveProperty<StageSO> SelectedStage => _selectedStage;
-
-        public StageSelectViewModel(StageSO[] stages)
+        public StageSelectViewModel(StageSO[] stages, ISceneFlow sceneFlow)
         {
             Stages = stages;
+            _sceneFlow = sceneFlow;
         }
 
         /// <summary>
-        /// 스테이지를 선택으로 기록한다. <see cref="SelectedStage"/> 구독자에게 즉시 전파된다.
+        /// 스테이지를 골라 전투 씬으로 진입한다. 씬 로드 중복 진입을 한 번만 막는다.
         /// </summary>
-        /// <param name="stage">선택할 스테이지. <see cref="Stages"/>에 속한 항목을 전제로 한다.</param>
-        public void Select(StageSO stage)
+        /// <param name="stage">탭된 스테이지(현재 전투 씬은 단일이라 값은 쓰지 않는다).</param>
+        public void EnterBattle(StageSO stage)
         {
-            _selectedStage.Value = stage;
-        }
-
-        protected override void OnDispose()
-        {
-            base.OnDispose();
-            _selectedStage.Dispose();
+            if (_entering)
+                return;
+            _entering = true;
+            _sceneFlow.ToBattleAsync().Forget();
         }
     }
 }
