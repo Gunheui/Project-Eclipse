@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7465757b0460e47d782f2fbdd57ce020, type: 3}
+  m_Name: Slime
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.EnemySO
+  id: enemy_slime
+  displayName: 침식 점액체
+  baseStats:
+    hp: 300
+    atk: 140
+    def: 25
+    spd: 100
+    critRate: 0.05
+    critDamage: 1.5
+  basicSkill: {fileID: 11400000, guid: a2e1aef5073874263b71b9a4e6cd83f2, type: 2}
+  normalSkill: {fileID: 0}
+  ultimateSkill: {fileID: 0}
+  battlerAssetRef: {fileID: 6474042226187092978, guid: e374e73466a6e4321905d70e719a03bc, type: 3}

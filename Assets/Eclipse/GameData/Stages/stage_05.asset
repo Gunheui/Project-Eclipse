@@ -10,14 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6ed043016dbe543298969b024b9fb4aa, type: 3}
-  m_Name: stage_03
+  m_Name: stage_05
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.StageSO
-  id: stage_03
-  displayName: "\uBD95\uAD34\uD55C \uC655\uC88C\uC758 \uBC29"
-  description: "\uBB34\uB108\uC9C4 \uC655\uC88C \uC704\uC5D0 \uAD70\uB9BC\uD558\uB294
-    \uC774. \uADF8\uB97C \uB04C\uC5B4\uB0B4\uB824\uC57C \uD55C\uB2E4."
+  id: stage_05
+  displayName: "\uC655\uC88C\uC758 \uD3ED\uAD70"
+  description: "\uC625\uC88C\uB97C \uCC28\uC9C0\uD55C \uD3ED\uAD70\uACFC\uC758 \uACB0\uC804."
   thumbnail: {fileID: 21300000, guid: 850d5d227eb3043ee85f3fe9abb63ae5, type: 3}
+  isBoss: 1
   enemies:
-  - {fileID: 11400000, guid: e5ff1161681544ec6b8eaeb5cfdc8f62, type: 2}
-  - {fileID: 11400000, guid: 0b7faf62b01a4f6f9eee97f8f05b22ee, type: 2}
-  - {fileID: 11400000, guid: 0b7faf62b01a4f6f9eee97f8f05b22ee, type: 2}
+  - {fileID: 11400000, guid: 4eeae767760d45aab9d845e315e0b783, type: 2}
+  - {fileID: 11400000, guid: 2af35d4408874bf8aa546ba5a5ca30c9, type: 2}

@@ -7346,11 +7346,8 @@ MonoBehaviour:
   autoRun: 1
   autoInjectGameObjects: []
   battleConstants: {fileID: 11400000, guid: 4f060e1a055484e83ab28efcf34c0f6e, type: 2}
-  enemies:
-  - {fileID: 11400000, guid: eecc1fa5afb2a466b92719ab4f7fb51b, type: 2}
-  - {fileID: 11400000, guid: e5ff1161681544ec6b8eaeb5cfdc8f62, type: 2}
   startAuto: 0
-  battleSeed: 12345
+  debugSeedOverride: 0
 --- !u!4 &2028233459
 Transform:
   m_ObjectHideFlags: 0

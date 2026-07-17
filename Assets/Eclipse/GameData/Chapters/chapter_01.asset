@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c546ebec1d4fb468fb918341981a902e, type: 3}
+  m_Name: chapter_01
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.ChapterSO
+  id: chapter_01
+  number: 1
+  displayName: "\uAC80\uC740 \uC7A5\uBBF8"
+  description: "\uC131\uBCBD\uC744 \uC9C0\uD0A4\uB358 \uD30C\uC218\uBCD1\uB4E4\uC774
+    \uC5B4\uB460\uC5D0 \uBB3C\uB4E4\uC5C8\uB2E4. \uCCAB \uC7A5\uC758 \uC704\uD611\uC744
+    \uBAB0\uC544\uB0B4\uB77C."
+  stages:
+  - {fileID: 11400000, guid: 26f03c0a6a8d94e7b81f3070667d945f, type: 2}
+  - {fileID: 11400000, guid: 2f066905d0d154f0090974d31a959627, type: 2}
+  - {fileID: 11400000, guid: 94991e36f99a84f638aba2791955ad8e, type: 2}
+  - {fileID: 11400000, guid: 7f28de9037a164707b2def74473aa528, type: 2}
+  - {fileID: 11400000, guid: 6fca18f71a21847ebba8eef17fdf0368, type: 2}

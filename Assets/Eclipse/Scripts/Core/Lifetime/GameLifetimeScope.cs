@@ -14,8 +14,8 @@ namespace Eclipse.Core
     /// </summary>
     public class GameLifetimeScope : LifetimeScope
     {
-        // 스테이지 선택 화면에 뿌릴 스테이지 정의. 인스펙터에서 배선한다.
-        [SerializeField] private StageSO[] stages;
+        // 스테이지 선택 화면에 뿌릴 장 정의. 인스펙터에서 배선한다.
+        [SerializeField] private ChapterSO[] chapters;
 
         protected override void Configure(IContainerBuilder builder)
         {
@@ -31,8 +31,8 @@ namespace Eclipse.Core
             builder.Register<CharacterListViewModel>(Lifetime.Singleton);
             builder.Register<CharacterDetailViewModel>(Lifetime.Transient);
 
-            // StageSO[]를 자동 주입하면 VContainer가 컬렉션 resolve로 가로채므로 이 인자만 손수 지정한다.
-            builder.Register<StageSelectViewModel>(Lifetime.Singleton).WithParameter(stages);
+            // ChapterSO[]를 자동 주입하면 VContainer가 컬렉션 resolve로 가로채므로 이 인자만 손수 지정한다.
+            builder.Register<StageSelectViewModel>(Lifetime.Singleton).WithParameter(chapters);
         }
     }
 }

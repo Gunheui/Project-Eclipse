@@ -37,6 +37,7 @@ namespace Eclipse.Core
             builder.RegisterInstance(BuildDummySave());
             builder.Register<ISpriteProvider, DirectSpriteProvider>(Lifetime.Singleton);
             builder.Register<CurrencyWallet>(Lifetime.Singleton);
+            builder.Register<StageProgress>(Lifetime.Singleton);
             builder.Register<NavigationContext>(Lifetime.Singleton);
         }
 

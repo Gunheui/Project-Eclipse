@@ -1690,6 +1690,10 @@ MonoBehaviour:
   thumbnail: {fileID: 4281932743822038639}
   nameText: {fileID: 3833473982777867984}
   selectButton: {fileID: 6884820181497281118}
+  numberText: {fileID: 2261108055290817469}
+  clearMark: {fileID: 1521149481687287388}
+  lockOverlay: {fileID: 6049842888700006298}
+  bossFrame: {fileID: 6060940409661035423}
   selectedIndicator: {fileID: 8765805686518701550}
 --- !u!1 &7179977301854778629
 GameObject:

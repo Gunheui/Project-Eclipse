@@ -1,5 +1,7 @@
+using System;
 using Eclipse.Data;
 using Eclipse.Domain;
+using Eclipse.Presentation;
 using Eclipse.View;
 using UnityEngine;
 using VContainer;
@@ -18,17 +20,18 @@ namespace Eclipse.Core
 
         [SerializeField] private BattleConstantsSO battleConstants;
 
-        // TODO: 적 편성은 전투 진입 파라미터(스테이지)로 받도록 교체한다.
-        [SerializeField] private EnemySO[] enemies;
-
         [SerializeField] private bool startAuto;
 
-        // TODO: 시드는 전투 진입 파라미터(스테이지·재도전 정책)로 받도록 교체한다.
-        [SerializeField] private int battleSeed = 12345;
+        // 0이면 진입할 때마다 새 시드(재도전=fresh). nonzero면 그 값으로 고정 — 난수 재현·디버깅용.
+        [SerializeField] private int debugSeedOverride;
 
         protected override void Configure(IContainerBuilder builder)
         {
             base.Configure(builder);
+
+            // 시드는 이 스코프에서 진입당 1회 확정한다. IRandomService(데미지)와 팩토리(타겟 스트림)가
+            // 같은 값을 공유해야 스트림 분리가 한 전투 안에서 일관되므로 로컬 변수로 잡아 둘 다에 넘긴다.
+            int battleSeed = debugSeedOverride != 0 ? debugSeedOverride : new System.Random().Next(int.MinValue, int.MaxValue);
 
             builder.RegisterComponentInHierarchy<BattleSceneBootstrap>();
             builder.RegisterComponentInHierarchy<BattleView>();
@@ -45,12 +48,24 @@ namespace Eclipse.Core
             builder.Register<TargetResolver>(Lifetime.Scoped);
             builder.Register<SkillExecutor>(Lifetime.Scoped);
 
-            // 전투 조립은 팩토리가 소유한다. 스코프는 팩토리를 등록하고, 인스펙터 값(적 편성·시드·오토·파티 인원)만
-            // 넘겨 뷰모델을 위임 생성한다.
+            // 전투 조립은 팩토리가 소유한다. 적 편성은 app-scope NavigationContext에 실려 온 선택 스테이지에서
+            // 읽고(씬 경계 캐리어), 시드·오토·파티 인원과 함께 넘겨 뷰모델을 위임 생성한다.
             builder.Register<BattleFactory>(Lifetime.Scoped);
-            builder.Register(
-                c => c.Resolve<BattleFactory>().Create(enemies, battleSeed, startAuto, PartySize),
-                Lifetime.Scoped);
+            builder.Register(c =>
+            {
+                var stage = c.Resolve<NavigationContext>().SelectedStage;
+                if (stage == null)
+                    throw new InvalidOperationException(
+                        "BattleScene 진입에 선택 스테이지가 없다. StageSelect(S10)를 거쳐 진입해야 한다 " +
+                        "— 단독 씬 Play는 지원하지 않는다(debugSeedOverride는 시드만 고정할 뿐 스테이지를 대신하지 않는다).");
+                if (stage.enemies == null || stage.enemies.Length == 0)
+                    throw new InvalidOperationException($"스테이지 '{stage.id}'에 적 편성(enemies)이 비어 있다.");
+                for (int i = 0; i < stage.enemies.Length; i++)
+                    if (stage.enemies[i] == null)
+                        throw new InvalidOperationException(
+                            $"스테이지 '{stage.id}'의 적 편성 슬롯 {i}가 비어 있다(Inspector EnemySO 참조 누락).");
+                return c.Resolve<BattleFactory>().Create(stage.enemies, battleSeed, startAuto, PartySize);
+            }, Lifetime.Scoped);
         }
     }
 }

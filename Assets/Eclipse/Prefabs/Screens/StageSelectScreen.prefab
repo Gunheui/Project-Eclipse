@@ -2501,4 +2501,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Eclipse.View::Eclipse.View.StageSelectView
   cellPrefab: {fileID: 1899242088814531668, guid: 237135c8f28c44d5995eeb1cfc469cf7, type: 3}
   contentRoot: {fileID: 717991171128477763}
+  chapterNumberText: {fileID: 7017043724517298940}
+  chapterTitleText: {fileID: 1828361289670761180}
+  chapterDescText: {fileID: 864247727814804115}
+  chapterNavLabel: {fileID: 2346902025755029558}
+  prevChapterButton: {fileID: 1165174190847338459}
+  nextChapterButton: {fileID: 3978871883218731924}
   backButton: {fileID: 582072235985386303}
