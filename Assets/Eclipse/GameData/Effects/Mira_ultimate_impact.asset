@@ -15,52 +15,52 @@ MonoBehaviour:
   layers:
   - sprite: {fileID: 2910620647352401644, guid: eb966630e5b984650a991a1929d4bd11, type: 3}
     offset: {x: 0, y: 0.16}
-    startDelay: 0.02
-    duration: 0.5
-    startScale: {x: 0.3, y: 0.12}
-    endScale: {x: 0.98, y: 0.34}
+    startDelay: 0.056
+    duration: 1.4
+    startScale: {x: 0.3, y: 0.136364}
+    endScale: {x: 0.98, y: 0.445455}
     spinDegPerSec: 32
     moveBy: {x: 0, y: 0.06}
-    tint: {r: 1, g: 0.82, b: 0.42, a: 0.58}
+    tint: {r: 1, g: 0.82, b: 0.42, a: 0.87}
     endAlpha: 0
     ease: 1
     sortingOrder: 18
     additive: 0
   - sprite: {fileID: 270138247091584535, guid: 4d03b66e78d8947a392c7ac8c9dd07ab, type: 3}
     offset: {x: 0, y: 0.74}
-    startDelay: 0.07
-    duration: 0.54
+    startDelay: 0.196
+    duration: 1.512
     startScale: {x: 0.34, y: 0.4}
     endScale: {x: 0.68, y: 1.08}
     spinDegPerSec: 0
     moveBy: {x: 0, y: 0.16}
-    tint: {r: 0.82, g: 1, b: 0.7, a: 0.58}
+    tint: {r: 0.82, g: 1, b: 0.7, a: 0.87}
     endAlpha: 0
     ease: 5
     sortingOrder: 20
     additive: 1
   - sprite: {fileID: 2686789269317412053, guid: 47d5af5f30b464bc38b19826484881b3, type: 3}
     offset: {x: 0, y: 0.58}
-    startDelay: 0.12
-    duration: 0.56
+    startDelay: 0.336
+    duration: 1.568
     startScale: {x: 0.22, y: 0.28}
     endScale: {x: 0.62, y: 0.76}
     spinDegPerSec: 75
     moveBy: {x: 0, y: 0.24}
-    tint: {r: 0.48, g: 0.82, b: 0.48, a: 0.64}
+    tint: {r: 0.48, g: 0.82, b: 0.48, a: 0.96}
     endAlpha: 0
     ease: 1
     sortingOrder: 21
     additive: 1
   - sprite: {fileID: -6897342630389892985, guid: 6b46adbb6845f4132905a927f1bfe4f3, type: 3}
     offset: {x: 0.18, y: 0.34}
-    startDelay: 0.2
-    duration: 0.48
+    startDelay: 0.56
+    duration: 1.344
     startScale: {x: 0.1, y: 0.1}
     endScale: {x: 0.28, y: 0.28}
     spinDegPerSec: -60
     moveBy: {x: -0.1, y: 0.66}
-    tint: {r: 1, g: 0.9, b: 0.58, a: 0.82}
+    tint: {r: 1, g: 0.9, b: 0.58, a: 1}
     endAlpha: 0
     ease: 1
     sortingOrder: 22

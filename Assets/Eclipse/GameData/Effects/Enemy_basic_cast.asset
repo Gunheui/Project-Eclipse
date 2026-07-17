@@ -16,12 +16,12 @@ MonoBehaviour:
   - sprite: {fileID: 3929488906960901998, guid: 45939173b4c784c15b751f01bdb766d4, type: 3}
     offset: {x: 0.38, y: 0.92}
     startDelay: 0
-    duration: 0.22
+    duration: 0.374
     startScale: {x: 0.3, y: 0.36}
     endScale: {x: 0.62, y: 0.48}
     spinDegPerSec: 0
     moveBy: {x: 0.52, y: 0}
-    tint: {r: 0.46, g: 0.18, b: 0.12, a: 0.82}
+    tint: {r: 0.46, g: 0.18, b: 0.12, a: 1}
     endAlpha: 0
     ease: 1
     sortingOrder: 20

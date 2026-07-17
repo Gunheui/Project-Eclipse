@@ -15,8 +15,8 @@ MonoBehaviour:
   layers:
   - sprite: {fileID: 1494717266108852402, guid: 0952c588bc5014175b91bb311a30d74d, type: 3}
     offset: {x: 0, y: 0.95}
-    startDelay: 0.03
-    duration: 0.2
+    startDelay: 0.066
+    duration: 0.44
     startScale: {x: 0.38, y: 0.52}
     endScale: {x: 0.65, y: 0.78}
     spinDegPerSec: 0
@@ -28,21 +28,21 @@ MonoBehaviour:
     additive: 0
   - sprite: {fileID: -6146397436882819629, guid: b310cb4255d09429eb90351a0a10c9f7, type: 3}
     offset: {x: 0, y: 1.05}
-    startDelay: 0.08
-    duration: 0.22
+    startDelay: 0.176
+    duration: 0.484
     startScale: {x: 0.2, y: 0.2}
     endScale: {x: 0.38, y: 0.38}
     spinDegPerSec: 25
     moveBy: {x: 0, y: 0}
-    tint: {r: 1, g: 0.78, b: 0.25, a: 0.85}
+    tint: {r: 1, g: 0.78, b: 0.25, a: 1}
     endAlpha: 0
     ease: 2
     sortingOrder: 26
     additive: 0
   - sprite: {fileID: -1172740179624419359, guid: cb5b2dd2839cd4fa0b259e1db0ff737b, type: 3}
     offset: {x: 0.04, y: 1.02}
-    startDelay: 0.11
-    duration: 0.17
+    startDelay: 0.242
+    duration: 0.374
     startScale: {x: 0.22, y: 0.22}
     endScale: {x: 0.48, y: 0.48}
     spinDegPerSec: 0

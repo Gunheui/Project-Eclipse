@@ -15,39 +15,39 @@ MonoBehaviour:
   layers:
   - sprite: {fileID: 768216927382997730, guid: 3f5255a64db3e48e991f03d0646d6a81, type: 3}
     offset: {x: 0, y: 0.18}
-    startDelay: 0.02
-    duration: 0.44
-    startScale: {x: 0.28, y: 0.12}
-    endScale: {x: 0.82, y: 0.3}
+    startDelay: 0.044
+    duration: 0.968
+    startScale: {x: 0.28, y: 0.127273}
+    endScale: {x: 0.82, y: 0.372727}
     spinDegPerSec: 30
     moveBy: {x: 0, y: 0.08}
-    tint: {r: 1, g: 0.82, b: 0.42, a: 0.58}
+    tint: {r: 1, g: 0.82, b: 0.42, a: 0.87}
     endAlpha: 0
     ease: 1
     sortingOrder: 19
     additive: 0
   - sprite: {fileID: -4392026575416330997, guid: 0f8abad88841247cc9389c0a5b6bb5e0, type: 3}
     offset: {x: 0, y: 0.72}
-    startDelay: 0.06
-    duration: 0.48
+    startDelay: 0.132
+    duration: 1.056
     startScale: {x: 0.3, y: 0.38}
     endScale: {x: 0.56, y: 0.92}
     spinDegPerSec: 0
     moveBy: {x: 0, y: 0.16}
-    tint: {r: 0.82, g: 1, b: 0.7, a: 0.55}
+    tint: {r: 0.82, g: 1, b: 0.7, a: 0.825}
     endAlpha: 0
     ease: 5
     sortingOrder: 20
     additive: 1
   - sprite: {fileID: -798099193805667584, guid: 24be17582ff804edba8650bb843a2b2b, type: 3}
     offset: {x: -0.16, y: 0.36}
-    startDelay: 0.12
-    duration: 0.42
+    startDelay: 0.264
+    duration: 0.924
     startScale: {x: 0.12, y: 0.12}
     endScale: {x: 0.28, y: 0.28}
     spinDegPerSec: 65
     moveBy: {x: 0.1, y: 0.54}
-    tint: {r: 0.48, g: 0.82, b: 0.48, a: 0.85}
+    tint: {r: 0.48, g: 0.82, b: 0.48, a: 1}
     endAlpha: 0
     ease: 1
     sortingOrder: 22

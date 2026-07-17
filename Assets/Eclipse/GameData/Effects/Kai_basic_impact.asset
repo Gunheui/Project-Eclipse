@@ -15,8 +15,8 @@ MonoBehaviour:
   layers:
   - sprite: {fileID: 316400062676456750, guid: 0320dd85804da4d17aed405d0b3187d2, type: 3}
     offset: {x: 0, y: 1.1}
-    startDelay: 0.05
-    duration: 0.2
+    startDelay: 0.085
+    duration: 0.34
     startScale: {x: 0.5, y: 0.5}
     endScale: {x: 0.7, y: 0.7}
     spinDegPerSec: 0
@@ -28,8 +28,8 @@ MonoBehaviour:
     additive: 0
   - sprite: {fileID: -1172740179624419359, guid: cb5b2dd2839cd4fa0b259e1db0ff737b, type: 3}
     offset: {x: 0, y: 1.1}
-    startDelay: 0.1
-    duration: 0.18
+    startDelay: 0.17
+    duration: 0.306
     startScale: {x: 0.3, y: 0.3}
     endScale: {x: 0.45, y: 0.45}
     spinDegPerSec: 0

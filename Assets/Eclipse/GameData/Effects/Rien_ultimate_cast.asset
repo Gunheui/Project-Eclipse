@@ -16,38 +16,38 @@ MonoBehaviour:
   - sprite: {fileID: 2910620647352401644, guid: eb966630e5b984650a991a1929d4bd11, type: 3}
     offset: {x: 0, y: 0.65}
     startDelay: 0
-    duration: 0.46
+    duration: 1.288
     startScale: {x: 0.38, y: 0.48}
     endScale: {x: 0.9, y: 1.08}
     spinDegPerSec: 0
     moveBy: {x: 0, y: 0}
-    tint: {r: 0.58, g: 0.66, b: 0.7, a: 0.62}
+    tint: {r: 0.58, g: 0.66, b: 0.7, a: 0.93}
     endAlpha: 0
     ease: 4
     sortingOrder: 18
     additive: 0
   - sprite: {fileID: -3643760154290002694, guid: ddb7b565deb7a4a37b0d4cdcad7c1e92, type: 3}
     offset: {x: 0, y: 0.9}
-    startDelay: 0.06
-    duration: 0.44
+    startDelay: 0.168
+    duration: 1.232
     startScale: {x: 0.4, y: 0.5}
     endScale: {x: 1, y: 1.1}
     spinDegPerSec: 0
     moveBy: {x: 0, y: 0.02}
-    tint: {r: 0.78, g: 0.84, b: 0.84, a: 0.72}
+    tint: {r: 0.78, g: 0.84, b: 0.84, a: 1}
     endAlpha: 0
     ease: 5
     sortingOrder: 20
     additive: 0
   - sprite: {fileID: 2712952763405070, guid: 238b5808ce6864ebb948d39d62646e35, type: 3}
     offset: {x: 0, y: 0.3}
-    startDelay: 0.14
-    duration: 0.34
+    startDelay: 0.392
+    duration: 0.952
     startScale: {x: 0.14, y: 0.14}
     endScale: {x: 0.4, y: 0.4}
     spinDegPerSec: 0
     moveBy: {x: 0, y: 0.28}
-    tint: {r: 0.92, g: 0.58, b: 0.2, a: 0.7}
+    tint: {r: 0.92, g: 0.58, b: 0.2, a: 1}
     endAlpha: 0
     ease: 1
     sortingOrder: 22
