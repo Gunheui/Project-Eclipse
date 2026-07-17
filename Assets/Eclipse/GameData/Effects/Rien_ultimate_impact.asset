@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67c3d463d14e54e8cb6880db2bc8f262, type: 3}
+  m_Name: Rien_ultimate_impact
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.EffectSpec
+  layers:
+  - sprite: {fileID: -5338738485830625687, guid: d968bfa6b9fc3478c90facc2fc7ff6f9, type: 3}
+    offset: {x: 0, y: 0.18}
+    startDelay: 0.02
+    duration: 0.44
+    startScale: {x: 0.3, y: 0.12}
+    endScale: {x: 0.86, y: 0.28}
+    spinDegPerSec: 35
+    moveBy: {x: 0, y: 0}
+    tint: {r: 0.92, g: 0.58, b: 0.2, a: 0.48}
+    endAlpha: 0
+    ease: 1
+    sortingOrder: 18
+    additive: 1
+  - sprite: {fileID: -3643760154290002694, guid: ddb7b565deb7a4a37b0d4cdcad7c1e92, type: 3}
+    offset: {x: 0, y: 0.85}
+    startDelay: 0.06
+    duration: 0.48
+    startScale: {x: 0.35, y: 0.45}
+    endScale: {x: 0.7, y: 1}
+    spinDegPerSec: 0
+    moveBy: {x: 0, y: 0.03}
+    tint: {r: 0.58, g: 0.66, b: 0.7, a: 0.72}
+    endAlpha: 0
+    ease: 4
+    sortingOrder: 20
+    additive: 0
+  - sprite: {fileID: -4392026575416330997, guid: 0f8abad88841247cc9389c0a5b6bb5e0, type: 3}
+    offset: {x: 0, y: 0.9}
+    startDelay: 0.1
+    duration: 0.44
+    startScale: {x: 0.26, y: 0.4}
+    endScale: {x: 0.52, y: 1}
+    spinDegPerSec: 0
+    moveBy: {x: 0, y: 0.08}
+    tint: {r: 0.78, g: 0.84, b: 0.84, a: 0.48}
+    endAlpha: 0
+    ease: 5
+    sortingOrder: 21
+    additive: 1
+  - sprite: {fileID: 2712952763405070, guid: 238b5808ce6864ebb948d39d62646e35, type: 3}
+    offset: {x: -0.15, y: 0.36}
+    startDelay: 0.17
+    duration: 0.38
+    startScale: {x: 0.1, y: 0.1}
+    endScale: {x: 0.24, y: 0.24}
+    spinDegPerSec: 0
+    moveBy: {x: 0.1, y: 0.42}
+    tint: {r: 1, g: 0.68, b: 0.28, a: 0.7}
+    endAlpha: 0
+    ease: 1
+    sortingOrder: 22
+    additive: 0

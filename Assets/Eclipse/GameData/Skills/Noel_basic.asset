@@ -24,5 +24,5 @@ MonoBehaviour:
     value: 0.8
     affectedStat: 0
     duration: 0
-  castEffect: {fileID: 0}
-  impactEffect: {fileID: 0}
+  castEffect: {fileID: 11400000, guid: d48c9c9d49c341f0a9e7f0e6f74caa30, type: 2}
+  impactEffect: {fileID: 11400000, guid: 1414e80751b747b3982815502c7b425d, type: 2}

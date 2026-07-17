@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67c3d463d14e54e8cb6880db2bc8f262, type: 3}
+  m_Name: Sera_basic_impact
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.EffectSpec
+  layers:
+  - sprite: {fileID: -4587046070185855358, guid: fa3e6f85e691b42aab3a1bcf6dacc938, type: 3}
+    offset: {x: 0, y: 0.95}
+    startDelay: 0.03
+    duration: 0.22
+    startScale: {x: 0.25, y: 0.25}
+    endScale: {x: 0.58, y: 0.58}
+    spinDegPerSec: -120
+    moveBy: {x: 0, y: 0.02}
+    tint: {r: 0.58, g: 0.3, b: 0.92, a: 0.95}
+    endAlpha: 0
+    ease: 3
+    sortingOrder: 25
+    additive: 1
+  - sprite: {fileID: 5164678972361644163, guid: 6a986b614e039425f8a4acd8aa0d830e, type: 3}
+    offset: {x: 0.02, y: 0.98}
+    startDelay: 0.08
+    duration: 0.17
+    startScale: {x: 0.18, y: 0.18}
+    endScale: {x: 0.38, y: 0.38}
+    spinDegPerSec: 70
+    moveBy: {x: 0.06, y: 0.08}
+    tint: {r: 1, g: 0.28, b: 0.72, a: 0.85}
+    endAlpha: 0
+    ease: 1
+    sortingOrder: 26
+    additive: 1
