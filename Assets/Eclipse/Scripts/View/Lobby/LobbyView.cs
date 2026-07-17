@@ -39,7 +39,7 @@ namespace Eclipse.View
                 .AddTo(this);
 
             battleButton.OnClickAsObservable()
-                .Subscribe(_ => _viewModel.EnterBattleAsync().Forget())
+                .Subscribe(_ => _screens.Push(ScreenId.StageSelect).Forget())
                 .AddTo(this);
         }
 

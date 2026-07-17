@@ -2480,17 +2480,10 @@ MonoBehaviour:
     TypeName: 
   autoRun: 1
   autoInjectGameObjects: []
-  dummyRoster:
-  - character: {fileID: 11400000, guid: 8a55c9e8ddcd84f2bbf78bd6722c7012, type: 2}
-    level: 1
-  - character: {fileID: 11400000, guid: 782a87a98fe504f79941986813fadf09, type: 2}
-    level: 1
-  - character: {fileID: 11400000, guid: 823758449a3e64898bcec9f871b1b822, type: 2}
-    level: 1
-  - character: {fileID: 11400000, guid: 62d92da064f264e7ea14f9f92335d44f, type: 2}
-    level: 1
-  - character: {fileID: 11400000, guid: 9195b66d1507f41cbb9badbabf82bbaf, type: 2}
-    level: 1
+  stages:
+  - {fileID: 11400000, guid: 26f03c0a6a8d94e7b81f3070667d945f, type: 2}
+  - {fileID: 11400000, guid: 2f066905d0d154f0090974d31a959627, type: 2}
+  - {fileID: 11400000, guid: 94991e36f99a84f638aba2791955ad8e, type: 2}
 --- !u!4 &1069015700
 Transform:
   m_ObjectHideFlags: 0
@@ -3111,6 +3104,8 @@ MonoBehaviour:
     Prefab: {fileID: 6636953750776265042, guid: 3d654c1f4d00d4823aa2f2a7b4dbb783, type: 3}
   - Id: 2
     Prefab: {fileID: 8238371269226125603, guid: 45c7f92b22077400e9778578484b9d60, type: 3}
+  - Id: 3
+    Prefab: {fileID: 8828994955002065645, guid: 6e1b5ce5585ae45819cbe53a2b837685, type: 3}
 --- !u!4 &1443029401
 Transform:
   m_ObjectHideFlags: 0

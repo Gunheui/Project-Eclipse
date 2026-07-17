@@ -34,8 +34,8 @@ namespace Eclipse.Core
             builder.RegisterComponentInHierarchy<BattleView>();
 
             builder.RegisterInstance(battleConstants);
-            builder.Register<IRandomService>(
-                _ => new SeededRandom(BattleSeed.For(battleSeed, BattleSeed.Stream.Damage)), Lifetime.Scoped);
+            builder.Register<IRandomService, SeededRandom>(Lifetime.Scoped)
+                .WithParameter(BattleSeed.For(battleSeed, BattleSeed.Stream.Damage));
             builder.Register(container => new DamagePipeline(
                 battleConstants.defenseK,
                 battleConstants.varianceMin,

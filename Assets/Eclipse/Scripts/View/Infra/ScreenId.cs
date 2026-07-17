@@ -7,6 +7,7 @@ namespace Eclipse.View.Infra
     {
         Lobby = 0,
         CharacterList = 1,
-        CharacterDetail = 2
+        CharacterDetail = 2,
+        StageSelect = 3
     }
 }
