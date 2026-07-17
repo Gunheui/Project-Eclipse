@@ -89,7 +89,12 @@ namespace Eclipse.Presentation
                 .ToReadOnlyReactiveProperty(openingOrder);
 
             _autoMode = new ReactiveProperty<bool>(_manualProvider.AutoMode);
-            _autoMode.Subscribe(on => _manualProvider.AutoMode = on).AddTo(_subscriptions);
+            _autoMode.Subscribe(on =>
+            {
+                _manualProvider.AutoMode = on;
+                // 내 수동 턴 중 AUTO를 켜면 Submit을 거치지 않아 행동자가 남는다. 직접 비워 스킬바 잔상을 막는다.
+                if (on) _actingCombatant.Value = null;
+            }).AddTo(_subscriptions);
 
             // 수동 아군 턴이 열려 입력 대기에 들어가면 그 유닛을 ActingCombatant으로 세운다(스킬 버튼 활성화용).
             _manualProvider.InputRequested += OnInputRequested;

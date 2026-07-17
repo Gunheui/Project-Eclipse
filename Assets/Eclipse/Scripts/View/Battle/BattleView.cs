@@ -203,8 +203,13 @@ namespace Eclipse.View
                     if (skillLabels != null && i < skillLabels.Length)
                         skillLabels[i].text = slot.Skill.displayName;
                     if (skillIcons != null && i < skillIcons.Length && slot.Skill.icon != null)
+                    {
                         skillIcons[i].sprite = slot.Skill.icon;
+                        skillIcons[i].enabled = true; // 빈 슬롯 처리로 꺼졌을 수 있어 되살린다
+                    }
                     SetTooltipContent(i, slot.Skill.displayName, slot.Skill.description);
+
+                    if (skillButtons[i].image != null) skillButtons[i].image.enabled = true; // 버튼 배경 프레임 되살림
 
                     bool ready = slot.IsReady.CurrentValue;
                     skillButtons[i].interactable = ready;
@@ -212,6 +217,12 @@ namespace Eclipse.View
                 }
                 else
                 {
+                    // 행동 중인 아군이 없는 턴: 버튼 배경 프레임·라벨·아이콘까지 통째로 비워 잔상을 막는다
+                    if (skillButtons[i].image != null) skillButtons[i].image.enabled = false;
+                    if (skillLabels != null && i < skillLabels.Length)
+                        skillLabels[i].text = "";
+                    if (skillIcons != null && i < skillIcons.Length)
+                        skillIcons[i].enabled = false;
                     SetTooltipContent(i, null, null);
                     skillButtons[i].interactable = false;
                     ShowCooldown(i, 0, show: false);
