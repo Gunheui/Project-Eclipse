@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Eclipse.Data;
 using Eclipse.Domain;
 using Eclipse.Presentation;
@@ -15,8 +17,8 @@ namespace Eclipse.Core
     /// </summary>
     public class BattleLifetimeScope : LifetimeScope
     {
-        // 파티·전장이 다루는 최대 편성 인원. 로스터·적이 이보다 많아도 앞에서부터 이 수만 참전한다.
-        private const int PartySize = 4;
+        // 선택 파티가 없을 때 세이브 로스터에서 폴백으로 뽑는 최대 인원. 정상 흐름은 편성 화면이 파티를 실어 온다.
+        private const int MaxPartySize = 4;
 
         [SerializeField] private BattleConstantsSO battleConstants;
 
@@ -48,12 +50,13 @@ namespace Eclipse.Core
             builder.Register<TargetResolver>(Lifetime.Scoped);
             builder.Register<SkillExecutor>(Lifetime.Scoped);
 
-            // 전투 조립은 팩토리가 소유한다. 적 편성은 app-scope NavigationContext에 실려 온 선택 스테이지에서
-            // 읽고(씬 경계 캐리어), 시드·오토·파티 인원과 함께 넘겨 뷰모델을 위임 생성한다.
+            // 전투 조립은 팩토리가 소유한다. 스테이지(적 편성)와 아군 파티는 app-scope NavigationContext에 실려
+            // 온다(씬 경계 캐리어). 파티는 편성 화면이 확정한 SelectedParty를 쓰고, 없을 때만 세이브 로스터로 폴백한다.
             builder.Register<BattleFactory>(Lifetime.Scoped);
             builder.Register(c =>
             {
-                var stage = c.Resolve<NavigationContext>().SelectedStage;
+                var nav = c.Resolve<NavigationContext>();
+                var stage = nav.SelectedStage;
                 if (stage == null)
                     throw new InvalidOperationException(
                         "BattleScene 진입에 선택 스테이지가 없다. StageSelect(S10)를 거쳐 진입해야 한다 " +
@@ -64,7 +67,17 @@ namespace Eclipse.Core
                     if (stage.enemies[i] == null)
                         throw new InvalidOperationException(
                             $"스테이지 '{stage.id}'의 적 편성 슬롯 {i}가 비어 있다(Inspector EnemySO 참조 누락).");
-                return c.Resolve<BattleFactory>().Create(stage.enemies, battleSeed, startAuto, PartySize);
+
+                // 파티가 비어있다면, 미리 현재 가지고 있는 캐릭터 List에서 앞에 4개를 꺼내옴(테스트용)
+                var party = nav.SelectedParty?.ToList() ?? new List<OwnedCharacter>();
+                if (party.All(x => x == null))
+                    party = c.Resolve<PlayerSave>().OwnedCharacters
+                        .Where(x => x != null).Take(MaxPartySize).ToList();
+                if (party.All(x => x == null))
+                    throw new InvalidOperationException(
+                        "전투에 세울 아군이 없다 — 선택 파티도 세이브 로스터도 비어 있다.");
+
+                return c.Resolve<BattleFactory>().Create(party, stage.enemies, battleSeed, startAuto);
             }, Lifetime.Scoped);
         }
     }

@@ -448,6 +448,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8989048342787520151}
   - component: {fileID: 7947853114164891667}
+  - component: {fileID: 285584842527392146}
   m_Layer: 0
   m_Name: PartySlotCell
   m_TagString: Untagged
@@ -520,6 +521,23 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &285584842527392146
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2708611925963339488}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4951e882b64eb4a299da2fc92189edec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.PartySlotCellView
+  emptyState: {fileID: 2765436978280089735}
+  filledState: {fileID: 4388279994108348706}
+  portrait: {fileID: 6177995491216476309}
+  nameText: {fileID: 5646887726151802362}
+  selectButton: {fileID: 7947853114164891667}
 --- !u!1 &2765436978280089735
 GameObject:
   m_ObjectHideFlags: 0

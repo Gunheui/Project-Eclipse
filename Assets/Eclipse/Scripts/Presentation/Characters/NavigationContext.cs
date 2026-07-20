@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Eclipse.Data;
 using Eclipse.Domain;
 
@@ -14,5 +15,12 @@ namespace Eclipse.Presentation
 
         /// <summary> 직전에 선택된 스테이지. 전투 씬 스코프가 적 편성을 여기서 읽어 전투를 조립한다. </summary>
         public StageSO SelectedStage { get; set; }
+
+        /// <summary>
+        /// 편성 화면이 확정한 아군 파티. 인덱스가 편성 칸 위치와 같고 빈 칸은 null이다(압축하지 않는다) —
+        /// 전투 씬 스코프가 이 위치를 그대로 전투 진영 자리로 쓴다. null이거나 전부 null이면 세이브 로스터로 폴백한다.
+        /// 편성 화면 재진입 시 스테이지 선택 단계에서 클리어된다.
+        /// </summary>
+        public IReadOnlyList<OwnedCharacter> SelectedParty { get; set; }
     }
 }

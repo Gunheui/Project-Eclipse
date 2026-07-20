@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
 using Eclipse.Data;
 using Eclipse.Data.Enums;
+using Eclipse.Domain;
 using Eclipse.Presentation;
-using Eclipse.Service;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -35,15 +34,8 @@ namespace Eclipse.Tests
             return c;
         }
 
-        private sealed class FakeSceneFlow : ISceneFlow
-        {
-            public int ToBattleCount;
-            public UniTask ToBattleAsync() { ToBattleCount++; return UniTask.CompletedTask; }
-            public UniTask ToMainAsync() => UniTask.CompletedTask;
-        }
-
-        private static StageSelectViewModel BuildVm(FakeSceneFlow flow, NavigationContext nav = null)
-            => new StageSelectViewModel(new[] { Chapter("chapter_01", 1, 5) }, new StageProgress(), flow, nav ?? new NavigationContext());
+        private static StageSelectViewModel BuildVm(NavigationContext nav = null)
+            => new StageSelectViewModel(new[] { Chapter("chapter_01", 1, 5) }, new StageProgress(), nav ?? new NavigationContext());
 
         // --- StateOf 공식: 경계 인덱스에서 3상태가 정확한가 ---
 
@@ -112,54 +104,48 @@ namespace Eclipse.Tests
             Assert.AreEqual(5, progress.ClearedCountOf("chapter_01").CurrentValue, "상한 초과 시 값 불변");
         }
 
-        // --- Select: 잠긴 아이템은 진입 차단, 열린/클리어 아이템만 전투 진입 ---
+        // --- Select: 잠긴 아이템은 선택 차단, 열린/클리어 아이템만 선택 기록(화면 전환은 View 몫) ---
 
         [Test]
-        public void Select는_잠긴_스테이지면_진입을_차단()
+        public void Select는_잠긴_스테이지면_선택을_차단()
         {
-            var flow = new FakeSceneFlow();
-            var vm = BuildVm(flow); // cleared=2 → index 3,4는 Locked
+            var vm = BuildVm(); // cleared=2 → index 3,4는 Locked
 
             var locked = vm.Items[3];
             Assert.AreEqual(StageState.Locked, locked.State.CurrentValue);
 
-            vm.Select(locked);
-
-            Assert.AreEqual(0, flow.ToBattleCount, "잠긴 스테이지는 전투 씬으로 진입하지 않는다");
+            Assert.IsFalse(vm.Select(locked), "잠긴 스테이지는 false를 돌려 편성 진입을 막는다");
             Assert.IsNull(vm.SelectedStage.Value, "잠긴 스테이지는 선택되지 않는다");
 
             vm.Dispose();
         }
 
         [Test]
-        public void Select는_열린_스테이지면_선택하고_전투로_진입()
+        public void Select는_열린_스테이지면_선택하고_true를_반환()
         {
-            var flow = new FakeSceneFlow();
-            var vm = BuildVm(flow); // cleared=2 → index 2는 Open
+            var vm = BuildVm(); // cleared=2 → index 2는 Open
 
             var open = vm.Items[2];
             Assert.AreEqual(StageState.Open, open.State.CurrentValue);
 
-            vm.Select(open);
-
-            Assert.AreEqual(1, flow.ToBattleCount, "열린 스테이지는 전투 씬으로 진입한다");
+            Assert.IsTrue(vm.Select(open), "열린 스테이지는 true를 돌려 편성 진입을 허용한다");
             Assert.AreSame(open, vm.SelectedStage.Value, "선택 상태가 갱신된다");
 
             vm.Dispose();
         }
 
         [Test]
-        public void Select는_진입_시_선택_스테이지를_캐리어에_기록()
+        public void Select는_선택_스테이지를_캐리어에_기록하고_이전_파티를_클리어()
         {
-            var flow = new FakeSceneFlow();
-            var nav = new NavigationContext();
-            var vm = BuildVm(flow, nav); // cleared=2 → index 2는 Open
+            var nav = new NavigationContext { SelectedParty = new List<OwnedCharacter>() };
+            var vm = BuildVm(nav); // cleared=2 → index 2는 Open
 
             var open = vm.Items[2];
             vm.Select(open);
 
             Assert.AreSame(open.Stage, nav.SelectedStage,
-                "전투 스코프가 읽을 SelectedStage 캐리어에 선택 StageSO가 실린다");
+                "편성·전투 스코프가 읽을 SelectedStage 캐리어에 선택 StageSO가 실린다");
+            Assert.IsNull(nav.SelectedParty, "새 편성 시작이므로 이전 파티는 클리어된다");
 
             vm.Dispose();
         }
@@ -167,9 +153,8 @@ namespace Eclipse.Tests
         [Test]
         public void Select는_잠긴_스테이지면_캐리어를_건드리지_않는다()
         {
-            var flow = new FakeSceneFlow();
             var nav = new NavigationContext();
-            var vm = BuildVm(flow, nav); // cleared=2 → index 3은 Locked
+            var vm = BuildVm(nav); // cleared=2 → index 3은 Locked
 
             vm.Select(vm.Items[3]);
 

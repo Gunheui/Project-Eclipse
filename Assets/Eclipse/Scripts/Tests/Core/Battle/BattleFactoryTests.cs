@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
@@ -56,29 +57,116 @@ namespace Eclipse.Tests
             public UniTask ToMainAsync() => UniTask.CompletedTask;
         }
 
-        private static BattleFactory BuildFactory(PlayerSave save)
+        private static BattleFactory BuildFactory()
         {
             var targeting = new TargetResolver();
             var combat = new CombatPipeline(new DamagePipeline(1f, 0.95f, 1.05f, new SeededRandom(1)));
             var executor = new SkillExecutor(combat, targeting);
             var constants = ScriptableObject.CreateInstance<BattleConstantsSO>();
-            return new BattleFactory(save, constants, targeting, combat, executor, new FakeSceneFlow());
+            return new BattleFactory(constants, targeting, combat, executor, new FakeSceneFlow());
         }
 
         [Test]
-        public void Create는_양_진영_앞에서_partySize명씩_뽑고_아군을_먼저_배치한다()
+        public void 명시_파티가_로스터_순서가_아니라_그대로_아군에_반영된다()
         {
-            // 로스터·적 편성 모두 partySize보다 많게 준비 → 앞에서부터 잘라 쓰는지 검증
-            var save = new PlayerSave(new List<OwnedCharacter> { Owned("A0"), Owned("A1"), Owned("A2") });
-            var enemies = new[] { Enemy("E0"), Enemy("E1"), Enemy("E2") };
-            const int partySize = 2;
+            var a0 = Owned("A0");
+            var a1 = Owned("A1");
+            var a2 = Owned("A2");
+            // 선택 파티 순서를 로스터 순서와 다르게 → 팩토리가 파티 순서를 그대로 쓰는지 검증
+            var party = new List<OwnedCharacter> { a2, a0, a1 };
+            var enemies = new[] { Enemy("E0") };
 
-            var vm = BuildFactory(save).Create(enemies, battleSeed: 12345, startAuto: false, partySize);
+            var vm = BuildFactory().Create(party, enemies, battleSeed: 12345, startAuto: false);
 
-            Assert.AreEqual(partySize, vm.Combatants.Count(u => u.IsAlly), "아군은 로스터 앞 partySize명");
-            Assert.AreEqual(partySize, vm.Combatants.Count(u => !u.IsAlly), "적은 편성 앞 partySize명");
-            // Combatants 순서 = 스케줄러 입력 순(아군 먼저, 그다음 적) — 앞 partySize개가 전부 아군
-            Assert.IsTrue(vm.Combatants.Take(partySize).All(u => u.IsAlly), "아군이 적보다 먼저 배치된다");
+            var allies = vm.Combatants.Where(u => u.IsAlly).OrderBy(u => u.SlotIndex).ToList();
+            CollectionAssert.AreEqual(new[] { "A2", "A0", "A1" }, allies.Select(u => u.Name).ToList(),
+                "아군은 선택 파티 순서를 그대로 따른다(로스터 순서 아님)");
+        }
+
+        [Test]
+        public void 아군_slotIndex는_편성_인덱스를_그대로_쓴다()
+        {
+            var party = new List<OwnedCharacter> { Owned("A0"), Owned("A1"), Owned("A2") };
+            var vm = BuildFactory().Create(party, new[] { Enemy("E0") }, 1, false);
+
+            var slots = vm.Combatants.Where(u => u.IsAlly).Select(u => u.SlotIndex).OrderBy(x => x).ToList();
+            CollectionAssert.AreEqual(new[] { 0, 1, 2 }, slots);
+        }
+
+        [Test]
+        public void 중간_빈칸은_자리를_비운_채_뒤_슬롯_번호가_유지된다()
+        {
+            // 편성 1·3번 칸(인덱스 0·2)에만 배치 → 전투에서도 0·2번 자리에 서야 한다(1로 당겨지면 안 됨)
+            var party = new List<OwnedCharacter> { Owned("A0"), null, Owned("A2"), null };
+
+            var vm = BuildFactory().Create(party, new[] { Enemy("E0") }, 1, false);
+
+            var allies = vm.Combatants.Where(u => u.IsAlly).OrderBy(u => u.SlotIndex).ToList();
+            CollectionAssert.AreEqual(new[] { 0, 2 }, allies.Select(u => u.SlotIndex).ToList(),
+                "빈칸은 건너뛰되 뒤 유닛의 자리 번호는 당겨지지 않는다");
+            CollectionAssert.AreEqual(new[] { "A0", "A2" }, allies.Select(u => u.Name).ToList());
+        }
+
+        [Test]
+        public void 아군은_최대_4자리까지만_참전한다()
+        {
+            var party = Enumerable.Range(0, 6).Select(i => Owned("A" + i)).ToList();
+
+            var vm = BuildFactory().Create(party, new[] { Enemy("E0") }, 1, false);
+
+            var slots = vm.Combatants.Where(u => u.IsAlly).Select(u => u.SlotIndex).OrderBy(x => x).ToList();
+            CollectionAssert.AreEqual(new[] { 0, 1, 2, 3 }, slots, "진영 자리는 4개뿐이라 그 뒤는 잘린다");
+        }
+
+        [Test]
+        public void 적은_스테이지_편성_전부_참전하며_아군_수를_따르지_않는다()
+        {
+            var party = new List<OwnedCharacter> { Owned("A0") };          // 아군 1명
+            var enemies = new[] { Enemy("E0"), Enemy("E1"), Enemy("E2") }; // 적 3
+
+            var vm = BuildFactory().Create(party, enemies, 1, false);
+
+            Assert.AreEqual(1, vm.Combatants.Count(u => u.IsAlly));
+            Assert.AreEqual(3, vm.Combatants.Count(u => !u.IsAlly),
+                "적 수는 아군(1)이 아니라 스테이지 편성(3)을 따른다");
+        }
+
+        [Test]
+        public void 적은_4명_상한을_넘지_않는다()
+        {
+            var party = new List<OwnedCharacter> { Owned("A0") };
+            var enemies = new[] { Enemy("E0"), Enemy("E1"), Enemy("E2"), Enemy("E3"), Enemy("E4") };
+
+            var vm = BuildFactory().Create(party, enemies, 1, false);
+
+            Assert.AreEqual(4, vm.Combatants.Count(u => !u.IsAlly), "적은 4v4 상한까지만 참전한다");
+        }
+
+        [Test]
+        public void 아군이_적보다_먼저_배치된다()
+        {
+            var party = new List<OwnedCharacter> { Owned("A0"), Owned("A1") };
+            var enemies = new[] { Enemy("E0"), Enemy("E1") };
+
+            var vm = BuildFactory().Create(party, enemies, 1, false);
+
+            Assert.IsTrue(vm.Combatants.Take(2).All(u => u.IsAlly), "앞 2개가 전부 아군");
+        }
+
+        [Test]
+        public void 빈_또는_null_파티와_null_적은_예외()
+        {
+            var enemies = new[] { Enemy("E0") };
+            var party = new List<OwnedCharacter> { Owned("A0") };
+
+            Assert.Throws<ArgumentException>(
+                () => BuildFactory().Create(new List<OwnedCharacter>(), enemies, 1, false), "빈 파티");
+            Assert.Throws<ArgumentException>(
+                () => BuildFactory().Create(new List<OwnedCharacter> { null, null }, enemies, 1, false), "전부 null 파티");
+            Assert.Throws<ArgumentNullException>(
+                () => BuildFactory().Create(null, enemies, 1, false), "null 파티");
+            Assert.Throws<ArgumentNullException>(
+                () => BuildFactory().Create(party, null, 1, false), "null 적");
         }
     }
 }

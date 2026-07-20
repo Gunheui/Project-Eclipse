@@ -1,22 +1,19 @@
 using System.Collections.Generic;
-using Cysharp.Threading.Tasks;
 using Eclipse.Data;
 using Eclipse.Data.Enums;
-using Eclipse.Service;
 using R3;
 
 namespace Eclipse.Presentation
 {
     /// <summary>
     /// 스테이지 선택 화면의 상태. 현재 장의 스테이지 아이템을 데이터로 노출하고, 잠기지 않은 셀을 탭하면
-    /// 전투 씬으로 진입시킨다. 장 전환기는 배선돼 있으나 현재 콘텐츠가 1장이라 실질 no-op다.
+    /// 그 스테이지를 선택으로 기록한다(화면 전환은 View가 편성 화면 Push로 처리). 장 전환기는 배선돼 있으나
+    /// 현재 콘텐츠가 1장이라 실질 no-op다.
     /// </summary>
     public sealed class StageSelectViewModel : ViewModelBase
     {
         private readonly StageProgress _progress;
-        private readonly ISceneFlow _sceneFlow;
         private readonly NavigationContext _nav;
-        private bool _entering;
 
         /// <summary> 전체 장 목록. 순서·내용 고정(런타임 변경 없음). </summary>
         public IReadOnlyList<ChapterSO> Chapters { get; }
@@ -38,13 +35,11 @@ namespace Eclipse.Presentation
 
         /// <param name="chapters">표시할 장 목록. 첫 항목이 초기 선택 장.</param>
         /// <param name="progress">장별 진행/해금 상태(셀 3상태의 원천).</param>
-        /// <param name="sceneFlow">셀 탭 시 전투 씬으로 전환하는 창구.</param>
-        /// <param name="nav">씬 경계 선택 보관함. 진입 직전 선택 스테이지를 여기 기록해 전투 스코프가 적 편성을 읽는다.</param>
-        public StageSelectViewModel(ChapterSO[] chapters, StageProgress progress, ISceneFlow sceneFlow, NavigationContext nav)
+        /// <param name="nav">씬 경계 선택 보관함. 선택 스테이지를 여기 기록해 편성·전투 스코프가 읽는다.</param>
+        public StageSelectViewModel(ChapterSO[] chapters, StageProgress progress, NavigationContext nav)
         {
             Chapters = chapters;
             _progress = progress;
-            _sceneFlow = sceneFlow;
             _nav = nav;
 
             var first = chapters[0];
@@ -61,22 +56,21 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 스테이지 아이템을 골라 전투 씬으로 진입한다. 잠긴(Locked) 아이템은 무시하며(선택 차단의 권위),
-        /// 씬 로드 중복 진입도 한 번만 막는다. 진입 전 선택 상태를 갱신한다.
+        /// 스테이지 아이템을 선택으로 기록한다. 잠긴(Locked) 아이템은 무시하며(선택 차단의 권위) false를 돌려준다.
+        /// 새 편성을 시작하므로 이전에 확정했다 버린 파티(SelectedParty)를 함께 클리어한다.
+        /// 화면 전환(편성 화면 Push)은 이 반환값을 보고 View가 처리한다.
         /// </summary>
-        /// <param name="item">탭된 스테이지 아이템. State가 Locked면 아무 일도 하지 않는다.</param>
-        public void Select(StageSelectItemViewModel item)
+        /// <param name="item">탭된 스테이지 아이템. State가 Locked거나 null이면 아무 일도 하지 않는다.</param>
+        /// <returns>선택이 기록됐으면 true(편성 화면으로 진행 가능), 잠김/null이면 false.</returns>
+        public bool Select(StageSelectItemViewModel item)
         {
             if (item == null || item.State.CurrentValue == StageState.Locked)
-                return;
+                return false;
 
             SelectedStage.Value = item;
-
-            if (_entering)
-                return;
-            _entering = true;
             _nav.SelectedStage = item.Stage;
-            _sceneFlow.ToBattleAsync().Forget();
+            _nav.SelectedParty = null;
+            return true;
         }
 
         /// <summary>이전 장으로 전환한다. 첫 장이면 아무 일도 하지 않는다.</summary>

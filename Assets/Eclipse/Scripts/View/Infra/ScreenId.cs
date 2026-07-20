@@ -8,6 +8,8 @@ namespace Eclipse.View.Infra
         Lobby = 0,
         CharacterList = 1,
         CharacterDetail = 2,
-        StageSelect = 3
+        StageSelect = 3,
+        PartyFormation = 4,
+        PartyPick = 5
     }
 }

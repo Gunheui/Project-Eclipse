@@ -104,12 +104,19 @@ namespace Eclipse.View
             return UniTask.CompletedTask;
         }
 
-        // 셀 프리팹을 하나 생성해 contentRoot 끝(장 설명 패널 뒤)에 붙이고, 탭 시 선택/진입하도록 바인딩한다.
+        // 셀 프리팹을 하나 생성해 contentRoot 끝(장 설명 패널 뒤)에 붙이고, 탭 시 선택/편성 진입하도록 바인딩한다.
         private void AddCell(StageSelectItemViewModel item)
         {
             var cell = Instantiate(cellPrefab, contentRoot);
-            cell.Bind(item, _viewModel.Select);
+            cell.Bind(item, OnStageSelected);
             _cells.Add(cell);
+        }
+
+        // 스테이지를 탭하면 선택으로 기록하고(잠김이면 무시), 기록됐을 때만 편성 화면을 전면에 올린다.
+        private void OnStageSelected(StageSelectItemViewModel item)
+        {
+            if (_viewModel.Select(item))
+                _screenManager.Push(ScreenId.PartyFormation).Forget();
         }
 
         // 장 정보 패널·내비 라벨을 선택 장 값으로 채운다. 번호는 "01"(D2), 내비는 "N장" 표기.

@@ -8,12 +8,22 @@ namespace Eclipse.Domain
     /// </summary>
     public class PlayerSave
     {
+        /// <summary> 파티 편성 칸 수. 편성 화면 슬롯 수이자 전투 아군 진영의 자리 수와 같다. </summary>
+        public const int PartySlotCount = 4;
+
         /// <summary> 보유 캐릭터 목록. </summary>
         public List<OwnedCharacter> OwnedCharacters { get; }
+
+        /// <summary>
+        /// 파티 편성. 길이는 항상 <see cref="PartySlotCount"/>이며, 인덱스가 곧 편성 칸 위치다(빈 칸은 null).
+        /// 중간 빈 칸을 허용하므로 앞으로 당겨 압축하지 않는다 — 이 위치가 전투 진영 배치로 그대로 이어진다.
+        /// </summary>
+        public OwnedCharacter[] Party { get; }
 
         public PlayerSave(List<OwnedCharacter> ownedCharacters)
         {
             OwnedCharacters = ownedCharacters;
+            Party = new OwnedCharacter[PartySlotCount];
         }
     }
 }

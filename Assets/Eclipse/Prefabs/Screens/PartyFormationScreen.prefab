@@ -806,6 +806,7 @@ GameObject:
   - component: {fileID: 6871932832166944333}
   - component: {fileID: 4002489392171821503}
   - component: {fileID: 5354478177564645242}
+  - component: {fileID: 9095648983391822314}
   m_Layer: 0
   m_Name: PartyFormationScreen
   m_TagString: Untagged
@@ -873,6 +874,28 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &9095648983391822314
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2597675729861496772}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b93cb29894b59463dbadeebc44eb5f27, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.PartyFormationView
+  slotCells:
+  - {fileID: 8338936946355979293}
+  - {fileID: 1976650465514629087}
+  - {fileID: 1667326676544223963}
+  - {fileID: 3409351109449456614}
+  stageNameText: {fileID: 7318506138303926498}
+  stageDescText: {fileID: 8770313370232636277}
+  countLabel: {fileID: 1227419156277213525}
+  enterButton: {fileID: 9088903718031676929}
+  backButton: {fileID: 6133972541999025390}
 --- !u!1 &3659384109842232883
 GameObject:
   m_ObjectHideFlags: 0
@@ -2518,6 +2541,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 1652408319999076286, guid: 85c053ed7debb4d7f88ead5a79d63a08, type: 3}
   m_PrefabInstance: {fileID: 209054547397200779}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &6133972541999025390 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6324893943084369765, guid: 85c053ed7debb4d7f88ead5a79d63a08, type: 3}
+  m_PrefabInstance: {fileID: 209054547397200779}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!1001 &1501124888321571657
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2647,6 +2681,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 032b330ce18a04dcd8d6bc45c370bdf7, type: 3}
+--- !u!114 &1667326676544223963 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 285584842527392146, guid: 032b330ce18a04dcd8d6bc45c370bdf7, type: 3}
+  m_PrefabInstance: {fileID: 1501124888321571657}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4951e882b64eb4a299da2fc92189edec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.PartySlotCellView
 --- !u!224 &7523987715139718622 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8989048342787520151, guid: 032b330ce18a04dcd8d6bc45c370bdf7, type: 3}
@@ -2777,6 +2822,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 032b330ce18a04dcd8d6bc45c370bdf7, type: 3}
+--- !u!114 &1976650465514629087 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 285584842527392146, guid: 032b330ce18a04dcd8d6bc45c370bdf7, type: 3}
+  m_PrefabInstance: {fileID: 1772413597029819981}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4951e882b64eb4a299da2fc92189edec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.PartySlotCellView
 --- !u!224 &7216845856352309466 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8989048342787520151, guid: 032b330ce18a04dcd8d6bc45c370bdf7, type: 3}
@@ -2801,6 +2857,10 @@ PrefabInstance:
     - target: {fileID: 4388279994108348706, guid: 032b330ce18a04dcd8d6bc45c370bdf7, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7597914805657547368, guid: 032b330ce18a04dcd8d6bc45c370bdf7, type: 3}
+      propertyPath: m_text
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 8989048342787520151, guid: 032b330ce18a04dcd8d6bc45c370bdf7, type: 3}
       propertyPath: m_Pivot.x
@@ -2887,6 +2947,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 032b330ce18a04dcd8d6bc45c370bdf7, type: 3}
+--- !u!114 &3409351109449456614 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 285584842527392146, guid: 032b330ce18a04dcd8d6bc45c370bdf7, type: 3}
+  m_PrefabInstance: {fileID: 3217517523474143860}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4951e882b64eb4a299da2fc92189edec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.PartySlotCellView
 --- !u!224 &5771759796947299555 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8989048342787520151, guid: 032b330ce18a04dcd8d6bc45c370bdf7, type: 3}
@@ -3026,3 +3097,14 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 8989048342787520151, guid: 032b330ce18a04dcd8d6bc45c370bdf7, type: 3}
   m_PrefabInstance: {fileID: 8092760852340999567}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &8338936946355979293 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 285584842527392146, guid: 032b330ce18a04dcd8d6bc45c370bdf7, type: 3}
+  m_PrefabInstance: {fileID: 8092760852340999567}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4951e882b64eb4a299da2fc92189edec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.PartySlotCellView
