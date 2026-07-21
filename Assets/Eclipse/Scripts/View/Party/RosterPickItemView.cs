@@ -10,11 +10,11 @@ using UnityEngine.UI;
 namespace Eclipse.View
 {
     /// <summary>
-    /// 픽 화면 로스터 셀 하나를 그리는 View. 표시값(초상·이름·등급·레벨)은 공유 셀 VM에서 읽고,
+    /// 픽 화면 로스터 항목 하나를 그리는 View. 표시값(초상·이름·등급·레벨)은 공유 항목 VM에서 읽고,
     /// 슬롯 번호 배지·편성 강조는 <see cref="PartyPickItemViewModel.SlotNumber"/>를 구독해 갱신한다.
-    /// 셀은 PartyPickView가 생성하고 Bind를 호출해 연결한다.
+    /// 항목은 PartyPickView가 생성하고 Bind를 호출해 연결한다.
     /// </summary>
-    public class RosterPickCellView : MonoBehaviour
+    public class RosterPickItemView : MonoBehaviour
     {
         [SerializeField] private Image portrait;
         [SerializeField] private TMP_Text nameText;
@@ -30,20 +30,20 @@ namespace Eclipse.View
         [SerializeField] private GameObject selectHighlight;
 
         /// <summary>
-        /// 셀을 지정 아이템에 바인딩한다. 안 바뀌는 값(초상·이름·등급)은 즉시 대입하고, 레벨·슬롯 번호는 구독해 갱신한다.
+        /// 항목을 지정 아이템에 바인딩한다. 안 바뀌는 값(초상·이름·등급)은 즉시 대입하고, 레벨·슬롯 번호는 구독해 갱신한다.
         /// 구독은 이 GameObject 수명에 묶여 Destroy 시 자동 해지된다. 탭은 <paramref name="onPick"/>으로 전달한다.
-        /// 셀당 한 번만 호출한다(재바인딩 미지원 — 구독이 중첩된다).
+        /// 항목당 한 번만 호출한다(재바인딩 미지원 — 구독이 중첩된다).
         /// </summary>
-        /// <param name="item">이 셀이 표시할 픽 아이템(공유 셀 VM + 슬롯 번호 상태).</param>
-        /// <param name="onPick">셀을 탭했을 때 호출되는 콜백(슬롯 배치는 픽 ViewModel이 담당).</param>
+        /// <param name="item">이 항목이 표시할 픽 아이템(공유 항목 VM + 슬롯 번호 상태).</param>
+        /// <param name="onPick">항목을 탭했을 때 호출되는 콜백(슬롯 배치는 픽 ViewModel이 담당).</param>
         public void Bind(PartyPickItemViewModel item, Action onPick)
         {
             ApplyPortraitAsync(item, this.GetCancellationTokenOnDestroy()).Forget();
-            nameText.text = item.Cell.DisplayName;
+            nameText.text = item.Character.DisplayName;
             if (rarityText != null)
-                rarityText.text = $"★{item.Cell.Rarity}";
+                rarityText.text = $"★{item.Character.Rarity}";
 
-            item.Cell.Level
+            item.Character.Level
                 .Subscribe(level => { if (levelText != null) levelText.text = $"Lv. {level}"; })
                 .AddTo(this);
 
@@ -68,7 +68,7 @@ namespace Eclipse.View
 
         private async UniTaskVoid ApplyPortraitAsync(PartyPickItemViewModel item, CancellationToken ct)
         {
-            portrait.sprite = await item.Cell.LoadPortraitAsync(ct);
+            portrait.sprite = await item.Character.LoadPortraitAsync(ct);
         }
     }
 }

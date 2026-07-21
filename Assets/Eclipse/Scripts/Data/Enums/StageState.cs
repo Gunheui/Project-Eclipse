@@ -1,7 +1,7 @@
 namespace Eclipse.Data.Enums
 {
     /// <summary>
-    /// 스테이지 선택 화면 셀의 진행 상태 3종. 장별 클리어 수에서 파생되는 런타임 값이라 직렬화하지 않는다.
+    /// 스테이지 선택 화면 항목의 진행 상태 3종. 장별 클리어 수에서 파생되는 런타임 값이라 직렬화하지 않는다.
     /// </summary>
     public enum StageState
     {

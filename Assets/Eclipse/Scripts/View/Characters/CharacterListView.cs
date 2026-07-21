@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using Eclipse.Data.Enums;
 using Eclipse.Presentation;
 using Eclipse.View.Infra;
-using ObservableCollections;
 using R3;
 using TMPro;
 using UnityEngine;
@@ -12,12 +12,12 @@ using VContainer;
 namespace Eclipse.View
 {
     /// <summary>
-    /// 캐릭터 목록 화면. CharacterListViewModel의 셀 목록을 구독해
-    /// 셀 프리팹을 생성/제거한다. 구독은 화면이 보이는 동안(OnEnter~OnExit)만 유지한다.
+    /// 캐릭터 목록 화면. CharacterListViewModel의 항목 목록으로 항목 뷰를 생성하고, 항목을 탭하면 상세 화면을 연다.
+    /// 역할 필터로 표시를 거르고 정렬 버튼으로 순서를 바꾼다. 구독은 화면이 보이는 동안(OnEnter~OnExit)만 유지한다.
     /// </summary>
     public class CharacterListView : MonoBehaviour, IScreen
     {
-        [SerializeField] private CharacterCellView cellPrefab;
+        [SerializeField] private CharacterItemView itemPrefab;
         [SerializeField] private Transform contentRoot;
 
         [Header("내비")]
@@ -27,16 +27,19 @@ namespace Eclipse.View
         [SerializeField] private Button sortButton;
         [SerializeField] private TMP_Text sortLabel;
 
+        [Header("역할 필터")]
+        [SerializeField] private RoleFilterBar roleFilterBar;
+
         private CharacterListViewModel _viewModel;
         private ScreenManager _screenManager;
-        private readonly List<CharacterCellView> _cells = new List<CharacterCellView>();
+        private readonly List<CharacterItemView> _items = new List<CharacterItemView>();
         private CompositeDisposable _subscriptions;
 
         /// <summary>
         /// ScreenManager가 이 화면 프리팹을 주입 생성할 때 호출한다. OnEnter보다 먼저 실행된다.
         /// </summary>
         /// <param name="viewModel">표시할 캐릭터 목록 ViewModel(컨테이너가 주입).</param>
-        /// <param name="screenManager">셀 탭 시 상세 화면으로 전환하는 데 사용한다.</param>
+        /// <param name="screenManager">항목 탭 시 상세 화면으로 전환하는 데 사용한다.</param>
         [Inject]
         public void Construct(CharacterListViewModel viewModel, ScreenManager screenManager)
         {
@@ -45,83 +48,103 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// 화면이 스택 전면에 설 때(주입 완료 후) 호출된다. 현재 목록 항목마다 셀을 생성하고,
-        /// 이후의 항목 추가/제거를 구독한다. 구독은 OnExit까지 유지된다.
+        /// 화면이 스택 전면에 설 때(주입 완료 후) 호출된다. 정렬·역할 필터를 구독한다 —
+        /// 정렬의 최초 통지가 항목 뷰 생성을 겸하므로 여기서 따로 만들지 않는다. 구독은 OnExit까지 유지된다.
         /// </summary>
         /// <returns>등장 처리가 끝났음을 알리는 UniTask(연출이 없어 즉시 완료).</returns>
         public UniTask OnEnter()
         {
-            foreach (var cellViewModel in _viewModel.CharacterList)
-                AddCell(cellViewModel);
-
             _subscriptions = new CompositeDisposable();
-            _viewModel.CharacterList.ObserveAdd()
-                .Subscribe(e => AddCell(e.Value))
-                .AddTo(_subscriptions);
-            _viewModel.CharacterList.ObserveRemove()
-                .Subscribe(e => RemoveCell(e.Index))
-                .AddTo(_subscriptions);
 
             backButton.onClick.AddListener(() => _screenManager.Pop().Forget());
-
             sortButton.onClick.AddListener(() => _viewModel.CycleSort());
+            if (roleFilterBar != null)
+                roleFilterBar.Selected += OnRoleFilterSelected;
+
+            // 정렬 구독이 먼저다 — 최초 통지가 항목 뷰 생성을 겸하고, 필터 구독이 그 위에 표시를 거른다.
             _viewModel.CurrentSortKey
-                .Subscribe(key => sortLabel.text = $"정렬: {SortLabel(key)}")
+                .Subscribe(OnSortKeyChanged)
+                .AddTo(_subscriptions);
+            _viewModel.RoleFilter
+                .Subscribe(_ => ApplyRoleFilter())
                 .AddTo(_subscriptions);
 
             return UniTask.CompletedTask;
         }
 
         /// <summary>
-        /// 화면이 스택에서 제거될 때 호출된다. 목록 추가/제거 구독을 해지하고 생성한 셀을 모두 파괴한다.
+        /// 화면이 스택에서 제거될 때 호출된다. 정렬·필터 구독을 해지하고 생성한 항목 뷰를 모두 파괴한다.
         /// </summary>
         /// <returns>퇴장 처리가 끝났음을 알리는 UniTask(연출이 없어 즉시 완료).</returns>
         public UniTask OnExit()
         {
             _subscriptions?.Dispose();
-            foreach (var cell in _cells)
-                Destroy(cell.gameObject);
-            _cells.Clear();
+            if (roleFilterBar != null)
+                roleFilterBar.Selected -= OnRoleFilterSelected;
+
+            DestroyItems();
             return UniTask.CompletedTask;
         }
 
-        /// <summary>정렬 기준을 사용자에게 보일 한글 라벨로 바꾼다.</summary>
-        private static string SortLabel(CharacterListViewModel.SortKey key) => key switch
-        {
-            CharacterListViewModel.SortKey.Rarity => "등급",
-            CharacterListViewModel.SortKey.Level => "레벨",
-            CharacterListViewModel.SortKey.Name => "이름",
-            _ => "",
-        };
+        private void OnRoleFilterSelected(Role? role) => _viewModel.SetRoleFilter(role);
 
-        /// <summary>셀 프리팹을 하나 생성해 contentRoot 끝에 붙이고 ViewModel에 바인딩한다.</summary>
-        /// <param name="cellViewModel">새 셀이 표시할 캐릭터 셀 ViewModel.</param>
-        private void AddCell(CharacterCellViewModel cellViewModel)
+        // 정렬이 바뀌면 라벨을 갱신하고 항목 뷰를 VM의 새 순서대로 다시 만든다(로스터 규모에서 재배치보다 단순).
+        private void OnSortKeyChanged(CharacterSortKey key)
         {
-            var cell = Instantiate(cellPrefab, contentRoot);
-            cell.Bind(cellViewModel, () => OnCellSelected(cell));
-            _cells.Add(cell);
+            sortLabel.text = $"정렬: {CharacterSort.Label(key)}";
+
+            DestroyItems();
+            foreach (var itemViewModel in _viewModel.Items)
+                AddItem(itemViewModel);
         }
 
-        /// <summary>셀을 탭하면 그 캐릭터를 선택으로 기록하고 상세 화면을 전면에 올린다.</summary>
-        /// <param name="cell">탭된 셀 View. 목록에서의 위치로 선택 인덱스를 정한다.</param>
-        private void OnCellSelected(CharacterCellView cell)
+        private void DestroyItems()
         {
-            var index = _cells.IndexOf(cell);
+            foreach (var item in _items)
+                Destroy(item.gameObject);
+            _items.Clear();
+        }
+
+        /// <summary>
+        /// 현재 역할 필터에 맞춰 항목 표시를 켜고 끈다. null이면 전체 표시. 필터 바의 선택 표시도 함께 맞춘다.
+        /// 항목 뷰를 제거하지 않고 SetActive만 토글해 인덱스를 ViewModel 목록과 일치시킨 채로 둔다.
+        /// </summary>
+        private void ApplyRoleFilter()
+        {
+            var role = _viewModel.RoleFilter.CurrentValue;
+            if (roleFilterBar != null)
+                roleFilterBar.SetSelected(role);
+            var itemViewModels = _viewModel.Items;
+            for (int i = 0; i < _items.Count && i < itemViewModels.Count; i++)
+                _items[i].gameObject.SetActive(Matches(itemViewModels[i], role));
+        }
+
+        private static bool Matches(CharacterItemViewModel itemViewModel, Role? role)
+            => role == null || itemViewModel.Role == role.Value;
+
+        /// <summary>
+        /// 항목 프리팹을 하나 생성해 contentRoot 끝에 붙이고 ViewModel에 바인딩한다.
+        /// 정렬 시 항목 뷰가 전량 재생성되므로, 생성 시점에 현재 역할 필터를 적용해 필터 상태를 유지한다.
+        /// </summary>
+        /// <param name="itemViewModel">새 항목 뷰가 표시할 캐릭터 항목 ViewModel.</param>
+        private void AddItem(CharacterItemViewModel itemViewModel)
+        {
+            var item = Instantiate(itemPrefab, contentRoot);
+            item.Bind(itemViewModel, () => OnItemSelected(item));
+            item.gameObject.SetActive(Matches(itemViewModel, _viewModel.RoleFilter.CurrentValue));
+            _items.Add(item);
+        }
+
+        /// <summary>항목을 탭하면 그 캐릭터를 선택으로 기록하고 상세 화면을 전면에 올린다.</summary>
+        /// <param name="item">탭된 항목 View. 목록에서의 위치로 선택 인덱스를 정한다.</param>
+        private void OnItemSelected(CharacterItemView item)
+        {
+            var index = _items.IndexOf(item);
             if (index < 0)
                 return;
 
             _viewModel.Select(index);
             _screenManager.Push(ScreenId.CharacterDetail).Forget();
-        }
-
-        /// <summary>지정 위치의 셀을 목록에서 제거하고 GameObject를 파괴한다.</summary>
-        /// <param name="index">제거할 셀의 위치. ViewModel 목록의 인덱스와 대응한다.</param>
-        private void RemoveCell(int index)
-        {
-            var cell = _cells[index];
-            _cells.RemoveAt(index);
-            Destroy(cell.gameObject);
         }
     }
 }

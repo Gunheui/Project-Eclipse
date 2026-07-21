@@ -10,9 +10,9 @@ namespace Eclipse.View
     /// <summary>
     /// 편성 화면의 슬롯 하나를 그리는 View. 슬롯의 ReactiveProperty(OwnedCharacter)를 구독해 빈칸/채움 상태를
     /// 전환하고, 채움일 때 초상·이름을 대입한다. 슬롯을 탭하면 픽 화면 진입 콜백을 호출한다.
-    /// 셀은 PartyFormationView가 생성하고 Bind를 호출해 연결한다.
+    /// 항목은 PartyFormationView가 생성하고 Bind를 호출해 연결한다.
     /// </summary>
-    public class PartySlotCellView : MonoBehaviour
+    public class PartySlotView : MonoBehaviour
     {
         [Header("상태 루트")]
         [Tooltip("빈 슬롯 표시(+ 아이콘/점선 테두리). 슬롯이 비었을 때만 켠다.")]
@@ -29,9 +29,9 @@ namespace Eclipse.View
         /// <summary>
         /// 슬롯을 지정 슬롯 점유자 스트림에 바인딩한다. 점유자 정의 변화를 구독해 빈칸/채움을 전환하며,
         /// 구독은 이 GameObject 수명에 묶여 Destroy 시 자동 해지된다. 탭은 <paramref name="onSelected"/>로 전달한다.
-        /// 셀당 한 번만 호출한다(재바인딩 미지원 — 구독이 중첩된다).
+        /// 항목당 한 번만 호출한다(재바인딩 미지원 — 구독이 중첩된다).
         /// </summary>
-        /// <param name="occupant">이 셀이 표시할 슬롯 점유자 정의 스트림. null이면 빈칸, 값이 있으면 채움.</param>
+        /// <param name="occupant">이 항목이 표시할 슬롯 점유자 정의 스트림. null이면 빈칸, 값이 있으면 채움.</param>
         /// <param name="onSelected">슬롯을 탭했을 때 호출되는 콜백(픽 화면 진입은 편성 View가 담당).</param>
         public void Bind(ReadOnlyReactiveProperty<CharacterSO> occupant, Action onSelected)
         {

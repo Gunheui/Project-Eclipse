@@ -25,7 +25,7 @@ namespace Eclipse.Presentation
             }
         }
 
-        // 장 id → 진행 항목. Cleared가 바뀌면 구독한 셀 상태가 갱신된다.
+        // 장 id → 진행 항목. Cleared가 바뀌면 구독한 항목 상태가 갱신된다.
         private readonly Dictionary<string, ChapterEntry> _chapters = new Dictionary<string, ChapterEntry>();
 
         /// <summary>더미 초기 진행도로 서비스를 만든다. 실제 진행도는 세이브 로딩 시점에 주입된다.</summary>
@@ -51,7 +51,7 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 지정한 장의 클리어 수를 읽기 전용으로 노출한다. 셀 ViewModel이 이를 구독해 상태를 파생한다.
+        /// 지정한 장의 클리어 수를 읽기 전용으로 노출한다. 항목 ViewModel이 이를 구독해 상태를 파생한다.
         /// </summary>
         /// <param name="chapterId">조회할 장 id. 시드되지 않은 id면 예외.</param>
         /// <returns>해당 장의 클리어 수 스트림.</returns>

@@ -10,13 +10,13 @@ using VContainer;
 namespace Eclipse.View
 {
     /// <summary>
-    /// 파티 편성 화면. 4개 슬롯 셀을 생성해 편성 VM의 슬롯 스트림에 각각 바인딩하고, 슬롯 탭 시 픽 화면을 올린다.
+    /// 파티 편성 화면. 4개 슬롯을 생성해 편성 VM의 슬롯 스트림에 각각 바인딩하고, 슬롯 탭 시 픽 화면을 올린다.
     /// 상단에 스테이지 요약을, 하단에 인원수·진입 버튼을 바인딩한다. 진입 버튼은 1명 이상일 때만 활성.
     /// </summary>
     public class PartyFormationView : MonoBehaviour, IScreen
     {
-        [Tooltip("SlotGrid에 고정 배치된 4개 슬롯 셀(순서 = 슬롯 0~3). 편성 슬롯 수와 개수가 맞아야 한다.")]
-        [SerializeField] private PartySlotCellView[] slotCells;
+        [Tooltip("SlotGrid에 고정 배치된 4개 슬롯(순서 = 슬롯 0~3). 편성 슬롯 수와 개수가 맞아야 한다.")]
+        [SerializeField] private PartySlotView[] slotViews;
 
         [Header("스테이지 요약")]
         [SerializeField] private TMP_Text stageNameText;
@@ -46,7 +46,7 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// 화면이 스택 전면에 설 때 호출된다. 스테이지 요약을 채우고 고정 배치된 슬롯 셀을 슬롯 스트림에 바인딩하며,
+        /// 화면이 스택 전면에 설 때 호출된다. 스테이지 요약을 채우고 고정 배치된 슬롯을 슬롯 스트림에 바인딩하며,
         /// 인원수 라벨·진입 버튼 가용성을 편성 VM에 바인딩한다. 바인딩은 OnExit까지 유지된다.
         /// </summary>
         /// <returns>등장 처리가 끝났음을 알리는 UniTask(연출이 없어 즉시 완료).</returns>
@@ -61,11 +61,11 @@ namespace Eclipse.View
                     stageDescText.text = stage.description;
             }
 
-            int slotCount = Mathf.Min(slotCells.Length, _viewModel.SlotOccupants.Count);
+            int slotCount = Mathf.Min(slotViews.Length, _viewModel.SlotOccupants.Count);
             for (int i = 0; i < slotCount; i++)
             {
                 int slot = i;
-                slotCells[slot].Bind(_viewModel.SlotOccupants[slot], () => OnSlotTapped(slot));
+                slotViews[slot].Bind(_viewModel.SlotOccupants[slot], () => OnSlotTapped(slot));
             }
 
             if (countLabel != null)
@@ -84,8 +84,8 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// 화면이 스택에서 제거될 때 호출된다. 버튼 리스너·바인딩을 해지한다. 슬롯 셀은 고정 배치라 파괴하지 않으며,
-        /// 셀의 R3 구독·리스너는 화면 프리팹이 pop 시 통째로 Destroy될 때 함께 정리된다.
+        /// 화면이 스택에서 제거될 때 호출된다. 버튼 리스너·바인딩을 해지한다. 슬롯은 고정 배치라 파괴하지 않으며,
+        /// 항목의 R3 구독·리스너는 화면 프리팹이 pop 시 통째로 Destroy될 때 함께 정리된다.
         /// </summary>
         /// <returns>퇴장 처리가 끝났음을 알리는 UniTask(연출이 없어 즉시 완료).</returns>
         public UniTask OnExit()

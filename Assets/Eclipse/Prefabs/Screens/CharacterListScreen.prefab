@@ -682,7 +682,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4273103037774702855}
   - component: {fileID: 4294084172027512638}
-  - component: {fileID: 9091069496786654553}
+  - component: {fileID: 4949293144866737655}
   m_Layer: 0
   m_Name: Content
   m_TagString: Untagged
@@ -723,7 +723,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
   m_HorizontalFit: 2
   m_VerticalFit: 0
---- !u!114 &9091069496786654553
+--- !u!114 &4949293144866737655
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -824,6 +824,119 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!1001 &7539456730445207347
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 5470636070823704531}
+    m_Modifications:
+    - target: {fileID: 3406567089189920996, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_Name
+      value: RoleFilterBar
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+--- !u!224 &4509300391996563741 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 6212090218122671662, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+  m_PrefabInstance: {fileID: 7539456730445207347}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8323819065751105762 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1956148446560430033, guid: 177e972fe8d5446148bedc0b3f8a55ca, type: 3}
+  m_PrefabInstance: {fileID: 7539456730445207347}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd5c70d6f3fc6459086b5af9d69496d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.RoleFilterBar
 --- !u!1001 &8573996420504594311
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -922,7 +1035,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6507917423273739762, guid: 667b334c57efd485f92ee09076431527, type: 3}
       propertyPath: m_Name
-      value: CharacterListScreen_New
+      value: CharacterListScreen
       objectReference: {fileID: 0}
     - target: {fileID: 6970582210127969494, guid: 667b334c57efd485f92ee09076431527, type: 3}
       propertyPath: m_text
@@ -940,6 +1053,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5240370102235885499, guid: 667b334c57efd485f92ee09076431527, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6471251389067897669}
+    - targetCorrespondingSourceObject: {fileID: 4402109021168275540, guid: 667b334c57efd485f92ee09076431527, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4509300391996563741}
     - targetCorrespondingSourceObject: {fileID: 4402109021168275540, guid: 667b334c57efd485f92ee09076431527, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3965377767722463080}
@@ -965,11 +1081,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: de7bbca7993fd4a1aa4864c74cacef04, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Eclipse.View::Eclipse.View.CharacterListView
-  cellPrefab: {fileID: 838319165574718792, guid: c141181383b224a4e90b3d6940d8b7f7, type: 3}
+  itemPrefab: {fileID: 838319165574718792, guid: c141181383b224a4e90b3d6940d8b7f7, type: 3}
   contentRoot: {fileID: 4273103037774702855}
   backButton: {fileID: 5271146641489494817}
   sortButton: {fileID: 5790155585186241559}
   sortLabel: {fileID: 2779467813351790571}
+  roleFilterBar: {fileID: 8323819065751105762}
 --- !u!224 &4487129521513646140 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5240370102235885499, guid: 667b334c57efd485f92ee09076431527, type: 3}

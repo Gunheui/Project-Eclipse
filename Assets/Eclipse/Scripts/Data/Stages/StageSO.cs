@@ -18,10 +18,10 @@ namespace Eclipse.Data
         /// <summary> 스테이지 설명(선택 화면 상세 문구). </summary>
         [TextArea] public string description;
 
-        /// <summary> 스테이지 셀 썸네일 스프라이트. </summary>
+        /// <summary> 스테이지 항목 썸네일 스프라이트. </summary>
         public Sprite thumbnail;
 
-        /// <summary> 보스 스테이지 여부. 셀에 보스 프레임을 표시하고 장의 마지막 스테이지로 배치한다. </summary>
+        /// <summary> 보스 스테이지 여부. 항목에 보스 프레임을 표시하고 장의 마지막 스테이지로 배치한다. </summary>
         public bool isBoss;
 
         /// <summary> 이 스테이지의 적 편성. 배열 순서가 전장 슬롯 순서(SlotIndex)이며, 전투 진입 시 앞에서부터 참전한다. </summary>

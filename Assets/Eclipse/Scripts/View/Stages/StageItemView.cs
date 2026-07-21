@@ -9,11 +9,11 @@ using UnityEngine.UI;
 namespace Eclipse.View
 {
     /// <summary>
-    /// 스테이지 목록의 셀 하나를 그리는 View. 아이템 ViewModel의 불변값(썸네일·이름·번호·보스)을 1회 대입하고,
+    /// 스테이지 목록의 항목 하나를 그리는 View. 아이템 ViewModel의 불변값(썸네일·이름·번호·보스)을 1회 대입하고,
     /// 3상태(클리어/열림/잠김)는 <see cref="StageSelectItemViewModel.State"/>를 구독해 반영한다.
-    /// 셀은 StageSelectView가 생성하고 Bind를 호출해 연결한다.
+    /// 항목은 StageSelectView가 생성하고 Bind를 호출해 연결한다.
     /// </summary>
-    public class StageCellView : MonoBehaviour
+    public class StageItemView : MonoBehaviour
     {
         [SerializeField] private Image thumbnail;
         [SerializeField] private TMP_Text nameText;
@@ -35,13 +35,13 @@ namespace Eclipse.View
         [SerializeField] private GameObject selectedIndicator;
 
         /// <summary>
-        /// 셀을 지정 아이템에 바인딩한다. 불변값(썸네일·이름·번호·보스 프레임)을 즉시 대입하고,
+        /// 항목을 지정 아이템에 바인딩한다. 불변값(썸네일·이름·번호·보스 프레임)을 즉시 대입하고,
         /// 3상태는 <paramref name="item"/>.State 구독으로 반영한다. 탭 시 <paramref name="onSelected"/>에
         /// 이 아이템을 넘긴다(잠금 차단의 최종 판정은 ViewModel이 담당하며, 버튼 비활성화는 어포던스일 뿐이다).
-        /// 상태 구독은 이 GameObject 수명에 묶여 Destroy 시 함께 해지된다. 셀당 한 번만 호출한다(재바인딩 미지원).
+        /// 상태 구독은 이 GameObject 수명에 묶여 Destroy 시 함께 해지된다. 항목당 한 번만 호출한다(재바인딩 미지원).
         /// </summary>
-        /// <param name="item">이 셀이 표시할 스테이지 아이템(불변값 + 상태 스트림).</param>
-        /// <param name="onSelected">셀을 탭했을 때 호출되는 콜백(선택·진입 처리는 목록 ViewModel이 담당).</param>
+        /// <param name="item">이 항목이 표시할 스테이지 아이템(불변값 + 상태 스트림).</param>
+        /// <param name="onSelected">항목을 탭했을 때 호출되는 콜백(선택·진입 처리는 목록 ViewModel이 담당).</param>
         public void Bind(StageSelectItemViewModel item, Action<StageSelectItemViewModel> onSelected)
         {
             thumbnail.sprite = item.Stage.thumbnail;
@@ -70,7 +70,7 @@ namespace Eclipse.View
         }
 
         /// <summary>선택 강조 표시를 켜거나 끈다.</summary>
-        /// <param name="selected">true면 이 셀이 현재 선택 상태.</param>
+        /// <param name="selected">true면 이 항목이 현재 선택 상태.</param>
         public void SetSelected(bool selected)
         {
             if (selectedIndicator != null)

@@ -7437,7 +7437,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b93cb29894b59463dbadeebc44eb5f27, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Eclipse.View::Eclipse.View.PartyFormationView
-  slotCells:
+  slotViews:
   - {fileID: 4789303216192283927}
   - {fileID: 9213628210678573853}
   - {fileID: 352722419161731584}

@@ -1703,7 +1703,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 558c6f1c01c0248e2ace8f73a7b2e305, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Eclipse.View::Eclipse.View.StageSelectView
-  cellPrefab: {fileID: 1899242088814531668, guid: 237135c8f28c44d5995eeb1cfc469cf7, type: 3}
+  itemPrefab: {fileID: 1899242088814531668, guid: 237135c8f28c44d5995eeb1cfc469cf7, type: 3}
   contentRoot: {fileID: 5994159193611217904}
   chapterNumberText: {fileID: 7892231988991125348}
   chapterTitleText: {fileID: 3319397588360261141}

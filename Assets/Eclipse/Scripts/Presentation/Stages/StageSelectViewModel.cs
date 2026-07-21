@@ -6,7 +6,7 @@ using R3;
 namespace Eclipse.Presentation
 {
     /// <summary>
-    /// 스테이지 선택 화면의 상태. 현재 장의 스테이지 아이템을 데이터로 노출하고, 잠기지 않은 셀을 탭하면
+    /// 스테이지 선택 화면의 상태. 현재 장의 스테이지 아이템을 데이터로 노출하고, 잠기지 않은 항목을 탭하면
     /// 그 스테이지를 선택으로 기록한다(화면 전환은 View가 편성 화면 Push로 처리). 장 전환기는 배선돼 있으나
     /// 현재 콘텐츠가 1장이라 실질 no-op다.
     /// </summary>
@@ -21,7 +21,7 @@ namespace Eclipse.Presentation
         /// <summary> 현재 보고 있는 장. 초기값은 첫 장. 장 전환기로만 바뀐다. </summary>
         public ReactiveProperty<ChapterSO> SelectedChapter { get; }
 
-        /// <summary> 현재 장의 셀 아이템 목록. 장 수명 내내 고정(1장 전제). </summary>
+        /// <summary> 현재 장의 항목 목록. 장 수명 내내 고정(1장 전제). </summary>
         public IReadOnlyList<StageSelectItemViewModel> Items { get; }
 
         /// <summary> 마지막으로 선택한 스테이지. 장 전환 시 초기화된다. </summary>
@@ -34,7 +34,7 @@ namespace Eclipse.Presentation
         public ReadOnlyReactiveProperty<bool> CanSelectNextChapter { get; }
 
         /// <param name="chapters">표시할 장 목록. 첫 항목이 초기 선택 장.</param>
-        /// <param name="progress">장별 진행/해금 상태(셀 3상태의 원천).</param>
+        /// <param name="progress">장별 진행/해금 상태(항목 3상태의 원천).</param>
         /// <param name="nav">씬 경계 선택 보관함. 선택 스테이지를 여기 기록해 편성·전투 스코프가 읽는다.</param>
         public StageSelectViewModel(ChapterSO[] chapters, StageProgress progress, NavigationContext nav)
         {
@@ -99,7 +99,7 @@ namespace Eclipse.Presentation
             SelectedChapter.Value = chapter;
         }
 
-        // 지정 장의 스테이지들로 셀 아이템을 만든다. 인덱스+1이 스테이지 번호.
+        // 지정 장의 스테이지들로 항목을 만든다. 인덱스+1이 스테이지 번호.
         private IReadOnlyList<StageSelectItemViewModel> BuildItems(ChapterSO chapter)
         {
             var clearedCount = _progress.ClearedCountOf(chapter.id);
@@ -117,7 +117,7 @@ namespace Eclipse.Presentation
             return -1;
         }
 
-        /// <summary>보유한 리액티브 프로퍼티와 셀 아이템을 모두 해제한다.</summary>
+        /// <summary>보유한 리액티브 프로퍼티와 항목을 모두 해제한다.</summary>
         protected override void OnDispose()
         {
             foreach (var item in Items)

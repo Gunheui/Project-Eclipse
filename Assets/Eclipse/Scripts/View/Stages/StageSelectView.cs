@@ -12,12 +12,12 @@ using VContainer;
 namespace Eclipse.View
 {
     /// <summary>
-    /// 스테이지 선택 화면. 현재 장의 아이템으로 셀을 데이터 구동 생성하고, 잠기지 않은 셀을 탭하면
+    /// 스테이지 선택 화면. 현재 장의 아이템으로 항목을 데이터 구동 생성하고, 잠기지 않은 항목을 탭하면
     /// 곧바로 전투 씬으로 진입한다. 장 정보 패널·장 내비 라벨은 선택 장에 바인딩한다.
     /// </summary>
     public class StageSelectView : MonoBehaviour, IScreen
     {
-        [SerializeField] private StageCellView cellPrefab;
+        [SerializeField] private StageItemView itemPrefab;
         [SerializeField] private Transform contentRoot;
 
         [Header("장 정보 패널")]
@@ -37,7 +37,7 @@ namespace Eclipse.View
 
         private StageSelectViewModel _viewModel;
         private ScreenManager _screenManager;
-        private readonly List<StageCellView> _cells = new List<StageCellView>();
+        private readonly List<StageItemView> _items = new List<StageItemView>();
         private readonly CompositeDisposable _bindings = new CompositeDisposable();
 
         /// <summary>
@@ -53,14 +53,14 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// 화면이 스택 전면에 설 때(주입 완료 후) 호출된다. 현재 장 아이템마다 셀을 생성하고,
+        /// 화면이 스택 전면에 설 때(주입 완료 후) 호출된다. 현재 장 아이템마다 항목을 생성하고,
         /// 장 정보 패널·내비 라벨·내비 버튼 가용성을 선택 장에 바인딩한다.
         /// </summary>
         /// <returns>등장 처리가 끝났음을 알리는 UniTask(연출이 없어 즉시 완료).</returns>
         public UniTask OnEnter()
         {
             foreach (var item in _viewModel.Items)
-                AddCell(item);
+                AddItem(item);
 
             _viewModel.SelectedChapter
                 .Subscribe(BindChapterInfo)
@@ -86,7 +86,7 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// 화면이 스택에서 제거될 때 호출된다. 버튼 리스너·바인딩을 해지하고 생성한 셀을 모두 파괴한다.
+        /// 화면이 스택에서 제거될 때 호출된다. 버튼 리스너·바인딩을 해지하고 생성한 항목을 모두 파괴한다.
         /// </summary>
         /// <returns>퇴장 처리가 끝났음을 알리는 UniTask(연출이 없어 즉시 완료).</returns>
         public UniTask OnExit()
@@ -98,18 +98,18 @@ namespace Eclipse.View
             if (nextChapterButton != null)
                 nextChapterButton.onClick.RemoveListener(OnNextChapter);
 
-            foreach (var cell in _cells)
-                Destroy(cell.gameObject);
-            _cells.Clear();
+            foreach (var item in _items)
+                Destroy(item.gameObject);
+            _items.Clear();
             return UniTask.CompletedTask;
         }
 
-        // 셀 프리팹을 하나 생성해 contentRoot 끝(장 설명 패널 뒤)에 붙이고, 탭 시 선택/편성 진입하도록 바인딩한다.
-        private void AddCell(StageSelectItemViewModel item)
+        // 항목 프리팹을 하나 생성해 contentRoot 끝(장 설명 패널 뒤)에 붙이고, 탭 시 선택/편성 진입하도록 바인딩한다.
+        private void AddItem(StageSelectItemViewModel itemViewModel)
         {
-            var cell = Instantiate(cellPrefab, contentRoot);
-            cell.Bind(item, OnStageSelected);
-            _cells.Add(cell);
+            var item = Instantiate(itemPrefab, contentRoot);
+            item.Bind(itemViewModel, OnStageSelected);
+            _items.Add(item);
         }
 
         // 스테이지를 탭하면 선택으로 기록하고(잠김이면 무시), 기록됐을 때만 편성 화면을 전면에 올린다.
