@@ -5,6 +5,9 @@ namespace Eclipse.View.Infra
     /// </summary>
     public enum PopupId
     {
-        Confirm = 0
+        Confirm = 0,
+
+        /// <summary> 전투 결과(승/패 + 보상) 팝업. 결과 타입은 bool — true=재도전, false=확인. </summary>
+        BattleResult = 1
     }
 }

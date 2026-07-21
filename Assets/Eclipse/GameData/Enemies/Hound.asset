@@ -16,10 +16,10 @@ MonoBehaviour:
   displayName: 오염된 사냥개
   baseStats:
     hp: 1400
-    atk: 240
+    atk: 145
     def: 70
     spd: 110
-    critRate: 0.15
+    critRate: 0.1
     critDamage: 1.6
   basicSkill: {fileID: 11400000, guid: a2e1aef5073874263b71b9a4e6cd83f2, type: 2}
   normalSkill: {fileID: 11400000, guid: 61dbf658398749b7bd1b6448a79fb913, type: 2}

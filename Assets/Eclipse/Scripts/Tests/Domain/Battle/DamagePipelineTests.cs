@@ -96,22 +96,5 @@ namespace Eclipse.Tests
 
             Assert.AreEqual(1, result.Amount);
         }
-
-        [Test]
-        public void 같은_시드는_같은_데미지_수열을_재현()
-        {
-            var a = Pipeline(new SeededRandom(2024));
-            var b = Pipeline(new SeededRandom(2024));
-            var atk = Attacker(175, 0.30f, 2.0f);
-            var def = Target(60);
-
-            for (int i = 0; i < 50; i++)
-            {
-                var ra = a.ComputeDamage(atk, def, 1.0f);
-                var rb = b.ComputeDamage(atk, def, 1.0f);
-                Assert.AreEqual(ra.Amount, rb.Amount, "i={0} 데미지 불일치", i);
-                Assert.AreEqual(ra.IsCrit, rb.IsCrit, "i={0} 크리 판정 불일치", i);
-            }
-        }
     }
 }

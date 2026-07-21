@@ -31,7 +31,7 @@ namespace Eclipse.Presentation
         /// <summary>더미 초기 진행도로 서비스를 만든다. 실제 진행도는 세이브 로딩 시점에 주입된다.</summary>
         public StageProgress()
         {
-            _chapters["chapter_01"] = new ChapterEntry(cleared: 2, stageCount: 5);
+            _chapters["chapter_01"] = new ChapterEntry(cleared: 0, stageCount: 5);
         }
 
         /// <summary>

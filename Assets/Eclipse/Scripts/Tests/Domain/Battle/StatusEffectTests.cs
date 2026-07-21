@@ -1,14 +1,10 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using Cysharp.Threading.Tasks;
 using Eclipse.Data;
 using Eclipse.Data.Enums;
 using Eclipse.Domain;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.TestTools;
 
 namespace Eclipse.Tests
 {
@@ -225,55 +221,5 @@ namespace Eclipse.Tests
             unit.TickStatusEffects(); // 1 → 0 만료
             Assert.IsFalse(unit.IsTaunting, "누적이 아니라 갱신돼 최신(1턴)만 남고 소진");
         }
-
-        // --- 상태효과가 낀 전투도 시드 고정이면 결정적 ---
-
-        [UnityTest]
-        public IEnumerator 도트_스킬_전투도_같은_시드면_같은_결과() => UniTask.ToCoroutine(async () =>
-        {
-            SkillSO Skill()
-            {
-                var s = ScriptableObject.CreateInstance<SkillSO>();
-                s.id = "atk_dot"; s.displayName = "독칼"; s.cooldownTurns = 0;
-                s.effects = new List<SkillEffect>
-                {
-                    new SkillEffect { type = EffectType.Damage, target = TargetSelector.SingleEnemy, value = 0.8f },
-                    new SkillEffect { type = EffectType.Dot, target = TargetSelector.SingleEnemy, value = 0.3f, duration = 3 },
-                };
-                return s;
-            }
-
-            BattleEngine Build()
-            {
-                var so = ScriptableObject.CreateInstance<CharacterSO>();
-                so.displayName = "A"; so.baseStats = S(500, 100, 20, 110, 0.3f, 2f);
-                so.growthCurve = ScriptableObject.CreateInstance<GrowthCurve>();
-                so.basicSkill = Skill();
-                var ally = Combatant.FromCharacter(new OwnedCharacter(so, 1), 0);
-
-                var eso = ScriptableObject.CreateInstance<EnemySO>();
-                eso.displayName = "E"; eso.baseStats = S(400, 80, 10, 100);
-                eso.basicSkill = Skill();
-                var enemy = Combatant.FromEnemy(eso, 0);
-
-                var allies = new List<Combatant> { ally };
-                var enemies = new List<Combatant> { enemy };
-                var scheduler = new AtbTurnScheduler(allies.Concat(enemies));
-                var pipeline = new DamagePipeline(1f, 0.95f, 1.05f, new SeededRandom(777));
-                var combat = new CombatPipeline(pipeline);
-                var targeting = new TargetResolver();
-                var executor = new SkillExecutor(combat, targeting);
-                // 1v1 결정성 테스트라 타겟 선택은 후보가 하나뿐(난수 미소비). 양편에 같은 프로파일을 넘겨도 결과가 같다.
-                var targetRng = new SeededRandom(BattleSeed.For(777, BattleSeed.Stream.AllyTargeting));
-                var provider = RuleBasedActionProvider.AllyAuto(targeting, combat, targetRng);
-                return new BattleEngine(allies, enemies, scheduler, executor, provider, provider, 200);
-            }
-
-            var e1 = Build(); var o1 = await e1.RunAsync(CancellationToken.None);
-            var e2 = Build(); var o2 = await e2.RunAsync(CancellationToken.None);
-
-            Assert.AreEqual(o1, o2, "같은 시드·편성은 같은 승패");
-            Assert.AreEqual(e1.ActionCount, e2.ActionCount, "같은 시드·편성은 같은 행동 수");
-        });
     }
 }

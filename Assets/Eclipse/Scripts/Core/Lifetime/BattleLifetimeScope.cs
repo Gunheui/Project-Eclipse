@@ -5,6 +5,7 @@ using Eclipse.Data;
 using Eclipse.Domain;
 using Eclipse.Presentation;
 using Eclipse.View;
+using Eclipse.View.Infra;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -37,6 +38,13 @@ namespace Eclipse.Core
 
             builder.RegisterComponentInHierarchy<BattleSceneBootstrap>();
             builder.RegisterComponentInHierarchy<BattleView>();
+
+            // 팝업 매니저는 씬 인프라라 씬마다 하나씩 선다. 결과 팝업은 이 컨테이너에서 생성·주입된다.
+            builder.RegisterComponentInHierarchy<PopupManager>();
+
+            // 결과 팝업이 생성되는 시점 = 전투 종료 후라 Result는 이미 최종값이다(그래서 값 복사로 충분).
+            builder.Register(c => new ResultViewModel(c.Resolve<BattleViewModel>().Result.CurrentValue),
+                Lifetime.Transient);
 
             builder.RegisterInstance(battleConstants);
             builder.Register<IRandomService, SeededRandom>(Lifetime.Scoped)

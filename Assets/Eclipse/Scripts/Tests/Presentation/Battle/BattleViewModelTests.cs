@@ -83,7 +83,8 @@ namespace Eclipse.Tests
 
             return new BattleViewModel(
                 allies.Select(Entry).ToArray(), enemies.Select(Entry).ToArray(),
-                engine, scheduler, manualProvider, targeting, new FakeSceneFlow());
+                engine, scheduler, manualProvider, targeting, new FakeSceneFlow(),
+                new StageProgress(), new NavigationContext());
         }
 
         private static BattleViewModel Vm(Combatant ally, Combatant enemy, bool startAuto)

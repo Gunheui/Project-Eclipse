@@ -16,7 +16,7 @@ MonoBehaviour:
   displayName: 침식 점액체
   baseStats:
     hp: 300
-    atk: 140
+    atk: 110
     def: 25
     spd: 100
     critRate: 0.05

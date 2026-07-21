@@ -69,6 +69,7 @@ namespace Eclipse.Presentation
 
             SelectedStage.Value = item;
             _nav.SelectedStage = item.Stage;
+            _nav.SelectedChapter = SelectedChapter.Value;
             _nav.SelectedParty = null;
             return true;
         }

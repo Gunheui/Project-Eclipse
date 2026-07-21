@@ -31,6 +31,10 @@ namespace Eclipse.Presentation
         private readonly ManualActionProvider _manualProvider;
         private readonly ISceneFlow _sceneFlow;
 
+        // 승리 시 클리어를 기록할 대상. 진행도는 앱 스코프에 살고, 어느 스테이지였는지는 내비 컨텍스트가 실어 온다.
+        private readonly StageProgress _progress;
+        private readonly NavigationContext _nav;
+
         // 조준 UI 후보 산출용(수동 후보). 오토 타겟 정책과 같은 리졸버 인스턴스를 공유한다.
         private readonly TargetResolver _targeting;
 
@@ -52,6 +56,8 @@ namespace Eclipse.Presentation
         /// <param name="manualProvider">수동/오토 입력 프로바이더. AutoMode 초기값과 입력 대기 신호(InputRequested)를 제공한다.</param>
         /// <param name="targeting">범위 해석·수동 후보 리졸버. 오토 타겟 정책과 같은 인스턴스를 공유한다.</param>
         /// <param name="sceneFlow">전투 종료·이탈 시 씬 전환 창구.</param>
+        /// <param name="progress">장별 진행도. 승리 시 이 전투의 스테이지를 클리어로 기록한다.</param>
+        /// <param name="nav">씬 경계 선택 보관함. 어느 장·스테이지의 전투인지를 여기서 읽어 클리어를 기록한다.</param>
         public BattleViewModel(
             IReadOnlyList<BattleUnitEntry> allies,
             IReadOnlyList<BattleUnitEntry> enemies,
@@ -59,13 +65,17 @@ namespace Eclipse.Presentation
             ITurnScheduler scheduler,
             ManualActionProvider manualProvider,
             TargetResolver targeting,
-            ISceneFlow sceneFlow)
+            ISceneFlow sceneFlow,
+            StageProgress progress,
+            NavigationContext nav)
         {
             _engine = engine;
             _scheduler = scheduler;
             _manualProvider = manualProvider;
             _sceneFlow = sceneFlow;
             _targeting = targeting;
+            _progress = progress;
+            _nav = nav;
 
             // 명판은 아트를 포함하므로 엔트리 그대로 쓴다. 순서는 아군 먼저, 그다음 적(스케줄러 입력 순과 동일).
             var all = allies.Concat(enemies).ToList();
@@ -140,7 +150,14 @@ namespace Eclipse.Presentation
                 if (playTurnAnimation != null)
                     await playTurnAnimation(linked.Token);
             }
+
+            if (_outcome == BattleOutcome.Victory)
+                MarkStageCleared();
         }
+
+        /// <summary> 같은 스테이지로 전투 씬을 다시 로드한다. 스코프가 새로 서므로 시드도 새로 뽑혀 매번 다른 전투다. </summary>
+        /// <returns>씬 로드가 끝나면 완료되는 태스크.</returns>
+        public UniTask RetryAsync() => _sceneFlow.ToBattleAsync();
 
         /// <summary>
         /// 플레이어가 스킬(과 대상)을 골랐을 때 호출한다. 대기 중이던 아군 턴을 그 행동으로 재개시킨다.
@@ -172,6 +189,19 @@ namespace Eclipse.Presentation
 
         /// <summary> 전투 씬을 떠나 메인 씬으로 돌아간다. </summary>
         public UniTask ExitAsync() => _sceneFlow.ToMainAsync();
+
+        // 이번 전투 스테이지를 진행도에 클리어로 기록한다. 스테이지 인덱스는 장의 stages 배열에서 파생하므로
+        // 진행도의 0-기반 인덱스와 항상 맞는다. 진입 정보가 없으면(단독 씬 Play 등) 조용히 넘어간다.
+        private void MarkStageCleared()
+        {
+            var chapter = _nav?.SelectedChapter;
+            if (chapter == null || _progress == null) return;
+
+            int stageIndex = Array.IndexOf(chapter.stages, _nav.SelectedStage);
+            if (stageIndex < 0) return;
+
+            _progress.TryMarkCleared(chapter.id, stageIndex);
+        }
 
         // 입력 대기가 시작된 행동자를 대응하는 명판 VM으로 매핑해 ActingCombatant에 세운다.
         // 결정 화면이 이번 턴 상태(쿨은 턴 시작에 감소)를 반영하도록 재읽기 신호도 함께 흘린다.

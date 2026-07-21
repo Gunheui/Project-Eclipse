@@ -20,6 +20,10 @@ MonoBehaviour:
   onPrimary: {r: 1, g: 1, b: 1, a: 1}
   surface2: {r: 0.9804, g: 0.9843, b: 0.9961, a: 1}
   borderDefault: {r: 0.8588, g: 0.8706, b: 0.9412, a: 1}
+  positiveSubtle: {r: 0.9098, g: 0.9529, b: 0.9333, a: 1}
+  onPositiveSubtle: {r: 0.1765, g: 0.4078, b: 0.3176, a: 1}
+  dangerSubtle: {r: 0.9843, g: 0.9176, b: 0.9098, a: 1}
+  onDangerSubtle: {r: 0.651, g: 0.2824, b: 0.251, a: 1}
   textHigh: {r: 0.1373, g: 0.1529, b: 0.2392, a: 1}
   textMedium: {r: 0.3529, g: 0.3804, b: 0.502, a: 1}
   textDisabled: {r: 0.6549, g: 0.6745, b: 0.7686, a: 1}

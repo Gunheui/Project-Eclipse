@@ -15,8 +15,8 @@ MonoBehaviour:
   id: enemy_boss_ilnoct
   displayName: 침식 거상 일노크트
   baseStats:
-    hp: 4800
-    atk: 220
+    hp: 3300
+    atk: 175
     def: 90
     spd: 90
     critRate: 0.08

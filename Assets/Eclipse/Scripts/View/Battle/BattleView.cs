@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Eclipse.Presentation;
+using Eclipse.View.Infra;
 using R3;
 using TMPro;
 using UnityEngine;
@@ -45,21 +47,26 @@ namespace Eclipse.View
         [SerializeField] private Button speedButton;
         [SerializeField] private TMP_Text speedLabel;
         [SerializeField] private TMP_Text actionCounterLabel;
-        [SerializeField] private TMP_Text resultLabel;
 
         private BattleViewModel _viewModel;
+        private PopupManager _popups;
 
         // 연출 배속(1 또는 2). View 소유 — 계산엔 무관하고 배틀러 트윈·턴 대기 시간만 나눈다.
         private int _speedMultiplier = 1;
+
+        // 이 화면을 떠나기로 확정된 상태(나가기 클릭). 씬 언로드는 몇 프레임 걸리므로 그 사이 전투가 끝나도
+        // 결과 팝업을 띄우지 않는다 — 내려가는 중인 계층에 팝업을 Instantiate 하는 것을 막는다.
+        private bool _leaving;
 
         // 조준 모드 상태. 스킬 탭으로 대기 중인 스킬과 그때 계산한 유효 타겟 집합. null이면 조준 중이 아니다.
         private SkillSlotViewModel _pendingSkill;
         private IReadOnlyList<CombatantViewModel> _validTargets;
 
         [Inject]
-        public void Construct(BattleViewModel viewModel)
+        public void Construct(BattleViewModel viewModel, PopupManager popups)
         {
             _viewModel = viewModel;
+            _popups = popups;
         }
 
         private void Start()
@@ -71,8 +78,26 @@ namespace Eclipse.View
             if (turnTimeline != null) turnTimeline.Bind(_viewModel);
 
             // 바인딩을 모두 건 뒤에 루프를 시작한다. 화면이 파괴되면 토큰이 취소돼 루프가 끊긴다.
-            // PlayTurnAnimationAsync를 넘겨, 루프가 매 턴 배틀러 연출이 끝날 때까지 기다리게 한다.
-            _viewModel.RunBattleAsync(PlayTurnAnimationAsync, this.GetCancellationTokenOnDestroy()).Forget();
+            RunBattleAsync(this.GetCancellationTokenOnDestroy()).Forget();
+        }
+
+        // 전투 한 판의 전체 흐름: 턴 루프 → 결과 팝업 → 사용자가 고른 다음 목적지(재도전/로비).
+        // 팝업은 RunBattleAsync 완료로 트리거한다 — 결과 RP 구독은 결정타 연출이 끝나기 전에 발화한다.
+        // 나가기 버튼이나 씬 파괴로 루프가 끊기면 팝업 없이 그대로 종료한다.
+        private async UniTaskVoid RunBattleAsync(CancellationToken ct)
+        {
+            try
+            {
+                // PlayTurnAnimationAsync를 넘겨, 루프가 매 턴 배틀러 연출이 끝날 때까지 기다리게 한다.
+                await _viewModel.RunBattleAsync(PlayTurnAnimationAsync, ct);
+                if (_leaving || ct.IsCancellationRequested) return;
+
+                bool retry = await _popups.Show<bool>(PopupId.BattleResult);
+                await (retry ? _viewModel.RetryAsync() : _viewModel.ExitAsync());
+            }
+            catch (OperationCanceledException)
+            {
+            }
         }
 
         // 전장 배틀러를 소속·슬롯으로 유닛 VM에 연결한다. 대응 유닛이 없는 앵커는 숨긴다.
@@ -124,15 +149,11 @@ namespace Eclipse.View
             return null;
         }
 
-        // 행동 수·결과·오토 토글·나가기를 뷰모델에 잇는다.
+        // 행동 수·오토 토글·나가기를 뷰모델에 잇는다. 결과는 팝업이 맡으므로 여기서 구독하지 않는다.
         private void BindControls()
         {
             _viewModel.ActionCount
                 .Subscribe(n => actionCounterLabel.text = n.ToString())
-                .AddTo(this);
-
-            _viewModel.Result
-                .Subscribe(ShowResult)
                 .AddTo(this);
 
             // 오토는 버튼 클릭으로 뒤집고, 뷰모델 값이 바뀌면 라벨을 갱신한다.
@@ -147,8 +168,14 @@ namespace Eclipse.View
                 })
                 .AddTo(this);
 
+            // 연타·전투 종료와의 경합을 함께 막는다(첫 클릭만 유효, 이후 결과 팝업 경로도 잠긴다).
             exitButton.OnClickAsObservable()
-                .Subscribe(_ => _viewModel.ExitAsync().Forget())
+                .Where(_ => !_leaving)
+                .Subscribe(_ =>
+                {
+                    _leaving = true;
+                    _viewModel.ExitAsync().Forget();
+                })
                 .AddTo(this);
 
             // 배속: 버튼으로 1x↔2x 토글, 라벨 즉시 갱신.
@@ -335,25 +362,6 @@ namespace Eclipse.View
                 skillCooldownOverlays[index].SetActive(show);
             if (show && skillCooldownLabels != null && index < skillCooldownLabels.Length)
                 skillCooldownLabels[index].text = turns.ToString();
-        }
-
-        private void ShowResult(BattleResult result)
-        {
-            if (resultLabel == null) return;
-            switch (result)
-            {
-                case BattleResult.Victory:
-                    resultLabel.text = "승리";
-                    resultLabel.gameObject.SetActive(true);
-                    break;
-                case BattleResult.Defeat:
-                    resultLabel.text = "패배";
-                    resultLabel.gameObject.SetActive(true);
-                    break;
-                default:
-                    resultLabel.gameObject.SetActive(false);
-                    break;
-            }
         }
     }
 }

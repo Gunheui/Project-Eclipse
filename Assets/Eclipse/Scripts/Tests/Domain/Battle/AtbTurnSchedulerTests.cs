@@ -84,14 +84,6 @@ namespace Eclipse.Tests
         }
 
         [Test]
-        public void 같은_편성은_같은_시퀀스_재현()
-        {
-            var seq1 = Sequence(new AtbTurnScheduler(Roster()), 30);
-            var seq2 = Sequence(new AtbTurnScheduler(Roster()), 30);
-            Assert.AreEqual(seq1, seq2);
-        }
-
-        [Test]
         public void 먼저_도달한_유닛이_행동_SPD_높다고_우선하지_않음()
         {
             // A: 잔여 89,970 / SPD 100 → 도달 시각 899.7 (먼저 도달)

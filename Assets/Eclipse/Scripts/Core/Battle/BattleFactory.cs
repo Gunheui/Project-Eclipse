@@ -23,19 +23,25 @@ namespace Eclipse.Core
         private readonly CombatPipeline combat;
         private readonly SkillExecutor executor;
         private readonly ISceneFlow sceneFlow;
+        private readonly StageProgress progress;
+        private readonly NavigationContext nav;
 
         public BattleFactory(
             BattleConstantsSO constants,
             TargetResolver targeting,
             CombatPipeline combat,
             SkillExecutor executor,
-            ISceneFlow sceneFlow)
+            ISceneFlow sceneFlow,
+            StageProgress progress,
+            NavigationContext nav)
         {
             this.constants = constants;
             this.targeting = targeting;
             this.combat = combat;
             this.executor = executor;
             this.sceneFlow = sceneFlow;
+            this.progress = progress;
+            this.nav = nav;
         }
 
         /// <summary>
@@ -115,7 +121,9 @@ namespace Eclipse.Core
                 scheduler,
                 manualProvider,
                 targeting,
-                sceneFlow);
+                sceneFlow,
+                progress,
+                nav);
         }
     }
 }

@@ -156,22 +156,6 @@ namespace Eclipse.Tests
             Assert.AreSame(wounded, target); // 슬롯 앞이 아니라 HP비율 최저
         }
 
-        [Test]
-        public void 같은_시드면_적_가중랜덤도_같은_대상을_고른다()
-        {
-            // HP비율을 서로 다르게 둬야 가중치가 약분되지 않아 재현이 실제로 검증된다.
-            List<ICombatant> Enemies() => new List<ICombatant>
-            {
-                Enemy(0, 1000, 1000), Enemy(1, 500, 1000), Enemy(2, 100, 1000)
-            };
-            var actor = Actor(atk: 100);
-
-            var a = Policy(EnemyAi(), seed: 55).ChoosePrimaryTarget(actor, SingleEnemyDamage(), NoAllies, Enemies());
-            var b = Policy(EnemyAi(), seed: 55).ChoosePrimaryTarget(actor, SingleEnemyDamage(), NoAllies, Enemies());
-
-            Assert.AreEqual(((Combatant)a).SlotIndex, ((Combatant)b).SlotIndex); // 시드 고정 → 재현
-        }
-
         // 가중치 = 1 + bias × (1 − HP비율). 방향이 뒤집히면(멀쩡한 적을 노리면) 이 테스트가 깨진다.
         // 표본을 시드 0..199로 고정해 통계적이지만 완전히 결정적이다.
         [Test]

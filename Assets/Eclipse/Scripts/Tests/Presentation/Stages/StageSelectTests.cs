@@ -54,10 +54,11 @@ namespace Eclipse.Tests
         // --- 데모 초기값 ---
 
         [Test]
-        public void 데모_init은_chapter_01을_2클리어로_시드()
+        public void 데모_init은_chapter_01을_미클리어로_시드()
         {
             using var progress = new StageProgress();
-            Assert.AreEqual(2, progress.ClearedCountOf("chapter_01").CurrentValue);
+            Assert.AreEqual(0, progress.ClearedCountOf("chapter_01").CurrentValue,
+                "부팅 직후부터 1스테이지만 열려 해금 사슬 전체를 시연할 수 있다");
         }
 
         [Test]
@@ -72,29 +73,34 @@ namespace Eclipse.Tests
         [Test]
         public void TryMarkCleared는_현재_열린_스테이지만_순차_수용()
         {
-            using var progress = new StageProgress(); // chapter_01 = 2 → index 2가 열림
+            using var progress = new StageProgress(); // chapter_01 = 0 → index 0이 열림
 
-            Assert.IsTrue(progress.TryMarkCleared("chapter_01", 2), "열린 스테이지 클리어는 수용");
-            Assert.AreEqual(3, progress.ClearedCountOf("chapter_01").CurrentValue, "클리어 수가 1 증가");
+            Assert.IsTrue(progress.TryMarkCleared("chapter_01", 0), "열린 스테이지 클리어는 수용");
+            Assert.AreEqual(1, progress.ClearedCountOf("chapter_01").CurrentValue, "클리어 수가 1 증가");
         }
 
         [Test]
         public void TryMarkCleared는_비순차_미등록_음수를_거부()
         {
-            using var progress = new StageProgress(); // chapter_01 = 2
+            using var progress = new StageProgress(); // chapter_01 = 0
 
             Assert.IsFalse(progress.TryMarkCleared("chapter_01", 4), "건너뛴 인덱스는 거부");
-            Assert.IsFalse(progress.TryMarkCleared("chapter_01", 1), "이미 깬 인덱스는 거부");
             Assert.IsFalse(progress.TryMarkCleared("chapter_99", 0), "미등록 장은 거부");
             Assert.IsFalse(progress.TryMarkCleared("chapter_01", -1), "음수 인덱스는 거부");
-            Assert.AreEqual(2, progress.ClearedCountOf("chapter_01").CurrentValue, "거부 시 값 불변");
+            Assert.AreEqual(0, progress.ClearedCountOf("chapter_01").CurrentValue, "거부 시 값 불변");
+
+            progress.TryMarkCleared("chapter_01", 0);
+            Assert.IsFalse(progress.TryMarkCleared("chapter_01", 0), "이미 깬 인덱스는 거부");
+            Assert.AreEqual(1, progress.ClearedCountOf("chapter_01").CurrentValue, "재클리어로 값이 늘지 않는다");
         }
 
         [Test]
         public void TryMarkCleared는_장의_모든_스테이지_클리어_후_상한을_넘지_않는다()
         {
-            using var progress = new StageProgress(); // chapter_01 = 2, 총 5스테이지
+            using var progress = new StageProgress(); // chapter_01 = 0, 총 5스테이지
 
+            Assert.IsTrue(progress.TryMarkCleared("chapter_01", 0));
+            Assert.IsTrue(progress.TryMarkCleared("chapter_01", 1));
             Assert.IsTrue(progress.TryMarkCleared("chapter_01", 2));
             Assert.IsTrue(progress.TryMarkCleared("chapter_01", 3));
             Assert.IsTrue(progress.TryMarkCleared("chapter_01", 4)); // 보스까지 → cleared=5
@@ -109,7 +115,7 @@ namespace Eclipse.Tests
         [Test]
         public void Select는_잠긴_스테이지면_선택을_차단()
         {
-            var vm = BuildVm(); // cleared=2 → index 3,4는 Locked
+            var vm = BuildVm(); // cleared=0 → index 1~4는 Locked
 
             var locked = vm.Items[3];
             Assert.AreEqual(StageState.Locked, locked.State.CurrentValue);
@@ -123,9 +129,9 @@ namespace Eclipse.Tests
         [Test]
         public void Select는_열린_스테이지면_선택하고_true를_반환()
         {
-            var vm = BuildVm(); // cleared=2 → index 2는 Open
+            var vm = BuildVm(); // cleared=0 → index 0만 Open
 
-            var open = vm.Items[2];
+            var open = vm.Items[0];
             Assert.AreEqual(StageState.Open, open.State.CurrentValue);
 
             Assert.IsTrue(vm.Select(open), "열린 스테이지는 true를 돌려 편성 진입을 허용한다");
@@ -138,13 +144,15 @@ namespace Eclipse.Tests
         public void Select는_선택_스테이지를_캐리어에_기록하고_이전_파티를_클리어()
         {
             var nav = new NavigationContext { SelectedParty = new List<OwnedCharacter>() };
-            var vm = BuildVm(nav); // cleared=2 → index 2는 Open
+            var vm = BuildVm(nav); // cleared=0 → index 0만 Open
 
-            var open = vm.Items[2];
+            var open = vm.Items[0];
             vm.Select(open);
 
             Assert.AreSame(open.Stage, nav.SelectedStage,
                 "편성·전투 스코프가 읽을 SelectedStage 캐리어에 선택 StageSO가 실린다");
+            Assert.AreSame(vm.SelectedChapter.Value, nav.SelectedChapter,
+                "전투 후 클리어 마킹이 스테이지 인덱스를 파생할 장도 함께 실린다");
             Assert.IsNull(nav.SelectedParty, "새 편성 시작이므로 이전 파티는 클리어된다");
 
             vm.Dispose();
@@ -154,7 +162,7 @@ namespace Eclipse.Tests
         public void Select는_잠긴_스테이지면_캐리어를_건드리지_않는다()
         {
             var nav = new NavigationContext();
-            var vm = BuildVm(nav); // cleared=2 → index 3은 Locked
+            var vm = BuildVm(nav); // cleared=0 → index 3은 Locked
 
             vm.Select(vm.Items[3]);
 

@@ -6,6 +6,7 @@ using Eclipse.Core;
 using Eclipse.Data;
 using Eclipse.Data.Enums;
 using Eclipse.Domain;
+using Eclipse.Presentation;
 using Eclipse.Service;
 using NUnit.Framework;
 using UnityEngine;
@@ -63,7 +64,8 @@ namespace Eclipse.Tests
             var combat = new CombatPipeline(new DamagePipeline(1f, 0.95f, 1.05f, new SeededRandom(1)));
             var executor = new SkillExecutor(combat, targeting);
             var constants = ScriptableObject.CreateInstance<BattleConstantsSO>();
-            return new BattleFactory(constants, targeting, combat, executor, new FakeSceneFlow());
+            return new BattleFactory(constants, targeting, combat, executor, new FakeSceneFlow(),
+                new StageProgress(), new NavigationContext());
         }
 
         [Test]
