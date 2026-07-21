@@ -14,10 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.ChapterSO
   id: chapter_01
   number: 1
-  displayName: "\uAC80\uC740 \uC7A5\uBBF8"
-  description: "\uC131\uBCBD\uC744 \uC9C0\uD0A4\uB358 \uD30C\uC218\uBCD1\uB4E4\uC774
-    \uC5B4\uB460\uC5D0 \uBB3C\uB4E4\uC5C8\uB2E4. \uCCAB \uC7A5\uC758 \uC704\uD611\uC744
-    \uBAB0\uC544\uB0B4\uB77C."
+  displayName: "제1장 검은뿌리 벌목지"
+  description: "주둔지에 목재를 대던 숲 가장자리에 침식이 번지기 시작했다.\n보급로에 닿기 전에 오염원을 태워 되밀어내라."
   stages:
   - {fileID: 11400000, guid: 26f03c0a6a8d94e7b81f3070667d945f, type: 2}
   - {fileID: 11400000, guid: 2f066905d0d154f0090974d31a959627, type: 2}

@@ -28,8 +28,8 @@ namespace Eclipse.Presentation
         public CurrencyWallet()
         {
             _essence = new ReactiveProperty<int>(3000);
-            _gold = new ReactiveProperty<int>(43500);
-            _manual = new ReactiveProperty<int>(10);
+            _gold = new ReactiveProperty<int>(1000);
+            _manual = new ReactiveProperty<int>(0);
         }
 
         /// <summary>

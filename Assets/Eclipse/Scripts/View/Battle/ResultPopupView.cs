@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using Cysharp.Threading.Tasks;
+using Eclipse.Data.Enums;
 using Eclipse.Presentation;
 using Eclipse.View.Infra;
 using Eclipse.View.Theme;
@@ -17,12 +19,14 @@ namespace Eclipse.View
     /// </summary>
     public class ResultPopupView : MonoBehaviour, IPopup<bool>
     {
-        // 보상 칩 하나의 텍스트 두 칸. 아이콘·배경은 프리팹에 고정이라 바인딩 대상이 아니다.
+        // 재화 한 종류를 담당하는 보상 칩. 아이콘·표시명은 프리팹에 고정이라 바인딩 대상이 아니고,
+        // 이번 전투에 그 재화가 없으면 root째 꺼진다.
         [Serializable]
         private struct RewardChip
         {
+            public CurrencyType type;
+            public GameObject root;
             public TMP_Text amount;
-            public TMP_Text label;
         }
 
         [SerializeField] private UIThemeSO theme;
@@ -78,17 +82,19 @@ namespace Eclipse.View
         }
 
         // 보상이 있으면 칩 행을, 없으면(패배) "획득 보상 없음" 한 줄을 띄운다.
-        // 칩은 보상 종류와 1:1로 배선되므로(아이콘이 프리팹 고정) 짝이 맞는 앞에서부터만 채운다.
+        // 칩은 재화 종류와 1:1로 배선되어 있으므로(아이콘·표시명이 프리팹 고정) 종류로 짝을 찾아 채우고,
+        // 이번 전투에 없는 재화의 칩은 끈다 — 지급 목록에는 재화당 한 건만 들어온다.
         private void BindRewards(ResultViewModel viewModel)
         {
             var rewards = viewModel.Rewards;
             rewardRow.SetActive(rewards.Count > 0);
             noRewardLabel.SetActive(rewards.Count == 0);
 
-            for (int i = 0; i < rewardChips.Length && i < rewards.Count; i++)
+            foreach (var chip in rewardChips)
             {
-                rewardChips[i].amount.text = rewards[i].Amount.ToString("N0");
-                rewardChips[i].label.text = rewards[i].Label;
+                int amount = rewards.FirstOrDefault(r => r.type == chip.type).amount;
+                chip.root.SetActive(amount > 0);
+                if (amount > 0) chip.amount.text = amount.ToString("N0");
             }
         }
     }

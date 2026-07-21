@@ -26,5 +26,11 @@ namespace Eclipse.Data
 
         /// <summary> 이 스테이지의 적 편성. 배열 순서가 전장 슬롯 순서(SlotIndex)이며, 전투 진입 시 앞에서부터 참전한다. </summary>
         public EnemySO[] enemies;
+
+        /// <summary> 승리할 때마다 지급하는 보상. 반복 클리어에도 매번 그대로 지급된다. </summary>
+        public RewardEntry[] clearRewards;
+
+        /// <summary> 최초 클리어에 한해 <see cref="clearRewards"/>에 더해 지급하는 보상. 같은 재화면 합산된다. </summary>
+        public RewardEntry[] firstClearRewards;
     }
 }

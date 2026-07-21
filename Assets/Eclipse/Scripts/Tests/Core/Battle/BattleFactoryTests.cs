@@ -65,7 +65,7 @@ namespace Eclipse.Tests
             var executor = new SkillExecutor(combat, targeting);
             var constants = ScriptableObject.CreateInstance<BattleConstantsSO>();
             return new BattleFactory(constants, targeting, combat, executor, new FakeSceneFlow(),
-                new StageProgress(), new NavigationContext());
+                new StageProgress(), new NavigationContext(), new StageRewardService(new CurrencyWallet()));
         }
 
         [Test]

@@ -13,10 +13,15 @@ MonoBehaviour:
   m_Name: stage_01
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.StageSO
   id: stage_01
-  displayName: "\uC78A\uD600\uC9C4 \uC131\uBB38"
-  description: "\uC131\uBCBD\uC744 \uC9C0\uD0A4\uB358 \uD30C\uC218\uBCD1\uB4E4\uC774
-    \uC5B4\uB460\uC5D0 \uBB3C\uB4E4\uC5C8\uB2E4. \uCCAB \uAD00\uBB38\uC744 \uB3CC\uD30C\uD558\uB77C."
+  displayName: "1-1 검게 굳은 오솔길"
+  description: "보급로 초입, 갓 오염된 작은 것들이 길을 막는다.\n밀도는 옅다 — 되밀어내기엔 지금이 가장 쉽다."
   thumbnail: {fileID: 21300000, guid: 473c75e1a4a5542f8aa2f3ce55cfec4c, type: 3}
   enemies:
   - {fileID: 11400000, guid: 0b7faf62b01a4f6f9eee97f8f05b22ee, type: 2}
   - {fileID: 11400000, guid: 0b7faf62b01a4f6f9eee97f8f05b22ee, type: 2}
+  clearRewards:
+  - type: 1
+    amount: 200
+  firstClearRewards:
+  - type: 0
+    amount: 200

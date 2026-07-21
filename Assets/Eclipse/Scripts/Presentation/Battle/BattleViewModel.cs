@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Eclipse.Data;
 using Eclipse.Domain;
 using Eclipse.Service;
 using R3;
@@ -35,6 +36,9 @@ namespace Eclipse.Presentation
         private readonly StageProgress _progress;
         private readonly NavigationContext _nav;
 
+        // 승리 보상 지급 창구. 초회 여부는 진행도 기록의 반환값이 정한다.
+        private readonly IRewardService _rewards;
+
         // 조준 UI 후보 산출용(수동 후보). 오토 타겟 정책과 같은 리졸버 인스턴스를 공유한다.
         private readonly TargetResolver _targeting;
 
@@ -58,6 +62,7 @@ namespace Eclipse.Presentation
         /// <param name="sceneFlow">전투 종료·이탈 시 씬 전환 창구.</param>
         /// <param name="progress">장별 진행도. 승리 시 이 전투의 스테이지를 클리어로 기록한다.</param>
         /// <param name="nav">씬 경계 선택 보관함. 어느 장·스테이지의 전투인지를 여기서 읽어 클리어를 기록한다.</param>
+        /// <param name="rewards">승리 보상 지급 창구. 클리어 기록 직후 호출해 지급 결과를 결과 팝업에 넘긴다.</param>
         public BattleViewModel(
             IReadOnlyList<BattleUnitEntry> allies,
             IReadOnlyList<BattleUnitEntry> enemies,
@@ -67,8 +72,10 @@ namespace Eclipse.Presentation
             TargetResolver targeting,
             ISceneFlow sceneFlow,
             StageProgress progress,
-            NavigationContext nav)
+            NavigationContext nav,
+            IRewardService rewards)
         {
+            _rewards = rewards;
             _engine = engine;
             _scheduler = scheduler;
             _manualProvider = manualProvider;
@@ -127,6 +134,12 @@ namespace Eclipse.Presentation
 
         /// <summary> 오토 전투 토글. View가 값을 바꾸면 프로바이더에 반영된다. </summary>
         public ReactiveProperty<bool> AutoMode => _autoMode;
+
+        /// <summary>
+        /// 이번 전투 승리로 실제 지급된 보상(재화별 1건). 결과 팝업이 이 값을 그대로 표시한다.
+        /// 승리 이전·패배·진입 정보가 없어 지급을 건너뛴 경우에는 빈 목록이다.
+        /// </summary>
+        public IReadOnlyList<RewardEntry> GrantedRewards { get; private set; } = Array.Empty<RewardEntry>();
 
         /// <summary>
         /// 전투가 끝날 때까지 턴을 반복 구동한다. 아군 수동 턴에서는 엔진이 Submit을 기다리며 이 안에서 멈춘다.
@@ -190,8 +203,9 @@ namespace Eclipse.Presentation
         /// <summary> 전투 씬을 떠나 메인 씬으로 돌아간다. </summary>
         public UniTask ExitAsync() => _sceneFlow.ToMainAsync();
 
-        // 이번 전투 스테이지를 진행도에 클리어로 기록한다. 스테이지 인덱스는 장의 stages 배열에서 파생하므로
-        // 진행도의 0-기반 인덱스와 항상 맞는다. 진입 정보가 없으면(단독 씬 Play 등) 조용히 넘어간다.
+        // 이번 전투 스테이지를 진행도에 클리어로 기록하고, 그 결과(초회 여부)로 보상을 지급한다. 스테이지 인덱스는
+        // 장의 stages 배열에서 파생하므로 진행도의 0-기반 인덱스와 항상 맞는다. 진입 정보가 없으면(단독 씬 Play 등)
+        // 기록도 지급도 하지 않고 조용히 넘어간다 — 어느 스테이지의 보상인지 판단할 수 없기 때문.
         private void MarkStageCleared()
         {
             var chapter = _nav?.SelectedChapter;
@@ -200,7 +214,8 @@ namespace Eclipse.Presentation
             int stageIndex = Array.IndexOf(chapter.stages, _nav.SelectedStage);
             if (stageIndex < 0) return;
 
-            _progress.TryMarkCleared(chapter.id, stageIndex);
+            bool firstClear = _progress.TryMarkCleared(chapter.id, stageIndex);
+            GrantedRewards = _rewards.GrantVictory(_nav.SelectedStage, firstClear);
         }
 
         // 입력 대기가 시작된 행동자를 대응하는 명판 VM으로 매핑해 ActingCombatant에 세운다.

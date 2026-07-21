@@ -13,10 +13,17 @@ MonoBehaviour:
   m_Name: stage_02
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.StageSO
   id: stage_02
-  displayName: "\uC548\uAC1C \uB080 \uD68C\uB791"
-  description: "\uC548\uAC1C \uC18D\uC5D0\uC11C \uD615\uCCB4 \uC5C6\uB294 \uAC83\uB4E4\uC774
-    \uC6C0\uC9C1\uC778\uB2E4. \uD68C\uB791 \uB05D\uC758 \uBD09\uC778\uC744 \uCC3E\uC544\uB77C."
+  displayName: "1-2 이빨 자국의 길목"
+  description: "짐승이 다니던 길이 침식에 물들었다.\n변질된 야수가 무리를 끌고 달려든다. 속도가 빠르니 전열을 세워라."
   thumbnail: {fileID: 21300000, guid: 552ddc67a1e904639bfdddf9bc63659c, type: 3}
   enemies:
   - {fileID: 11400000, guid: eecc1fa5afb2a466b92719ab4f7fb51b, type: 2}
   - {fileID: 11400000, guid: 0b7faf62b01a4f6f9eee97f8f05b22ee, type: 2}
+  clearRewards:
+  - type: 1
+    amount: 350
+  - type: 2
+    amount: 1
+  firstClearRewards:
+  - type: 0
+    amount: 300

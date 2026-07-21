@@ -13,9 +13,8 @@ MonoBehaviour:
   m_Name: stage_04
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.StageSO
   id: stage_04
-  displayName: "\uBB34\uB108\uC9C4 \uC131\uBCBD"
-  description: "\uC131\uBB38\uC744 \uB118\uC5B4 \uB9C8\uC9C0\uB9C9 \uBC29\uC5B4\uC120\uC744
-    \uB3CC\uD30C\uD558\uB77C."
+  displayName: "1-4 뒤틀린 운반로"
+  description: "심부로 통하는 좁은 운반로. 침식이 가장 짙게 뭉친다.\n방패·사냥개·잔챙이가 한꺼번에 쏟아진다. 여기를 넘으면 중심이다."
   thumbnail: {fileID: 21300000, guid: 552ddc67a1e904639bfdddf9bc63659c, type: 3}
   isBoss: 0
   enemies:
@@ -23,3 +22,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2af35d4408874bf8aa546ba5a5ca30c9, type: 2}
   - {fileID: 11400000, guid: 0b7faf62b01a4f6f9eee97f8f05b22ee, type: 2}
   - {fileID: 11400000, guid: 0b7faf62b01a4f6f9eee97f8f05b22ee, type: 2}
+  clearRewards:
+  - type: 1
+    amount: 900
+  - type: 2
+    amount: 3
+  firstClearRewards:
+  - type: 0
+    amount: 800
