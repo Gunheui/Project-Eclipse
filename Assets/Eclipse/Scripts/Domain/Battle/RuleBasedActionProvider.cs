@@ -51,12 +51,13 @@ namespace Eclipse.Domain
         /// <param name="rng">타겟 선택 전용 난수. <see cref="AllyAuto"/>와 별도 인스턴스(별도 스트림)를 넘긴다.</param>
         /// <param name="lethalChance">막타 층 채택 확률(0=막타 안 침, 1=아군 오토와 동일).</param>
         /// <param name="lowHpBias">저HP 가중치(0=무작위, 1=최저HP 확정).</param>
+        /// <param name="frontLineWeight">전열 슬롯 가중치(1=전후열 무차별, 클수록 전열 집중).</param>
         public static RuleBasedActionProvider EnemyAi(
                 TargetResolver targeting, CombatPipeline combat, IRandomService rng,
-                float lethalChance, float lowHpBias)
+                float lethalChance, float lowHpBias, float frontLineWeight = 1f)
             => new(HealHpThreshold, useHealRule: true,
                    new TargetPriorityPolicy(targeting, combat, rng,
-                       TargetPolicyProfile.EnemyAi(lethalChance, lowHpBias)));
+                       TargetPolicyProfile.EnemyAi(lethalChance, lowHpBias, frontLineWeight)));
 
         /// <summary>
         /// 우선순위 규칙으로 스킬을 고르고, 단일-적 스킬이면 정책이 고른 주 타겟을 함께 담아 행동을 만든다.

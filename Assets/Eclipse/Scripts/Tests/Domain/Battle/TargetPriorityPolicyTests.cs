@@ -54,9 +54,10 @@ namespace Eclipse.Tests
             => new TargetPriorityPolicy(new TargetResolver(), Combat(seed),
                 new SeededRandom(BattleSeed.For(seed, BattleSeed.Stream.AllyTargeting)), profile);
 
-        // 적 프로파일. 기본값은 프로덕션 튜닝값(BattleConstantsSO 기본)과 같은 0.6 / 0.5.
-        private static TargetPolicyProfile EnemyAi(float lethalChance = 0.6f, float lowHpBias = 0.5f)
-            => TargetPolicyProfile.EnemyAi(lethalChance, lowHpBias);
+        // 적 프로파일. 기본값은 프로덕션 튜닝값(BattleConstantsSO 기본)과 같은 0.6 / 0.5. 전열 가중은 기본 1(무차별).
+        private static TargetPolicyProfile EnemyAi(
+                float lethalChance = 0.6f, float lowHpBias = 0.5f, float frontLineWeight = 1f)
+            => TargetPolicyProfile.EnemyAi(lethalChance, lowHpBias, frontLineWeight);
 
         private static readonly IReadOnlyList<ICombatant> NoAllies = new List<ICombatant>();
 
@@ -245,6 +246,56 @@ namespace Eclipse.Tests
             }
 
             Assert.Greater(healthyPicks, 0, "bias 0인데 멀쩡한 대상이 한 번도 안 뽑히면 균등이 아니다");
+        }
+
+        // 4인 풀피(HP효과 없음)·막타 0·저HP 가중 0으로 전열 효과만 격리해, 주어진 계수로 전열(슬롯 1·3)이 뽑혔는지 반환.
+        private static bool PicksFrontLine(int seed, float frontLineWeight)
+        {
+            var actor = Actor(atk: 100);
+            var enemies = new List<ICombatant>
+            {
+                Enemy(0, 1000, 1000), Enemy(1, 1000, 1000),
+                Enemy(2, 1000, 1000), Enemy(3, 1000, 1000)
+            };
+            var target = Policy(EnemyAi(lethalChance: 0f, lowHpBias: 0f, frontLineWeight), seed)
+                .ChoosePrimaryTarget(actor, SingleEnemyDamage(), NoAllies, enemies);
+            return ((Combatant)target).SlotIndex % 2 == 1;
+        }
+
+        // 표본을 시드 0..199로 고정해 통계적이지만 완전히 결정적이다. 중립(1f) 대조군이
+        // "전열 쏠림이 슬롯 순서·HP편향이 아니라 계수 때문"임을 격리한다.
+        [Test]
+        public void 전열_가중은_전열을_더_자주_고르되_후열을_배제하지_않는다()
+        {
+            int front = 0, back = 0, neutralFront = 0;
+
+            for (int seed = 0; seed < 200; seed++)
+            {
+                if (PicksFrontLine(seed, frontLineWeight: 2f)) front++; else back++;
+                if (PicksFrontLine(seed, frontLineWeight: 1f)) neutralFront++;
+            }
+
+            // 기대 확률(계수 2) = 4/6 ≈ 67% vs 33%. 방향만 못박고 정확한 비율은 요구하지 않는다.
+            Assert.Greater(front, back, $"전열 가중이 뒤집혔다(전열 {front} vs 후열 {back})");
+            Assert.Greater(front, neutralFront,
+                $"가중({front})이 중립 대조군({neutralFront})보다 전열을 더 고르지 않았다");
+            Assert.Greater(back, 0, "후열이 한 번도 안 뽑히면 '덜 맞음'이 아니라 '안 맞음'이다");
+        }
+
+        [Test]
+        public void 후열_도발자는_전열_가중을_무시하고_선택된다()
+        {
+            // 도발은 후보를 좁히는 상위 층이라 가중 이전에 결정된다. 계수를 극단값으로 줘도 못 덮어야 한다.
+            var actor = Actor(atk: 100);
+            var backTaunter = Enemy(0, 1000, 1000, taunting: true); // 슬롯 0 = 후열
+            var frontA = Enemy(1, 1000, 1000);
+            var frontB = Enemy(3, 1000, 1000);
+            var enemies = new List<ICombatant> { backTaunter, frontA, frontB };
+
+            var target = Policy(EnemyAi(frontLineWeight: 100f))
+                .ChoosePrimaryTarget(actor, SingleEnemyDamage(), NoAllies, enemies);
+
+            Assert.AreSame(backTaunter, target);
         }
 
         [Test]

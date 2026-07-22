@@ -63,7 +63,7 @@ namespace Eclipse.Domain
 
             // [이음새·스킬조건] 스킬별 타겟 조건 훅. 현재 no-op.
             // [이음새·속성상성] 속성 도입 시 약점 대상 우선. 현재 no-op. → DamagePipeline [보류 I]
-            // [이음새·어그로] 전열/어그로 가중. 시스템 없음, no-op.
+            // [이음새·어그로] 전열 가중은 기저 층의 Weight에서 프로파일 계수로 실현된다.
 
             // 기저 층.
             return _profile.BaseTier == TargetBaseTier.AllyLowestHpBucket
@@ -135,7 +135,14 @@ namespace Eclipse.Domain
             return ordered[idx];
         }
 
-        private float Weight(ICombatant unit) => 1f + _profile.LowHpBias * (1f - HpRatio(unit));
+        // 저HP 가중 × 전열 가중. 전열 계수 1(아군 프로파일 기본)이면 기존 저HP 가중과 동일하다.
+        private float Weight(ICombatant unit)
+            => (1f + _profile.LowHpBias * (1f - HpRatio(unit)))
+               * (IsFrontLine(unit) ? _profile.FrontLineWeight : 1f);
+
+        // 아군 편성 앵커 기준 전열 = 편성 2·4번(slotIndex 1·3). 적 진영 앵커는 전열이 0·1이라
+        // 이 술어가 성립하지 않는다 — 적 프로파일(=아군을 후보로 삼는 경로) 전용.
+        private static bool IsFrontLine(ICombatant unit) => unit.SlotIndex % 2 == 1;
 
         private static float HpRatio(ICombatant unit) => (float)unit.CurrentHp / unit.MaxHp;
     }

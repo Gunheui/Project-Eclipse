@@ -28,14 +28,20 @@ namespace Eclipse.Domain
         /// <summary> 적 저HP 가중 강도(<see cref="TargetBaseTier.EnemyWeightedLowHp"/> 전용). 0=완전 균등, 클수록 다친 대상을 더 노림. </summary>
         public float LowHpBias { get; }
 
+        /// <summary> 전열 슬롯 가중치(<see cref="TargetBaseTier.EnemyWeightedLowHp"/> 전용). 1=전후열 차이 없음, 클수록 전열 집중. </summary>
+        public float FrontLineWeight { get; }
+
         /// <param name="lethalChance">막타 층 채택 확률(0=미사용, 1=항상).</param>
         /// <param name="baseTier">기저 규칙 종류.</param>
         /// <param name="lowHpBias">적 저HP 가중 강도(적 프로파일 전용, 아군은 0).</param>
-        public TargetPolicyProfile(float lethalChance, TargetBaseTier baseTier, float lowHpBias)
+        /// <param name="frontLineWeight">전열 슬롯 가중치(적 프로파일 전용). 기본 1=전후열 무차별.</param>
+        public TargetPolicyProfile(float lethalChance, TargetBaseTier baseTier, float lowHpBias,
+                                   float frontLineWeight = 1f)
         {
             LethalChance = lethalChance;
             BaseTier = baseTier;
             LowHpBias = lowHpBias;
+            FrontLineWeight = frontLineWeight;
         }
 
         /// <summary> 아군 오토: 막타 항상 + 최저HP 버킷 시드 추첨. 수동 지정(사다리 최상위)이 항상 이 위를 덮는다. </summary>
@@ -44,7 +50,9 @@ namespace Eclipse.Domain
         /// <summary> 적 AI: 막타 부분 확률 + 저HP 약가중 시드 랜덤. 일부러 완벽하지 않게 둬 난이도를 낮춘다. </summary>
         /// <param name="lethalChance">막타 층 채택 확률(BattleConstantsSO에서 튜닝).</param>
         /// <param name="lowHpBias">저HP 가중 강도(BattleConstantsSO에서 튜닝). 0이면 HP 무관 균등 랜덤.</param>
-        public static TargetPolicyProfile EnemyAi(float lethalChance, float lowHpBias)
-            => new(lethalChance, TargetBaseTier.EnemyWeightedLowHp, lowHpBias);
+        /// <param name="frontLineWeight">전열 슬롯 가중치(BattleConstantsSO에서 튜닝). 기본 1=전후열 무차별.</param>
+        public static TargetPolicyProfile EnemyAi(float lethalChance, float lowHpBias,
+                                                  float frontLineWeight = 1f)
+            => new(lethalChance, TargetBaseTier.EnemyWeightedLowHp, lowHpBias, frontLineWeight);
     }
 }

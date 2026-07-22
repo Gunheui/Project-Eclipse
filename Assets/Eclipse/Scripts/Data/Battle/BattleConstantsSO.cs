@@ -29,5 +29,8 @@ namespace Eclipse.Data
         [Tooltip("적 AI가 다친 대상을 노리는 강도. 가중치 = 1 + 이 값 × (1 − HP비율). " +
                  "0 = HP 무관 완전 균등, 클수록 저HP 집중(난이도 상승). 하드 저격을 피하려는 값이라 과하게 올리지 말 것.")]
         public float enemyLowHpBias = 0.5f;
+
+        [Tooltip("적 AI 기저 추첨에서 전열 슬롯(편성 2·4번)에 곱하는 가중치. 1 = 전후열 차이 없음.")]
+        public float enemyFrontLineWeight = 2f;
     }
 }

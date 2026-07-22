@@ -124,7 +124,7 @@ namespace Eclipse.Core
             var autoRule = RuleBasedActionProvider.AllyAuto(targeting, combat, allyTargetRng);
             var manualProvider = new ManualActionProvider(autoRule) { AutoMode = startAuto };
             var enemyAi = RuleBasedActionProvider.EnemyAi(targeting, combat, enemyTargetRng,
-                constants.enemyLethalChance, constants.enemyLowHpBias);
+                constants.enemyLethalChance, constants.enemyLowHpBias, constants.enemyFrontLineWeight);
 
             // 도메인(엔진·스케줄러)은 아트를 모르므로 유닛만 뽑아 넘긴다. 순서는 아군 먼저, 그다음 적.
             var allyUnits = allyEntries.Select(e => e.Unit).ToList();
