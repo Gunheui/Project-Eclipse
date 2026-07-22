@@ -135,7 +135,7 @@ namespace Eclipse.View
         private static bool Matches(PartyPickItemViewModel item, Role? role)
             => role == null || item.Role == role.Value;
 
-        private void OnRoleFilterSelected(Role? role) => _viewModel.SetRoleFilter(role);
+        private void OnRoleFilterSelected(Role? role) => _viewModel.RoleFilter.Value = role;
 
         // 정렬 버튼: 기준을 다음으로 넘긴다(등급 → 레벨 → 이름 순환).
         private void OnSort() => _viewModel.CycleSort();

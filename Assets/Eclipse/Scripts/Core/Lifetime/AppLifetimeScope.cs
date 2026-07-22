@@ -30,7 +30,6 @@ namespace Eclipse.Core
         {
             base.Configure(builder);
 
-            builder.Register<IAppLogger, ConsoleAppLogger>(Lifetime.Singleton);
             builder.Register<ISceneFlow, SceneFlowService>(Lifetime.Singleton);
 
             // 항상 유지되어야 하는 목록

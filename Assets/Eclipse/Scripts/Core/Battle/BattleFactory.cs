@@ -15,9 +15,6 @@ namespace Eclipse.Core
     /// </summary>
     public sealed class BattleFactory
     {
-        // 4v4 그리드가 그릴 수 있는 한 진영 최대 인원. 적은 스테이지 편성 앞에서 이 수만 참전한다(아군 수와 무관).
-        private const int MaxPartySize = 4;
-
         private readonly BattleConstantsSO constants;
         private readonly TargetResolver targeting;
         private readonly CombatPipeline combat;
@@ -73,15 +70,16 @@ namespace Eclipse.Core
                 throw new ArgumentNullException(nameof(enemies));
 
             // 인덱스가 곧 진영 자리이므로 빈칸을 걷어내되 남은 유닛의 자리 번호는 원래 인덱스를 유지한다.
+            // 한 진영 참전 상한은 편성 슬롯 수와 같다(적도 4v4 그리드 앞에서 같은 수만 선다).
             var ownedParty = selectedParty
-                .Take(MaxPartySize)
+                .Take(PlayerSave.PartySlotCount)
                 .Select((owned, slot) => (owned, slot))
                 .Where(x => x.owned != null)
                 .ToList();
             if (ownedParty.Count == 0)
                 throw new ArgumentException("선택 파티에 유효한 아군이 하나도 없다.", nameof(selectedParty));
 
-            var enemyParty = enemies.Take(MaxPartySize).ToList();
+            var enemyParty = enemies.Take(PlayerSave.PartySlotCount).ToList();
 
             // 유닛과 그 유닛의 아트를 함께 만들어 넘긴다. 아트는 도메인이 아닌 정의 SO에서 뽑는다.
             // 타임라인 아이콘은 아군=얼굴 크롭, 적=소형 배틀러 스프라이트 그대로. 아군 얼굴이 비면 그 칸은

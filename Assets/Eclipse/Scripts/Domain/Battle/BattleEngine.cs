@@ -10,7 +10,6 @@ namespace Eclipse.Domain
     /// <summary>
     /// 전투 한 판의 진행을 담당한다. 스케줄러가 뽑은 행동자마다 스킬 하나를 실행하고,
     /// 매 턴 승패를 판정한다. 행동 상한은 무한 루프를 막는 종료 안전장치다.
-    /// 행동 결정은 지금 플레이스홀더이며, 이후 범위에서 IActionProvider로 교체된다.
     /// </summary>
     public class BattleEngine
     {

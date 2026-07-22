@@ -12,14 +12,10 @@ namespace Eclipse.Domain
         /// <summary> 이 타격이 치명타였는지(연출·표시용). </summary>
         public readonly bool IsCrit;
 
-        /// <summary> 빗나감 여부. 명중 판정(보류 H) 도입 전까지 항상 false인 예약 필드. </summary>
-        public readonly bool IsMiss;
-
-        public DamageResult(int amount, bool isCrit, bool isMiss = false)
+        public DamageResult(int amount, bool isCrit)
         {
             Amount = amount;
             IsCrit = isCrit;
-            IsMiss = isMiss;
         }
     }
 }

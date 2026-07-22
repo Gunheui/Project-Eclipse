@@ -35,9 +35,9 @@ namespace Eclipse.Presentation
         // 이번 승리에 해당하는 보상 원본. 최초 클리어면 두 배열이 이어져 같은 재화가 중복 등장할 수 있다.
         private static IEnumerable<RewardEntry> Entries(StageSO stage, bool firstClear)
         {
-            var entries = stage.clearRewards ?? Array.Empty<RewardEntry>();
+            IEnumerable<RewardEntry> entries = stage.clearRewards ?? Array.Empty<RewardEntry>();
             if (firstClear && stage.firstClearRewards != null)
-                entries = entries.Concat(stage.firstClearRewards).ToArray();
+                entries = entries.Concat(stage.firstClearRewards);
             return entries;
         }
 

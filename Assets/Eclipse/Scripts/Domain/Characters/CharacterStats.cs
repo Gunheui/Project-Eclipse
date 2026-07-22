@@ -1,5 +1,5 @@
+using System;
 using Eclipse.Data;
-using UnityEngine;
 
 namespace Eclipse.Domain
 {
@@ -20,11 +20,12 @@ namespace Eclipse.Domain
         {
             var baseStats = definition.baseStats;
             var curve = definition.growthCurve;
+            // 반올림은 전투 파이프라인과 같은 AwayFromZero — .5 처리 방식이 갈리면 결정성이 흔들린다.
             return new Stats
             {
-                hp = Mathf.RoundToInt(curve.StatAtLevel(baseStats.hp, level)),
-                atk = Mathf.RoundToInt(curve.StatAtLevel(baseStats.atk, level)),
-                def = Mathf.RoundToInt(curve.StatAtLevel(baseStats.def, level)),
+                hp = (int)Math.Round(curve.StatAtLevel(baseStats.hp, level), MidpointRounding.AwayFromZero),
+                atk = (int)Math.Round(curve.StatAtLevel(baseStats.atk, level), MidpointRounding.AwayFromZero),
+                def = (int)Math.Round(curve.StatAtLevel(baseStats.def, level), MidpointRounding.AwayFromZero),
                 spd = baseStats.spd,
                 critRate = baseStats.critRate,
                 critDamage = baseStats.critDamage,

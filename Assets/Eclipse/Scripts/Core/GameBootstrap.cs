@@ -10,14 +10,11 @@ namespace Eclipse.Core
     /// </summary>
     public class GameBootstrap : MonoBehaviour
     {
-        private IAppLogger _appLogger;
-
         private ScreenManager _screenManager;
 
         [Inject]
-        public void Construct(IAppLogger appLogger, ScreenManager screenManager)
+        public void Construct(ScreenManager screenManager)
         {
-            _appLogger = appLogger;
             _screenManager = screenManager;
         }
 
@@ -25,7 +22,6 @@ namespace Eclipse.Core
         {
             // 부팅 시 첫 화면을 띄운다.
             _screenManager.Push(ScreenId.Lobby).Forget();
-            _appLogger.Log("Eclipse booted");
         }
     }
 }

@@ -18,9 +18,6 @@ namespace Eclipse.Core
     /// </summary>
     public class BattleLifetimeScope : LifetimeScope
     {
-        // 선택 파티가 없을 때 세이브 로스터에서 폴백으로 뽑는 최대 인원. 정상 흐름은 편성 화면이 파티를 실어 온다.
-        private const int MaxPartySize = 4;
-
         [SerializeField] private BattleConstantsSO battleConstants;
 
         [SerializeField] private bool startAuto;
@@ -36,7 +33,6 @@ namespace Eclipse.Core
             // 같은 값을 공유해야 스트림 분리가 한 전투 안에서 일관되므로 로컬 변수로 잡아 둘 다에 넘긴다.
             int battleSeed = debugSeedOverride != 0 ? debugSeedOverride : new System.Random().Next(int.MinValue, int.MaxValue);
 
-            builder.RegisterComponentInHierarchy<BattleSceneBootstrap>();
             builder.RegisterComponentInHierarchy<BattleView>();
 
             // 팝업 매니저는 씬 인프라라 씬마다 하나씩 선다. 결과 팝업은 이 컨테이너에서 생성·주입된다.
@@ -83,7 +79,7 @@ namespace Eclipse.Core
                 var party = nav.SelectedParty?.ToList() ?? new List<OwnedCharacter>();
                 if (party.All(x => x == null))
                     party = c.Resolve<PlayerSave>().OwnedCharacters
-                        .Where(x => x != null).Take(MaxPartySize).ToList();
+                        .Where(x => x != null).Take(PlayerSave.PartySlotCount).ToList();
                 if (party.All(x => x == null))
                     throw new InvalidOperationException(
                         "전투에 세울 아군이 없다 — 선택 파티도 세이브 로스터도 비어 있다.");

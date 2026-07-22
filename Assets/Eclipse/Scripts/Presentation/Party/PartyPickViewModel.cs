@@ -24,8 +24,10 @@ namespace Eclipse.Presentation
         /// <summary> 역할 필터(null = 전체). View가 구독해 보이는 항목을 거른다. </summary>
         public ReactiveProperty<Role?> RoleFilter { get; } = new(null);
 
+        private readonly ReactiveProperty<CharacterSortKey> _sortKey = new(CharacterSortKey.Rarity);
+
         /// <summary> 현재 정렬 기준. View가 구독해 라벨을 갱신하고 항목을 다시 만든다. </summary>
-        public ReactiveProperty<CharacterSortKey> CurrentSortKey { get; } = new(CharacterSortKey.Rarity);
+        public ReadOnlyReactiveProperty<CharacterSortKey> CurrentSortKey => _sortKey;
 
         /// <param name="save">보유 캐릭터 원천. 로스터 항목을 만든다.</param>
         /// <param name="spriteProvider">항목 초상 로딩 경로(공유 항목 VM에 전달).</param>
@@ -37,7 +39,7 @@ namespace Eclipse.Presentation
                 .Select(owned => new PartyPickItemViewModel(new CharacterItemViewModel(owned, spriteProvider)))
                 .ToList();
 
-            ApplySort(CurrentSortKey.Value);
+            ApplySort(_sortKey.Value);
         }
 
         /// <summary>
@@ -70,19 +72,15 @@ namespace Eclipse.Presentation
             RefreshSlotNumbers();
         }
 
-        /// <summary>역할 필터를 설정한다. null이면 전체 표시. View의 역할 필터 바가 호출한다.</summary>
-        /// <param name="role">보일 역할. null이면 필터 해제.</param>
-        public void SetRoleFilter(Role? role) => RoleFilter.Value = role;
-
         /// <summary>
         /// 정렬 기준을 다음 값으로 넘기고 <see cref="Items"/>를 재배열한다.
         /// 리스트 자체가 바뀌므로 View는 CurrentSortKey를 받아 항목을 다시 만들어야 한다.
         /// </summary>
         public void CycleSort()
         {
-            var next = CharacterSort.Next(CurrentSortKey.Value);
+            var next = CharacterSort.Next(_sortKey.Value);
             ApplySort(next);
-            CurrentSortKey.Value = next;
+            _sortKey.Value = next;
         }
 
         // 지정 기준으로 _items를 제자리 재배열한다(항목 VM 인스턴스는 그대로 재사용).
@@ -116,7 +114,7 @@ namespace Eclipse.Presentation
         protected override void OnDispose()
         {
             RoleFilter.Dispose();
-            CurrentSortKey.Dispose();
+            _sortKey.Dispose();
             foreach (var item in _items)
                 item.Dispose();
         }

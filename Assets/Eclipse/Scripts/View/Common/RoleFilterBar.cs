@@ -1,5 +1,6 @@
 using System;
 using Eclipse.Data.Enums;
+using Eclipse.View.Theme;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,13 +14,7 @@ namespace Eclipse.View
     /// </summary>
     public class RoleFilterBar : MonoBehaviour
     {
-        // 선택/비선택 상태 색. 배경·테두리·아이콘·라벨 네 곳을 함께 바꿔야 선택이 눈에 띈다.
-        private static readonly Color SelectedFill = new Color32(0xE7, 0xE9, 0xFC, 0xFF);
-        private static readonly Color SelectedAccent = new Color32(0x6E, 0x7B, 0xF2, 0xFF);
-        private static readonly Color NormalFill = new Color32(0xFA, 0xFB, 0xFE, 0xFF);
-        private static readonly Color NormalBorder = new Color32(0xC4, 0xC9, 0xE4, 0xFF);
-        private static readonly Color NormalIcon = new Color32(0x5A, 0x61, 0x80, 0xFF);
-        private static readonly Color NormalLabel = new Color32(0x23, 0x27, 0x3D, 0xFF);
+        [SerializeField] private UIThemeSO theme;
 
         [SerializeField] private Button allButton;
         [SerializeField] private Button tankerButton;
@@ -48,6 +43,8 @@ namespace Eclipse.View
         /// <param name="role">선택으로 표시할 역할. null이면 "전체" 버튼이 선택 상태가 된다.</param>
         public void SetSelected(Role? role)
         {
+            if (theme == null)
+                return;
             foreach (var entry in Entries)
             {
                 if (entry.Button == null)
@@ -76,12 +73,13 @@ namespace Eclipse.View
         }
 
         // 버튼 한 개의 배경/테두리/아이콘/라벨 색을 선택 상태에 맞춰 칠한다.
-        private static void Paint(Transform button, bool selected)
+        // 배경·테두리·아이콘·라벨 네 곳을 함께 바꿔야 선택이 눈에 띈다. 색은 전부 테마 토큰에서 읽는다.
+        private void Paint(Transform button, bool selected)
         {
-            button.GetComponent<Image>().color = selected ? SelectedFill : NormalFill;
-            button.Find("Border").GetComponent<Image>().color = selected ? SelectedAccent : NormalBorder;
-            button.Find("Icon").GetComponent<Image>().color = selected ? SelectedAccent : NormalIcon;
-            button.Find("Label").GetComponent<TMP_Text>().color = selected ? SelectedAccent : NormalLabel;
+            button.GetComponent<Image>().color = selected ? theme.primarySubtle : theme.surface2;
+            button.Find("Border").GetComponent<Image>().color = selected ? theme.primary : theme.borderDefault;
+            button.Find("Icon").GetComponent<Image>().color = selected ? theme.primary : theme.textMedium;
+            button.Find("Label").GetComponent<TMP_Text>().color = selected ? theme.primary : theme.textHigh;
         }
     }
 }

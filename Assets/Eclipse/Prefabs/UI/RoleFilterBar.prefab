@@ -957,6 +957,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd5c70d6f3fc6459086b5af9d69496d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Eclipse.View::Eclipse.View.RoleFilterBar
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
   allButton: {fileID: 5626706389632658839}
   tankerButton: {fileID: 3716533746380650064}
   dealerButton: {fileID: 5269640891613242302}

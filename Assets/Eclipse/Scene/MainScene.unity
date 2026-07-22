@@ -3079,9 +3079,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Infra.PopupManager
   popupRoot: {fileID: 1560750366}
   dim: {fileID: 24404487}
-  entries:
-  - Id: 0
-    Prefab: {fileID: 7092091780543040223, guid: 7ddb059f062e249339abec475bf64571, type: 3}
+  entries: []
 --- !u!114 &1443029400
 MonoBehaviour:
   m_ObjectHideFlags: 0

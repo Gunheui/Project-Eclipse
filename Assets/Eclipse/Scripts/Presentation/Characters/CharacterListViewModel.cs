@@ -13,7 +13,6 @@ namespace Eclipse.Presentation
     /// </summary>
     public class CharacterListViewModel : ViewModelBase
     {
-        private PlayerSave _playerSave;
         private NavigationContext _navigationContext;
 
         private readonly List<CharacterItemViewModel> _items = new List<CharacterItemViewModel>();
@@ -33,10 +32,9 @@ namespace Eclipse.Presentation
 
         public CharacterListViewModel(PlayerSave save, NavigationContext navigationContext, ISpriteProvider spriteProvider)
         {
-            _playerSave = save;
             _navigationContext = navigationContext;
 
-            foreach (var character in _playerSave.OwnedCharacters)
+            foreach (var character in save.OwnedCharacters)
             {
                 _items.Add(new CharacterItemViewModel(character, spriteProvider));
             }
@@ -54,10 +52,6 @@ namespace Eclipse.Presentation
             ApplySort(next);
             _sortKey.Value = next;
         }
-
-        /// <summary>역할 필터를 설정한다. null이면 전체 표시. View의 역할 필터 바가 호출한다.</summary>
-        /// <param name="role">보일 역할. null이면 필터 해제.</param>
-        public void SetRoleFilter(Role? role) => RoleFilter.Value = role;
 
         // 지정 기준으로 _items를 제자리 재배열한다(항목 VM 인스턴스는 그대로 재사용).
         // 반드시 CurrentSortKey 통지보다 먼저 돌아야 View가 재배열된 Items로 항목 뷰를 다시 만든다.

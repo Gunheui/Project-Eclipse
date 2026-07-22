@@ -151,7 +151,7 @@ namespace Eclipse.Tests
 
             Assert.AreSame(open.Stage, nav.SelectedStage,
                 "편성·전투 스코프가 읽을 SelectedStage 캐리어에 선택 StageSO가 실린다");
-            Assert.AreSame(vm.SelectedChapter.Value, nav.SelectedChapter,
+            Assert.AreSame(vm.SelectedChapter, nav.SelectedChapter,
                 "전투 후 클리어 마킹이 스테이지 인덱스를 파생할 장도 함께 실린다");
             Assert.IsNull(nav.SelectedParty, "새 편성 시작이므로 이전 파티는 클리어된다");
 

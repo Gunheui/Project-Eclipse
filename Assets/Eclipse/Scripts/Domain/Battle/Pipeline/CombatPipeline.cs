@@ -56,7 +56,7 @@ namespace Eclipse.Domain
         /// <param name="power">틱 배율(시전자 ATK에 곱해지는 값).</param>
         /// <returns>틱당 HP 변화량(1 이상).</returns>
         public int ComputeTickAmount(Stats caster, float power)
-            => Math.Max(1, (int)Math.Round(caster.atk * power, MidpointRounding.AwayFromZero));
+            => ComputeHeal(caster, power);
 
         /// <summary>
         /// 실드가 흡수할 총 피해량을 계산한다(대상 최대 HP × 비율, 최소 1).

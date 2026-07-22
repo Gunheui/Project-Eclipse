@@ -38,8 +38,8 @@ namespace Eclipse.Domain
         /// <param name="skillPower">스킬계수(기본공격 1.0 등, 스킬 데이터).</param>
         public DamageResult ComputeDamage(Stats attacker, Stats target, float skillPower)
         {
-            // [보류 H · 명중 판정] 빗나감 도입 시 파이프라인 맨 앞에서 rng로 판정해 miss면 조기 반환:
-            //   if (_rng.NextFloat() >= hitChance) return new DamageResult(0, false, isMiss: true);
+            // [보류 H · 명중 판정] 빗나감 도입 시 파이프라인 맨 앞에서 rng로 판정하고,
+            // DamageResult에 IsMiss 플래그를 되살려 miss면 조기 반환한다.
 
             // 난수 순서: 치명 먼저, 변동 나중.
             bool isCrit = _rng.NextFloat() < attacker.critRate;

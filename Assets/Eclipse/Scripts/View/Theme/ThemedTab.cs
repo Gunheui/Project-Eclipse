@@ -22,15 +22,6 @@ namespace Eclipse.View.Theme
 
         [SerializeField] private UIThemeSO theme;
 
-        /// <summary>
-        /// 선택 상태를 갱신하고 즉시 색을 다시 적용한다. 런타임 탭 전환용(현재 미사용).
-        /// </summary>
-        public void SetSelected(bool selected)
-        {
-            isSelected = selected;
-            DoStateTransition(currentSelectionState, true);
-        }
-
         protected override void DoStateTransition(SelectionState state, bool instant)
         {
             base.DoStateTransition(state, instant);

@@ -45,20 +45,6 @@ namespace Eclipse.Presentation
             _level = new ReactiveProperty<int>(_ownedCharacter.Level);
         }
 
-        /// <summary>
-        /// 레벨을 지정값으로 설정한다. 유효 범위(1 ~ growthCurve.maxLevel) 밖이면
-        /// 아무 것도 바꾸지 않고 false를 반환한다.
-        /// </summary>
-        public bool SetLevel(int level)
-        {
-            if (level > _ownedCharacter.Definition.growthCurve.maxLevel || level < 1)
-                return false;
-
-            _level.Value = level;
-            _ownedCharacter.Level = level;
-            return true;
-        }
-
         protected override void OnDispose()
         {
             base.OnDispose();

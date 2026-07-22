@@ -3,7 +3,6 @@ using Cysharp.Threading.Tasks;
 using Eclipse.Data;
 using Eclipse.Presentation;
 using Eclipse.View.Infra;
-using R3;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -29,8 +28,6 @@ namespace Eclipse.View
         [Header("장 내비")]
         [Tooltip("장 라벨(\"1장\" 형식).")]
         [SerializeField] private TMP_Text chapterNavLabel;
-        [SerializeField] private Button prevChapterButton;
-        [SerializeField] private Button nextChapterButton;
 
         [Header("내비")]
         [SerializeField] private Button backButton;
@@ -38,7 +35,6 @@ namespace Eclipse.View
         private StageSelectViewModel _viewModel;
         private ScreenManager _screenManager;
         private readonly List<StageItemView> _items = new List<StageItemView>();
-        private readonly CompositeDisposable _bindings = new CompositeDisposable();
 
         /// <summary>
         /// ScreenManager가 이 화면 프리팹을 주입 생성할 때 호출한다. OnEnter보다 먼저 실행된다.
@@ -54,7 +50,7 @@ namespace Eclipse.View
 
         /// <summary>
         /// 화면이 스택 전면에 설 때(주입 완료 후) 호출된다. 현재 장 아이템마다 항목을 생성하고,
-        /// 장 정보 패널·내비 라벨·내비 버튼 가용성을 선택 장에 바인딩한다.
+        /// 장 정보 패널·내비 라벨을 현재 장 값으로 채운다.
         /// </summary>
         /// <returns>등장 처리가 끝났음을 알리는 UniTask(연출이 없어 즉시 완료).</returns>
         public UniTask OnEnter()
@@ -62,24 +58,7 @@ namespace Eclipse.View
             foreach (var item in _viewModel.Items)
                 AddItem(item);
 
-            _viewModel.SelectedChapter
-                .Subscribe(BindChapterInfo)
-                .AddTo(_bindings);
-
-            if (prevChapterButton != null)
-            {
-                prevChapterButton.onClick.AddListener(OnPrevChapter);
-                _viewModel.CanSelectPrevChapter
-                    .Subscribe(can => prevChapterButton.interactable = can)
-                    .AddTo(_bindings);
-            }
-            if (nextChapterButton != null)
-            {
-                nextChapterButton.onClick.AddListener(OnNextChapter);
-                _viewModel.CanSelectNextChapter
-                    .Subscribe(can => nextChapterButton.interactable = can)
-                    .AddTo(_bindings);
-            }
+            BindChapterInfo(_viewModel.SelectedChapter);
 
             backButton.onClick.AddListener(OnBack);
             return UniTask.CompletedTask;
@@ -91,12 +70,7 @@ namespace Eclipse.View
         /// <returns>퇴장 처리가 끝났음을 알리는 UniTask(연출이 없어 즉시 완료).</returns>
         public UniTask OnExit()
         {
-            _bindings.Clear();
             backButton.onClick.RemoveListener(OnBack);
-            if (prevChapterButton != null)
-                prevChapterButton.onClick.RemoveListener(OnPrevChapter);
-            if (nextChapterButton != null)
-                nextChapterButton.onClick.RemoveListener(OnNextChapter);
 
             foreach (var item in _items)
                 Destroy(item.gameObject);
@@ -134,8 +108,6 @@ namespace Eclipse.View
                 chapterNavLabel.text = $"{chapter.number}장";
         }
 
-        private void OnPrevChapter() => _viewModel.SelectPrevChapter();
-        private void OnNextChapter() => _viewModel.SelectNextChapter();
         private void OnBack() => _screenManager.Pop().Forget();
     }
 }
