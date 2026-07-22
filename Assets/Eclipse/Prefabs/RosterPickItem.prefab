@@ -1003,8 +1003,9 @@ GameObject:
   - component: {fileID: 628891717564034707}
   - component: {fileID: 7023294560658597166}
   - component: {fileID: 8616560053011634486}
+  - component: {fileID: 2612302442240615736}
   m_Layer: 0
-  m_Name: RosterPickCell
+  m_Name: RosterPickItem
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1173,15 +1174,28 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3985acbcc691f413e9b819d909aaaf4a, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.RosterPickCellView
+  m_EditorClassIdentifier: 
+  baseItem: {fileID: 2612302442240615736}
+  orderBadge: {fileID: 7808793303780705693}
+  orderText: {fileID: 6870933104899957638}
+  selectHighlight: {fileID: 4318720047136979683}
+--- !u!114 &2612302442240615736
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7628175264654138144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c759301ecf8ad42539c0933bcf0dc564, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.CharacterItemView
   portrait: {fileID: 8836998096899961380}
   nameText: {fileID: 3678196557432468730}
   rarityText: {fileID: 6238204214744469984}
   levelText: {fileID: 6155920924506531460}
   selectButton: {fileID: 4352659291670815618}
-  orderBadge: {fileID: 7808793303780705693}
-  orderText: {fileID: 6870933104899957638}
-  selectHighlight: {fileID: 4318720047136979683}
 --- !u!1 &7808793303780705693
 GameObject:
   m_ObjectHideFlags: 0

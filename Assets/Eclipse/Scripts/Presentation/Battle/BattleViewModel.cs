@@ -32,9 +32,12 @@ namespace Eclipse.Presentation
         private readonly ManualActionProvider _manualProvider;
         private readonly ISceneFlow _sceneFlow;
 
-        // 승리 시 클리어를 기록할 대상. 진행도는 앱 스코프에 살고, 어느 스테이지였는지는 내비 컨텍스트가 실어 온다.
+        // 승리 시 클리어를 기록할 대상. 진행도는 앱 스코프에 살고, 어느 장·스테이지의 전투인지는
+        // 조립 시점(BattleFactory)에 검증·확정된 값을 불변으로 들고 있는다 — 승리 순간의 외부 상태를 다시 읽지 않는다.
         private readonly StageProgress _progress;
-        private readonly NavigationContext _nav;
+        private readonly ChapterSO _chapter;
+        private readonly StageSO _stage;
+        private readonly int _stageIndex;
 
         // 승리 보상 지급 창구. 초회 여부는 진행도 기록의 반환값이 정한다.
         private readonly IRewardService _rewards;
@@ -61,7 +64,9 @@ namespace Eclipse.Presentation
         /// <param name="targeting">범위 해석·수동 후보 리졸버. 오토 타겟 정책과 같은 인스턴스를 공유한다.</param>
         /// <param name="sceneFlow">전투 종료·이탈 시 씬 전환 창구.</param>
         /// <param name="progress">장별 진행도. 승리 시 이 전투의 스테이지를 클리어로 기록한다.</param>
-        /// <param name="nav">씬 경계 선택 보관함. 어느 장·스테이지의 전투인지를 여기서 읽어 클리어를 기록한다.</param>
+        /// <param name="chapter">이 전투 스테이지가 속한 장. 조립 시점에 검증된 값이다.</param>
+        /// <param name="stage">이 전투의 스테이지. 승리 보상의 원천.</param>
+        /// <param name="stageIndex">장 안에서의 0-기반 스테이지 인덱스. 조립 시점에 stages에서 계산·검증된 값이다.</param>
         /// <param name="rewards">승리 보상 지급 창구. 클리어 기록 직후 호출해 지급 결과를 결과 팝업에 넘긴다.</param>
         public BattleViewModel(
             IReadOnlyList<BattleUnitEntry> allies,
@@ -72,7 +77,9 @@ namespace Eclipse.Presentation
             TargetResolver targeting,
             ISceneFlow sceneFlow,
             StageProgress progress,
-            NavigationContext nav,
+            ChapterSO chapter,
+            StageSO stage,
+            int stageIndex,
             IRewardService rewards)
         {
             _rewards = rewards;
@@ -82,7 +89,9 @@ namespace Eclipse.Presentation
             _sceneFlow = sceneFlow;
             _targeting = targeting;
             _progress = progress;
-            _nav = nav;
+            _chapter = chapter;
+            _stage = stage;
+            _stageIndex = stageIndex;
 
             // 명판은 아트를 포함하므로 엔트리 그대로 쓴다. 순서는 아군 먼저, 그다음 적(스케줄러 입력 순과 동일).
             var all = allies.Concat(enemies).ToList();
@@ -203,19 +212,12 @@ namespace Eclipse.Presentation
         /// <summary> 전투 씬을 떠나 메인 씬으로 돌아간다. </summary>
         public UniTask ExitAsync() => _sceneFlow.ToMainAsync();
 
-        // 이번 전투 스테이지를 진행도에 클리어로 기록하고, 그 결과(초회 여부)로 보상을 지급한다. 스테이지 인덱스는
-        // 장의 stages 배열에서 파생하므로 진행도의 0-기반 인덱스와 항상 맞는다. 진입 정보가 없으면(단독 씬 Play 등)
-        // 기록도 지급도 하지 않고 조용히 넘어간다 — 어느 스테이지의 보상인지 판단할 수 없기 때문.
+        // 이번 전투 스테이지를 진행도에 클리어로 기록하고, 그 결과(초회 여부)로 보상을 지급한다.
+        // 장·스테이지·인덱스는 조립 시점에 검증된 불변 값이라 승리 순간의 외부 상태와 무관하게 항상 맞는다.
         private void MarkStageCleared()
         {
-            var chapter = _nav?.SelectedChapter;
-            if (chapter == null || _progress == null) return;
-
-            int stageIndex = Array.IndexOf(chapter.stages, _nav.SelectedStage);
-            if (stageIndex < 0) return;
-
-            bool firstClear = _progress.TryMarkCleared(chapter.id, stageIndex);
-            GrantedRewards = _rewards.GrantVictory(_nav.SelectedStage, firstClear);
+            bool firstClear = _progress.TryMarkCleared(_chapter, _stageIndex);
+            GrantedRewards = _rewards.GrantVictory(_stage, firstClear);
         }
 
         // 입력 대기가 시작된 행동자를 대응하는 명판 VM으로 매핑해 ActingCombatant에 세운다.

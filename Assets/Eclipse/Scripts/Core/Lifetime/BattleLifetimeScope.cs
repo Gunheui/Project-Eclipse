@@ -62,18 +62,19 @@ namespace Eclipse.Core
             builder.Register<BattleFactory>(Lifetime.Scoped);
             builder.Register(c =>
             {
+                // nav 읽기는 이 조립 람다에서 끝난다 — 뷰모델은 여기서 확정된 장·스테이지를 불변으로 받는다.
+                // 스테이지 데이터 내용 검증(적 편성·장 소속)은 팩토리 계약이다.
                 var nav = c.Resolve<NavigationContext>();
                 var stage = nav.SelectedStage;
                 if (stage == null)
                     throw new InvalidOperationException(
                         "BattleScene 진입에 선택 스테이지가 없다. StageSelect(S10)를 거쳐 진입해야 한다 " +
                         "— 단독 씬 Play는 지원하지 않는다(debugSeedOverride는 시드만 고정할 뿐 스테이지를 대신하지 않는다).");
-                if (stage.enemies == null || stage.enemies.Length == 0)
-                    throw new InvalidOperationException($"스테이지 '{stage.id}'에 적 편성(enemies)이 비어 있다.");
-                for (int i = 0; i < stage.enemies.Length; i++)
-                    if (stage.enemies[i] == null)
-                        throw new InvalidOperationException(
-                            $"스테이지 '{stage.id}'의 적 편성 슬롯 {i}가 비어 있다(Inspector EnemySO 참조 누락).");
+                var chapter = nav.SelectedChapter;
+                if (chapter == null)
+                    throw new InvalidOperationException(
+                        $"BattleScene 진입에 선택 장이 없다(스테이지 '{stage.id}'만 실려 있다). " +
+                        "StageSelect가 SelectedStage와 SelectedChapter를 함께 기록해야 한다.");
 
                 // 파티가 비어있다면, 미리 현재 가지고 있는 캐릭터 List에서 앞에 4개를 꺼내옴(테스트용)
                 var party = nav.SelectedParty?.ToList() ?? new List<OwnedCharacter>();
@@ -84,7 +85,7 @@ namespace Eclipse.Core
                     throw new InvalidOperationException(
                         "전투에 세울 아군이 없다 — 선택 파티도 세이브 로스터도 비어 있다.");
 
-                return c.Resolve<BattleFactory>().Create(party, stage.enemies, battleSeed, startAuto);
+                return c.Resolve<BattleFactory>().Create(party, chapter, stage, battleSeed, startAuto);
             }, Lifetime.Scoped);
         }
     }

@@ -66,7 +66,7 @@ namespace Eclipse.Tests
                 new SeededRandom(BattleSeed.For(seed, BattleSeed.Stream.Damage))));
             var executor = new SkillExecutor(combat, targeting);
             return new BattleFactory(constants, targeting, combat, executor, new FakeSceneFlow(),
-                new StageProgress(), new NavigationContext(), new StageRewardService(new CurrencyWallet()));
+                new StageProgress(), new StageRewardService(new CurrencyWallet()));
         }
 
         [UnityTest]
@@ -79,7 +79,7 @@ namespace Eclipse.Tests
                 var constants = AssetDatabase.LoadAssetAtPath<BattleConstantsSO>(ConstantsPath);
 
                 var vm = BuildFactory(constants, seed)
-                    .Create(BuildParty(), stage.enemies, seed, startAuto: true);
+                    .Create(BuildParty(), chapter, stage, seed, startAuto: true);
 
                 await vm.RunBattleAsync(null, CancellationToken.None);
 

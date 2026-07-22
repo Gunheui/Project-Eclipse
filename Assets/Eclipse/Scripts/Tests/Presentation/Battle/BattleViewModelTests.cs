@@ -81,10 +81,18 @@ namespace Eclipse.Tests
             var engine = new BattleEngine(allies.ToList(), enemies.ToList(), scheduler,
                 executor, manualProvider, enemyAi, actionCap: 200);
 
+            // 장·스테이지는 조립 시점에 확정돼 불변으로 들어간다(프로덕션은 BattleFactory가 검증·계산).
+            var stage = ScriptableObject.CreateInstance<StageSO>();
+            stage.id = "stage_t";
+            var chapter = ScriptableObject.CreateInstance<ChapterSO>();
+            chapter.id = "chapter_t";
+            chapter.stages = new[] { stage };
+
             return new BattleViewModel(
                 allies.Select(Entry).ToArray(), enemies.Select(Entry).ToArray(),
                 engine, scheduler, manualProvider, targeting, new FakeSceneFlow(),
-                new StageProgress(), new NavigationContext(), new StageRewardService(new CurrencyWallet()));
+                new StageProgress(), chapter, stage, stageIndex: 0,
+                new StageRewardService(new CurrencyWallet()));
         }
 
         private static BattleViewModel Vm(Combatant ally, Combatant enemy, bool startAuto)

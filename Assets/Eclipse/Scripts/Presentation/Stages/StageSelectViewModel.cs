@@ -58,7 +58,7 @@ namespace Eclipse.Presentation
         // 지정 장의 스테이지들로 항목을 만든다. 인덱스+1이 스테이지 번호.
         private IReadOnlyList<StageSelectItemViewModel> BuildItems(ChapterSO chapter)
         {
-            var clearedCount = _progress.ClearedCountOf(chapter.id);
+            var clearedCount = _progress.ClearedCountOf(chapter);
             var items = new List<StageSelectItemViewModel>(chapter.stages.Length);
             for (int i = 0; i < chapter.stages.Length; i++)
                 items.Add(new StageSelectItemViewModel(chapter.stages[i], i + 1, clearedCount));

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Eclipse.Data;
 using Eclipse.Data.Enums;
@@ -21,7 +22,7 @@ namespace Eclipse.Tests
             return s;
         }
 
-        // 마지막 스테이지를 보스로 두는 장. StageProgress 데모 init과 맞추려면 id="chapter_01".
+        // 마지막 스테이지를 보스로 두는 장.
         private static ChapterSO Chapter(string id, int number, int stageCount)
         {
             var c = ScriptableObject.CreateInstance<ChapterSO>();
@@ -51,63 +52,85 @@ namespace Eclipse.Tests
             Assert.AreEqual(StageState.Open, StageProgress.StateOf(4, 4), "앞 4개 클리어면 보스가 열림");
         }
 
-        // --- 데모 초기값 ---
+        // --- lazy 등록: 첫 접근이 장을 미클리어로 등록하고, 데이터 불일치는 즉시 드러난다 ---
 
         [Test]
-        public void 데모_init은_chapter_01을_미클리어로_시드()
+        public void ClearedCountOf는_첫_접근에서_장을_미클리어로_등록()
         {
             using var progress = new StageProgress();
-            Assert.AreEqual(0, progress.ClearedCountOf("chapter_01").CurrentValue,
-                "부팅 직후부터 1스테이지만 열려 해금 사슬 전체를 시연할 수 있다");
+            Assert.AreEqual(0, progress.ClearedCountOf(Chapter("chapter_01", 1, 5)).CurrentValue,
+                "시드 없이도 첫 접근부터 1스테이지만 열려 해금 사슬이 성립한다");
         }
 
         [Test]
-        public void ClearedCountOf는_미등록_장이면_예외()
+        public void 잘못된_장_데이터는_예외()
         {
             using var progress = new StageProgress();
-            Assert.Throws<KeyNotFoundException>(() => progress.ClearedCountOf("chapter_99"));
+
+            Assert.Throws<ArgumentNullException>(() => progress.ClearedCountOf(null), "null 장");
+
+            var emptyId = Chapter("chapter_01", 1, 3);
+            emptyId.id = "";
+            Assert.Throws<ArgumentException>(() => progress.ClearedCountOf(emptyId), "빈 id는 키로 쓸 수 없다");
+
+            var nullStages = Chapter("chapter_02", 2, 3);
+            nullStages.stages = null;
+            Assert.Throws<ArgumentException>(() => progress.ClearedCountOf(nullStages), "stages 없이는 상한을 정할 수 없다");
         }
 
-        // --- TryMarkCleared: 순차만 수용, 비순차·미등록·음수 거부 ---
+        [Test]
+        public void 같은_id가_다른_스테이지_수로_재등장하면_예외()
+        {
+            using var progress = new StageProgress();
+            progress.ClearedCountOf(Chapter("chapter_01", 1, 5));
+
+            Assert.Throws<InvalidOperationException>(
+                () => progress.ClearedCountOf(Chapter("chapter_01", 1, 3)),
+                "등록 시점과 스테이지 수가 다르면 데이터 불일치로 즉시 드러낸다");
+        }
+
+        // --- TryMarkCleared: 순차만 수용, 비순차·범위밖·음수 거부 ---
 
         [Test]
         public void TryMarkCleared는_현재_열린_스테이지만_순차_수용()
         {
-            using var progress = new StageProgress(); // chapter_01 = 0 → index 0이 열림
+            using var progress = new StageProgress();
+            var chapter = Chapter("chapter_01", 1, 5); // 미클리어 → index 0이 열림
 
-            Assert.IsTrue(progress.TryMarkCleared("chapter_01", 0), "열린 스테이지 클리어는 수용");
-            Assert.AreEqual(1, progress.ClearedCountOf("chapter_01").CurrentValue, "클리어 수가 1 증가");
+            Assert.IsTrue(progress.TryMarkCleared(chapter, 0), "열린 스테이지 클리어는 수용(미등록 장도 lazy 등록 후 처리)");
+            Assert.AreEqual(1, progress.ClearedCountOf(chapter).CurrentValue, "클리어 수가 1 증가");
         }
 
         [Test]
-        public void TryMarkCleared는_비순차_미등록_음수를_거부()
+        public void TryMarkCleared는_비순차_음수_기클리어를_거부()
         {
-            using var progress = new StageProgress(); // chapter_01 = 0
+            using var progress = new StageProgress();
+            var chapter = Chapter("chapter_01", 1, 5);
 
-            Assert.IsFalse(progress.TryMarkCleared("chapter_01", 4), "건너뛴 인덱스는 거부");
-            Assert.IsFalse(progress.TryMarkCleared("chapter_99", 0), "미등록 장은 거부");
-            Assert.IsFalse(progress.TryMarkCleared("chapter_01", -1), "음수 인덱스는 거부");
-            Assert.AreEqual(0, progress.ClearedCountOf("chapter_01").CurrentValue, "거부 시 값 불변");
+            Assert.IsFalse(progress.TryMarkCleared(chapter, 4), "건너뛴 인덱스는 거부");
+            Assert.IsFalse(progress.TryMarkCleared(chapter, -1), "음수 인덱스는 거부");
+            Assert.AreEqual(0, progress.ClearedCountOf(chapter).CurrentValue, "거부 시 값 불변");
 
-            progress.TryMarkCleared("chapter_01", 0);
-            Assert.IsFalse(progress.TryMarkCleared("chapter_01", 0), "이미 깬 인덱스는 거부");
-            Assert.AreEqual(1, progress.ClearedCountOf("chapter_01").CurrentValue, "재클리어로 값이 늘지 않는다");
+            progress.TryMarkCleared(chapter, 0);
+            Assert.IsFalse(progress.TryMarkCleared(chapter, 0), "이미 깬 인덱스는 거부");
+            Assert.AreEqual(1, progress.ClearedCountOf(chapter).CurrentValue, "재클리어로 값이 늘지 않는다");
         }
 
         [Test]
         public void TryMarkCleared는_장의_모든_스테이지_클리어_후_상한을_넘지_않는다()
         {
-            using var progress = new StageProgress(); // chapter_01 = 0, 총 5스테이지
+            using var progress = new StageProgress();
+            var chapter = Chapter("chapter_01", 1, 5);
 
-            Assert.IsTrue(progress.TryMarkCleared("chapter_01", 0));
-            Assert.IsTrue(progress.TryMarkCleared("chapter_01", 1));
-            Assert.IsTrue(progress.TryMarkCleared("chapter_01", 2));
-            Assert.IsTrue(progress.TryMarkCleared("chapter_01", 3));
-            Assert.IsTrue(progress.TryMarkCleared("chapter_01", 4)); // 보스까지 → cleared=5
-            Assert.AreEqual(5, progress.ClearedCountOf("chapter_01").CurrentValue);
+            Assert.IsTrue(progress.TryMarkCleared(chapter, 0));
+            Assert.IsTrue(progress.TryMarkCleared(chapter, 1));
+            Assert.IsTrue(progress.TryMarkCleared(chapter, 2));
+            Assert.IsTrue(progress.TryMarkCleared(chapter, 3));
+            Assert.IsTrue(progress.TryMarkCleared(chapter, 4)); // 보스까지 → cleared=5
+            Assert.AreEqual(5, progress.ClearedCountOf(chapter).CurrentValue);
 
-            Assert.IsFalse(progress.TryMarkCleared("chapter_01", 5), "존재하지 않는 인덱스(상한)는 거부");
-            Assert.AreEqual(5, progress.ClearedCountOf("chapter_01").CurrentValue, "상한 초과 시 값 불변");
+            Assert.IsFalse(progress.TryMarkCleared(chapter, 5), "존재하지 않는 인덱스(상한)는 거부");
+            Assert.AreEqual(5, progress.ClearedCountOf(chapter).CurrentValue, "상한 초과 시 값 불변");
         }
 
         // --- Select: 잠긴 아이템은 선택 차단, 열린/클리어 아이템만 선택 기록(화면 전환은 View 몫) ---
@@ -152,7 +175,7 @@ namespace Eclipse.Tests
             Assert.AreSame(open.Stage, nav.SelectedStage,
                 "편성·전투 스코프가 읽을 SelectedStage 캐리어에 선택 StageSO가 실린다");
             Assert.AreSame(vm.SelectedChapter, nav.SelectedChapter,
-                "전투 후 클리어 마킹이 스테이지 인덱스를 파생할 장도 함께 실린다");
+                "전투 조립이 스테이지 인덱스를 파생할 장도 함께 실린다");
             Assert.IsNull(nav.SelectedParty, "새 편성 시작이므로 이전 파티는 클리어된다");
 
             vm.Dispose();
