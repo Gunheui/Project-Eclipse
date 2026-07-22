@@ -92,7 +92,7 @@ namespace Eclipse.Tests
                 allies.Select(Entry).ToArray(), enemies.Select(Entry).ToArray(),
                 engine, scheduler, manualProvider, targeting, new FakeSceneFlow(),
                 new StageProgress(), chapter, stage, stageIndex: 0,
-                new StageRewardService(new CurrencyWallet()));
+                new StageRewardService(new CurrencyWallet()), saveService: null);
         }
 
         private static BattleViewModel Vm(Combatant ally, Combatant enemy, bool startAuto)

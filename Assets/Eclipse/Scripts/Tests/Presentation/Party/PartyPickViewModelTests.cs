@@ -37,7 +37,7 @@ namespace Eclipse.Tests
         {
             var roster = Enumerable.Range(0, rosterCount).Select(i => Owned("C" + i)).ToList();
             var save = new PlayerSave(roster);
-            var formation = new PartyFormationViewModel(save, new NavigationContext(), new FakeSceneFlow());
+            var formation = new PartyFormationViewModel(save, new NavigationContext(), new FakeSceneFlow(), saveService: null);
             var pick = new PartyPickViewModel(save, new FakeSpriteProvider(), formation);
             return (pick, formation, roster);
         }

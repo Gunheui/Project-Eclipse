@@ -22,6 +22,7 @@ namespace Eclipse.Core
         private readonly ISceneFlow sceneFlow;
         private readonly StageProgress progress;
         private readonly IRewardService rewards;
+        private readonly SaveService saveService;
 
         public BattleFactory(
             BattleConstantsSO constants,
@@ -30,7 +31,8 @@ namespace Eclipse.Core
             SkillExecutor executor,
             ISceneFlow sceneFlow,
             StageProgress progress,
-            IRewardService rewards)
+            IRewardService rewards,
+            SaveService saveService)
         {
             this.constants = constants;
             this.targeting = targeting;
@@ -39,6 +41,7 @@ namespace Eclipse.Core
             this.sceneFlow = sceneFlow;
             this.progress = progress;
             this.rewards = rewards;
+            this.saveService = saveService;
         }
 
         /// <summary>
@@ -146,7 +149,8 @@ namespace Eclipse.Core
                 chapter,
                 stage,
                 stageIndex,
-                rewards);
+                rewards,
+                saveService);
         }
     }
 }

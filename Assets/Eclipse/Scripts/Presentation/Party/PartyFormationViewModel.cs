@@ -23,6 +23,10 @@ namespace Eclipse.Presentation
         private readonly NavigationContext _nav;
         private readonly ISceneFlow _sceneFlow;
 
+        // 편성 변경 직후 스냅샷을 저장하는 창구. WebGL은 탭 종료 훅이 없어 변경 시점 저장이 유일한 안전망이다.
+        // null이면 저장을 건너뛴다(테스트 조립).
+        private readonly SaveService _saveService;
+
         private readonly ReactiveProperty<OwnedCharacter>[] _slots;
         private readonly ReadOnlyReactiveProperty<CharacterSO>[] _slotOccupants;
         private bool _entering;
@@ -52,11 +56,14 @@ namespace Eclipse.Presentation
         /// <param name="save">보유 캐릭터 원천이자 편성 보관처. 슬롯 초기값을 여기서 읽고 변경도 여기에 되쓴다.</param>
         /// <param name="nav">씬 경계 선택 보관함. 진입 시 슬롯 위치를 보존한 파티를 SelectedParty에 기록한다.</param>
         /// <param name="sceneFlow">진입 시 전투 씬으로 전환하는 창구.</param>
-        public PartyFormationViewModel(PlayerSave save, NavigationContext nav, ISceneFlow sceneFlow)
+        /// <param name="saveService">편성 변경 직후 저장할 세이브 서비스. null이면 저장을 건너뛴다.</param>
+        public PartyFormationViewModel(PlayerSave save, NavigationContext nav, ISceneFlow sceneFlow,
+            SaveService saveService)
         {
             _save = save;
             _nav = nav;
             _sceneFlow = sceneFlow;
+            _saveService = saveService;
 
             _slots = new ReactiveProperty<OwnedCharacter>[SlotCount];
             _slotOccupants = new ReadOnlyReactiveProperty<CharacterSO>[SlotCount];
@@ -99,6 +106,8 @@ namespace Eclipse.Presentation
                 return false;
             if (unit == null || !_save.OwnedCharacters.Contains(unit))
                 return false;
+            if (_slots[slot].Value == unit)
+                return true; // 같은 캐릭터를 같은 칸에 다시 배치 — 무변화이므로 저장하지 않는다.
 
             for (int i = 0; i < SlotCount; i++)
             {
@@ -118,6 +127,8 @@ namespace Eclipse.Presentation
         {
             if (slot < 0 || slot >= SlotCount)
                 return;
+            if (_slots[slot].Value == null)
+                return; // 이미 빈칸 — 무변화이므로 저장하지 않는다.
             _slots[slot].Value = null;
             SyncToSave();
         }
@@ -154,11 +165,13 @@ namespace Eclipse.Presentation
             }
         }
 
-        // 현재 슬롯 상태를 편성 저장에 그대로 복사한다. 위치가 의미를 가지므로 인덱스를 맞춰 넣는다.
+        // 현재 슬롯 상태를 편성 저장에 그대로 복사하고 즉시 디스크에 저장한다. 위치가 의미를 가지므로
+        // 인덱스를 맞춰 넣는다. 성공한 변경(AssignToSlot·ClearSlot)에서만 불린다 — 거부·무변화는 저장하지 않는다.
         private void SyncToSave()
         {
             for (int i = 0; i < SlotCount; i++)
                 _save.Party[i] = _slots[i].Value;
+            _saveService?.Save();
         }
 
         /// <summary>보유한 슬롯 스트림과 파생 프로퍼티(PartyCount·CanEnter)를 모두 해제한다.</summary>

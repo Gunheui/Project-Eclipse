@@ -24,12 +24,20 @@ namespace Eclipse.Presentation
         /// <summary>스킬강화 재료 재화 잔액.</summary>
         public ReadOnlyReactiveProperty<int> Manual => _manual;
 
-        /// <summary>더미 초기 잔액으로 지갑을 만든다. 실제 잔액은 세이브 로딩 시점에 주입된다.</summary>
-        public CurrencyWallet()
+        /// <summary>신규 계정 기본 잔액으로 지갑을 만든다.</summary>
+        public CurrencyWallet() : this(3000, 1000, 0)
         {
-            _essence = new ReactiveProperty<int>(3000);
-            _gold = new ReactiveProperty<int>(1000);
-            _manual = new ReactiveProperty<int>(0);
+        }
+
+        /// <summary>저장된 잔액으로 지갑을 만든다. 세이브 로딩이 복원값을 넘기는 생성자. 음수는 0으로 고정한다.</summary>
+        /// <param name="essence">소환 재화 초기 잔액.</param>
+        /// <param name="gold">성장 재화 초기 잔액.</param>
+        /// <param name="manual">스킬강화 재료 초기 잔액.</param>
+        public CurrencyWallet(int essence, int gold, int manual)
+        {
+            _essence = new ReactiveProperty<int>(Math.Max(0, essence));
+            _gold = new ReactiveProperty<int>(Math.Max(0, gold));
+            _manual = new ReactiveProperty<int>(Math.Max(0, manual));
         }
 
         /// <summary>

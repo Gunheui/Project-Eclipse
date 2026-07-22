@@ -32,6 +32,10 @@ namespace Eclipse.Presentation
         // 장 id → 진행 항목. Cleared가 바뀌면 구독한 항목 상태가 갱신된다.
         private readonly Dictionary<string, ChapterEntry> _chapters = new Dictionary<string, ChapterEntry>();
 
+        // 등록 전에 도착한 복원값(장 id → 클리어 수). EntryOf가 그 장을 등록하는 순간 소비·제거하므로
+        // _chapters와 키가 겹치지 않는다(등록된 장의 복원은 제자리 갱신으로 간다).
+        private readonly Dictionary<string, int> _pending = new Dictionary<string, int>();
+
         /// <summary>
         /// 스테이지 인덱스와 장의 클리어 수로 3상태를 계산하는 순수 함수.
         /// 인덱스가 클리어 수보다 작으면 이미 깬 것(Cleared), 같으면 지금 열린 것(Open), 크면 잠김(Locked).
@@ -77,6 +81,37 @@ namespace Eclipse.Presentation
             return true;
         }
 
+        /// <summary>
+        /// 저장된 클리어 수를 복원한다. 이미 등록된 장이면 기존 ReactiveProperty를 제자리 갱신하고(구독 유지),
+        /// 아직 등록되지 않은 장이면 보류해 두었다가 첫 접근으로 등록되는 순간 초기값으로 소비한다.
+        /// 같은 장에 여러 번 호출되면 마지막 값이 이긴다.
+        /// </summary>
+        /// <param name="chapterId">복원할 장의 id. null/빈 문자열이면 무시한다.</param>
+        /// <param name="cleared">저장된 클리어 수. 음수는 0으로, 장의 총 스테이지 수 초과분은 상한으로 잘린다.</param>
+        public void Restore(string chapterId, int cleared)
+        {
+            if (string.IsNullOrEmpty(chapterId))
+                return;
+
+            if (_chapters.TryGetValue(chapterId, out var entry))
+                entry.Cleared.Value = Math.Clamp(cleared, 0, entry.StageCount);
+            else
+                _pending[chapterId] = Math.Max(0, cleared); // 상한 클램프는 등록 시점(스테이지 수 확정 때)에 한다.
+        }
+
+        /// <summary>
+        /// 저장용 스냅샷 — 장 id별 클리어 수를 열거한다. 등록된 장과 아직 소비되지 않은 보류 장(복원 후 미접근)을
+        /// 모두 포함하므로, 로드 직후 스테이지 화면을 열지 않고 저장해도 진행도가 유실되지 않는다.
+        /// </summary>
+        /// <returns>(장 id, 클리어 수) 시퀀스. 장마다 정확히 한 항목.</returns>
+        public IEnumerable<(string chapterId, int cleared)> Snapshot()
+        {
+            foreach (var pair in _chapters)
+                yield return (pair.Key, pair.Value.Cleared.Value);
+            foreach (var pair in _pending)
+                yield return (pair.Key, pair.Value);
+        }
+
         // 장 진행 항목을 찾고, 없으면 미클리어로 만들어 등록한다(lazy). 스테이지 수는 등록 시점 stages 길이로
         // 고정되므로, 같은 id가 다른 스테이지 수로 다시 오면 데이터 불일치로 보고 즉시 드러낸다.
         private ChapterEntry EntryOf(ChapterSO chapter)
@@ -96,7 +131,12 @@ namespace Eclipse.Presentation
                 return entry;
             }
 
-            entry = new ChapterEntry(cleared: 0, stageCount: chapter.stages.Length);
+            // 복원이 등록보다 먼저 도착한 장이면 보류값을 초기 클리어 수로 소비한다(총 스테이지 수로 클램프).
+            int cleared = 0;
+            if (_pending.Remove(chapter.id, out var pendingCleared))
+                cleared = Math.Min(pendingCleared, chapter.stages.Length);
+
+            entry = new ChapterEntry(cleared, stageCount: chapter.stages.Length);
             _chapters[chapter.id] = entry;
             return entry;
         }
@@ -107,6 +147,7 @@ namespace Eclipse.Presentation
             foreach (var entry in _chapters.Values)
                 entry.Cleared.Dispose();
             _chapters.Clear();
+            _pending.Clear();
         }
     }
 }

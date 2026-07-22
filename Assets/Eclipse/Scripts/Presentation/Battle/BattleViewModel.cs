@@ -42,6 +42,9 @@ namespace Eclipse.Presentation
         // 승리 보상 지급 창구. 초회 여부는 진행도 기록의 반환값이 정한다.
         private readonly IRewardService _rewards;
 
+        // 승리 처리(클리어 기록·보상 지급) 완료 직후 스냅샷을 저장하는 창구. null이면 저장을 건너뛴다(테스트 조립).
+        private readonly SaveService _saveService;
+
         // 조준 UI 후보 산출용(수동 후보). 오토 타겟 정책과 같은 리졸버 인스턴스를 공유한다.
         private readonly TargetResolver _targeting;
 
@@ -68,6 +71,7 @@ namespace Eclipse.Presentation
         /// <param name="stage">이 전투의 스테이지. 승리 보상의 원천.</param>
         /// <param name="stageIndex">장 안에서의 0-기반 스테이지 인덱스. 조립 시점에 stages에서 계산·검증된 값이다.</param>
         /// <param name="rewards">승리 보상 지급 창구. 클리어 기록 직후 호출해 지급 결과를 결과 팝업에 넘긴다.</param>
+        /// <param name="saveService">승리 처리 완료 직후 저장할 세이브 서비스. null이면 저장을 건너뛴다.</param>
         public BattleViewModel(
             IReadOnlyList<BattleUnitEntry> allies,
             IReadOnlyList<BattleUnitEntry> enemies,
@@ -80,9 +84,11 @@ namespace Eclipse.Presentation
             ChapterSO chapter,
             StageSO stage,
             int stageIndex,
-            IRewardService rewards)
+            IRewardService rewards,
+            SaveService saveService)
         {
             _rewards = rewards;
+            _saveService = saveService;
             _engine = engine;
             _scheduler = scheduler;
             _manualProvider = manualProvider;
@@ -218,6 +224,8 @@ namespace Eclipse.Presentation
         {
             bool firstClear = _progress.TryMarkCleared(_chapter, _stageIndex);
             GrantedRewards = _rewards.GrantVictory(_stage, firstClear);
+            // 진행도 기록과 보상 지급이 모두 끝난 스냅샷만 저장한다 — 클리어만 오르고 보상이 빠진 부분 상태를 쓰지 않는다.
+            _saveService?.Save();
         }
 
         // 입력 대기가 시작된 행동자를 대응하는 명판 VM으로 매핑해 ActingCombatant에 세운다.

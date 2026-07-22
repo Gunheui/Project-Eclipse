@@ -87,7 +87,11 @@ sysinfo.txt
 #   - NuGet 패키지: NuGetForUnity가 packages.config로 자동 복원
 #   - DOTween: Asset Store 재임포트 → DOTween Utility Panel > Setup
 # ※ 아래 규칙은 위 38번 `!/[Aa]ssets/**/*.meta`(meta 되살림)보다 뒤에 와야 meta까지 제외된다.
-Assets/Plugins/
+# ※ 예외: Assets/Plugins/WebGL/ 은 직접 작성한 .jslib(세이브 FS.syncfs 브리지)라 커밋한다.
+#   (디렉터리 통째 무시(Assets/Plugins/)면 git이 하위로 내려가지 않아 부정 패턴이 안 먹으므로 `*` 방식 사용)
+Assets/Plugins/*
+!Assets/Plugins/WebGL/
+!Assets/Plugins/WebGL.meta
 Assets/Plugins.meta
 Assets/Packages/
 Assets/Packages.meta
@@ -118,3 +122,4 @@ Assets/Screenshots/
 Assets/Screenshots.meta
 
 Recordings/
+explain-diff/

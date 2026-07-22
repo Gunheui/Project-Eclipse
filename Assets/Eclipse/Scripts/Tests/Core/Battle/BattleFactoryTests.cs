@@ -94,7 +94,7 @@ namespace Eclipse.Tests
             var executor = new SkillExecutor(combat, targeting);
             var constants = ScriptableObject.CreateInstance<BattleConstantsSO>();
             return new BattleFactory(constants, targeting, combat, executor, new FakeSceneFlow(),
-                progress ?? new StageProgress(), new StageRewardService(new CurrencyWallet()));
+                progress ?? new StageProgress(), new StageRewardService(new CurrencyWallet()), saveService: null);
         }
 
         // 적 편성을 1스테이지짜리 장으로 감싸 조립한다 — 조립 규칙 테스트의 공통 경로.

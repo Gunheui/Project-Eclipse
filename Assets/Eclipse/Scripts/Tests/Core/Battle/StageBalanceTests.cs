@@ -66,7 +66,7 @@ namespace Eclipse.Tests
                 new SeededRandom(BattleSeed.For(seed, BattleSeed.Stream.Damage))));
             var executor = new SkillExecutor(combat, targeting);
             return new BattleFactory(constants, targeting, combat, executor, new FakeSceneFlow(),
-                new StageProgress(), new StageRewardService(new CurrencyWallet()));
+                new StageProgress(), new StageRewardService(new CurrencyWallet()), saveService: null);
         }
 
         [UnityTest]

@@ -43,7 +43,7 @@ namespace Eclipse.Tests
             var roster = Enumerable.Range(0, rosterCount).Select(i => Owned("C" + i)).ToList();
             var nav = new NavigationContext();
             var flow = new FakeSceneFlow();
-            var vm = new PartyFormationViewModel(new PlayerSave(roster), nav, flow);
+            var vm = new PartyFormationViewModel(new PlayerSave(roster), nav, flow, saveService: null);
             return (vm, nav, flow, roster);
         }
 
@@ -158,11 +158,11 @@ namespace Eclipse.Tests
         {
             var roster = Enumerable.Range(0, 4).Select(i => Owned("C" + i)).ToList();
             var save = new PlayerSave(roster);
-            var vm = new PartyFormationViewModel(save, new NavigationContext(), new FakeSceneFlow());
+            var vm = new PartyFormationViewModel(save, new NavigationContext(), new FakeSceneFlow(), saveService: null);
             vm.AssignToSlot(2, roster[1]);
             vm.Dispose(); // 전투 진입으로 씬 스코프가 내려간 상황
 
-            var revisited = new PartyFormationViewModel(save, new NavigationContext(), new FakeSceneFlow());
+            var revisited = new PartyFormationViewModel(save, new NavigationContext(), new FakeSceneFlow(), saveService: null);
 
             Assert.AreSame(roster[1], revisited.Slots[2].Value, "전투를 다녀와도 편성 위치가 그대로 남는다");
             Assert.IsNull(revisited.Slots[0].Value, "빈 칸도 그대로");
