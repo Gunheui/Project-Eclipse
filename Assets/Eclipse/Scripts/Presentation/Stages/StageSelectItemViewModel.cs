@@ -11,9 +11,7 @@ namespace Eclipse.Presentation
     /// </summary>
     public sealed class StageSelectItemViewModel
     {
-        /// <param name="stage">이 항목이 표시할 스테이지 정의(썸네일·이름·보스 여부의 원천).</param>
-        /// <param name="stageNumber">1-기반 스테이지 번호. 항목 번호 뱃지 표기이자 잠금 계산의 인덱스(번호−1) 기준.</param>
-        /// <param name="clearedCount">이 스테이지가 속한 장의 클리어 수 스트림. 값이 바뀌면 <see cref="State"/>가 갱신된다.</param>
+        /// <param name="stageNumber">1-기반 스테이지 번호. 잠금 계산은 번호−1 인덱스를 사용한다.</param>
         public StageSelectItemViewModel(StageSO stage, int stageNumber, ReadOnlyReactiveProperty<int> clearedCount)
         {
             Stage = stage;

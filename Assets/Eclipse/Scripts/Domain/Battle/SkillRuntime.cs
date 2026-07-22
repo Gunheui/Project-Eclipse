@@ -16,7 +16,6 @@ namespace Eclipse.Domain
         /// <summary> 쿨이 다 돌아 사용 가능한 상태인지. </summary>
         public bool IsReady => CurrentCooldown == 0;
 
-        /// <param name="skill">감쌀 스킬 정의(공유·불변).</param>
         /// <param name="initialCooldown">전투 시작 시 걸어둘 잔여 쿨(턴). 0이면 시작부터 사용 가능.</param>
         public SkillRuntime(SkillSO skill, int initialCooldown = 0)
         {
@@ -24,9 +23,7 @@ namespace Eclipse.Domain
             CurrentCooldown = initialCooldown;
         }
 
-        /// <summary>
-        /// 사용 가능하면 쿨을 최대치로 잠그고 true, 쿨이 남아 못 쓰면 false를 반환한다.
-        /// </summary>
+        /// <summary> 사용 가능하면 쿨을 최대치로 잠그고 true, 쿨이 남아 못 쓰면 false를 반환한다. </summary>
         public bool TryUse()
         {
             if (!IsReady) return false;
@@ -36,7 +33,7 @@ namespace Eclipse.Domain
 
         }
 
-        /// <summary> 라운드마다 호출해 남은 쿨을 1 줄인다(0 밑으로는 내려가지 않음). </summary>
+        /// <summary> 라운드마다 호출해 남은 쿨을 1 줄인다. 0 밑으로는 내려가지 않는다. </summary>
         public void ReduceCooldown()
         {
             if (IsReady) return;

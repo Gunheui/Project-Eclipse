@@ -17,7 +17,7 @@ namespace Eclipse.Tests
             public float NextFloat() => _values[_i++ % _values.Length];
         }
 
-        // 슬라이스 기본값(05 §3): k=1, 변동 0.95~1.05.
+        // 기본 밸런스 값: k=1, 변동 0.95~1.05.
         private static DamagePipeline Pipeline(IRandomService rng) => new DamagePipeline(1f, 0.95f, 1.05f, rng);
 
         private static Stats Attacker(int atk, float critRate, float critDamage)
@@ -31,7 +31,7 @@ namespace Eclipse.Tests
         [Test]
         public void 카이_기본공격_비크리_기대값_130()
         {
-            // 175 × 175/(175+60) = 175 × 0.7447 = 130.3 → 반올림 130 (05 §3 검산)
+            // 175 × 175/(175+60) = 175 × 0.7447 = 130.3 → 반올림 130
             var result = Pipeline(new FixedRandom(NoCritAvg))
                 .ComputeDamage(Attacker(175, 0.30f, 2.0f), Target(60), 1.0f);
 
@@ -53,7 +53,7 @@ namespace Eclipse.Tests
         [Test]
         public void 리엔_기본공격_비크리_기대값_46()
         {
-            // 80 × 80/(80+60) = 80 × 0.5714 = 45.7 → 46 (05 §3 검산)
+            // 80 × 80/(80+60) = 80 × 0.5714 = 45.7 → 46
             var result = Pipeline(new FixedRandom(NoCritAvg))
                 .ComputeDamage(Attacker(80, 0.05f, 1.5f), Target(60), 1.0f);
 

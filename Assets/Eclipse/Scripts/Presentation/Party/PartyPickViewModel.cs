@@ -8,10 +8,9 @@ using R3;
 namespace Eclipse.Presentation
 {
     /// <summary>
-    /// 파티 픽 화면의 상태. 보유 로스터를 항목로 노출하고, 탭 한 번으로 편성(PartyFormation)의 앵커 슬롯에 즉시
-    /// 배치한다. 편성 draft를 직접 소유하지 않고 <see cref="PartyFormationViewModel"/>에 위임한다 —
-    /// 이 화면은 로스터 표시·역할 필터·앵커 슬롯 배치만 책임진다(단일선택·상세 네비의 CharacterListViewModel과 관심사 분리).
-    /// 편성 VM 위로 스택에 올라오므로 함께 Singleton으로 살아 세션 간 상태를 보존한다.
+    /// 파티 픽 화면의 ViewModel. 보유 로스터를 항목으로 노출하고, 탭 한 번으로 앵커 슬롯에 즉시 배치한다.
+    /// 편성 상태는 소유하지 않고 <see cref="PartyFormationViewModel"/>에 위임한다 — 이 화면의 책임은
+    /// 로스터 표시·역할 필터·앵커 슬롯 배치까지다.
     /// </summary>
     public sealed class PartyPickViewModel : ViewModelBase
     {
@@ -29,9 +28,6 @@ namespace Eclipse.Presentation
         /// <summary> 현재 정렬 기준. View가 구독해 라벨을 갱신하고 항목을 다시 만든다. </summary>
         public ReadOnlyReactiveProperty<CharacterSortKey> CurrentSortKey => _sortKey;
 
-        /// <param name="save">보유 캐릭터 원천. 로스터 항목을 만든다.</param>
-        /// <param name="spriteProvider">항목 초상 로딩 경로(공유 항목 VM에 전달).</param>
-        /// <param name="formation">배치 대상 편성 VM(같은 스코프의 Singleton). 앵커 슬롯도 여기서 읽는다.</param>
         public PartyPickViewModel(PlayerSave save, ISpriteProvider spriteProvider, PartyFormationViewModel formation)
         {
             _formation = formation;
@@ -43,7 +39,7 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 픽 세션을 시작한다. 각 항목의 슬롯 번호 배지를 현재 편성 상태로 시드하고 역할 필터를 전체로 초기화한다.
+        /// 픽 세션을 시작한다. 슬롯 번호 배지를 현재 편성으로 시드하고 역할 필터를 전체로 초기화한다.
         /// 픽 화면이 전면에 설 때 호출한다.
         /// </summary>
         public void BeginSession()
@@ -53,11 +49,9 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 탭된 항목을 앵커 슬롯(<see cref="PartyFormationViewModel.PickSlot"/>)에 배치한다. 그 캐릭터가 이미
-        /// 앵커 슬롯에 있으면 재탭으로 보고 슬롯을 비운다. 다른 슬롯에 있었다면 그 슬롯이 비워지며 이동한다.
-        /// View는 이 호출 뒤 화면을 닫아 편성으로 돌아간다.
+        /// 탭된 항목을 앵커 슬롯(<see cref="PartyFormationViewModel.PickSlot"/>)에 배치한다.
+        /// 이미 앵커 슬롯에 있으면 재탭으로 보고 비우고, 다른 슬롯에 있었다면 이동한다. null이면 무시한다.
         /// </summary>
-        /// <param name="item">탭된 로스터 항목. null이면 아무 일도 하지 않는다.</param>
         public void Place(PartyPickItemViewModel item)
         {
             if (item == null)

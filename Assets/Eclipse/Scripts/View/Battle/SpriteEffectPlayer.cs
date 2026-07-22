@@ -20,9 +20,7 @@ namespace Eclipse.View
         /// <summary>
         /// 스펙을 재생한다. 반환 태스크는 모든 레이어 연출이 끝나 이 오브젝트가 파괴될 때 완료된다.
         /// </summary>
-        /// <param name="spec">재생할 이펙트 정의.</param>
         /// <param name="speed">연출 배속(1 또는 2). 지연·지속 시간을 나눈다.</param>
-        /// <param name="ct">취소 토큰(대상 파괴·씬 종료).</param>
         public async UniTask Play(EffectSpec spec, int speed, CancellationToken ct)
         {
             if (spec != null && spec.layers != null && spec.layers.Count > 0)

@@ -35,11 +35,7 @@ namespace Eclipse.View
         private readonly List<CharacterItemView> _items = new List<CharacterItemView>();
         private CompositeDisposable _subscriptions;
 
-        /// <summary>
-        /// ScreenManager가 이 화면 프리팹을 주입 생성할 때 호출한다. OnEnter보다 먼저 실행된다.
-        /// </summary>
-        /// <param name="viewModel">표시할 캐릭터 목록 ViewModel(컨테이너가 주입).</param>
-        /// <param name="screenManager">항목 탭 시 상세 화면으로 전환하는 데 사용한다.</param>
+        /// <summary> ScreenManager가 이 화면 프리팹을 주입 생성할 때 호출한다. OnEnter보다 먼저 실행된다. </summary>
         [Inject]
         public void Construct(CharacterListViewModel viewModel, ScreenManager screenManager)
         {
@@ -48,10 +44,9 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// 화면이 스택 전면에 설 때(주입 완료 후) 호출된다. 정렬·역할 필터를 구독한다 —
+        /// 화면이 스택 전면에 설 때 호출된다. 정렬·역할 필터를 구독한다.
         /// 정렬의 최초 통지가 항목 뷰 생성을 겸하므로 여기서 따로 만들지 않는다. 구독은 OnExit까지 유지된다.
         /// </summary>
-        /// <returns>등장 처리가 끝났음을 알리는 UniTask(연출이 없어 즉시 완료).</returns>
         public UniTask OnEnter()
         {
             _subscriptions = new CompositeDisposable();
@@ -61,7 +56,7 @@ namespace Eclipse.View
             if (roleFilterBar != null)
                 roleFilterBar.Selected += OnRoleFilterSelected;
 
-            // 정렬 구독이 먼저다 — 최초 통지가 항목 뷰 생성을 겸하고, 필터 구독이 그 위에 표시를 거른다.
+            // 정렬 구독이 먼저다. 최초 통지가 항목 뷰 생성을 겸하고, 필터 구독이 그 위에 표시를 거른다.
             _viewModel.CurrentSortKey
                 .Subscribe(OnSortKeyChanged)
                 .AddTo(_subscriptions);
@@ -72,10 +67,7 @@ namespace Eclipse.View
             return UniTask.CompletedTask;
         }
 
-        /// <summary>
-        /// 화면이 스택에서 제거될 때 호출된다. 정렬·필터 구독을 해지하고 생성한 항목 뷰를 모두 파괴한다.
-        /// </summary>
-        /// <returns>퇴장 처리가 끝났음을 알리는 UniTask(연출이 없어 즉시 완료).</returns>
+        /// <summary> 화면이 스택에서 제거될 때 호출된다. 정렬·필터 구독을 해지하고 항목 뷰를 모두 파괴한다. </summary>
         public UniTask OnExit()
         {
             _subscriptions?.Dispose();
@@ -126,7 +118,6 @@ namespace Eclipse.View
         /// 항목 프리팹을 하나 생성해 contentRoot 끝에 붙이고 ViewModel에 바인딩한다.
         /// 정렬 시 항목 뷰가 전량 재생성되므로, 생성 시점에 현재 역할 필터를 적용해 필터 상태를 유지한다.
         /// </summary>
-        /// <param name="itemViewModel">새 항목 뷰가 표시할 캐릭터 항목 ViewModel.</param>
         private void AddItem(CharacterItemViewModel itemViewModel)
         {
             var item = Instantiate(itemPrefab, contentRoot);
@@ -135,8 +126,7 @@ namespace Eclipse.View
             _items.Add(item);
         }
 
-        /// <summary>항목을 탭하면 그 캐릭터를 선택으로 기록하고 상세 화면을 전면에 올린다.</summary>
-        /// <param name="item">탭된 항목 View. 목록에서의 위치로 선택 인덱스를 정한다.</param>
+        /// <summary>항목을 탭하면 목록 위치로 선택 인덱스를 기록하고 상세 화면을 전면에 올린다.</summary>
         private void OnItemSelected(CharacterItemView item)
         {
             var index = _items.IndexOf(item);

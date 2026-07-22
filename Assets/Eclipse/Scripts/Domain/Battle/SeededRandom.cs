@@ -16,7 +16,7 @@ namespace Eclipse.Domain
         /// </summary>
         public SeededRandom(int seed)
         {
-            ulong s = (ulong)(uint)seed; //부호 문제를 없애기 위해서 두번 캐스팅
+            ulong s = (ulong)(uint)seed; // 음수 시드의 부호 확장을 막는 이중 캐스팅
             _s0 = SplitMix64(ref s);
             _s1 = SplitMix64(ref s);
             if ((_s0 | _s1) == 0) _s0 = 0x9E3779B97F4A7C15UL; // 만약의 0-상태 방지

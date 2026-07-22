@@ -69,7 +69,7 @@ namespace Eclipse.Tests
             return new BattleEngine(allies, enemies, scheduler, executor, allyProvider, enemyProvider, cap);
         }
 
-        // --- 완주 + 승패 판정 (DoD #1 선행) ---
+        // --- 완주 + 승패 판정 ---
 
         [UnityTest]
         public IEnumerator 강한_파티는_행동상한_내_승리() => UniTask.ToCoroutine(async () =>
@@ -103,7 +103,7 @@ namespace Eclipse.Tests
             Assert.AreEqual(5, engine.ActionCount);
         });
 
-        // --- 쿨다운 FSM (DoD #5) ---
+        // --- 쿨다운 FSM ---
 
         [UnityTest]
         public IEnumerator 쿨다운_사용후_잠금_매턴감소_기본공격은_항상_준비() => UniTask.ToCoroutine(async () =>

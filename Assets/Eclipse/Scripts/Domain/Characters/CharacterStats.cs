@@ -13,9 +13,7 @@ namespace Eclipse.Domain
         /// 정의의 기본 스탯을 성장곡선으로 레벨 스케일해 현재 스탯을 반환한다.
         /// HP·ATK·DEF만 스케일하고, SPD·치명확률·치명배율은 기본값을 유지한다.
         /// </summary>
-        /// <param name="definition">캐릭터 정의(기본 스탯·성장곡선 보유).</param>
         /// <param name="level">현재 레벨(1 이상).</param>
-        /// <returns>레벨이 반영된 현재 스탯 스냅샷.</returns>
         public static Stats ScaleToLevel(CharacterSO definition, int level)
         {
             var baseStats = definition.baseStats;

@@ -16,10 +16,9 @@ namespace Eclipse.View
     public enum TargetState { None, Selectable, Ineligible }
 
     /// <summary>
-    /// 전장에 세우는 배틀러 하나. 대응하는 <see cref="CombatantViewModel"/>의 스프라이트를 월드 공간
-    /// SpriteRenderer로 그리고, 자기 상태(HP·행동·생존)를 구독해 스스로 연출한다 — 피격 흔들림·플로팅
-    /// 숫자·시전 돌진·사망 숨김. 중앙 지휘 없이 각자 자기 VM만 본다.
-    /// 조준 모드에서는 몸통 탭으로 대상 선택 입력을 낸다(Bind의 onTapped).
+    /// 전장에 세우는 배틀러 하나. 유닛 VM의 스프라이트를 월드 SpriteRenderer로 그리고,
+    /// 자기 상태(HP·행동·생존)를 구독해 스스로 연출한다(피격 흔들림·플로팅 숫자·시전 돌진·사망 숨김).
+    /// 조준 모드에서는 몸통 탭으로 대상 선택 입력을 보낸다(Bind의 onTapped).
     /// </summary>
     public class BattlerView : MonoBehaviour, IPointerClickHandler
     {
@@ -37,8 +36,8 @@ namespace Eclipse.View
         // 선택 불가(Ineligible) 대상 스프라이트에 곱하는 색. 채도는 유지하고 밝기만 낮춰 어둡게 보이게 한다.
         private static readonly Color DimColor = new(0.35f, 0.35f, 0.35f, 1f);
 
-        // 유효 타겟 아웃라인. 적 공격 조준=적군 계열 #D06A61, 아군 힐/버프 조준=아군 계열 녹색 #4E9B7A
-        // (아군 HP바와 같은 색 — 힐 대상이 공격 대상처럼 보이지 않게). 두께는 월드 단위 — 스프라이트 PPU가
+        // 유효 타겟 아웃라인. 적 공격 조준=적군 계열 #D06A61, 아군 힐/버프 조준=아군 HP바와 같은 녹색 #4E9B7A
+        // (힐 대상이 공격 대상처럼 보이지 않게). 두께는 월드 단위로 정의한다 — 스프라이트 PPU가
         // 달라도(아군 315·적 100) 화면상 굵기가 같도록 셰이더에 넘길 때 PPU로 환산한다.
         private static readonly Color SelectableOutline = new(0.816f, 0.416f, 0.380f, 1f);
         private static readonly Color AllyOutline = new(0.306f, 0.608f, 0.478f, 1f);
@@ -68,10 +67,9 @@ namespace Eclipse.View
         private UniTask _animation = UniTask.CompletedTask;
 
         /// <summary>
-        /// 이 배틀러를 한 유닛 VM에 연결한다. 이전 구독을 정리하고 스프라이트를 세팅한 뒤,
-        /// HP 변화(피격·힐)·행동(시전)·생존을 구독해 스스로 연출하도록 만든다.
+        /// 이 배틀러를 한 유닛 VM에 연결한다. 이전 구독을 정리하고,
+        /// HP 변화(피격·힐)·행동(시전)·생존을 구독해 스스로 연출하게 한다.
         /// </summary>
-        /// <param name="unit">이 배틀러가 표시할 유닛 VM.</param>
         /// <param name="speed">현재 연출 배속(1 또는 2)을 읽는 함수. 트윈 시간을 나눈다.</param>
         /// <param name="onTapped">몸통을 탭했을 때 이 유닛으로 호출된다. null이면 탭이 무시된다.</param>
         public void Bind(CombatantViewModel unit, Func<int> speed, Action<CombatantViewModel> onTapped = null)
@@ -94,17 +92,15 @@ namespace Eclipse.View
                 .Subscribe(OnHpChanged)
                 .AddTo(_bindings);
 
-            // 이 유닛이 행동하면 시전 돌진 + 시전 이펙트.
             unit.Acted
                 .Subscribe(skill => AddAnimation(PlayCastAsync(skill)))
                 .AddTo(_bindings);
 
-            // 이 유닛이 스킬 대상이 되면 피격 이펙트(흔들림·숫자는 HP 변화가 따로 처리).
+            // 스킬 대상이 되면 피격 이펙트만 재생한다(흔들림·숫자는 HP 변화가 따로 처리).
             unit.Hit
                 .Subscribe(skill => AddAnimation(SpawnEffect(skill != null ? skill.impactEffect : null)))
                 .AddTo(_bindings);
 
-            // 사망 시 렌더러를 끈다.
             unit.IsAlive
                 .Subscribe(alive => { if (spriteRenderer != null) spriteRenderer.enabled = alive; })
                 .AddTo(_bindings);
@@ -129,11 +125,9 @@ namespace Eclipse.View
         public void OnPointerClick(PointerEventData eventData) => _onTapped?.Invoke(_unit);
 
         /// <summary>
-        /// 조준 모드에서 이 배틀러의 대상 상태를 시각으로 반영한다. 유효 타겟(Selectable)은 아웃라인을 켜고,
-        /// 선택 불가(Ineligible)는 스프라이트를 어둡게 한다. None이면 평상시(밝기 원복·아웃라인 off)로 되돌린다.
+        /// 조준 모드의 대상 상태를 시각으로 반영한다. Selectable=아웃라인, Ineligible=어둡게, None=평상시 원복.
         /// </summary>
-        /// <param name="state">이 배틀러의 대상 상태(None/Selectable/Ineligible).</param>
-        /// <param name="allyTarget">유효 타겟(Selectable) 아웃라인을 아군색(녹색)으로 칠할지. false면 적색.</param>
+        /// <param name="allyTarget">아웃라인을 아군색(녹색)으로 칠할지. false면 적색.</param>
         public void SetTargetState(TargetState state, bool allyTarget = false)
         {
             if (spriteRenderer == null) return;
@@ -141,8 +135,7 @@ namespace Eclipse.View
             ApplyOutline(state == TargetState.Selectable, allyTarget);
         }
 
-        // 탭 영역을 방금 바인딩한 스프라이트 크기에 맞춘다. 스프라이트는 런타임에 정해지고 유닛마다
-        // 크기·PPU가 달라 에디터에서 미리 맞출 수 없다. 렌더러의 월드 바운드를 배틀러 루트 로컬로 환산해 쓴다.
+        // 탭 영역을 바인딩된 스프라이트 크기에 맞춘다. 유닛마다 크기·PPU가 달라 에디터에서 미리 맞출 수 없다.
         private void ResizeTapArea()
         {
             if (tapArea == null || spriteRenderer == null || spriteRenderer.sprite == null) return;
@@ -181,9 +174,8 @@ namespace Eclipse.View
             else if (delta > 0) SpawnFloatingText(delta, isHeal: true);
         }
 
-        // 이번 턴의 하위 연출을 합류시킨다. 한 배틀러가 같은 턴에 여러 신호(시전·피격·HP변화)를 받아도
-        // 마지막 것이 앞선 것을 덮지 않도록 WhenAll로 묶는다. 직전 턴 연출은 루프가 이미 기다려 완료됐으므로
-        // 완료 상태면 새로 시작하고, 진행 중(같은 턴)이면 합친다.
+        // 이번 턴의 하위 연출을 합류시킨다. 같은 턴에 여러 신호(시전·피격·HP변화)를 받아도
+        // 마지막 것이 앞선 것을 덮지 않도록 WhenAll로 묶는다. 완료 상태면 새 턴이므로 새로 시작한다.
         private void AddAnimation(UniTask next)
         {
             _animation = _animation.Status.IsCompleted()
@@ -220,9 +212,8 @@ namespace Eclipse.View
                 .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
         }
 
-        // 연출은 배틀러 자신이 아니라 부모 앵커 밑에 스폰한다(사망으로 배틀러가 숨어도 연출은 남아야 하므로).
-        // 그 앵커가 파괴되는 중이면 스폰할 수 없다 — 씬 종료·사망 정리 도중 뒤늦게 도착한 신호가 여기로 온다.
-        // 스폰 가능한 부모를 주고, 불가능하면 null.
+        // 연출은 부모 앵커 밑에 스폰한다(사망으로 배틀러가 숨어도 연출은 남아야 하므로).
+        // 씬 종료 등으로 앵커가 파괴 중이면 null을 반환해 스폰을 건너뛴다.
         private Transform SpawnParentOrNull()
         {
             var parent = transform.parent;

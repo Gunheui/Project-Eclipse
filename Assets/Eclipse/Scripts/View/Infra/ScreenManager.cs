@@ -43,7 +43,7 @@ namespace Eclipse.View.Infra
 
         private IObjectResolver _resolver;
         
-        // 현재 UI 실행 진행중인지 확인하는 변수
+        // 화면 전환 진행 중 여부. 연타로 화면이 겹치는 것을 막는다.
         private bool _isTransitioning;
 
         [Inject]

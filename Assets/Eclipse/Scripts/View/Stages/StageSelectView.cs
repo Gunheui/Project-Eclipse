@@ -36,11 +36,7 @@ namespace Eclipse.View
         private ScreenManager _screenManager;
         private readonly List<StageItemView> _items = new List<StageItemView>();
 
-        /// <summary>
-        /// ScreenManager가 이 화면 프리팹을 주입 생성할 때 호출한다. OnEnter보다 먼저 실행된다.
-        /// </summary>
-        /// <param name="viewModel">현재 장 아이템·장 전환·전투 진입을 담당하는 ViewModel(컨테이너가 주입).</param>
-        /// <param name="screenManager">뒤로가기 시 로비로 되돌리는 데 사용한다.</param>
+        /// <summary> ScreenManager가 이 화면 프리팹을 주입 생성할 때 호출한다. OnEnter보다 먼저 실행된다. </summary>
         [Inject]
         public void Construct(StageSelectViewModel viewModel, ScreenManager screenManager)
         {
@@ -49,10 +45,9 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// 화면이 스택 전면에 설 때(주입 완료 후) 호출된다. 현재 장 아이템마다 항목을 생성하고,
-        /// 장 정보 패널·내비 라벨을 현재 장 값으로 채운다.
+        /// 화면이 스택 전면에 설 때 호출된다. 현재 장 아이템마다 항목을 생성하고
+        /// 장 정보 패널·내비 라벨을 채운다.
         /// </summary>
-        /// <returns>등장 처리가 끝났음을 알리는 UniTask(연출이 없어 즉시 완료).</returns>
         public UniTask OnEnter()
         {
             foreach (var item in _viewModel.Items)
@@ -64,10 +59,7 @@ namespace Eclipse.View
             return UniTask.CompletedTask;
         }
 
-        /// <summary>
-        /// 화면이 스택에서 제거될 때 호출된다. 버튼 리스너·바인딩을 해지하고 생성한 항목을 모두 파괴한다.
-        /// </summary>
-        /// <returns>퇴장 처리가 끝났음을 알리는 UniTask(연출이 없어 즉시 완료).</returns>
+        /// <summary> 화면이 스택에서 제거될 때 호출된다. 버튼 리스너를 해지하고 항목을 모두 파괴한다. </summary>
         public UniTask OnExit()
         {
             backButton.onClick.RemoveListener(OnBack);

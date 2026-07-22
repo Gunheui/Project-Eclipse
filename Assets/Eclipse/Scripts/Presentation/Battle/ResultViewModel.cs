@@ -10,8 +10,8 @@ namespace Eclipse.Presentation
     /// </summary>
     public sealed class ResultViewModel
     {
-        /// <param name="result">확정된 전투 결과. InProgress로 만들면 패배와 같게 표시되므로 종료 후에만 만든다.</param>
-        /// <param name="rewards">이번 전투로 실제 지급된 보상(재화별 1건). null이면 빈 목록으로 다룬다.</param>
+        /// <param name="result">확정된 전투 결과. InProgress면 패배와 같게 표시되므로 종료 후에만 생성한다.</param>
+        /// <param name="rewards">실제 지급된 보상. null이면 빈 목록으로 다룬다.</param>
         public ResultViewModel(BattleResult result, IReadOnlyList<RewardEntry> rewards)
         {
             IsVictory = result == BattleResult.Victory;

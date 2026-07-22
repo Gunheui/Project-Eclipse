@@ -31,7 +31,7 @@ namespace Eclipse.Tests
             }
         }
 
-        // 로스터 5인 실수치(05 §1)의 SPD로 구성.
+        // 로스터 5인의 실제 SPD 값으로 구성.
         private static List<ICombatant> Roster() => new List<ICombatant>
         {
             new FakeCombatant("노엘", Team.Ally, 0, 135),

@@ -43,10 +43,7 @@ namespace Eclipse.Domain
             RemainingTurns = duration;
         }
 
-        /// <summary> 스탯을 지속 변경하는 버프·디버프 효과를 만든다. </summary>
-        /// <param name="type">Buff 또는 Debuff.</param>
-        /// <param name="stat">변경할 스탯.</param>
-        /// <param name="value">변화율(0.4 = ±40%).</param>
+        /// <summary> 스탯을 지속 변경하는 버프·디버프 효과를 만든다(type은 Buff/Debuff만 허용). </summary>
         /// <param name="duration">지속턴(양수) 또는 -1(상시).</param>
         public static StatusEffect StatModifier(EffectType type, StatType stat, float value, int duration)
         {
@@ -55,9 +52,7 @@ namespace Eclipse.Domain
             return new StatusEffect(type, stat, value, 0, 0, duration);
         }
 
-        /// <summary> 매 턴 HP를 변화시키는 도트·리젠 효과를 만든다. </summary>
-        /// <param name="type">Dot 또는 Regen.</param>
-        /// <param name="tickAmount">틱당 HP 변화량(1 이상, 적용 시점 스냅샷).</param>
+        /// <summary> 매 턴 HP를 변화시키는 도트·리젠 효과를 만든다(type은 Dot/Regen만 허용). </summary>
         /// <param name="duration">지속턴(양수) 또는 -1(상시).</param>
         public static StatusEffect Periodic(EffectType type, int tickAmount, int duration)
         {
@@ -67,14 +62,12 @@ namespace Eclipse.Domain
         }
 
         /// <summary> 피해를 흡수하는 실드 효과를 만든다. </summary>
-        /// <param name="absorb">흡수 가능한 총 피해량(1 이상, 적용 시점 스냅샷).</param>
+        /// <param name="absorb">흡수 가능한 총 피해량(1 이상).</param>
         /// <param name="duration">지속턴(양수) 또는 -1(상시).</param>
         public static StatusEffect Shield(int absorb, int duration)
             => new StatusEffect(EffectType.Shield, StatType.None, 0, 0, absorb, duration);
 
-        /// <summary>
-        /// 이 효과를 지닌 유닛이 적의 단일-적 공격을 자신에게 끌어오는 도발 상태를 만든다(자기 대상).
-        /// </summary>
+        /// <summary> 적의 단일-적 공격을 자신에게 끌어오는 도발 효과를 만든다(자기 대상). </summary>
         /// <param name="duration">지속턴(양수) 또는 -1(상시).</param>
         public static StatusEffect Taunt(int duration)
             => new StatusEffect(EffectType.Taunt, StatType.None, 0, 0, 0, duration);

@@ -25,12 +25,10 @@ namespace Eclipse.View
         [SerializeField] private GameObject selectHighlight;
 
         /// <summary>
-        /// 항목을 지정 아이템에 바인딩한다. 표시값·탭은 공용 셀에 위임하고, 슬롯 번호는 구독해 배지·강조를 갱신한다.
-        /// 구독은 이 GameObject 수명에 묶여 Destroy 시 자동 해지된다. 탭은 <paramref name="onPick"/>으로 전달한다.
-        /// 항목당 한 번만 호출한다(재바인딩 미지원 — 구독이 중첩된다).
+        /// 항목을 픽 아이템에 바인딩한다. 표시값·탭은 공용 셀에 위임하고, 슬롯 번호만 구독해 배지·강조를 갱신한다.
+        /// 구독은 GameObject 수명에 묶여 Destroy 시 자동 해지된다. 항목당 한 번만 호출한다(재바인딩 시 구독이 중첩된다).
         /// </summary>
-        /// <param name="item">이 항목이 표시할 픽 아이템(공유 항목 VM + 슬롯 번호 상태).</param>
-        /// <param name="onPick">항목을 탭했을 때 호출되는 콜백(슬롯 배치는 픽 ViewModel이 담당).</param>
+        /// <param name="onPick">항목을 탭했을 때 호출된다(슬롯 배치는 픽 ViewModel이 담당).</param>
         public void Bind(PartyPickItemViewModel item, Action onPick)
         {
             baseItem.Bind(item.Character, onPick);

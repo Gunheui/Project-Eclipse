@@ -9,10 +9,9 @@ using R3;
 namespace Eclipse.Presentation
 {
     /// <summary>
-    /// 파티 편성 화면의 상태. 4개 슬롯을 리액티브로 들고, 슬롯 채움 신호에서 인원수·진입 가능 여부를 파생한다.
-    /// 편성 자체는 이 VM이 아니라 <see cref="PlayerSave.Party"/>가 보관한다 — 이 VM은 씬 스코프라 전투를 다녀오면
-    /// 새로 만들어지므로, 생성 시 저장된 편성을 읽어 슬롯을 채우고 변경 때마다 되쓴다.
-    /// 전투 진입 시 슬롯 위치를 그대로 실어 보내 편성 칸이 전투 진영 배치가 되게 한다.
+    /// 파티 편성 화면의 ViewModel. 4개 슬롯을 리액티브로 노출하고 인원수·진입 가능 여부를 파생한다.
+    /// 편성 원본은 <see cref="PlayerSave.Party"/>가 보관한다. 이 VM은 씬 스코프라 생성 시 저장된 편성을
+    /// 읽어 오고 변경 때마다 되쓴다. 전투 진입 시 슬롯 위치가 그대로 전투 진영 배치가 된다.
     /// </summary>
     public sealed class PartyFormationViewModel : ViewModelBase
     {
@@ -36,8 +35,8 @@ namespace Eclipse.Presentation
         public IReadOnlyList<ReactiveProperty<OwnedCharacter>> Slots => _slots;
 
         /// <summary>
-        /// 슬롯별 점유자 정의(Data 투영). 각 값은 채움 캐릭터의 CharacterSO 또는 빈칸(null). View가 슬롯별로 구독한다.
-        /// View 레이어가 도메인(OwnedCharacter)을 보지 않도록 Slots를 정의로만 얇게 투영한 것.
+        /// 슬롯별 점유자의 CharacterSO(빈칸은 null). View가 도메인(OwnedCharacter)을 보지 않도록
+        /// Slots를 정의로만 얇게 투영한 것.
         /// </summary>
         public IReadOnlyList<ReadOnlyReactiveProperty<CharacterSO>> SlotOccupants => _slotOccupants;
 
@@ -53,10 +52,6 @@ namespace Eclipse.Presentation
         /// <summary> 이번 편성이 향하는 스테이지. 진입 직전 StageSelect가 기록한 현재 선택 스테이지. </summary>
         public StageSO SelectedStage => _nav.SelectedStage;
 
-        /// <param name="save">보유 캐릭터 원천이자 편성 보관처. 슬롯 초기값을 여기서 읽고 변경도 여기에 되쓴다.</param>
-        /// <param name="nav">씬 경계 선택 보관함. 진입 시 슬롯 위치를 보존한 파티를 SelectedParty에 기록한다.</param>
-        /// <param name="sceneFlow">진입 시 전투 씬으로 전환하는 창구.</param>
-        /// <param name="saveService">편성 변경 직후 저장할 세이브 서비스. null이면 저장을 건너뛴다.</param>
         public PartyFormationViewModel(PlayerSave save, NavigationContext nav, ISceneFlow sceneFlow,
             SaveService saveService)
         {
@@ -83,23 +78,17 @@ namespace Eclipse.Presentation
                 .ToReadOnlyReactiveProperty(false);
         }
 
-        /// <summary>
-        /// 슬롯 탭으로 픽 세션을 연다. 이후 픽 화면이 고른 캐릭터는 이 슬롯에 배치된다.
-        /// </summary>
-        /// <param name="slot">탭된 슬롯 번호(0~3). 픽 화면이 배치 대상(앵커)으로 읽는다.</param>
+        /// <summary> 슬롯 탭으로 픽 세션을 연다. 이후 픽 화면이 고른 캐릭터는 이 슬롯에 배치된다. </summary>
         public void BeginPick(int slot)
         {
             _pickSlot = slot;
         }
 
         /// <summary>
-        /// 지정 슬롯에 캐릭터를 배치한다. 그 캐릭터가 다른 슬롯에 이미 있으면 그 슬롯을 비워 중복을 막는다
-        /// (= 슬롯 간 이동). 대상 슬롯의 기존 점유자는 교체된다. 슬롯 사이 빈칸은 그대로 유지된다.
-        /// 성공하면 편성이 <see cref="PlayerSave.Party"/>에 반영돼 화면을 떠나도 남는다.
+        /// 지정 슬롯에 캐릭터를 배치한다. 다른 슬롯에 이미 있으면 그 슬롯을 비워 중복을 막고(슬롯 간 이동),
+        /// 성공하면 <see cref="PlayerSave.Party"/>에 반영된다. 범위밖 슬롯·null·미보유 캐릭터는 거부한다.
         /// </summary>
-        /// <param name="slot">배치할 슬롯 번호(0~3). 범위를 벗어나면 거부한다.</param>
-        /// <param name="unit">배치할 보유 캐릭터. null이거나 미보유면 거부한다.</param>
-        /// <returns>배치했으면 true, 검증에 걸려 거부됐으면 false(이때 슬롯 불변).</returns>
+        /// <returns>배치했으면 true, 거부됐으면 false(이때 슬롯 불변).</returns>
         public bool AssignToSlot(int slot, OwnedCharacter unit)
         {
             if (slot < 0 || slot >= SlotCount)
@@ -120,9 +109,8 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 지정 슬롯을 빈칸으로 만든다. 다른 슬롯은 당겨지지 않고 중간 빈칸으로 남으며, 편성 저장에도 반영된다.
+        /// 지정 슬롯을 빈칸으로 만든다. 다른 슬롯은 당겨지지 않고 중간 빈칸으로 남는다. 범위밖은 무시한다.
         /// </summary>
-        /// <param name="slot">비울 슬롯 번호(0~3). 범위를 벗어나면 무시한다.</param>
         public void ClearSlot(int slot)
         {
             if (slot < 0 || slot >= SlotCount)
@@ -134,9 +122,8 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 현재 편성으로 전투 씬에 진입한다. 슬롯 위치를 그대로 유지한 4칸 목록(빈칸은 null)을
-        /// NavigationContext.SelectedParty에 실어 전투 스코프가 아군을 구성한다 — 편성 칸이 곧 전투 진영 자리라
-        /// 앞으로 당겨 압축하지 않는다. 빈 편성이면 아무 일도 하지 않고, 씬 로드 중복 진입도 한 번만 막는다(연타 방어).
+        /// 현재 편성으로 전투 씬에 진입한다. 슬롯 위치를 유지한 4칸 목록(빈칸 null)을 SelectedParty에 실어
+        /// 편성 칸이 곧 전투 진영 자리가 된다(압축하지 않는다). 빈 편성은 무시하고, 중복 진입은 가드로 막는다.
         /// </summary>
         public void EnterBattle()
         {

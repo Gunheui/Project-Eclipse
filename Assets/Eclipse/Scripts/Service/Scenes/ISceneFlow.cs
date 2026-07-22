@@ -9,11 +9,9 @@ namespace Eclipse.Service
     public interface ISceneFlow
     {
         /// <summary>전투 씬으로 전환한다. 현재 씬은 언로드된다.</summary>
-        /// <returns>씬 로드가 끝나면 완료되는 태스크.</returns>
         UniTask ToBattleAsync();
 
         /// <summary>아웃게임(메인) 씬으로 돌아간다. 현재 씬은 언로드된다.</summary>
-        /// <returns>씬 로드가 끝나면 완료되는 태스크.</returns>
         UniTask ToMainAsync();
     }
 }

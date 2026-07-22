@@ -10,14 +10,10 @@ namespace Eclipse.Data
     [CreateAssetMenu(menuName = "Eclipse/Growth/Growth Curve")]
     public class GrowthCurve : ScriptableObject
     {
-        /// <summary>
-        /// 성장률 — 레벨당 base × growthRate 만큼 선형 증가 (기본 0.07).
-        /// </summary>
+        /// <summary> 성장률. 레벨당 base × growthRate 만큼 선형 증가(기본 0.07). </summary>
         public float growthRate;
 
-        /// <summary>
-        /// 도달 가능한 최대 레벨 (기본 30).
-        /// </summary>
+        /// <summary> 도달 가능한 최대 레벨(기본 30). </summary>
         public int maxLevel;
 
         /// <summary>

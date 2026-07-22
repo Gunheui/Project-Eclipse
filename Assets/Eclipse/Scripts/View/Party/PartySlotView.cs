@@ -27,12 +27,11 @@ namespace Eclipse.View
         [SerializeField] private Button selectButton;
 
         /// <summary>
-        /// 슬롯을 지정 슬롯 점유자 스트림에 바인딩한다. 점유자 정의 변화를 구독해 빈칸/채움을 전환하며,
-        /// 구독은 이 GameObject 수명에 묶여 Destroy 시 자동 해지된다. 탭은 <paramref name="onSelected"/>로 전달한다.
-        /// 항목당 한 번만 호출한다(재바인딩 미지원 — 구독이 중첩된다).
+        /// 슬롯을 점유자 스트림에 바인딩한다. 구독은 GameObject 수명에 묶여 Destroy 시 자동 해지된다.
+        /// 슬롯당 한 번만 호출한다(재바인딩 시 구독이 중첩된다).
         /// </summary>
-        /// <param name="occupant">이 항목이 표시할 슬롯 점유자 정의 스트림. null이면 빈칸, 값이 있으면 채움.</param>
-        /// <param name="onSelected">슬롯을 탭했을 때 호출되는 콜백(픽 화면 진입은 편성 View가 담당).</param>
+        /// <param name="occupant">점유자 스트림. null 값이면 빈칸, 있으면 채움.</param>
+        /// <param name="onSelected">슬롯을 탭했을 때 호출된다(픽 화면 진입은 편성 View가 담당).</param>
         public void Bind(ReadOnlyReactiveProperty<CharacterSO> occupant, Action onSelected)
         {
             occupant.Subscribe(ApplyOccupant).AddTo(this);

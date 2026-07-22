@@ -15,10 +15,7 @@ namespace Eclipse.Domain
         /// 행동자가 이번 턴에 할 행동을 결정한다. 규칙 기반 구현은 즉시 완료되고,
         /// 수동 입력 구현은 플레이어가 스킬·대상을 고를 때까지 대기한 뒤 완료된다.
         /// </summary>
-        /// <param name="actor">행동할 유닛.</param>
-        /// <param name="allies">행동자 편의 유닛 목록.</param>
-        /// <param name="enemies">상대 편의 유닛 목록.</param>
-        /// <param name="ct">대기 취소 토큰(전투 이탈·씬 언로드 시 대기를 끊는다).</param>
+        /// <param name="ct">대기 취소 토큰. 전투 이탈·씬 언로드 시 대기를 끊는다.</param>
         /// <returns>사용할 스킬과 (있으면) 지정 대상. 쓸 스킬이 없으면 Skill이 null.</returns>
         UniTask<BattleAction> ChooseActionAsync(
             ICombatant actor,

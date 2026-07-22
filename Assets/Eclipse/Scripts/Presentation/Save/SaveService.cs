@@ -28,9 +28,6 @@ namespace Eclipse.Presentation
         /// <summary> 기본 저장 경로. 플랫폼별 영속 디렉터리 밑의 player.json. </summary>
         public static string DefaultFilePath => Path.Combine(Application.persistentDataPath, "player.json");
 
-        /// <param name="save">보유 캐릭터·파티 원천.</param>
-        /// <param name="wallet">재화 3종 잔액 원천.</param>
-        /// <param name="progress">장별 클리어 카운트 원천.</param>
         /// <param name="filePath">저장 파일 경로. null이면 <see cref="DefaultFilePath"/>. 테스트가 임시 경로를 주입하는 이음새.</param>
         public SaveService(PlayerSave save, CurrencyWallet wallet, StageProgress progress, string filePath = null)
         {
@@ -80,9 +77,8 @@ namespace Eclipse.Presentation
 
         /// <summary>
         /// 파일에서 SaveData를 읽는다. 파일 없음·손상·버전 불일치·그 외 모든 예외는 신규 계정(new SaveData())으로
-        /// 수렴한다 — 로드는 어떤 경우에도 던지지 않는다. 어느 경로로 갈렸는지 로그를 남긴다.
+        /// 수렴하며 어떤 경우에도 던지지 않는다. 어느 경로로 갈렸는지 로그를 남긴다.
         /// </summary>
-        /// <param name="filePath">읽을 파일 경로.</param>
         /// <returns>복원된 데이터 또는 신규 계정 기본값. null이 아니다.</returns>
         public static SaveData LoadOrNew(string filePath)
         {
@@ -97,7 +93,7 @@ namespace Eclipse.Presentation
                 var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(filePath));
                 if (data == null || data.version != 1)
                 {
-                    // 버전이 다르면 부분 역직렬화된 반쪽 상태를 쓰지 않고 신규 계정으로 취급한다.
+                    // 버전이 다르면 부분 역직렬화된 반쪽 상태를 쓰지 않는다.
                     Debug.LogWarning($"세이브 버전 불일치 또는 빈 파일({filePath}) — 신규 계정으로 시작한다.");
                     return new SaveData();
                 }
@@ -117,7 +113,6 @@ namespace Eclipse.Presentation
         /// 앱 부트스트랩 중 호출되므로 예외는 곧 검은 화면이다). 파티 칸은 방금 복원한 보유 목록의 동일 인스턴스를
         /// 가리킨다 — 편성 검증(<see cref="PartyFormationViewModel.AssignToSlot"/>)이 참조 동등성으로 동작하기 때문이다.
         /// </summary>
-        /// <param name="data">복원할 저장 데이터.</param>
         /// <param name="catalog">캐릭터 id → 정의 SO. 여기 없는 id는 복원되지 않는다.</param>
         /// <returns>복원된 PlayerSave. 세이브가 비었으면 보유 목록도 비어 있다.</returns>
         public static PlayerSave BuildPlayerSave(SaveData data, IReadOnlyDictionary<string, CharacterSO> catalog)
@@ -146,11 +141,9 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// SaveData의 장별 클리어 카운트를 StageProgress에 복원한다. 아직 등록되지 않은 장이면
-        /// StageProgress가 보류했다가 첫 접근 때 적용한다(<see cref="StageProgress.Restore"/>).
+        /// SaveData의 장별 클리어 카운트를 StageProgress에 복원한다. 미등록 장은 StageProgress가
+        /// 보류했다가 첫 접근 때 적용한다(<see cref="StageProgress.Restore"/>).
         /// </summary>
-        /// <param name="data">복원할 저장 데이터.</param>
-        /// <param name="progress">복원 대상 진행도.</param>
         public static void ApplyChapters(SaveData data, StageProgress progress)
         {
             foreach (var chapter in data.chapters ?? new List<ChapterEntry>())

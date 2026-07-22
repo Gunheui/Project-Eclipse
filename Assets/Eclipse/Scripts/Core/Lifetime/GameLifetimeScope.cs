@@ -21,7 +21,6 @@ namespace Eclipse.Core
         {
             base.Configure(builder);
 
-            //Inject 목록
             builder.RegisterComponentInHierarchy<GameBootstrap>();
             builder.RegisterComponentInHierarchy<ScreenManager>();
             builder.RegisterComponentInHierarchy<PopupManager>();

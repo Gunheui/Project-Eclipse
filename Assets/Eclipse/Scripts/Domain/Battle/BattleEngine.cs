@@ -23,13 +23,7 @@ namespace Eclipse.Domain
 
         private int _actionCount;
 
-        /// <param name="allies">아군 파티 유닛.</param>
-        /// <param name="enemies">적 유닛.</param>
-        /// <param name="scheduler">양편 유닛으로 구성된 턴 스케줄러.</param>
-        /// <param name="executor">스킬 효과 적용기.</param>
-        /// <param name="allyProvider">아군 유닛의 행동 결정 주체(오토 또는 수동).</param>
-        /// <param name="enemyProvider">적 유닛의 행동 결정 주체(적 AI).</param>
-        /// <param name="actionCap">전장 누적 행동 상한. 넘으면 미클리어(패배) 처리한다.</param>
+        /// <param name="actionCap">전장 누적 행동 상한. 넘으면 패배 처리한다.</param>
         public BattleEngine(
             List<Combatant> allies, List<Combatant> enemies,
             ITurnScheduler scheduler, SkillExecutor executor,
@@ -55,19 +49,16 @@ namespace Eclipse.Domain
         /// 행동자 스킬 쿨 감소·스킬 실행·게이지 정산·행동 카운터 증가가 이 안에서 일어난다.
         /// </summary>
         /// <param name="ct">행동 결정 대기 취소 토큰. 수동 입력을 기다리는 중 전투를 끊을 때 쓴다.</param>
-        /// <returns>이 턴 처리 후의 전투 상태(진행/승리/패배).</returns>
         public async UniTask<BattleOutcome> AdvanceTurnAsync(CancellationToken ct)
         {
-            // 정상 진행 중이라면 스케줄러는 항상 생존 유닛을 준다.
-            // null은 살아있는 유닛이 없는 퇴화 상태이므로 현재 생존 상황으로 판정한다.
+            // null은 생존 유닛이 없는 퇴화 상태이므로 현재 생존 상황으로 판정한다.
             var actor = _scheduler.GetNextActor();
             if (actor == null) return Evaluate();
 
-            // 턴 시작 정산: 자기 도트·리젠 적용, 효과 지속턴 감소·만료 정리, 생존 시 스킬 쿨 감소.
-            // 이 전투의 행동자는 항상 Combatant이다(스케줄러는 읽기용 ICombatant만 반환).
+            // 턴 시작 정산. 행동자는 항상 Combatant다(스케줄러는 읽기용 ICombatant만 반환).
             ((Combatant)actor).OnTurnStart();
 
-            // 이번 턴에 실제로 쓴 스킬·영향 대상(스킬을 안 쓰면 null/빈 목록으로 남는다).
+            // 이번 턴에 실제로 쓴 스킬·영향 대상. 스킬을 안 쓰면 null/빈 목록으로 남는다.
             SkillSO usedSkill = null;
             IReadOnlyList<ICombatant> targets = Array.Empty<ICombatant>();
 
@@ -84,7 +75,6 @@ namespace Eclipse.Domain
                 }
             }
 
-            // 이번 턴에 벌어진 일을 연출용으로 한데 기록한다.
             LastTurn = new TurnResult(actor, usedSkill, targets);
 
             _scheduler.OnActionResolved(actor);
@@ -97,8 +87,6 @@ namespace Eclipse.Domain
         /// 전투가 끝날 때까지 턴을 반복 처리한다. 오토·헤드리스 진행용이며, UI가 매 턴 상태를
         /// 갱신해야 하는 경우엔 대신 AdvanceTurnAsync를 턴 단위로 호출한다.
         /// </summary>
-        /// <param name="ct">행동 결정 대기 취소 토큰.</param>
-        /// <returns>최종 전투 상태(승리 또는 패배).</returns>
         public async UniTask<BattleOutcome> RunAsync(CancellationToken ct)
         {
             var outcome = BattleOutcome.Ongoing;
@@ -113,9 +101,9 @@ namespace Eclipse.Domain
 
         private BattleOutcome Evaluate()
         {
-            if (_enemies.All(u => !u.IsAlive)) return BattleOutcome.Victory; // 적이 모두 죽은경우
-            if (_allies.All(u => !u.IsAlive)) return BattleOutcome.Defeat; // 우리팀이 모두 죽은경우
-            if (_actionCount >= _actionCap) return BattleOutcome.Defeat; // 최대 액션 수를 모두 사용한 경우
+            if (_enemies.All(u => !u.IsAlive)) return BattleOutcome.Victory;
+            if (_allies.All(u => !u.IsAlive)) return BattleOutcome.Defeat;
+            if (_actionCount >= _actionCap) return BattleOutcome.Defeat; // 행동 상한 초과 = 미클리어
             return BattleOutcome.Ongoing;
         }
 

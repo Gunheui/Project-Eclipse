@@ -36,11 +36,7 @@ namespace Eclipse.View
         private readonly List<RosterPickItemView> _items = new List<RosterPickItemView>();
         private readonly CompositeDisposable _bindings = new CompositeDisposable();
 
-        /// <summary>
-        /// ScreenManager가 이 화면 프리팹을 주입 생성할 때 호출한다. OnEnter보다 먼저 실행된다.
-        /// </summary>
-        /// <param name="viewModel">로스터 표시·앵커 슬롯 배치를 담당하는 픽 VM(컨테이너가 주입).</param>
-        /// <param name="screenManager">배치·닫기 시 편성 화면으로 되돌린다.</param>
+        /// <summary> ScreenManager가 이 화면 프리팹을 주입 생성할 때 호출한다. OnEnter보다 먼저 실행된다. </summary>
         [Inject]
         public void Construct(PartyPickViewModel viewModel, ScreenManager screenManager)
         {
@@ -49,10 +45,9 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// 화면이 스택 전면에 설 때 호출된다. 픽 세션을 시작(슬롯 배지 시드)하고 로스터 항목을 생성해 바인딩하며,
-        /// 역할 필터를 바인딩한다. 바인딩은 OnExit까지 유지된다.
+        /// 화면이 스택 전면에 설 때 호출된다. 픽 세션을 시작(슬롯 배지 시드)하고
+        /// 로스터 항목·역할 필터를 바인딩한다. 바인딩은 OnExit까지 유지된다.
         /// </summary>
-        /// <returns>등장 처리가 끝났음을 알리는 UniTask(연출이 없어 즉시 완료).</returns>
         public UniTask OnEnter()
         {
             _viewModel.BeginSession();
@@ -64,7 +59,7 @@ namespace Eclipse.View
             if (roleFilterBar != null)
                 roleFilterBar.Selected += OnRoleFilterSelected;
 
-            // 정렬 구독이 먼저다 — 최초 통지가 항목 생성을 겸하고, 필터 구독이 그 위에 표시를 거른다.
+            // 정렬 구독이 먼저다. 최초 통지가 항목 생성을 겸하고, 필터 구독이 그 위에 표시를 거른다.
             _viewModel.CurrentSortKey
                 .Subscribe(OnSortKeyChanged)
                 .AddTo(_bindings);
@@ -75,10 +70,7 @@ namespace Eclipse.View
             return UniTask.CompletedTask;
         }
 
-        /// <summary>
-        /// 화면이 스택에서 제거될 때 호출된다. 버튼 리스너·바인딩을 해지하고 생성한 항목을 모두 파괴한다.
-        /// </summary>
-        /// <returns>퇴장 처리가 끝났음을 알리는 UniTask(연출이 없어 즉시 완료).</returns>
+        /// <summary> 화면이 스택에서 제거될 때 호출된다. 버튼 리스너·바인딩을 해지하고 항목을 모두 파괴한다. </summary>
         public UniTask OnExit()
         {
             _bindings.Clear();
@@ -137,7 +129,6 @@ namespace Eclipse.View
 
         private void OnRoleFilterSelected(Role? role) => _viewModel.RoleFilter.Value = role;
 
-        // 정렬 버튼: 기준을 다음으로 넘긴다(등급 → 레벨 → 이름 순환).
         private void OnSort() => _viewModel.CycleSort();
 
         // 항목 탭: 앵커 슬롯에 배치(같은 캐릭터 재탭이면 제거)한 뒤 편성 화면으로 자동 복귀한다.
@@ -147,7 +138,6 @@ namespace Eclipse.View
             _screenManager.Pop().Forget();
         }
 
-        // 닫기: 편성을 그대로 두고 편성 화면으로 되돌린다.
         private void OnBack()
         {
             _screenManager.Pop().Forget();

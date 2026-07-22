@@ -15,8 +15,7 @@ namespace Eclipse.View
 {
     /// <summary>
     /// 전투 화면의 루트 View. <see cref="BattleViewModel"/>을 HUD에 바인딩하고 턴 루프를 구동한다.
-    /// 명판·행동 수·결과는 뷰모델의 리액티브 프로퍼티를 구독해 갱신하고, 스킬 버튼은 지금 행동하는
-    /// 아군(ActingCombatant)이 정해질 때만 활성화해 클릭을 뷰모델의 Submit으로 넘긴다.
+    /// 스킬 버튼은 행동하는 아군(ActingCombatant)이 정해질 때만 활성화해 클릭을 Submit으로 넘긴다.
     /// </summary>
     public class BattleView : MonoBehaviour
     {
@@ -54,8 +53,8 @@ namespace Eclipse.View
         // 연출 배속(1 또는 2). View 소유 — 계산엔 무관하고 배틀러 트윈·턴 대기 시간만 나눈다.
         private int _speedMultiplier = 1;
 
-        // 이 화면을 떠나기로 확정된 상태(나가기 클릭). 씬 언로드는 몇 프레임 걸리므로 그 사이 전투가 끝나도
-        // 결과 팝업을 띄우지 않는다 — 내려가는 중인 계층에 팝업을 Instantiate 하는 것을 막는다.
+        // 이 화면을 떠나기로 확정된 상태(나가기 클릭). 씬 언로드에 걸리는 몇 프레임 사이 전투가 끝나도
+        // 결과 팝업을 띄우지 않는다(내려가는 계층에 Instantiate 방지).
         private bool _leaving;
 
         // 조준 모드 상태. 스킬 탭으로 대기 중인 스킬과 그때 계산한 유효 타겟 집합. null이면 조준 중이 아니다.
@@ -81,9 +80,9 @@ namespace Eclipse.View
             RunBattleAsync(this.GetCancellationTokenOnDestroy()).Forget();
         }
 
-        // 전투 한 판의 전체 흐름: 턴 루프 → 결과 팝업 → 사용자가 고른 다음 목적지(재도전/로비).
-        // 팝업은 RunBattleAsync 완료로 트리거한다 — 결과 RP 구독은 결정타 연출이 끝나기 전에 발화한다.
-        // 나가기 버튼이나 씬 파괴로 루프가 끊기면 팝업 없이 그대로 종료한다.
+        // 전투 한 판의 전체 흐름: 턴 루프 → 결과 팝업 → 재도전/로비.
+        // 팝업은 RunBattleAsync 완료로 트리거한다(결과 RP 구독은 결정타 연출이 끝나기 전에 발화하므로).
+        // 나가기 버튼이나 씬 파괴로 루프가 끊기면 팝업 없이 종료한다.
         private async UniTaskVoid RunBattleAsync(CancellationToken ct)
         {
             try
@@ -124,7 +123,7 @@ namespace Eclipse.View
             await UniTask.WhenAll(animations).AttachExternalCancellation(ct);
         }
 
-        // 명판 8개를 소속·슬롯으로 유닛 VM에 연결한다. 대응 유닛이 없는 명판은 숨긴다.
+        // 플레이트를 소속·슬롯으로 유닛 VM에 연결한다. 대응 유닛이 없는 플레이트는 숨긴다.
         private void BindPlates()
         {
             AssignPlates(allyPlates, isAlly: true);
@@ -156,7 +155,6 @@ namespace Eclipse.View
                 .Subscribe(n => actionCounterLabel.text = n.ToString())
                 .AddTo(this);
 
-            // 오토는 버튼 클릭으로 뒤집고, 뷰모델 값이 바뀌면 라벨을 갱신한다.
             autoButton.OnClickAsObservable()
                 .Subscribe(_ => _viewModel.AutoMode.Value = !_viewModel.AutoMode.Value)
                 .AddTo(this);
@@ -178,7 +176,6 @@ namespace Eclipse.View
                 })
                 .AddTo(this);
 
-            // 배속: 버튼으로 1x↔2x 토글, 라벨 즉시 갱신.
             if (speedButton != null)
                 speedButton.OnClickAsObservable()
                     .Subscribe(_ => ToggleSpeed())
@@ -214,7 +211,7 @@ namespace Eclipse.View
                 .AddTo(this);
         }
 
-        // 행동자가 정해지면 그 유닛의 스킬로 버튼을 채우고 명판을 강조한다. null이면(적 턴·오토) 버튼을 잠근다.
+        // 행동자가 정해지면 그 유닛의 스킬로 버튼을 채우고 플레이트를 강조한다. null이면(적 턴·오토) 버튼을 잠근다.
         private void OnActingCombatantChanged(CombatantViewModel unit)
         {
             ExitTargeting(); // 행동자가 바뀌면(턴 종료·적 턴·오토) 이전 조준 상태를 정리한다
@@ -288,7 +285,7 @@ namespace Eclipse.View
                 return;
             }
 
-            // 유효 타겟 판정은 도메인 규칙(적=도발/아군=생존)을 VM 통해 그대로 받는다 — View는 칠하기만 한다.
+            // 유효 타겟 판정은 도메인 규칙(적=도발/아군=생존)을 VM을 통해 그대로 받는다. View는 칠하기만 한다.
             var valid = _viewModel.ValidManualTargets(unit, slot);
             if (valid.Count == 0) { ExitTargeting(); _viewModel.Submit(slot); return; } // 후보 없으면 셀렉터 폴백에 맡긴다
             if (valid.Count == 1)                                       // 후보가 하나뿐이면 조준 생략하고 바로 지정
@@ -323,7 +320,7 @@ namespace Eclipse.View
                 FindBattler(u)?.SetTargetState(TargetState.None);
         }
 
-        // 배틀러 몸통·명판 탭의 공통 처리. 조준 중이고 유효 타겟일 때만 그 대상으로 스킬을 제출한다.
+        // 배틀러 몸통·플레이트 탭의 공통 처리. 조준 중이고 유효 타겟일 때만 그 대상으로 스킬을 제출한다.
         private void OnUnitTapped(CombatantViewModel unit)
         {
             if (_pendingSkill == null) return;                                  // 조준 중이 아니면 무시

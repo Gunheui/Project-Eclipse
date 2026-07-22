@@ -33,11 +33,7 @@ namespace Eclipse.View
         private ScreenManager _screenManager;
         private readonly CompositeDisposable _bindings = new CompositeDisposable();
 
-        /// <summary>
-        /// ScreenManager가 이 화면 프리팹을 주입 생성할 때 호출한다. OnEnter보다 먼저 실행된다.
-        /// </summary>
-        /// <param name="viewModel">편성 슬롯·인원수·진입을 담당하는 편성 VM(컨테이너가 주입).</param>
-        /// <param name="screenManager">슬롯 탭 시 픽 화면을 올리고 뒤로가기 시 스테이지 선택으로 되돌린다.</param>
+        /// <summary> ScreenManager가 이 화면 프리팹을 주입 생성할 때 호출한다. OnEnter보다 먼저 실행된다. </summary>
         [Inject]
         public void Construct(PartyFormationViewModel viewModel, ScreenManager screenManager)
         {
@@ -46,10 +42,9 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// 화면이 스택 전면에 설 때 호출된다. 스테이지 요약을 채우고 고정 배치된 슬롯을 슬롯 스트림에 바인딩하며,
-        /// 인원수 라벨·진입 버튼 가용성을 편성 VM에 바인딩한다. 바인딩은 OnExit까지 유지된다.
+        /// 화면이 스택 전면에 설 때 호출된다. 스테이지 요약을 채우고 슬롯·인원수·진입 버튼을
+        /// 편성 VM에 바인딩한다. 바인딩은 OnExit까지 유지된다.
         /// </summary>
-        /// <returns>등장 처리가 끝났음을 알리는 UniTask(연출이 없어 즉시 완료).</returns>
         public UniTask OnEnter()
         {
             var stage = _viewModel.SelectedStage;
@@ -84,10 +79,9 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// 화면이 스택에서 제거될 때 호출된다. 버튼 리스너·바인딩을 해지한다. 슬롯은 고정 배치라 파괴하지 않으며,
-        /// 항목의 R3 구독·리스너는 화면 프리팹이 pop 시 통째로 Destroy될 때 함께 정리된다.
+        /// 화면이 스택에서 제거될 때 호출된다. 버튼 리스너·바인딩을 해지한다.
+        /// 슬롯은 고정 배치라 파괴하지 않는다(구독·리스너는 pop 시 프리팹 Destroy와 함께 정리).
         /// </summary>
-        /// <returns>퇴장 처리가 끝났음을 알리는 UniTask(연출이 없어 즉시 완료).</returns>
         public UniTask OnExit()
         {
             _bindings.Clear();

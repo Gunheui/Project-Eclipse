@@ -56,7 +56,6 @@ namespace Eclipse.View
         /// 팝업 내용을 뷰모델 값으로 채우고 버튼 클릭을 결과에 잇는다. PopupManager가 프리팹을 생성할 때
         /// 컨테이너가 호출하며, Awake보다 늦고 <see cref="Open"/>보다 앞선다.
         /// </summary>
-        /// <param name="viewModel">이 전투의 확정된 결과·보상.</param>
         [Inject]
         public void Construct(ResultViewModel viewModel)
         {
@@ -82,8 +81,7 @@ namespace Eclipse.View
         }
 
         // 보상이 있으면 칩 행을, 없으면(패배) "획득 보상 없음" 한 줄을 띄운다.
-        // 칩은 재화 종류와 1:1로 배선되어 있으므로(아이콘·표시명이 프리팹 고정) 종류로 짝을 찾아 채우고,
-        // 이번 전투에 없는 재화의 칩은 끈다 — 지급 목록에는 재화당 한 건만 들어온다.
+        // 칩은 재화 종류와 1:1 배선이라 종류로 짝을 찾아 채우고, 이번 전투에 없는 재화의 칩은 끈다.
         private void BindRewards(ResultViewModel viewModel)
         {
             var rewards = viewModel.Rewards;

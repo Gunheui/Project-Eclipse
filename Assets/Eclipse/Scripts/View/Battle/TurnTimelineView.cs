@@ -29,7 +29,6 @@ namespace Eclipse.View
         private readonly CompositeDisposable _bindings = new();
 
         /// <summary>이 표시줄을 전투 뷰모델의 다가올 순서에 연결한다. 이전 구독은 정리한다.</summary>
-        /// <param name="viewModel">다가올 순서를 노출하는 전투 뷰모델.</param>
         public void Bind(BattleViewModel viewModel)
         {
             _bindings.Clear();

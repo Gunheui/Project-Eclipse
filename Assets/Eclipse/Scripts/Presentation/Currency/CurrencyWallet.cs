@@ -29,10 +29,7 @@ namespace Eclipse.Presentation
         {
         }
 
-        /// <summary>저장된 잔액으로 지갑을 만든다. 세이브 로딩이 복원값을 넘기는 생성자. 음수는 0으로 고정한다.</summary>
-        /// <param name="essence">소환 재화 초기 잔액.</param>
-        /// <param name="gold">성장 재화 초기 잔액.</param>
-        /// <param name="manual">스킬강화 재료 초기 잔액.</param>
+        /// <summary>저장된 잔액으로 지갑을 만든다(세이브 복원용). 음수는 0으로 고정한다.</summary>
         public CurrencyWallet(int essence, int gold, int manual)
         {
             _essence = new ReactiveProperty<int>(Math.Max(0, essence));
@@ -41,11 +38,8 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 지정 재화 잔액을 <paramref name="amount"/>만큼 더한다(음수면 감소). 결과가 0 미만이면 0으로 고정한다.
-        /// 구독 중인 HUD 텍스트가 즉시 반영된다.
+        /// 지정 재화 잔액을 amount만큼 더한다(음수면 소모). 결과가 0 미만이면 0으로 고정한다.
         /// </summary>
-        /// <param name="type">증감할 재화 종류.</param>
-        /// <param name="amount">증감량. 양수는 획득, 음수는 소모.</param>
         public void Grant(CurrencyType type, int amount)
         {
             var rp = Select(type);

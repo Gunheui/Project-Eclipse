@@ -9,7 +9,7 @@ namespace Eclipse.View
 {
     /// <summary>
     /// 역할 필터 버튼 줄(전체/탱커/딜러/힐러/지원). 캐릭터 목록 화면과 파티 픽 화면이 같은 프리팹을 쓴다.
-    /// 필터 상태는 들고 있지 않고 탭을 <see cref="Selected"/>로만 흘려보낸다 — 어떤 필터가 켜졌는지는
+    /// 필터 상태는 보유하지 않고 탭을 <see cref="Selected"/>로만 흘려보낸다. 어떤 필터가 켜졌는지는
     /// 각 화면의 ViewModel이 보관하고, 선택 표시는 화면이 <see cref="SetSelected"/>로 되돌려 준다.
     /// </summary>
     public class RoleFilterBar : MonoBehaviour
@@ -53,7 +53,6 @@ namespace Eclipse.View
             }
         }
 
-        // 버튼 리스너를 건다. 오브젝트가 켜져 있는 동안만 유효하다.
         private void OnEnable()
         {
             foreach (var entry in Entries)
@@ -65,15 +64,13 @@ namespace Eclipse.View
             }
         }
 
-        // 건 리스너를 모두 걷어낸다.
         private void OnDisable()
         {
             foreach (var entry in Entries)
                 entry.Button?.onClick.RemoveAllListeners();
         }
 
-        // 버튼 한 개의 배경/테두리/아이콘/라벨 색을 선택 상태에 맞춰 칠한다.
-        // 배경·테두리·아이콘·라벨 네 곳을 함께 바꿔야 선택이 눈에 띈다. 색은 전부 테마 토큰에서 읽는다.
+        // 버튼 한 개의 배경·테두리·아이콘·라벨 색을 선택 상태에 맞춰 칠한다. 색은 전부 테마 토큰에서 읽는다.
         private void Paint(Transform button, bool selected)
         {
             button.GetComponent<Image>().color = selected ? theme.primarySubtle : theme.surface2;

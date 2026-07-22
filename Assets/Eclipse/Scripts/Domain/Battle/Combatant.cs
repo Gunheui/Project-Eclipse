@@ -33,7 +33,7 @@ namespace Eclipse.Domain
         /// </summary>
         public Stats EffectiveStats => ComputeEffectiveStats();
 
-        /// <summary> 붙어 있는 효과 중 도발이 있으면 도발중임. </summary>
+        /// <summary> 붙어 있는 효과 중 도발이 있는지. </summary>
         public bool IsTaunting => _effects.Any(e => e.Type == EffectType.Taunt);
 
         /// <summary> 붙어 있는 실드들의 남은 흡수량 합. ApplyDamage가 HP보다 먼저 깎는 양과 같다. </summary>
@@ -47,11 +47,11 @@ namespace Eclipse.Domain
         public void ApplyDamage(int amount)
         {
             int remaining = amount;
-            foreach (var e in _effects) //효과중 쉴드 찾기
+            foreach (var e in _effects)
             {
-                if (remaining <= 0) break; //남은 데미지가 0이면 탈출
+                if (remaining <= 0) break;
                 if (e.Type == EffectType.Shield)
-                    remaining = e.AbsorbDamage(remaining); //쉴드에서 데미지가 까이고 나머지 값이 반환
+                    remaining = e.AbsorbDamage(remaining);
             }
             CurrentHp = Math.Max(0, CurrentHp - remaining);
         }
@@ -71,16 +71,15 @@ namespace Eclipse.Domain
         public void ApplyEffect(StatusEffect effect)
         {
             if (effect.Type == EffectType.Buff || effect.Type == EffectType.Debuff)
-                _effects.RemoveAll(e => e.Type == effect.Type && e.Stat == effect.Stat); //버프 디퍼프의 경우에는 새로운 효과로 덮어씌우기
+                _effects.RemoveAll(e => e.Type == effect.Type && e.Stat == effect.Stat);
             else if (effect.Type == EffectType.Taunt)
-                _effects.RemoveAll(e => e.Type == EffectType.Taunt); //도발도 하나만 유지, 재적용 시 갱신
+                _effects.RemoveAll(e => e.Type == EffectType.Taunt); // 도발도 하나만 유지, 재적용 시 갱신
             _effects.Add(effect);
         }
 
         /// <summary>
-        /// 이 유닛의 자기 턴이 시작될 때 호출한다. 도트·리젠·지속턴 정산(TickStatusEffects)을 먼저 하고,
-        /// 그 정산으로 쓰러지지 않았다면 보유 스킬의 잔여 쿨을 1씩 줄인다.
-        /// 도트로 죽은 턴에는 스킬 쿨을 감소시키지 않는다(행동하지 못하므로).
+        /// 자기 턴 시작 시 호출한다. 도트·리젠·지속턴 정산을 먼저 하고, 살아남았을 때만 스킬 쿨을 1씩 줄인다.
+        /// 도트로 죽은 턴에는 행동하지 못하므로 쿨도 감소하지 않는다.
         /// </summary>
         public void OnTurnStart()
         {
@@ -122,10 +121,7 @@ namespace Eclipse.Domain
             CurrentHp = _maxHp;
         }
 
-        /// <summary>
-        /// 아군 캐릭터를 전투 유닛으로 만든다. 스탯은 레벨 스케일되고, 액티브 스킬 슬롯을 런타임으로 감싼다.
-        /// </summary>
-        /// <param name="owned">보유 캐릭터(정의·레벨).</param>
+        /// <summary> 아군 캐릭터를 전투 유닛으로 만든다. 스탯은 레벨 스케일되고, 스킬 슬롯을 런타임으로 감싼다. </summary>
         /// <param name="slotIndex">편성 슬롯 번호(0부터).</param>
         public static Combatant FromCharacter(OwnedCharacter owned, int slotIndex)
         {
@@ -135,10 +131,7 @@ namespace Eclipse.Domain
             return new Combatant(def.displayName, Team.Ally, slotIndex, stats, skills);
         }
 
-        /// <summary>
-        /// 적을 전투 유닛으로 만든다. 스탯은 스테이지 고정치를 그대로 쓴다(레벨 스케일 없음).
-        /// </summary>
-        /// <param name="enemy">적 정의.</param>
+        /// <summary> 적을 전투 유닛으로 만든다. 스탯은 스테이지 고정치를 그대로 쓴다(레벨 스케일 없음). </summary>
         /// <param name="slotIndex">편성 슬롯 번호(0부터).</param>
         public static Combatant FromEnemy(EnemySO enemy, int slotIndex)
         {
@@ -153,11 +146,11 @@ namespace Eclipse.Domain
         private Stats ComputeEffectiveStats()
         {
             float atkM = 1f, defM = 1f, spdM = 1f;
-            foreach (var e in _effects) // 현재 적용된 효과 각각 적용
+            foreach (var e in _effects)
             {
                 if (e.Type != EffectType.Buff && e.Type != EffectType.Debuff) continue;
-                float delta = e.Type == EffectType.Buff ? e.Value : -e.Value; //버프면 더하고 디버프면 뺌
-                // 버프·디버프가 수정하는 스탯은 atk·def·spd뿐이다. 크리·hp를 대상으로 한 효과는 지원하지 않아 무시된다.
+                float delta = e.Type == EffectType.Buff ? e.Value : -e.Value;
+                // 수정 대상 스탯은 atk·def·spd뿐. 크리·hp 대상 효과는 지원하지 않아 무시된다.
                 switch (e.Stat)
                 {
                     case StatType.Atk: atkM += delta; break;

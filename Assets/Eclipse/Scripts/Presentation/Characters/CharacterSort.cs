@@ -16,14 +16,10 @@ namespace Eclipse.Presentation
         private const int KeyCount = 3;
 
         /// <summary>정렬 기준을 다음 값으로 넘긴다(마지막이면 처음으로 되돌아온다).</summary>
-        /// <param name="key">현재 정렬 기준.</param>
-        /// <returns>순환상 다음 정렬 기준.</returns>
         public static CharacterSortKey Next(CharacterSortKey key)
             => (CharacterSortKey)(((int)key + 1) % KeyCount);
 
-        /// <summary>정렬 기준을 사용자에게 보일 한글 라벨로 바꾼다.</summary>
-        /// <param name="key">표시할 정렬 기준.</param>
-        /// <returns>"등급"/"레벨"/"이름". 정의되지 않은 값이면 빈 문자열.</returns>
+        /// <summary>정렬 기준의 표시 라벨("등급"/"레벨"/"이름"). 정의되지 않은 값이면 빈 문자열.</summary>
         public static string Label(CharacterSortKey key) => key switch
         {
             CharacterSortKey.Rarity => "등급",
@@ -33,13 +29,9 @@ namespace Eclipse.Presentation
         };
 
         /// <summary>
-        /// 정렬 기준에 맞춰 새 리스트를 만들어 돌려준다(원본은 건드리지 않는다).
-        /// 항목이 캐릭터 항목 VM을 직접 담든 감싸든 상관없도록 접근자를 받는다.
+        /// 정렬 기준에 맞춰 새 리스트를 만들어 반환한다(원본 불변).
         /// </summary>
-        /// <param name="source">정렬할 항목들.</param>
-        /// <param name="character">항목에서 표시 데이터(등급·레벨·이름)를 가진 캐릭터 항목 VM을 꺼내는 함수.</param>
-        /// <param name="key">정렬 기준.</param>
-        /// <returns>정렬된 새 리스트.</returns>
+        /// <param name="character">항목에서 캐릭터 항목 VM을 꺼내는 접근자. 항목이 VM을 직접 담든 감싸든 대응한다.</param>
         public static List<T> Apply<T>(IEnumerable<T> source, Func<T, CharacterItemViewModel> character, CharacterSortKey key)
             => key switch
             {

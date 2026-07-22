@@ -24,8 +24,6 @@ namespace Eclipse.Presentation
         public ReactiveProperty<StageSelectItemViewModel> SelectedStage { get; }
 
         /// <param name="chapters">표시할 장 목록. 첫 항목이 표시 장이 된다.</param>
-        /// <param name="progress">장별 진행/해금 상태(항목 3상태의 원천).</param>
-        /// <param name="nav">씬 경계 선택 보관함. 선택 스테이지를 여기 기록해 편성·전투 스코프가 읽는다.</param>
         public StageSelectViewModel(ChapterSO[] chapters, StageProgress progress, NavigationContext nav)
         {
             _progress = progress;
@@ -37,12 +35,9 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 스테이지 아이템을 선택으로 기록한다. 잠긴(Locked) 아이템은 무시하며(선택 차단의 권위) false를 돌려준다.
-        /// 새 편성을 시작하므로 이전에 확정했다 버린 파티(SelectedParty)를 함께 클리어한다.
-        /// 화면 전환(편성 화면 Push)은 이 반환값을 보고 View가 처리한다.
+        /// 스테이지 아이템을 선택으로 기록한다. 새 편성을 시작하므로 이전 SelectedParty도 함께 비운다.
         /// </summary>
-        /// <param name="item">탭된 스테이지 아이템. State가 Locked거나 null이면 아무 일도 하지 않는다.</param>
-        /// <returns>선택이 기록됐으면 true(편성 화면으로 진행 가능), 잠김/null이면 false.</returns>
+        /// <returns>선택이 기록됐으면 true(View가 편성 화면으로 전환), 잠김/null이면 false.</returns>
         public bool Select(StageSelectItemViewModel item)
         {
             if (item == null || item.State.CurrentValue == StageState.Locked)

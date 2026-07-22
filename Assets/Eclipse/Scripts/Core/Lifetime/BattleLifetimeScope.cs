@@ -76,7 +76,7 @@ namespace Eclipse.Core
                         $"BattleScene 진입에 선택 장이 없다(스테이지 '{stage.id}'만 실려 있다). " +
                         "StageSelect가 SelectedStage와 SelectedChapter를 함께 기록해야 한다.");
 
-                // 파티가 비어있다면, 미리 현재 가지고 있는 캐릭터 List에서 앞에 4개를 꺼내옴(테스트용)
+                // 선택 파티가 비어 있으면 세이브 로스터 앞 4명으로 대체한다(테스트용 폴백).
                 var party = nav.SelectedParty?.ToList() ?? new List<OwnedCharacter>();
                 if (party.All(x => x == null))
                     party = c.Resolve<PlayerSave>().OwnedCharacters

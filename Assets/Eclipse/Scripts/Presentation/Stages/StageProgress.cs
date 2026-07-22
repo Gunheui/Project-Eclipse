@@ -7,11 +7,9 @@ using R3;
 namespace Eclipse.Presentation
 {
     /// <summary>
-    /// 장별 스테이지 진행/해금 상태를 보관하는 반응형 서비스. 장마다 "클리어한 스테이지 수"와 총 스테이지 수를 들고,
-    /// 각 스테이지의 3상태(클리어/열림/잠김)는 <see cref="StateOf"/>로 클리어 수에서 파생한다.
-    /// 장은 사전 시드 없이 <see cref="ChapterSO"/>로 첫 접근할 때 미클리어 상태로 등록되며(lazy), 스테이지 수는
-    /// 그 시점의 <see cref="ChapterSO.stages"/> 길이를 상한으로 삼는다. 내부 키는 <see cref="ChapterSO.id"/> —
-    /// 세이브 로딩은 항목 교체가 아니라 기존 ReactiveProperty 값의 제자리 갱신으로 들어와야 구독이 유지된다.
+    /// 장별 스테이지 진행/해금 상태를 보유하는 반응형 서비스(키는 <see cref="ChapterSO.id"/>).
+    /// 장마다 클리어 수를 보유하고, 스테이지 3상태(클리어/열림/잠김)는 <see cref="StateOf"/>로 파생한다.
+    /// 장은 첫 접근 시 미클리어로 등록되며(lazy), 세이브 복원은 기존 ReactiveProperty의 제자리 갱신이라 구독이 유지된다.
     /// 씬 전환에서 살아남아야 하므로 <see cref="Eclipse.Core.AppLifetimeScope"/>에 싱글톤으로 등록한다.
     /// </summary>
     public sealed class StageProgress : IDisposable
@@ -37,14 +35,9 @@ namespace Eclipse.Presentation
         private readonly Dictionary<string, int> _pending = new Dictionary<string, int>();
 
         /// <summary>
-        /// 스테이지 인덱스와 장의 클리어 수로 3상태를 계산하는 순수 함수.
-        /// 인덱스가 클리어 수보다 작으면 이미 깬 것(Cleared), 같으면 지금 열린 것(Open), 크면 잠김(Locked).
-        /// 1스테이지(index 0)는 클리어 수 0에서 자동으로 Open, 보스(마지막 index)는 그 앞이 모두 깨져야 Open이 되어
-        /// 순차 해금·보스 규칙이 특수 분기 없이 성립한다.
+        /// 스테이지 3상태를 계산하는 순수 함수: 인덱스 &lt; 클리어 수 = Cleared, 같으면 Open, 크면 Locked.
+        /// 이 규칙 하나로 순차 해금·보스 잠금이 특수 분기 없이 성립한다.
         /// </summary>
-        /// <param name="stageIndex">장 안에서의 0-기반 스테이지 인덱스.</param>
-        /// <param name="clearedCount">해당 장에서 클리어한 스테이지 수.</param>
-        /// <returns>해당 스테이지의 표시 상태.</returns>
         public static StageState StateOf(int stageIndex, int clearedCount)
         {
             if (stageIndex < clearedCount) return StageState.Cleared;
@@ -53,23 +46,17 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 지정한 장의 클리어 수를 읽기 전용으로 노출한다. 항목 ViewModel이 이를 구독해 상태를 파생한다.
-        /// 미등록 장이면 이 호출에서 미클리어 상태로 등록된다.
+        /// 지정한 장의 클리어 수 스트림. 미등록 장이면 이 호출에서 미클리어로 등록된다.
         /// </summary>
         /// <param name="chapter">조회할 장. null이거나 id/stages가 비면 예외.</param>
-        /// <returns>해당 장의 클리어 수 스트림.</returns>
         public ReadOnlyReactiveProperty<int> ClearedCountOf(ChapterSO chapter)
             => EntryOf(chapter).Cleared;
 
         /// <summary>
-        /// 지정한 스테이지를 클리어 처리한다. 지금 열려 있는(Open) 스테이지일 때만 클리어 수를 1 올린다.
-        /// 미등록 장이면 이 호출에서 미클리어 상태로 등록된다. 음수 인덱스·장의 스테이지 수 이상(범위밖)·
-        /// 아직 잠겼거나 이미 깬 스테이지는 무시한다(단조·순차 보장).
-        /// 반환값은 곧 "이번이 최초 클리어인가"이며, 보상 지급이 최초 클리어분을 얹을지 판단하는 유일한 근거다.
+        /// 지정한 스테이지를 클리어 처리한다. 지금 열린(Open) 스테이지일 때만 클리어 수를 1 올리고,
+        /// 범위밖·잠김·이미 깬 스테이지는 무시한다(단조·순차 보장).
         /// </summary>
-        /// <param name="chapter">클리어한 스테이지가 속한 장. null이거나 id/stages가 비면 예외.</param>
-        /// <param name="stageIndex">클리어한 스테이지의 0-기반 인덱스. [0, 장의 스테이지 수) 범위여야 한다.</param>
-        /// <returns>클리어 수가 반영되면 true, 조건에 맞지 않아 무시되면 false.</returns>
+        /// <returns>true면 최초 클리어(보상 지급이 최초 클리어분을 얹는 유일한 근거). 무시되면 false.</returns>
         public bool TryMarkCleared(ChapterSO chapter, int stageIndex)
         {
             var entry = EntryOf(chapter);
@@ -82,12 +69,11 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 저장된 클리어 수를 복원한다. 이미 등록된 장이면 기존 ReactiveProperty를 제자리 갱신하고(구독 유지),
-        /// 아직 등록되지 않은 장이면 보류해 두었다가 첫 접근으로 등록되는 순간 초기값으로 소비한다.
-        /// 같은 장에 여러 번 호출되면 마지막 값이 이긴다.
+        /// 저장된 클리어 수를 복원한다. 등록된 장이면 제자리 갱신(구독 유지), 미등록 장이면 보류했다가
+        /// 첫 접근 때 초기값으로 소비한다. 같은 장에 여러 번 호출되면 마지막 값이 이긴다.
         /// </summary>
         /// <param name="chapterId">복원할 장의 id. null/빈 문자열이면 무시한다.</param>
-        /// <param name="cleared">저장된 클리어 수. 음수는 0으로, 장의 총 스테이지 수 초과분은 상한으로 잘린다.</param>
+        /// <param name="cleared">저장된 클리어 수. 음수는 0으로, 총 스테이지 수 초과분은 상한으로 잘린다.</param>
         public void Restore(string chapterId, int cleared)
         {
             if (string.IsNullOrEmpty(chapterId))
@@ -100,10 +86,9 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 저장용 스냅샷 — 장 id별 클리어 수를 열거한다. 등록된 장과 아직 소비되지 않은 보류 장(복원 후 미접근)을
-        /// 모두 포함하므로, 로드 직후 스테이지 화면을 열지 않고 저장해도 진행도가 유실되지 않는다.
+        /// 저장용 스냅샷(장 id별 클리어 수, 장마다 한 항목). 보류 장(복원 후 미접근)도 포함해
+        /// 로드 직후 바로 저장해도 진행도가 유실되지 않는다.
         /// </summary>
-        /// <returns>(장 id, 클리어 수) 시퀀스. 장마다 정확히 한 항목.</returns>
         public IEnumerable<(string chapterId, int cleared)> Snapshot()
         {
             foreach (var pair in _chapters)

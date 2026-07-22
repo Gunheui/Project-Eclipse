@@ -9,14 +9,8 @@ namespace Eclipse.Domain
     /// </summary>
     public interface ITargetSelectionPolicy
     {
-        /// <summary>
-        /// 스킬의 첫 단일-적 데미지 효과를 주 효과로 보고 그 대상을 고른다.
-        /// </summary>
-        /// <param name="actor">스킬을 쓰는 유닛(막타 판정의 공격 스탯 기준).</param>
-        /// <param name="skill">이번 턴 사용할 스킬 런타임.</param>
-        /// <param name="allies">행동자 편의 유닛 목록.</param>
-        /// <param name="enemies">상대 편의 유닛 목록(후보 출처).</param>
-        /// <returns>주 타겟. 단일-적 데미지 스킬이 아니거나 유효 후보가 없으면 null(호출부가 Target=null로 둔다).</returns>
+        /// <summary> 스킬의 첫 단일-적 데미지 효과를 주 효과로 보고 그 대상을 고른다. </summary>
+        /// <returns>주 타겟. 단일-적 데미지 스킬이 아니거나 유효 후보가 없으면 null.</returns>
         ICombatant ChoosePrimaryTarget(
             ICombatant actor, SkillRuntime skill,
             IReadOnlyList<ICombatant> allies, IReadOnlyList<ICombatant> enemies);

@@ -14,8 +14,6 @@ namespace Eclipse.Presentation
         // 이 슬롯이 대응하는 런타임 스킬. Submit 시 엔진에 되돌려 넘기려고 들고 있다.
         internal SkillRuntime Runtime { get; }
 
-        /// <param name="runtime">이 슬롯이 표시할 런타임 스킬(쿨 상태의 원천).</param>
-        /// <param name="stateChanged">뷰가 상태를 다시 읽어야 할 때 발화하는 신호. 이 신호에 맞춰 쿨을 다시 읽는다.</param>
         public SkillSlotViewModel(SkillRuntime runtime, Observable<Unit> stateChanged)
         {
             Runtime = runtime;
@@ -39,24 +37,22 @@ namespace Eclipse.Presentation
         public ReadOnlyReactiveProperty<bool> IsReady { get; }
 
         /// <summary>
-        /// 이 스킬이 플레이어의 수동 대상 지정을 활용하는지. 효과 중 단일-적 또는 단일-아군 스코프가
-        /// 하나라도 있으면 true. true면 View가 스킬 탭 시 조준 모드로 들어가 대상을 받고, false면(광역·자기)
-        /// 지정 대상이 어차피 무시되므로 즉시 시전한다. 전투 내내 불변.
+        /// 수동 대상 지정을 사용하는 스킬인지(단일-적/단일-아군 효과 보유). true면 View가 스킬 탭 시
+        /// 조준 모드로 들어가고, false면(광역·자기) 즉시 시전한다. 전투 내내 불변.
         /// </summary>
         public bool NeedsManualTarget { get; }
 
         /// <summary>
-        /// 조준 대상이 아군인지(힐/버프). 단일-아군 스코프가 있고 단일-적 스코프는 없을 때만 true —
-        /// 혼합 스킬은 적 우선(단일-적 조준). View·VM이 후보 팀과 아웃라인 색을 정하는 단일 소스. 전투 내내 불변.
+        /// 조준 대상이 아군인지(힐/버프). 단일-아군 효과만 있을 때 true이며 혼합 스킬은 적 우선.
+        /// 후보 팀과 아웃라인 색을 정하는 단일 소스. 전투 내내 불변.
         /// </summary>
         public bool ManualTargetsAllies { get; }
 
-        // 효과 중 단일-적 스코프가 하나라도 있는지. 수동 지정이 실제로 반영되는 단일-적 공격을 가린다.
-        // 판정은 도메인 규칙을 그대로 호출한다(스코프 집합이 늘어도 여기가 조용히 어긋나지 않게).
+        // 효과 중 단일-적 스코프가 하나라도 있는지. 판정은 도메인 규칙(TargetResolver)을 그대로 호출한다.
         private static bool HasSingleEnemyEffect(SkillSO skill)
             => skill.effects.Any(e => TargetResolver.IsSingleEnemy(e.target));
 
-        // 효과 중 단일-아군 스코프가 하나라도 있는지. 힐/버프의 아군 수동 지정을 가린다.
+        // 효과 중 단일-아군 스코프가 하나라도 있는지.
         private static bool HasSingleAllyEffect(SkillSO skill)
             => skill.effects.Any(e => TargetResolver.IsSingleAlly(e.target));
 

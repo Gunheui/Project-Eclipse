@@ -28,7 +28,7 @@ namespace Eclipse.View
         [SerializeField] private TMP_Text goldText;
         [SerializeField] private TMP_Text manualText;
 
-        // 개발용 임시 재화 증감 버튼 — M4a ICurrencyService 도입 시 대체 예정
+        // 개발용 임시 재화 증감 버튼. ICurrencyService 도입 시 대체 예정.
         [Header("더미 증감 버튼")]
         [SerializeField] private Button essencePlus;
         [SerializeField] private Button goldPlus;
@@ -44,7 +44,7 @@ namespace Eclipse.View
             _wallet.Gold.Subscribe(v => goldText.text = v.ToString("N0")).AddTo(this);
             _wallet.Manual.Subscribe(v => manualText.text = v.ToString("N0")).AddTo(this);
 
-            // ＋버튼 → 개발용 임시 재화 증감 (구독 반응 관측용, M4a ICurrencyService로 대체 예정)
+            // ＋버튼 → 개발용 임시 재화 증감(구독 반응 관측용. ICurrencyService로 대체 예정)
             essencePlus.OnClickAsObservable().Subscribe(_ => _wallet.Grant(CurrencyType.Essence, 300)).AddTo(this);
             goldPlus.OnClickAsObservable().Subscribe(_ => _wallet.Grant(CurrencyType.Gold, 5000)).AddTo(this);
             manualPlus.OnClickAsObservable().Subscribe(_ => _wallet.Grant(CurrencyType.Manual, 1)).AddTo(this);

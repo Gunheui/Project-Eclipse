@@ -35,13 +35,10 @@ namespace Eclipse.View
         [SerializeField] private GameObject selectedIndicator;
 
         /// <summary>
-        /// 항목을 지정 아이템에 바인딩한다. 불변값(썸네일·이름·번호·보스 프레임)을 즉시 대입하고,
-        /// 3상태는 <paramref name="item"/>.State 구독으로 반영한다. 탭 시 <paramref name="onSelected"/>에
-        /// 이 아이템을 넘긴다(잠금 차단의 최종 판정은 ViewModel이 담당하며, 버튼 비활성화는 어포던스일 뿐이다).
-        /// 상태 구독은 이 GameObject 수명에 묶여 Destroy 시 함께 해지된다. 항목당 한 번만 호출한다(재바인딩 미지원).
+        /// 항목을 스테이지 아이템에 바인딩한다. 불변값은 즉시 대입하고 3상태만 구독한다.
+        /// 잠금 차단의 최종 판정은 ViewModel이 담당하며 버튼 비활성화는 어포던스일 뿐이다.
+        /// 구독은 GameObject 수명에 묶여 Destroy 시 해지된다. 항목당 한 번만 호출한다(재바인딩 미지원).
         /// </summary>
-        /// <param name="item">이 항목이 표시할 스테이지 아이템(불변값 + 상태 스트림).</param>
-        /// <param name="onSelected">항목을 탭했을 때 호출되는 콜백(선택·진입 처리는 목록 ViewModel이 담당).</param>
         public void Bind(StageSelectItemViewModel item, Action<StageSelectItemViewModel> onSelected)
         {
             thumbnail.sprite = item.Stage.thumbnail;
@@ -70,7 +67,6 @@ namespace Eclipse.View
         }
 
         /// <summary>선택 강조 표시를 켜거나 끈다.</summary>
-        /// <param name="selected">true면 이 항목이 현재 선택 상태.</param>
         public void SetSelected(bool selected)
         {
             if (selectedIndicator != null)

@@ -20,7 +20,6 @@ namespace Eclipse.Core
 
         private void Start()
         {
-            // 부팅 시 첫 화면을 띄운다.
             _screenManager.Push(ScreenId.Lobby).Forget();
         }
     }

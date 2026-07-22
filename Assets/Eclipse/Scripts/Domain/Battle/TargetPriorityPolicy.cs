@@ -22,10 +22,7 @@ namespace Eclipse.Domain
         private readonly IRandomService _rng;
         private readonly TargetPolicyProfile _profile;
 
-        /// <param name="targeting">후보 산출(ValidManualTargets)을 위임할 리졸버.</param>
-        /// <param name="combat">막타 판정용 무난수 피해 미리보기(PreviewDamage) 제공.</param>
-        /// <param name="rng">타겟 선택 전용 난수 — 데미지 난수와 분리된 스트림이어야 한다.</param>
-        /// <param name="profile">아군/적 프로파일(활성 층·기저 규칙).</param>
+        /// <param name="rng">타겟 선택 전용 난수. 데미지 난수와 분리된 스트림이어야 한다.</param>
         public TargetPriorityPolicy(
             TargetResolver targeting, CombatPipeline combat,
             IRandomService rng, TargetPolicyProfile profile)
