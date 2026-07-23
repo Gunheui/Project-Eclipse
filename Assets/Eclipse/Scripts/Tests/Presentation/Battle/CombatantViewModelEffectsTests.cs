@@ -1,0 +1,57 @@
+using System.Collections.Generic;
+using System.Linq;
+using Eclipse.Data.Enums;
+using Eclipse.Domain;
+using Eclipse.Presentation;
+using NUnit.Framework;
+
+namespace Eclipse.Tests
+{
+    public class CombatantViewModelEffectsTests
+    {
+        [Test]
+        public void 해로움이_앞서고_그룹안은_남은턴_오름차순_상시가_마지막이다()
+        {
+            var effects = new List<StatusEffect>
+            {
+                StatusEffect.StatModifier(EffectType.Buff, StatType.Atk, 0.4f, 2),
+                StatusEffect.Shield(100, 3),
+                StatusEffect.StatModifier(EffectType.Debuff, StatType.Def, 0.3f, -1),
+                StatusEffect.Periodic(EffectType.Dot, 10, 1),
+                StatusEffect.StatModifier(EffectType.Debuff, StatType.Atk, 0.3f, 1),
+                StatusEffect.Taunt(2),
+            };
+
+            var result = CombatantViewModel.BuildActiveEffects(effects);
+
+            var expected = new[]
+            {
+                (EffectType.Debuff, 1),
+                (EffectType.Debuff, -1),
+                (EffectType.Dot, 1),
+                (EffectType.Taunt, 2),
+                (EffectType.Shield, 3),
+                (EffectType.Buff, 2),
+            };
+            CollectionAssert.AreEqual(expected, result.Select(e => (e.Type, e.RemainingTurns)).ToArray());
+        }
+
+        [Test]
+        public void 삽입_순서가_달라도_표시_순서는_같다()
+        {
+            var forward = new List<StatusEffect>
+            {
+                StatusEffect.StatModifier(EffectType.Debuff, StatType.Atk, 0.3f, 2),
+                StatusEffect.Periodic(EffectType.Regen, 10, 1),
+                StatusEffect.Shield(100, 3),
+                StatusEffect.StatModifier(EffectType.Buff, StatType.Def, 0.4f, 2),
+            };
+            var reversed = Enumerable.Reverse(forward).ToList();
+
+            var a = CombatantViewModel.BuildActiveEffects(forward).Select(e => (e.Type, e.RemainingTurns));
+            var b = CombatantViewModel.BuildActiveEffects(reversed).Select(e => (e.Type, e.RemainingTurns));
+
+            CollectionAssert.AreEqual(a.ToArray(), b.ToArray());
+        }
+    }
+}

@@ -1,12 +1,35 @@
 using System.Collections.Generic;
 using System.Linq;
 using Eclipse.Data;
+using Eclipse.Data.Enums;
 using Eclipse.Domain;
 using R3;
 using UnityEngine;
 
 namespace Eclipse.Presentation
 {
+    /// <summary>
+    /// 플레이트 아이콘 행에 표시할 지속 효과 하나. View가 Domain의 StatusEffect를 직접 못 보므로
+    /// 표시에 필요한 값만 담아 넘긴다.
+    /// </summary>
+    public readonly struct ActiveEffect
+    {
+        public EffectType Type { get; }
+
+        /// <summary> 버프·디버프가 바꾸는 스탯. 그 외 타입은 None. </summary>
+        public StatType Stat { get; }
+
+        /// <summary> 남은 지속턴. -1이면 상시(턴 라벨을 표시하지 않는다). </summary>
+        public int RemainingTurns { get; }
+
+        public ActiveEffect(EffectType type, StatType stat, int remainingTurns)
+        {
+            Type = type;
+            Stat = stat;
+            RemainingTurns = remainingTurns;
+        }
+    }
+
     /// <summary>
     /// 전투 유닛 하나에 대응하는 ViewModel. 이름·소속·슬롯·최대 HP는 고정이고,
     /// 현재 HP·생존 여부는 턴 신호에서 파생한 리액티브 프로퍼티로 노출한다.
@@ -36,6 +59,9 @@ namespace Eclipse.Presentation
             ShieldAbsorb = stateChanged
                 .Select(_ => model.ShieldAbsorb)
                 .ToReadOnlyReactiveProperty(model.ShieldAbsorb);
+            ActiveEffects = stateChanged
+                .Select(_ => BuildActiveEffects(model.Effects))
+                .ToReadOnlyReactiveProperty(BuildActiveEffects(model.Effects));
             Skills = model.Skills
                 .Select(s => new SkillSlotViewModel(s, stateChanged))
                 .ToList();
@@ -68,6 +94,9 @@ namespace Eclipse.Presentation
         /// <summary> 남은 실드 흡수량 합. HP 바의 실드 구간 바인딩용. 턴마다 갱신. </summary>
         public ReadOnlyReactiveProperty<int> ShieldAbsorb { get; }
 
+        /// <summary> 표시 순서로 정렬된 지속 효과 목록. 플레이트 아이콘 행 바인딩용. 턴마다 갱신. </summary>
+        public ReadOnlyReactiveProperty<IReadOnlyList<ActiveEffect>> ActiveEffects { get; }
+
         /// <summary> 이 유닛이 행동할 때 사용 스킬과 함께 발화. 배틀러 시전 연출 트리거. </summary>
         public Observable<SkillSO> Acted => _acted;
 
@@ -83,12 +112,35 @@ namespace Eclipse.Presentation
         /// <summary> Hit 신호를 발화한다. 이번 턴 스킬 대상마다 BattleViewModel이 호출한다. </summary>
         internal void RaiseHit(SkillSO skill) => _hit.OnNext(skill);
 
+        // 도메인 효과 목록을 표시 순서로 확정해 변환한다. 해로움(디버프→도트→도발) 먼저,
+        // 이로움(실드→리젠→버프) 다음, 그룹 안에서는 남은 턴 오름차순에 상시(-1)가 마지막이다.
+        // _effects의 삽입 순서에 기대지 않으므로 같은 효과를 다시 걸어도 아이콘 위치가 튀지 않는다.
+        public static IReadOnlyList<ActiveEffect> BuildActiveEffects(IReadOnlyList<StatusEffect> effects)
+            => effects
+                .OrderBy(e => DisplayRank(e.Type))
+                .ThenBy(e => e.RemainingTurns < 0 ? int.MaxValue : e.RemainingTurns)
+                .Select(e => new ActiveEffect(e.Type, e.Stat, e.RemainingTurns))
+                .ToList();
+
+        // 아이콘 행 정렬 순위. 값이 작을수록 앞에 놓인다.
+        private static int DisplayRank(EffectType type) => type switch
+        {
+            EffectType.Debuff => 0,
+            EffectType.Dot => 1,
+            EffectType.Taunt => 2,
+            EffectType.Shield => 3,
+            EffectType.Regen => 4,
+            EffectType.Buff => 5,
+            _ => 6,
+        };
+
         /// <summary> 파생 프로퍼티와 스킬 슬롯의 구독을 해지한다. 소유자(BattleViewModel)가 호출한다. </summary>
         public void Dispose()
         {
             CurrentHp.Dispose();
             IsAlive.Dispose();
             ShieldAbsorb.Dispose();
+            ActiveEffects.Dispose();
             _acted.Dispose();
             _hit.Dispose();
             foreach (var slot in Skills) slot.Dispose();

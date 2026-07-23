@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
+using Eclipse.Data.Enums;
 using Eclipse.Presentation;
 using R3;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace Eclipse.View
 {
@@ -25,6 +28,36 @@ namespace Eclipse.View
         [SerializeField] private TMP_Text hpLabel;
         [SerializeField] private CanvasGroup canvasGroup;
         [SerializeField] private GameObject actingMarker;
+
+        // 상태 아이콘 슬롯 하나의 위젯 묶음. 프리팹에서 고정 개수(4칸)로 배치해 참조를 연결한다.
+        [Serializable]
+        private struct EffectSlot
+        {
+            public GameObject root;
+            public Image frame;
+            public Image icon;
+            public TMP_Text turnsLabel;
+        }
+
+        // 효과 타입 → 아이콘 스프라이트 매핑 한 줄. 프리팹 인스펙터에서 지속 효과 6종을 채운다.
+        [Serializable]
+        private struct EffectIconEntry
+        {
+            public EffectType type;
+            public Sprite sprite;
+        }
+
+        // 마지막 슬롯은 넘침 표시(+N)로 전환될 수 있어 아이콘 개수는 슬롯 수보다 하나 적게 잡힐 수 있다.
+        [SerializeField] private EffectSlot[] effectSlots;
+        [SerializeField] private EffectIconEntry[] effectIcons;
+
+        // 매핑에 없는 타입이 들어왔을 때 대신 표시하는 아이콘. 경고 로그와 함께 쓰인다.
+        [SerializeField] private Sprite fallbackEffectIcon;
+
+        // 프레임 틴트. 이로움(버프·리젠·실드)=청, 해로움(디버프·도트·도발)=적, 넘침(+N)=어두운 중립색.
+        [SerializeField] private Color beneficialFrameColor = new Color32(0x4A, 0x7A, 0xD8, 0xFF);
+        [SerializeField] private Color harmfulFrameColor = new Color32(0xD0, 0x6A, 0x61, 0xFF);
+        [SerializeField] private Color overflowFrameColor = new Color32(0x4A, 0x4A, 0x52, 0xFF);
 
         private readonly CompositeDisposable _bindings = new();
 
@@ -66,7 +99,78 @@ namespace Eclipse.View
             unit.IsAlive
                 .Subscribe(alive => { if (canvasGroup != null) canvasGroup.alpha = alive ? 1f : 0.35f; })
                 .AddTo(_bindings);
+            unit.ActiveEffects
+                .Subscribe(OnEffectsChanged)
+                .AddTo(_bindings);
         }
+
+        // 상태 아이콘 행을 갱신한다. 효과가 슬롯 수를 넘으면 마지막 슬롯을 +N 표시로 전환해
+        // 잘림을 드러낸다. 남는 슬롯은 통째로 숨긴다.
+        private void OnEffectsChanged(IReadOnlyList<ActiveEffect> effects)
+        {
+            if (effectSlots == null || effectSlots.Length == 0) return;
+
+            bool overflow = effects.Count > effectSlots.Length;
+            int iconCount = overflow ? effectSlots.Length - 1 : effects.Count;
+
+            for (int i = 0; i < effectSlots.Length; i++)
+            {
+                if (i < iconCount) ShowEffect(effectSlots[i], effects[i]);
+                else if (overflow && i == effectSlots.Length - 1) ShowOverflow(effectSlots[i], effects.Count - iconCount);
+                else if (effectSlots[i].root != null) effectSlots[i].root.SetActive(false);
+            }
+        }
+
+        // 슬롯 하나에 효과 아이콘·프레임 색·남은 턴을 채운다. 상시(-1)는 턴 라벨을 숨긴다.
+        private void ShowEffect(EffectSlot slot, ActiveEffect effect)
+        {
+            if (slot.root == null) return;
+            slot.root.SetActive(true);
+
+            if (slot.icon != null)
+            {
+                slot.icon.enabled = true;
+                slot.icon.sprite = LookupIcon(effect.Type);
+            }
+            if (slot.frame != null)
+                slot.frame.color = IsBeneficial(effect.Type) ? beneficialFrameColor : harmfulFrameColor;
+            if (slot.turnsLabel != null)
+            {
+                slot.turnsLabel.alignment = TextAlignmentOptions.BottomRight;
+                slot.turnsLabel.text = effect.RemainingTurns < 0 ? string.Empty : effect.RemainingTurns.ToString();
+            }
+        }
+
+        // 마지막 슬롯을 넘침 표시로 전환한다. 아이콘을 끄고 어두운 프레임 중앙에 +N을 적는다.
+        private void ShowOverflow(EffectSlot slot, int hiddenCount)
+        {
+            if (slot.root == null) return;
+            slot.root.SetActive(true);
+
+            if (slot.icon != null) slot.icon.enabled = false;
+            if (slot.frame != null) slot.frame.color = overflowFrameColor;
+            if (slot.turnsLabel != null)
+            {
+                slot.turnsLabel.alignment = TextAlignmentOptions.Center;
+                slot.turnsLabel.text = $"+{hiddenCount}";
+            }
+        }
+
+        // 효과 타입에 매핑된 아이콘을 찾는다. 매핑 누락은 경고를 남기고 폴백 아이콘으로 대체한다.
+        private Sprite LookupIcon(EffectType type)
+        {
+            if (effectIcons != null)
+                foreach (var entry in effectIcons)
+                    if (entry.type == type && entry.sprite != null)
+                        return entry.sprite;
+
+            Debug.LogWarning($"효과 아이콘 매핑 누락: {type}", this);
+            return fallbackEffectIcon;
+        }
+
+        // 프레임 틴트 분류. 이로움(버프·리젠·실드)이면 true.
+        private static bool IsBeneficial(EffectType type)
+            => type is EffectType.Buff or EffectType.Regen or EffectType.Shield;
 
         // HP 바 채움·실드 구간(마스크 폭)과 "현재/최대 +실드" 숫자 라벨을 함께 갱신한다.
         // 바의 눈금은 항상 최대 HP 기준이라 실드가 붙어도 바 길이나 HP 한 칸의 의미가 변하지 않는다.
