@@ -43,8 +43,8 @@ PlayerSettings:
   m_VirtualRealitySplashScreen: {fileID: 0}
   defaultScreenWidth: 1920
   defaultScreenHeight: 1080
-  defaultScreenWidthWeb: 960
-  defaultScreenHeightWeb: 600
+  defaultScreenWidthWeb: 1280
+  defaultScreenHeightWeb: 720
   m_StereoRenderingPath: 0
   m_ActiveColorSpace: 1
   unsupportedMSAAFallback: 0
@@ -712,7 +712,7 @@ PlayerSettings:
     QNX: DOTWEEN
     Standalone: SENTIS_ANALYTICS_ENABLED;APP_UI_EDITOR_ONLY;DOTWEEN;UNITASK_DOTWEEN_SUPPORT
     VisionOS: DOTWEEN
-    WebGL: DOTWEEN;UNITASK_DOTWEEN_SUPPORT
+    WebGL: DOTWEEN;UNITASK_DOTWEEN_SUPPORT;APP_UI_EDITOR_ONLY;SENTIS_ANALYTICS_ENABLED
     Windows Store Apps: DOTWEEN
     XboxOne: DOTWEEN
     iPhone: DOTWEEN;UNITASK_DOTWEEN_SUPPORT;SENTIS_ANALYTICS_ENABLED;APP_UI_EDITOR_ONLY

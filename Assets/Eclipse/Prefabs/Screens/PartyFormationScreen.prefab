@@ -6802,6 +6802,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1786826639247769600}
   - component: {fileID: 2453825743593119557}
+  - component: {fileID: 1808742216741079071}
   m_Layer: 0
   m_Name: SlotGrid
   m_TagString: Untagged
@@ -6856,6 +6857,18 @@ MonoBehaviour:
   m_Spacing: {x: 32, y: 32}
   m_Constraint: 1
   m_ConstraintCount: 2
+--- !u!114 &1808742216741079071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8212904227307872598}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2923879a2eb744c94862b5a67e488655, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.GridCellAutoSizer
 --- !u!1 &8635331708687261937
 GameObject:
   m_ObjectHideFlags: 0

@@ -1055,6 +1055,62 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 241993218}
   m_CullTransparentMesh: 1
+--- !u!1 &260585647
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 260585648}
+  - component: {fileID: 260585649}
+  m_Layer: 0
+  m_Name: SafeArea
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &260585648
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 260585647}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1635698636}
+  - {fileID: 468527198}
+  - {fileID: 1691511207}
+  - {fileID: 2103431285}
+  - {fileID: 1668320259}
+  - {fileID: 1481116712}
+  - {fileID: 1949798620}
+  - {fileID: 2140190259}
+  m_Father: {fileID: 1670765880}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &260585649
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 260585647}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abc30ec272da642c38aec2fae20d1134, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.SafeAreaFitter
 --- !u!1 &278686845
 GameObject:
   m_ObjectHideFlags: 0
@@ -1809,7 +1865,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2082122561}
-  m_Father: {fileID: 1670765880}
+  m_Father: {fileID: 260585648}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
@@ -3330,7 +3386,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.35, y: 1.35, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1395089127}
@@ -3651,6 +3707,7 @@ GameObject:
   - component: {fileID: 957696597}
   - component: {fileID: 957696596}
   - component: {fileID: 957696599}
+  - component: {fileID: 957696600}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -3748,6 +3805,18 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   m_MaxRayIntersections: 0
+--- !u!114 &957696600
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 957696595}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bcb549a404ae74cb7a879c5dd66968d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.CameraWidthFitter
 --- !u!1 &978807903
 GameObject:
   m_ObjectHideFlags: 0
@@ -5154,7 +5223,7 @@ RectTransform:
   - {fileID: 1938988733}
   - {fileID: 280098723}
   - {fileID: 2047287927}
-  m_Father: {fileID: 1670765880}
+  m_Father: {fileID: 260585648}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
@@ -5629,7 +5698,7 @@ RectTransform:
   - {fileID: 582058436}
   - {fileID: 190344004}
   - {fileID: 2091950635}
-  m_Father: {fileID: 1670765880}
+  m_Father: {fileID: 260585648}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
@@ -5965,7 +6034,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 547823347}
-  m_Father: {fileID: 1670765880}
+  m_Father: {fileID: 260585648}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
@@ -6042,14 +6111,7 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1635698636}
-  - {fileID: 468527198}
-  - {fileID: 1691511207}
-  - {fileID: 2103431285}
-  - {fileID: 1668320259}
-  - {fileID: 1481116712}
-  - {fileID: 1949798620}
-  - {fileID: 2140190259}
+  - {fileID: 260585648}
   - {fileID: 1713329386}
   - {fileID: 278686847}
   m_Father: {fileID: 0}
@@ -6431,7 +6493,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2095278890}
-  m_Father: {fileID: 1670765880}
+  m_Father: {fileID: 260585648}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
@@ -7088,7 +7150,7 @@ RectTransform:
   - {fileID: 2030072030}
   - {fileID: 241993219}
   - {fileID: 1346099827}
-  m_Father: {fileID: 1670765880}
+  m_Father: {fileID: 260585648}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
@@ -8165,7 +8227,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1341124031}
-  m_Father: {fileID: 1670765880}
+  m_Father: {fileID: 260585648}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
@@ -8239,7 +8301,7 @@ RectTransform:
   - {fileID: 703206730}
   - {fileID: 1517326137}
   - {fileID: 1219992469}
-  m_Father: {fileID: 1670765880}
+  m_Father: {fileID: 260585648}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}

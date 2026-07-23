@@ -218,7 +218,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: b5a0a4b168f6644768df0038b3b93e91, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -450,7 +450,7 @@ GameObject:
   - component: {fileID: 7947853114164891667}
   - component: {fileID: 285584842527392146}
   m_Layer: 0
-  m_Name: PartySlotCell
+  m_Name: PartySlot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1260,7 +1260,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: 013d30133967e46368c46a6c8d385c5b, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1

@@ -144,7 +144,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: 88dbead770e7b48f4ab3cb6b27ea7ac8, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -299,7 +299,6 @@ GameObject:
   m_Component:
   - component: {fileID: 3485701291964216046}
   - component: {fileID: 7669990421638866554}
-  - component: {fileID: 9073156512189365335}
   - component: {fileID: 6070167390327927007}
   - component: {fileID: 4358627979953604050}
   - component: {fileID: 4329741659998906143}
@@ -361,29 +360,6 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 20
   m_TargetDisplay: 0
---- !u!114 &9073156512189365335
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2307492274764427771}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
-  m_UiScaleMode: 0
-  m_ReferencePixelsPerUnit: 100
-  m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
-  m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
-  m_PhysicalUnit: 3
-  m_FallbackScreenDPI: 96
-  m_DefaultSpriteDPI: 96
-  m_DynamicPixelsPerUnit: 10
-  m_PresetInfoIsWorld: 0
 --- !u!225 &6070167390327927007
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -447,6 +423,7 @@ MonoBehaviour:
   fallbackEffectIcon: {fileID: 21300000, guid: cc2844e43f14d4b92ac1a9c604f181aa, type: 3}
   beneficialFrameColor: {r: 0.2901961, g: 0.47843137, b: 0.84705883, a: 1}
   harmfulFrameColor: {r: 0.8156863, g: 0.41568628, b: 0.38039216, a: 1}
+  overflowFrameColor: {r: 0.2901961, g: 0.2901961, b: 0.32156864, a: 1}
 --- !u!114 &4329741659998906143
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -533,7 +510,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: 88dbead770e7b48f4ab3cb6b27ea7ac8, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -610,7 +587,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: 88dbead770e7b48f4ab3cb6b27ea7ac8, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -1026,7 +1003,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: 88dbead770e7b48f4ab3cb6b27ea7ac8, type: 3}
   m_Type: 0
-  m_PreserveAspect: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
