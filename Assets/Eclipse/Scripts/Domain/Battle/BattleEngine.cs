@@ -46,7 +46,7 @@ namespace Eclipse.Domain
 
         /// <summary>
         /// 다음 행동자 한 명의 턴을 처리하고 처리 후의 전투 상태를 반환한다.
-        /// 행동자 스킬 쿨 감소·스킬 실행·게이지 정산·행동 카운터 증가가 이 안에서 일어난다.
+        /// 행동자 스킬 쿨 감소·스킬 실행·턴 끝 지속턴 정산·게이지 정산·행동 카운터 증가가 이 안에서 일어난다.
         /// </summary>
         /// <param name="ct">행동 결정 대기 취소 토큰. 수동 입력을 기다리는 중 전투를 끊을 때 쓴다.</param>
         public async UniTask<BattleOutcome> AdvanceTurnAsync(CancellationToken ct)
@@ -76,6 +76,9 @@ namespace Eclipse.Domain
             }
 
             LastTurn = new TurnResult(actor, usedSkill, targets);
+
+            // 턴 끝 정산. 이번 턴에 새로 붙은 효과는 시전턴 면제로 깎이지 않는다.
+            ((Combatant)actor).OnTurnEnd();
 
             _scheduler.OnActionResolved(actor);
             _actionCount++;

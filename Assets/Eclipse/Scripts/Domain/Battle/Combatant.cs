@@ -16,6 +16,9 @@ namespace Eclipse.Domain
         private readonly Stats _baseStats;
         private readonly List<SkillRuntime> _skills;
         private readonly List<StatusEffect> _effects = new();
+        // 자기 턴 시작 시점에 붙어 있던 효과. 턴 끝 지속턴 감소는 이 목록만 대상으로 하므로
+        // 턴 도중 적용된 효과는 그 턴에 깎이지 않는다(시전턴 면제).
+        private readonly List<StatusEffect> _turnSnapshot = new();
         private readonly int _maxHp;
 
         public string DisplayName { get; }
@@ -41,7 +44,7 @@ namespace Eclipse.Domain
 
         /// <summary>
         /// 피해를 적용한다. 실드가 있으면 리스트 순으로 먼저 흡수하고, 막지 못한 나머지만 HP를 깎는다.
-        /// HP는 0 밑으로 내려가지 않는다. 흡수량이 0이 된 실드는 이 유닛의 자기 턴 틱에서 제거된다.
+        /// HP는 0 밑으로 내려가지 않는다. 흡수량이 0이 된 실드는 이 유닛의 자기 턴 정산에서 제거된다.
         /// </summary>
         /// <param name="amount">깎을 HP(0 이상 전제).</param>
         public void ApplyDamage(int amount)
@@ -78,22 +81,11 @@ namespace Eclipse.Domain
         }
 
         /// <summary>
-        /// 자기 턴 시작 시 호출한다. 도트·리젠·지속턴 정산을 먼저 하고, 살아남았을 때만 스킬 쿨을 1씩 줄인다.
-        /// 도트로 죽은 턴에는 행동하지 못하므로 쿨도 감소하지 않는다.
+        /// 자기 턴 시작 시 호출한다. 도트·리젠을 HP에 적용하고 만료 효과를 정리한 뒤,
+        /// 이번 턴 끝에 지속턴을 깎을 효과 목록을 기록한다. 도트는 ApplyDamage를 거치므로 자기 실드에 먼저 흡수된다.
+        /// 도트로 죽은 턴에는 행동하지 못하므로 스킬 쿨도 감소하지 않는다.
         /// </summary>
         public void OnTurnStart()
-        {
-            TickStatusEffects();
-            if (!IsAlive) return;
-            foreach (var skill in _skills)
-                skill.ReduceCooldown();
-        }
-
-        /// <summary>
-        /// 이 유닛의 자기 턴에 호출한다. 붙어 있는 도트·리젠을 HP에 적용하고, 모든 효과의 지속턴을 1 줄인 뒤,
-        /// 만료된 효과(지속턴 0)와 소진된 실드를 제거한다. 도트는 ApplyDamage를 거치므로 자기 실드에 먼저 흡수된다.
-        /// </summary>
-        public void TickStatusEffects()
         {
             foreach (var e in _effects)
             {
@@ -103,9 +95,25 @@ namespace Eclipse.Domain
                     case EffectType.Regen: Heal(e.TickAmount); break;
                 }
             }
+            _effects.RemoveAll(e => e.IsExpired);
 
-            foreach (var e in _effects)
+            _turnSnapshot.Clear();
+            _turnSnapshot.AddRange(_effects);
+
+            if (!IsAlive) return;
+            foreach (var skill in _skills)
+                skill.ReduceCooldown();
+        }
+
+        /// <summary>
+        /// 자기 턴 종료 시 호출한다. 턴 시작에 기록해 둔 효과만 지속턴을 1 줄이고, 만료된 효과를 제거한다.
+        /// 턴 도중 새로 붙은 효과(자기 시전 버프, 갱신된 도발)는 기록에 없어 이번 턴에는 깎이지 않는다.
+        /// </summary>
+        public void OnTurnEnd()
+        {
+            foreach (var e in _turnSnapshot)
                 e.TickDuration();
+            _turnSnapshot.Clear();
 
             _effects.RemoveAll(e => e.IsExpired);
         }

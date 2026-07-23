@@ -26,7 +26,7 @@ namespace Eclipse.Domain
         /// <summary> 실드의 남은 흡수량. 피해를 흡수할 때마다 줄어든다. 그 외 타입은 0. </summary>
         public int RemainingAbsorb { get; private set; }
 
-        /// <summary> 남은 지속턴. 대상의 자기 턴마다 1 줄어든다. -1이면 만료 없음(상시). </summary>
+        /// <summary> 남은 지속턴. 대상의 자기 턴이 끝날 때 1 줄어든다. -1이면 만료 없음(상시). </summary>
         public int RemainingTurns { get; private set; }
 
         /// <summary> 만료됐는지. 지속턴이 0이거나, 실드의 흡수량이 다 소진되면 참. </summary>

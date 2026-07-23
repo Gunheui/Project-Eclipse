@@ -52,11 +52,37 @@ namespace Eclipse.Tests
             var unit = Unit(S(1000, 100, 50, 100));
             ((IDamageable)unit).ApplyEffect(StatusEffect.StatModifier(EffectType.Buff, StatType.Atk, 0.4f, 2));
 
-            unit.TickStatusEffects(); // 지속턴 2 → 1, 아직 유효
-            Assert.AreEqual(140, unit.EffectiveStats.atk);
+            unit.OnTurnStart();
+            Assert.AreEqual(140, unit.EffectiveStats.atk, "1번째 행동을 버프 상태로 한다");
+            unit.OnTurnEnd(); // 지속턴 2 → 1
 
-            unit.TickStatusEffects(); // 지속턴 1 → 0, 만료
-            Assert.AreEqual(100, unit.EffectiveStats.atk);
+            unit.OnTurnStart();
+            Assert.AreEqual(140, unit.EffectiveStats.atk, "2번째 행동도 버프 상태로 한다");
+            unit.OnTurnEnd(); // 지속턴 1 → 0, 만료
+
+            unit.OnTurnStart();
+            Assert.AreEqual(100, unit.EffectiveStats.atk, "지속턴 소진 후 만료");
+        }
+
+        [Test]
+        public void 자기_턴에_받은_버프는_그_턴_끝에_깎이지_않는다()
+        {
+            var unit = Unit(S(1000, 100, 50, 100));
+
+            unit.OnTurnStart();
+            ((IDamageable)unit).ApplyEffect(StatusEffect.StatModifier(EffectType.Buff, StatType.Atk, 0.4f, 2)); // 자기 턴 중 시전
+            unit.OnTurnEnd(); // 시전턴 면제, 지속턴 2 유지
+
+            unit.OnTurnStart();
+            Assert.AreEqual(140, unit.EffectiveStats.atk, "시전 다음 1번째 행동");
+            unit.OnTurnEnd(); // 2 → 1
+
+            unit.OnTurnStart();
+            Assert.AreEqual(140, unit.EffectiveStats.atk, "시전 다음 2번째 행동");
+            unit.OnTurnEnd(); // 1 → 0, 만료
+
+            unit.OnTurnStart();
+            Assert.AreEqual(100, unit.EffectiveStats.atk, "표기 턴 수만큼 행동 후 만료");
         }
 
         [Test]
@@ -89,10 +115,10 @@ namespace Eclipse.Tests
             var unit = Unit(S(100, 100, 0, 100));
             ((IDamageable)unit).ApplyEffect(StatusEffect.Periodic(EffectType.Dot, 10, 3));
 
-            unit.TickStatusEffects(); Assert.AreEqual(90, unit.CurrentHp);
-            unit.TickStatusEffects(); Assert.AreEqual(80, unit.CurrentHp);
-            unit.TickStatusEffects(); Assert.AreEqual(70, unit.CurrentHp); // 3틱째 후 만료
-            unit.TickStatusEffects(); Assert.AreEqual(70, unit.CurrentHp, "만료 후 더는 안 깎임");
+            unit.OnTurnStart(); Assert.AreEqual(90, unit.CurrentHp); unit.OnTurnEnd(); // 3 → 2
+            unit.OnTurnStart(); Assert.AreEqual(80, unit.CurrentHp); unit.OnTurnEnd(); // 2 → 1
+            unit.OnTurnStart(); Assert.AreEqual(70, unit.CurrentHp); unit.OnTurnEnd(); // 1 → 0, 만료
+            unit.OnTurnStart(); Assert.AreEqual(70, unit.CurrentHp, "만료 후 더는 안 깎임");
         }
 
         [Test]
@@ -102,8 +128,8 @@ namespace Eclipse.Tests
             ((IDamageable)unit).ApplyDamage(50); // HP 50
             ((IDamageable)unit).ApplyEffect(StatusEffect.Periodic(EffectType.Regen, 30, 2));
 
-            unit.TickStatusEffects(); Assert.AreEqual(80, unit.CurrentHp);
-            unit.TickStatusEffects(); Assert.AreEqual(100, unit.CurrentHp, "최대치에서 클램프");
+            unit.OnTurnStart(); Assert.AreEqual(80, unit.CurrentHp); unit.OnTurnEnd(); // 2 → 1
+            unit.OnTurnStart(); Assert.AreEqual(100, unit.CurrentHp, "최대치에서 클램프");
         }
 
         // --- 실드: 전액 흡수 후 초과분만 HP ---
@@ -127,7 +153,9 @@ namespace Eclipse.Tests
             var unit = Unit(S(100, 100, 0, 100));
             ((IDamageable)unit).ApplyEffect(StatusEffect.Shield(50, 1));
 
-            unit.TickStatusEffects(); // 지속턴 1 → 0, 만료 제거
+            unit.OnTurnStart();
+            Assert.AreEqual(50, unit.ShieldAbsorb, "자기 턴 동안은 실드 유지");
+            unit.OnTurnEnd(); // 지속턴 1 → 0, 만료 제거
 
             ((IDamageable)unit).ApplyDamage(20);
             Assert.AreEqual(80, unit.CurrentHp, "실드가 사라져 피해가 그대로 HP로");
@@ -205,9 +233,9 @@ namespace Eclipse.Tests
             ((IDamageable)unit).ApplyEffect(StatusEffect.Taunt(2));
             Assert.IsTrue(unit.IsTaunting);
 
-            unit.TickStatusEffects(); // 2 → 1, 아직 유효
+            unit.OnTurnStart(); unit.OnTurnEnd(); // 2 → 1, 아직 유효
             Assert.IsTrue(unit.IsTaunting);
-            unit.TickStatusEffects(); // 1 → 0, 만료
+            unit.OnTurnStart(); unit.OnTurnEnd(); // 1 → 0, 만료
             Assert.IsFalse(unit.IsTaunting, "지속턴 소진 후 도발 풀림");
         }
 
@@ -218,8 +246,38 @@ namespace Eclipse.Tests
             ((IDamageable)unit).ApplyEffect(StatusEffect.Taunt(3));
             ((IDamageable)unit).ApplyEffect(StatusEffect.Taunt(1)); // 갱신 → 지속턴 1
 
-            unit.TickStatusEffects(); // 1 → 0 만료
+            unit.OnTurnStart(); unit.OnTurnEnd(); // 1 → 0 만료
             Assert.IsFalse(unit.IsTaunting, "누적이 아니라 갱신돼 최신(1턴)만 남고 소진");
+        }
+
+        [Test]
+        public void 자기_턴에_갱신한_버프도_그_턴_끝에_깎이지_않는다()
+        {
+            var unit = Unit(S(1000, 100, 50, 100));
+            ((IDamageable)unit).ApplyEffect(StatusEffect.StatModifier(EffectType.Buff, StatType.Atk, 0.4f, 1));
+
+            unit.OnTurnStart();
+            ((IDamageable)unit).ApplyEffect(StatusEffect.StatModifier(EffectType.Buff, StatType.Atk, 0.5f, 1)); // 자기 턴 중 갱신
+            unit.OnTurnEnd(); // 시전턴 면제
+            Assert.AreEqual(150, unit.EffectiveStats.atk, "갱신된 버프는 그 턴 끝에 소모되지 않는다");
+
+            unit.OnTurnStart(); unit.OnTurnEnd(); // 1 → 0, 만료
+            Assert.AreEqual(100, unit.EffectiveStats.atk);
+        }
+
+        [Test]
+        public void 자기_턴에_갱신한_도발은_그_턴_끝에_깎이지_않는다()
+        {
+            var unit = Unit(S(1000, 100, 0, 100));
+            ((IDamageable)unit).ApplyEffect(StatusEffect.Taunt(1));
+
+            unit.OnTurnStart();
+            ((IDamageable)unit).ApplyEffect(StatusEffect.Taunt(1)); // 자기 턴 중 갱신 → 새 인스턴스는 기록에 없음
+            unit.OnTurnEnd(); // 시전턴 면제
+            Assert.IsTrue(unit.IsTaunting, "갱신된 도발은 그 턴 끝에 소모되지 않는다");
+
+            unit.OnTurnStart(); unit.OnTurnEnd(); // 1 → 0, 만료
+            Assert.IsFalse(unit.IsTaunting);
         }
     }
 }
