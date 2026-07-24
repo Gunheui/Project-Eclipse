@@ -39,6 +39,7 @@ namespace Eclipse.Core
             var data = SaveService.LoadOrNew(SaveService.DefaultFilePath);
             builder.RegisterInstance(LoadOrSeedSave(data));
             builder.Register(_ => new CurrencyWallet(data.essence, data.gold, data.manual), Lifetime.Singleton);
+            builder.Register<ICurrencyService, CurrencyService>(Lifetime.Singleton);
             builder.Register(_ =>
             {
                 var progress = new StageProgress();

@@ -11,11 +11,11 @@ namespace Eclipse.Presentation
     /// </summary>
     public sealed class StageRewardService : IRewardService
     {
-        private readonly CurrencyWallet _wallet;
+        private readonly ICurrencyService _currency;
 
-        public StageRewardService(CurrencyWallet wallet)
+        public StageRewardService(ICurrencyService currency)
         {
-            _wallet = wallet;
+            _currency = currency;
         }
 
         /// <inheritdoc/>
@@ -25,7 +25,7 @@ namespace Eclipse.Presentation
 
             var granted = Sum(Entries(stage, firstClear));
             foreach (var reward in granted)
-                _wallet.Grant(reward.type, reward.amount);
+                _currency.Grant(reward.type, reward.amount);
 
             return granted;
         }

@@ -6,8 +6,8 @@ namespace Eclipse.Presentation
 {
     /// <summary>
     /// 플레이어가 보유한 재화 3종의 반응형 지갑. 값이 바뀌면 구독자(HUD)가 자동 갱신된다.
-    /// 읽기는 <see cref="ReadOnlyReactiveProperty{T}"/>로만 노출하고, 변경은 <see cref="Grant"/>로만 한다.
-    /// 실제 증감 규칙(보상·구매·소모)은 상위 서비스가 담당하며, 여기서는 잔액 상태만 보관한다.
+    /// 읽기는 <see cref="ReadOnlyReactiveProperty{T}"/>로만 노출하고, 잔액 변경은 <see cref="Add"/>를 통해서만 일어난다.
+    /// 증감 규칙(음수 거부·부족 판정)은 <see cref="ICurrencyService"/>가 담당하며, 여기서는 잔액 상태만 보관한다.
     /// </summary>
     public sealed class CurrencyWallet : IDisposable
     {
@@ -39,8 +39,10 @@ namespace Eclipse.Presentation
 
         /// <summary>
         /// 지정 재화 잔액을 amount만큼 더한다(음수면 소모). 결과가 0 미만이면 0으로 고정한다.
+        /// 증감 정책은 <see cref="ICurrencyService"/>가 강제하므로 여기서는 금액 부호를 검증하지 않는다.
         /// </summary>
-        public void Grant(CurrencyType type, int amount)
+        // ponytail: int 오버플로 미가드 — 현실 잔액 범위(수만~수백만) 밖. 상한이 필요해지면 Add에 clamp 추가.
+        internal void Add(CurrencyType type, int amount)
         {
             var rp = Select(type);
             rp.Value = Math.Max(0, rp.Value + amount);

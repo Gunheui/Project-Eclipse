@@ -18,7 +18,7 @@ namespace Eclipse.Tests
                 clear: new[] { Reward(CurrencyType.Gold, 200) },
                 first: new[] { Reward(CurrencyType.Essence, 200) });
 
-            var granted = new StageRewardService(wallet).GrantVictory(stage, firstClear: true);
+            var granted = new StageRewardService(new CurrencyService(wallet)).GrantVictory(stage, firstClear: true);
 
             Assert.That(granted.Count, Is.EqualTo(2));
             Assert.That(wallet.Gold.CurrentValue, Is.EqualTo(goldBefore + 200));
@@ -34,7 +34,7 @@ namespace Eclipse.Tests
                 clear: new[] { Reward(CurrencyType.Gold, 200) },
                 first: new[] { Reward(CurrencyType.Essence, 200) });
 
-            var granted = new StageRewardService(wallet).GrantVictory(stage, firstClear: false);
+            var granted = new StageRewardService(new CurrencyService(wallet)).GrantVictory(stage, firstClear: false);
 
             Assert.That(granted.Count, Is.EqualTo(1));
             Assert.That(granted[0].type, Is.EqualTo(CurrencyType.Gold));
@@ -52,7 +52,7 @@ namespace Eclipse.Tests
                 clear: new[] { Reward(CurrencyType.Gold, 1000) },
                 first: new[] { Reward(CurrencyType.Gold, 1000), Reward(CurrencyType.Essence, 1200) });
 
-            var granted = new StageRewardService(wallet).GrantVictory(stage, firstClear: true);
+            var granted = new StageRewardService(new CurrencyService(wallet)).GrantVictory(stage, firstClear: true);
 
             Assert.That(granted.Count, Is.EqualTo(2));
             var gold = granted[0];
@@ -66,7 +66,7 @@ namespace Eclipse.Tests
         {
             var wallet = new CurrencyWallet();
             int goldBefore = wallet.Gold.CurrentValue;
-            var service = new StageRewardService(wallet);
+            var service = new StageRewardService(new CurrencyService(wallet));
 
             Assert.That(service.GrantVictory(Stage(null, null), firstClear: true), Is.Empty);
             Assert.That(service.GrantVictory(null, firstClear: true), Is.Empty);

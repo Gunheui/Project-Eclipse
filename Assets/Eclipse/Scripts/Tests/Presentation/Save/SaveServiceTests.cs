@@ -65,7 +65,7 @@ namespace Eclipse.Tests
             save.Party[3] = ownedB;
 
             var wallet = new CurrencyWallet();
-            wallet.Grant(CurrencyType.Gold, 500);
+            new CurrencyService(wallet).Grant(CurrencyType.Gold, 500);
 
             var progress = new StageProgress();
             var chapter = Chapter("chapter_01", stageCount: 3);
