@@ -59,3 +59,4 @@ MonoBehaviour:
     level: 1
   - character: {fileID: 11400000, guid: 9195b66d1507f41cbb9badbabf82bbaf, type: 2}
     level: 1
+  growthConfig: {fileID: 11400000, guid: 9a7d855aac80645f99622bc9656d6672, type: 2}

@@ -22,6 +22,7 @@ namespace Eclipse.Tests
             so.displayName = "U";
             so.baseStats = stats;
             so.growthCurve = ScriptableObject.CreateInstance<GrowthCurve>(); // Lv1이라 스케일 없음
+            so.growthCurve.maxLevel = 30;
             return Combatant.FromCharacter(new OwnedCharacter(so, 1), slot);
         }
 

@@ -125,6 +125,9 @@ namespace Eclipse.Presentation
                     Debug.LogWarning($"세이브의 캐릭터 id '{entry.id}'가 카탈로그에 없다 — 건너뛴다.");
                     continue;
                 }
+                // 복원 레벨은 범위 검사 없이 그대로 쓴다. 저장된 레벨이 곧 growthCurve.maxLevel을 넘으면
+                // (그 커브의 maxLevel을 낮추는 밸런스 변경, 또는 손상·수기수정 세이브) CharacterStats.ScaleToLevel이
+                // 전투 진입·상세 화면에서 예외를 던진다. 상한은 올리기만 하면 안전하고, 내릴 땐 이 경로에 클램프가 필요하다.
                 owned.Add(new OwnedCharacter(definition, entry.level, entry.ascension));
             }
 

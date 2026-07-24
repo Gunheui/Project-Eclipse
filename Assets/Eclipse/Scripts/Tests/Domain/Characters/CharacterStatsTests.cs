@@ -1,3 +1,4 @@
+using System;
 using Eclipse.Data;
 using Eclipse.Domain;
 using NUnit.Framework;
@@ -42,6 +43,28 @@ namespace Eclipse.Tests
             Assert.AreEqual(1630, stats.hp, "1000 × 1.63 = 1630");
             Assert.AreEqual(285, stats.atk, "175 × 1.63 = 285.25 → 285");
             Assert.AreEqual(98, stats.def, "60 × 1.63 = 97.8 → 98");
+        }
+
+        [Test]
+        public void Lv30은_기본_스탯의_약_3_03배다()
+        {
+            // g=0.07, Lv30 → 계수 1 + 0.07×29 = 3.03
+            var def = Definition(1000, 175, 60, 120, 0.3f, 2.0f);
+
+            var stats = CharacterStats.ScaleToLevel(def, 30);
+
+            Assert.AreEqual(3030, stats.hp, "1000 × 3.03 = 3030");
+            Assert.AreEqual(530, stats.atk, "175 × 3.03 = 530.25 → 530");
+            Assert.AreEqual(182, stats.def, "60 × 3.03 = 181.8 → 182");
+        }
+
+        [Test]
+        public void 레벨_범위를_벗어나면_예외를_던진다()
+        {
+            var def = Definition(1000, 175, 60, 120, 0.3f, 2.0f); // maxLevel = 30
+
+            Assert.Throws<ArgumentOutOfRangeException>(() => CharacterStats.ScaleToLevel(def, 0));
+            Assert.Throws<ArgumentOutOfRangeException>(() => CharacterStats.ScaleToLevel(def, 31));
         }
 
         [Test]

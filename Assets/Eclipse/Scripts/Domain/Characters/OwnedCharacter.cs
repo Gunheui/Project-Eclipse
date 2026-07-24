@@ -11,8 +11,8 @@ namespace Eclipse.Domain
         /// <summary> 캐릭터 정의(공유·불변). </summary>
         public CharacterSO Definition { get; }
 
-        /// <summary> 이 계정에서의 현재 레벨. </summary>
-        public int Level { get; set; }
+        /// <summary> 이 계정에서의 현재 레벨. 성장 도메인 밖에서는 못 쓴다(생성·복원은 ctor, 증가는 <see cref="IncreaseLevel"/>). </summary>
+        public int Level { get; private set; }
 
         /// <summary> 돌파 단계(0 = 미돌파). 상한·강화 로직은 성장 시스템 소관. </summary>
         public int AscensionTier { get; set; }
@@ -23,5 +23,8 @@ namespace Eclipse.Domain
             Level = level;
             AscensionTier = ascensionTier;
         }
+
+        /// <summary> 레벨을 1 올린다. 상한(<see cref="Data.GrowthCurve.maxLevel"/>) 강제는 성장 서비스 책임이다. </summary>
+        public void IncreaseLevel() => Level++;
     }
 }

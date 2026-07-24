@@ -26,6 +26,7 @@ namespace Eclipse.Core
         }
 
         [SerializeField] private RosterEntry[] dummyRoster;
+        [SerializeField] private GrowthConfigSO growthConfig;
 
         private SaveService _saveService;
 
@@ -50,6 +51,8 @@ namespace Eclipse.Core
             builder.Register<IRewardService, StageRewardService>(Lifetime.Singleton);
             builder.Register(r => new SaveService(
                 r.Resolve<PlayerSave>(), r.Resolve<CurrencyWallet>(), r.Resolve<StageProgress>()), Lifetime.Singleton);
+            builder.RegisterInstance(growthConfig);
+            builder.Register<GrowthService>(Lifetime.Singleton);
             builder.Register<NavigationContext>(Lifetime.Singleton);
 
             // 라이프사이클 훅이 쓸 참조를 빌드 완료 시점에 잡아둔다.

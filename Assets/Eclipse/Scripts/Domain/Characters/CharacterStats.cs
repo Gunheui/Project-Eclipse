@@ -13,11 +13,20 @@ namespace Eclipse.Domain
         /// 정의의 기본 스탯을 성장곡선으로 레벨 스케일해 현재 스탯을 반환한다.
         /// HP·ATK·DEF만 스케일하고, SPD·치명확률·치명배율은 기본값을 유지한다.
         /// </summary>
-        /// <param name="level">현재 레벨(1 이상).</param>
+        /// <param name="level">현재 레벨. 1 이상 curve.maxLevel 이하만 허용한다.</param>
+        /// <exception cref="ArgumentNullException">정의나 성장곡선이 null일 때.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">level이 [1, maxLevel] 범위를 벗어날 때.</exception>
         public static Stats ScaleToLevel(CharacterSO definition, int level)
         {
-            var baseStats = definition.baseStats;
+            if (definition == null)
+                throw new ArgumentNullException(nameof(definition));
             var curve = definition.growthCurve;
+            if (curve == null)
+                throw new ArgumentNullException(nameof(definition), "growthCurve가 없다.");
+            if (level < 1 || level > curve.maxLevel)
+                throw new ArgumentOutOfRangeException(nameof(level), level, $"레벨은 1 이상 {curve.maxLevel} 이하여야 한다.");
+
+            var baseStats = definition.baseStats;
             // 반올림은 전투 파이프라인과 같은 AwayFromZero — .5 처리 방식이 갈리면 결정성이 흔들린다.
             return new Stats
             {

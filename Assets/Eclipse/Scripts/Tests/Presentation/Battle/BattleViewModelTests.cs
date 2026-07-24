@@ -42,6 +42,7 @@ namespace Eclipse.Tests
             so.displayName = name;
             so.baseStats = stats;
             so.growthCurve = ScriptableObject.CreateInstance<GrowthCurve>();
+            so.growthCurve.maxLevel = 30;
             so.basicSkill = Skill(name + "_b", 0, 1f);
             return Combatant.FromCharacter(new OwnedCharacter(so, 1), slot);
         }
