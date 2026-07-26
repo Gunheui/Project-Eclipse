@@ -9,7 +9,16 @@ namespace Eclipse.Data
     [CreateAssetMenu(menuName = "Eclipse/Growth/Growth Config")]
     public class GrowthConfigSO : ScriptableObject
     {
+        [Min(0)]
         [Tooltip("레벨업 비용 계수. 1회 비용 = 이 값 × 현재 레벨(길드 금화).")]
         public int levelUpCostCoefficient = 100;
+
+        [Min(0)]
+        [Tooltip("스킬 강화 골드 비용 계수. 1회 비용 = 이 값 × 현재 스킬 레벨.")]
+        public int skillEnhanceCostCoefficient = 500;
+
+        [Min(0)]
+        [Tooltip("스킬 강화 1회당 소모 교본 수.")]
+        public int skillEnhanceManualCost = 5;
     }
 }

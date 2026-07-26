@@ -53,6 +53,8 @@ namespace Eclipse.Core
                 r.Resolve<PlayerSave>(), r.Resolve<CurrencyWallet>(), r.Resolve<StageProgress>()), Lifetime.Singleton);
             builder.RegisterInstance(growthConfig);
             builder.Register<GrowthService>(Lifetime.Singleton);
+            builder.Register<SkillEnhanceService>(Lifetime.Singleton);
+            builder.Register<AscensionService>(Lifetime.Singleton);
             builder.Register<NavigationContext>(Lifetime.Singleton);
 
             // 라이프사이클 훅이 쓸 참조를 빌드 완료 시점에 잡아둔다.
@@ -90,6 +92,23 @@ namespace Eclipse.Core
         private void OnApplicationFocus(bool hasFocus)
         {
             if (!hasFocus) _saveService?.Save(); // 브라우저 탭 이탈
+        }
+
+        // 개발용 돌파 부여 경로. 돌파 재료(가챠 중복)가 아직 없어, 플레이 중 인스펙터 컨텍스트 메뉴로 검증한다.
+        [ContextMenu("디버그: 보유 전원 돌파 +1")]
+        private void DebugAscendAll()
+        {
+            if (Container == null)
+            {
+                Debug.LogWarning("컨테이너가 없다 — 플레이 모드에서만 쓸 수 있다.");
+                return;
+            }
+            var ascension = Container.Resolve<AscensionService>();
+            foreach (var owned in Container.Resolve<PlayerSave>().OwnedCharacters)
+            {
+                var result = ascension.TryAscend(owned);
+                Debug.Log($"{owned.Definition.displayName} 돌파 {result} → {owned.AscensionTier}단계");
+            }
         }
     }
 }

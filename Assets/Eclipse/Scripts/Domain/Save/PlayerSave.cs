@@ -20,6 +20,12 @@ namespace Eclipse.Domain
         /// </summary>
         public OwnedCharacter[] Party { get; }
 
+        /// <summary> 가챠 천장 카운터(0 이상). [이음새] 가챠 구현 전까지는 세이브 왕복만 한다. </summary>
+        public int PityCounter { get; set; }
+
+        /// <summary> 다음 최고 등급이 픽업 대상 확정인지. [이음새] 가챠 구현 전까지는 세이브 왕복만 한다. </summary>
+        public bool PickupGuaranteed { get; set; }
+
         public PlayerSave(List<OwnedCharacter> ownedCharacters)
         {
             OwnedCharacters = ownedCharacters;

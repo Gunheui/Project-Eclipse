@@ -132,12 +132,12 @@ namespace Eclipse.Domain
             CurrentHp = _maxHp;
         }
 
-        /// <summary> 아군 캐릭터를 전투 유닛으로 만든다. 스탯은 레벨 스케일되고, 스킬 슬롯을 런타임으로 감싼다. </summary>
+        /// <summary> 아군 캐릭터를 전투 유닛으로 만든다. 스탯은 정본 빌더(레벨·돌파)로 계산하고, 스킬 슬롯을 런타임으로 감싼다. </summary>
         /// <param name="slotIndex">편성 슬롯 번호(0부터).</param>
         public static Combatant FromCharacter(OwnedCharacter owned, int slotIndex)
         {
             var def = owned.Definition;
-            var stats = CharacterStats.ScaleToLevel(def, owned.Level);
+            var stats = CharacterStats.BuildAllyStats(def, owned.Level, owned.AscensionTier, null);
             var skills = BuildSkills(false, def.basicSkill, def.normalSkill, def.ultimateSkill);
             return new Combatant(def.displayName, Team.Ally, slotIndex, stats, skills);
         }

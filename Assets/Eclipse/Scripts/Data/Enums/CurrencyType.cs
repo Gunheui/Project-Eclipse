@@ -5,7 +5,7 @@ namespace Eclipse.Data.Enums
     /// </summary>
     public enum CurrencyType
     {
-        /// <summary>소환(가챠) 재화.</summary>
+        /// <summary>소환(가챠) 재화. 화면 표시명은 "보석".</summary>
         Essence = 0,
 
         /// <summary>성장(레벨업·스킬강화) 재화.</summary>

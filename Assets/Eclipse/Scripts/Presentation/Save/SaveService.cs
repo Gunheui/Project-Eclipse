@@ -63,7 +63,13 @@ namespace Eclipse.Presentation
             return new SaveData
             {
                 owned = _save.OwnedCharacters
-                    .Select(o => new OwnedEntry { id = o.Definition.id, level = o.Level, ascension = o.AscensionTier })
+                    .Select(o => new OwnedEntry
+                    {
+                        id = o.Definition.id,
+                        level = o.Level,
+                        ascension = o.AscensionTier,
+                        skillLevels = o.SkillLevels.ToArray(),
+                    })
                     .ToList(),
                 essence = _wallet.Essence.CurrentValue,
                 gold = _wallet.Gold.CurrentValue,
@@ -72,6 +78,8 @@ namespace Eclipse.Presentation
                     .Select(c => new ChapterEntry { chapterId = c.chapterId, cleared = c.cleared })
                     .ToList(),
                 party = _save.Party.Select(o => o != null ? o.Definition.id : "").ToArray(),
+                pityCounter = _save.PityCounter,
+                pickupGuaranteed = _save.PickupGuaranteed,
             };
         }
 
@@ -91,9 +99,10 @@ namespace Eclipse.Presentation
                 }
 
                 var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(filePath));
-                if (data == null || data.version != 1)
+                if (data == null || data.version != SaveData.CurrentVersion)
                 {
-                    // 버전이 다르면 부분 역직렬화된 반쪽 상태를 쓰지 않는다.
+                    // 버전이 다르면 부분 역직렬화된 반쪽 상태를 쓰지 않고 신규 계정으로 리셋한다.
+                    // 필드별 마이그레이션은 의도적으로 없다 — 배포된 세이브가 없는 포트폴리오 빌드의 확정 정책이다.
                     Debug.LogWarning($"세이브 버전 불일치 또는 빈 파일({filePath}) — 신규 계정으로 시작한다.");
                     return new SaveData();
                 }
@@ -125,10 +134,13 @@ namespace Eclipse.Presentation
                     Debug.LogWarning($"세이브의 캐릭터 id '{entry.id}'가 카탈로그에 없다 — 건너뛴다.");
                     continue;
                 }
-                // 복원 레벨은 범위 검사 없이 그대로 쓴다. 저장된 레벨이 곧 growthCurve.maxLevel을 넘으면
-                // (그 커브의 maxLevel을 낮추는 밸런스 변경, 또는 손상·수기수정 세이브) CharacterStats.ScaleToLevel이
-                // 전투 진입·상세 화면에서 예외를 던진다. 상한은 올리기만 하면 안전하고, 내릴 땐 이 경로에 클램프가 필요하다.
-                owned.Add(new OwnedCharacter(definition, entry.level, entry.ascension));
+                // 복원 레벨을 [1, maxLevel]로 고정한다. 범위 밖 레벨(손상·수기수정 세이브, maxLevel 하향 밸런스 변경)을
+                // 그대로 두면 CharacterStats.BuildAllyStats가 전투 진입·상세 화면에서 예외를 던진다.
+                // 돌파·스킬 레벨은 OwnedCharacter 생성자가 길이·범위를 정규화한다(같은 방어).
+                int level = definition.growthCurve != null
+                    ? Math.Clamp(entry.level, 1, definition.growthCurve.maxLevel)
+                    : entry.level;
+                owned.Add(new OwnedCharacter(definition, level, entry.ascension, entry.skillLevels));
             }
 
             var save = new PlayerSave(owned);
@@ -140,6 +152,8 @@ namespace Eclipse.Presentation
                     continue;
                 save.Party[i] = owned.FirstOrDefault(o => o.Definition.id == id);
             }
+            save.PityCounter = Math.Max(0, data.pityCounter);
+            save.PickupGuaranteed = data.pickupGuaranteed;
             return save;
         }
 

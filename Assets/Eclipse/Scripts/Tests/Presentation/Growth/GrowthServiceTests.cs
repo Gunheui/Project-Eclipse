@@ -123,10 +123,10 @@ namespace Eclipse.Tests
         [Test]
         public void 전투_생성_스탯은_도메인_스케일과_동일하다_MAR22()
         {
-            // 상세 화면(CharacterDetailViewModel)과 전투(Combatant.FromCharacter)가 같은 CharacterStats.ScaleToLevel을
-            // 태우는지 확증한다. 전투가 도메인 스케일을 벗어나 하드코딩되면 이 테스트가 깨진다.
+            // 상세 화면(CharacterDetailViewModel)과 전투(Combatant.FromCharacter)가 같은 정본 빌더
+            // (CharacterStats.BuildAllyStats)를 태우는지 확증한다. 전투가 도메인 스케일을 벗어나 하드코딩되면 이 테스트가 깨진다.
             var owned = Owned(level: 12);
-            var domain = CharacterStats.ScaleToLevel(owned.Definition, owned.Level);
+            var domain = CharacterStats.BuildAllyStats(owned.Definition, owned.Level, owned.AscensionTier, null);
 
             var combat = Combatant.FromCharacter(owned, 0).EffectiveStats; // 버프 없음 → 기본 스탯
 

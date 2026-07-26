@@ -40,8 +40,8 @@ namespace Eclipse.Presentation
             => _spriteProvider.LoadPortraitAsync(_owned.Definition, ct);
 
         /// <summary>
-        /// 현재 레벨 기준 스탯 6종. HP·ATK·DEF는 성장곡선으로 레벨 스케일,
-        /// SPD·치명확률·치명배율은 기본값 고정. 생성 시점에 한 번 계산해 캐싱한다.
+        /// 현재 레벨·돌파 기준 스탯 6종. 전투 조립과 같은 정본 빌더(<see cref="CharacterStats.BuildAllyStats"/>)를
+        /// 태워 표시와 전투가 어긋나지 않는다. 생성 시점에 한 번 계산해 캐싱한다.
         /// </summary>
         public Stats CurrentStats => _currentStats;
 
@@ -66,7 +66,7 @@ namespace Eclipse.Presentation
 
             _owned = context.Selected;
             _spriteProvider = spriteProvider;
-            _currentStats = CharacterStats.ScaleToLevel(_owned.Definition, _owned.Level);
+            _currentStats = CharacterStats.BuildAllyStats(_owned.Definition, _owned.Level, _owned.AscensionTier, null);
         }
     }
 }

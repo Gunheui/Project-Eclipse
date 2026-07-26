@@ -15,7 +15,7 @@ namespace Eclipse.Presentation
         private readonly ReactiveProperty<int> _gold;
         private readonly ReactiveProperty<int> _manual;
 
-        /// <summary>소환(가챠) 재화 잔액.</summary>
+        /// <summary>소환(가챠) 재화 잔액. 화면 표시명은 "보석".</summary>
         public ReadOnlyReactiveProperty<int> Essence => _essence;
 
         /// <summary>성장(레벨업·스킬강화) 재화 잔액.</summary>
@@ -24,8 +24,8 @@ namespace Eclipse.Presentation
         /// <summary>스킬강화 재료 재화 잔액.</summary>
         public ReadOnlyReactiveProperty<int> Manual => _manual;
 
-        /// <summary>신규 계정 기본 잔액으로 지갑을 만든다.</summary>
-        public CurrencyWallet() : this(3000, 1000, 0)
+        /// <summary>신규 계정 기본 잔액(보석 0·골드 1,000·교본 0)으로 지갑을 만든다. 보석은 가챠 구현 시점에 지급 경로가 열린다.</summary>
+        public CurrencyWallet() : this(0, 1000, 0)
         {
         }
 
