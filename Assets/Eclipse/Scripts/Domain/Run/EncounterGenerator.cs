@@ -8,13 +8,13 @@ namespace Eclipse.Domain
 {
     /// <summary>
     /// 방에 진입할 때 적 편성을 만든다. 일반 방은 마리수·몹·변이를 굴려 조합하고, 보스 방은 고정 편성이다.
-    /// 스탯 배수(스테이지 계수·변이·정예)는 여기서 접지 않고 스펙에만 실어 보낸다.
+    /// 스탯 배수(챕터 계수·변이·정예)는 여기서 접지 않고 스펙에만 실어 보낸다.
     /// 최종 스탯 계산처는 <see cref="CharacterStats"/> 하나로 유지한다.
     /// </summary>
     public sealed class EncounterGenerator
     {
         /// <summary> 보스 방 깊이. 고정 편성이라 난수를 쓰지 않는다. </summary>
-        public const int BossDepth = 5;
+        public const int BossDepth = 6;
 
         /// <summary> 한 방에 나올 수 있는 적의 최대 마리수. 전장 슬롯 수와 같다. </summary>
         public const int MaxEnemiesPerRoom = 4;
@@ -29,16 +29,16 @@ namespace Eclipse.Domain
         // 변이가 적중해도 스탯이 그대로다. 이런 데이터 실수는 눈에 띄지 않으므로 로드 시점에 막는다.
         private static readonly StatType[] MutableAxes = { StatType.Hp, StatType.Atk, StatType.Def, StatType.Spd };
 
-        private readonly StageTuningSO _tuning;
-        private readonly IStageRandom _encounterRng;
-        private readonly IStageRandom _mutationRng;
+        private readonly EncounterTuningSO _tuning;
+        private readonly IRunRandom _encounterRng;
+        private readonly IRunRandom _mutationRng;
 
         /// <summary>
-        /// 튜닝 데이터를 검증하고 생성기를 만든다. 조우와 변이는 서로 다른 난수 스트림을
-        /// 받는다(<see cref="StageSeed.For"/>로 파생).
+        /// 튜닝 데이터를 검증하고 생성기를 만든다. 인카운터와 변이는 서로 다른 난수 스트림을
+        /// 받는다(<see cref="RunSeed.For"/>로 파생).
         /// </summary>
         /// <exception cref="ArgumentException">튜닝 데이터가 로드 검증을 통과하지 못할 때.</exception>
-        public EncounterGenerator(StageTuningSO tuning, IStageRandom encounterRng, IStageRandom mutationRng)
+        public EncounterGenerator(EncounterTuningSO tuning, IRunRandom encounterRng, IRunRandom mutationRng)
         {
             _tuning = tuning ?? throw new ArgumentNullException(nameof(tuning));
             _encounterRng = encounterRng ?? throw new ArgumentNullException(nameof(encounterRng));
@@ -48,11 +48,11 @@ namespace Eclipse.Domain
         }
 
         /// <summary>
-        /// 해당 깊이의 조우를 생성한다. 호출할 때마다 난수를 소비하므로 같은 인자를 넘겨도 결과가 달라진다.
+        /// 해당 깊이의 인카운터를 생성한다. 호출할 때마다 난수를 소비하므로 같은 인자를 넘겨도 결과가 달라진다.
         /// 같은 시드로 만든 생성기를 같은 순서로 호출하면 항상 같은 편성이 나온다.
         /// </summary>
         /// <param name="depth">방 깊이. 1 이상 <see cref="BossDepth"/> 이하만 허용한다.</param>
-        /// <param name="elite">정예 조우 여부. 마리수를 상한으로 고정하고 전원을 변이·정예로 만든다. 보스 방에서는 무시한다.</param>
+        /// <param name="elite">정예 인카운터 여부. 마리수를 상한으로 고정하고 전원을 변이·정예로 만든다. 보스 방에서는 무시한다.</param>
         /// <exception cref="ArgumentOutOfRangeException">튜닝에 없는 깊이일 때.</exception>
         public EncounterSpec Generate(int depth, bool elite)
         {
@@ -82,7 +82,7 @@ namespace Eclipse.Domain
             => rule.minCount + _encounterRng.NextInt(rule.maxCount - rule.minCount + 1);
 
         // 적 한 마리에 붙일 변이를 뽑는다. 적중하지 못하면 null이고, 그 적은 변이 없이 나온다. 적중 판정은
-        // 확률이 0이든 100이든 마리당 1회 굴리는데, 소비량이 고정돼야 변이율을 튜닝해도 기대 수열이 안 흔들린다.
+        // 확률이 0이든 100이든 마리당 1회 추첨하는데, 소비량이 고정돼야 변이율을 튜닝해도 기대 수열이 안 흔들린다.
         private MutationSO RollMutation(int threshold)
         {
             bool hit = _mutationRng.NextInt(ProbabilityScale) < threshold;
@@ -98,9 +98,9 @@ namespace Eclipse.Domain
             return new EncounterSpec(enemies);
         }
 
-        // 튜닝 데이터를 검사하고 어긋난 데가 있으면 예외를 던진다. 어긋난 채로 굴리면 방마다 다른 곳에서
+        // 튜닝 데이터를 검사하고 잘못된 데가 있으면 예외를 던진다. 잘못된 채로 추첨하면 방마다 다른 곳에서
         // 터져 원인을 찾기 어려우므로 로드 시점에 한 번 걸러 낸다.
-        private static void Validate(StageTuningSO tuning)
+        private static void Validate(EncounterTuningSO tuning)
         {
             var depths = tuning.depths;
             if (depths == null || depths.Length != NormalDepthCount)

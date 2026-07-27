@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Eclipse.Data
 {
-    /// <summary> 방 깊이 한 단계의 조우 생성 규칙. </summary>
+    /// <summary> 방 깊이 한 단계의 인카운터 생성 규칙. </summary>
     [Serializable]
     public struct DepthPool
     {
@@ -24,11 +24,11 @@ namespace Eclipse.Data
     }
 
     /// <summary>
-    /// 챕터가 공유하는 조우 튜닝 데이터. 깊이 곡선은 스테이지가 달라도 같고,
-    /// 스테이지별 난이도 차이는 <see cref="StageSO.enemyStatMultiplier"/>가 담당한다.
+    /// 챕터가 공유하는 인카운터 튜닝 데이터. 깊이 곡선은 방이 달라도 같고,
+    /// 챕터별 난이도 차이는 <see cref="ChapterSO.enemyStatMultiplier"/>가 담당한다.
     /// </summary>
-    [CreateAssetMenu(menuName = "Eclipse/Stages/Stage Tuning Data")]
-    public sealed class StageTuningSO : ScriptableObject
+    [CreateAssetMenu(menuName = "Eclipse/Chapters/Encounter Tuning Data")]
+    public sealed class EncounterTuningSO : ScriptableObject
     {
         /// <summary> 일반 방의 깊이별 규칙. 깊이를 빠짐없이 한 번씩 덮어야 한다. </summary>
         public DepthPool[] depths;
@@ -42,7 +42,7 @@ namespace Eclipse.Data
         /// <summary> 변이 후보. 변이가 적중하면 이 중 하나를 균등 선택한다. </summary>
         public MutationSO[] mutations;
 
-        /// <summary> 정예 조우가 받는 전 스탯 배수. </summary>
+        /// <summary> 정예 인카운터가 받는 전 스탯 배수. </summary>
         public float eliteStatMultiplier = 1.15f;
     }
 }

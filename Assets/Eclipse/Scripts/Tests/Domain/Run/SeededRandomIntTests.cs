@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace Eclipse.Tests
 {
     /// <summary>
-    /// 정수 롤(<see cref="IStageRandom"/>)의 결정성·경계·균등성 검사.
+    /// 정수 롤(<see cref="IRunRandom"/>)의 결정성·경계·균등성 검사.
     /// 기대 수열은 같은 알고리즘(xorshift128+ / Lemire 구간 샘플링)을 별도 구현으로 돌려 얻은 값이다.
     /// </summary>
     public class SeededRandomIntTests

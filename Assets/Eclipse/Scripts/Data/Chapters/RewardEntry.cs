@@ -5,7 +5,7 @@ namespace Eclipse.Data
 {
     /// <summary>
     /// 보상 한 건 = 재화 종류와 수량. 지갑의 증감 API(Grant)에 그대로 먹일 수 있는 최소 단위이며,
-    /// 스테이지 보상 배열의 원소이자 결과 팝업에 표시되는 항목이기도 하다.
+    /// 보상 목록의 원소이자 결과 팝업에 표시되는 항목이기도 하다.
     /// </summary>
     [Serializable]
     public struct RewardEntry

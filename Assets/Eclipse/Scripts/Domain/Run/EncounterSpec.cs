@@ -18,7 +18,7 @@ namespace Eclipse.Domain
         public IReadOnlyList<EnemyInstanceSpec> Enemies { get; }
     }
 
-    /// <summary> 적 한 마리의 조우 스펙. 같은 적이라도 변이·정예 여부에 따라 다른 개체가 된다. </summary>
+    /// <summary> 적 한 마리의 인카운터 스펙. 같은 적이라도 변이·정예 여부에 따라 다른 개체가 된다. </summary>
     public readonly struct EnemyInstanceSpec
     {
         public EnemyInstanceSpec(EnemySO enemy, MutationSO mutation, bool isElite)
@@ -34,7 +34,7 @@ namespace Eclipse.Domain
         /// <summary> 침식 변이. 변이가 없으면 null이다. </summary>
         public MutationSO Mutation { get; }
 
-        /// <summary> 정예 조우로 생성된 개체인지 알려 준다. </summary>
+        /// <summary> 정예 인카운터로 생성된 개체인지 알려 준다. </summary>
         public bool IsElite { get; }
     }
 }
