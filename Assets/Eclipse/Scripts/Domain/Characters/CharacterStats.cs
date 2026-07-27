@@ -13,11 +13,7 @@ namespace Eclipse.Domain
         /// <summary> 돌파 1단계당 HP·ATK 증가율(+8%). </summary>
         private const float AscensionBonusPerTier = 0.08f;
 
-        /// <summary>
-        /// 아군 최종 스탯을 계산한다. HP·ATK·DEF는 성장곡선으로 레벨 스케일하고, HP·ATK에는 돌파 배수(단계당 +8%)를
-        /// 곱한 뒤, 스탯별 버프 %가산을 적용한다. 반올림(AwayFromZero)은 마지막에 한 번만 하며
-        /// 정수 스탯의 하한은 1이다. 치명 계열은 %p 가산이고 치명확률은 [0, 1]로 고정한다.
-        /// </summary>
+        /// <summary> 아군 최종 스탯을 계산한다. 레벨·돌파·스테이지 버프가 모두 반영된 완성값이다. </summary>
         /// <param name="level">현재 레벨. 1 이상 curve.maxLevel 이하만 허용한다.</param>
         /// <param name="ascensionTier">돌파 단계. 0 이상 <see cref="OwnedCharacter.MaxAscensionTier"/> 이하만 허용한다.</param>
         /// <param name="buffs">이 캐릭터가 스테이지에서 받은 버프 합산. 없으면 null.</param>
@@ -37,24 +33,59 @@ namespace Eclipse.Domain
                     $"돌파 단계는 0 이상 {OwnedCharacter.MaxAscensionTier} 이하여야 한다.");
 
             var baseStats = definition.baseStats;
-            float ascension = 1f + AscensionBonusPerTier * ascensionTier;
+            float ascension = 1f + AscensionBonusPerTier * ascensionTier; // 돌파 배수는 HP·ATK에만 곱한다
             return new Stats
             {
                 hp = ApplyBuffAndRound(curve.StatAtLevel(baseStats.hp, level) * ascension, buffs, StatType.Hp),
                 atk = ApplyBuffAndRound(curve.StatAtLevel(baseStats.atk, level) * ascension, buffs, StatType.Atk),
                 def = ApplyBuffAndRound(curve.StatAtLevel(baseStats.def, level), buffs, StatType.Def),
-                spd = ApplyBuffAndRound(baseStats.spd, buffs, StatType.Spd),
+                spd = ApplyBuffAndRound(baseStats.spd, buffs, StatType.Spd), // SPD는 레벨 스케일이 없다
+                // 치명 계열은 %p 가산이며 치명확률은 [0, 1]로 고정한다.
                 critRate = Math.Clamp(baseStats.critRate + SumOf(buffs, StatType.CritRate), 0f, 1f),
                 critDamage = baseStats.critDamage + SumOf(buffs, StatType.CritDamage),
             };
         }
 
-        // 버프 %가산을 곱한 뒤 한 번만 반올림한다. 반올림은 전투 파이프라인과 같은 AwayFromZero —
-        // .5 처리 방식이 갈리면 결정성이 흔들린다. 하한 1은 spd가 게이지 나눗셈 분모라 0이 금지되는 규칙을 겸한다.
-        private static int ApplyBuffAndRound(float value, StatModifierSet buffs, StatType axis)
-            => Math.Max(1, (int)Math.Round(value * (1f + SumOf(buffs, axis)), MidpointRounding.AwayFromZero));
+        /// <summary> 적 최종 스탯을 계산한다. 스테이지 난이도·변이·정예 배수와 디버프가 모두 반영된 완성값이다. </summary>
+        /// <param name="baseStats">적 정의의 고정 스탯. 적은 레벨 스케일이 없다.</param>
+        /// <param name="stageMultiplier">스테이지 난이도 배수(<see cref="StageSO.enemyStatMultiplier"/>).</param>
+        /// <param name="mutation">침식 변이. 없으면 null. 변이가 지정한 스탯 하나에만 배수가 걸린다.</param>
+        /// <param name="eliteMultiplier">정예 배수. 일반 조우면 1을 넘긴다.</param>
+        /// <param name="enemyDebuffs">스테이지 전역으로 적에게 걸린 디버프 합. 없으면 null.</param>
+        public static Stats BuildEnemyStats(Stats baseStats, float stageMultiplier, MutationSO mutation,
+            float eliteMultiplier, StatModifierSet enemyDebuffs)
+        {
+            float common = stageMultiplier * eliteMultiplier; // 배수는 HP·ATK·DEF·SPD에만 걸린다
+            return new Stats
+            {
+                hp = ApplyDebuffAndRound(baseStats.hp * common * MutationMultiplier(mutation, StatType.Hp), enemyDebuffs, StatType.Hp),
+                atk = ApplyDebuffAndRound(baseStats.atk * common * MutationMultiplier(mutation, StatType.Atk), enemyDebuffs, StatType.Atk),
+                def = ApplyDebuffAndRound(baseStats.def * common * MutationMultiplier(mutation, StatType.Def), enemyDebuffs, StatType.Def),
+                spd = ApplyDebuffAndRound(baseStats.spd * common * MutationMultiplier(mutation, StatType.Spd), enemyDebuffs, StatType.Spd),
+                // 치명 계열에는 배수를 곱하지 않고 디버프만 뺀다.
+                critRate = Math.Clamp(baseStats.critRate - SumOf(enemyDebuffs, StatType.CritRate), 0f, 1f),
+                critDamage = Math.Max(0f, baseStats.critDamage - SumOf(enemyDebuffs, StatType.CritDamage)),
+            };
+        }
 
-        private static float SumOf(StatModifierSet buffs, StatType axis)
-            => buffs?.SumOf(axis) ?? 0f;
+        // 이 스탯에 걸리는 변이 배수를 돌려준다. 변이가 없거나 다른 스탯을 올리는 변이면 1이다.
+        private static float MutationMultiplier(MutationSO mutation, StatType axis)
+            => mutation != null && mutation.statAxis == axis ? mutation.multiplier : 1f;
+
+        // 버프 %가산을 곱한 뒤 한 번만 반올림한다.
+        private static int ApplyBuffAndRound(float value, StatModifierSet buffs, StatType axis)
+            => Round(value * (1f + SumOf(buffs, axis)));
+
+        // 디버프 합만큼 깎은 뒤 한 번만 반올림한다. 버프 경로와 부호만 다르다.
+        private static int ApplyDebuffAndRound(float value, StatModifierSet debuffs, StatType axis)
+            => Round(value * (1f - SumOf(debuffs, axis)));
+
+        // 반올림한 뒤 하한 1을 적용한다. AwayFromZero는 전투 파이프라인과 맞춘 것으로, .5 처리 방식이 갈리면
+        // 결정성이 흔들린다. 하한 1은 spd가 게이지 나눗셈 분모라 0이 금지되는 규칙을 겸한다.
+        private static int Round(float value)
+            => Math.Max(1, (int)Math.Round(value, MidpointRounding.AwayFromZero));
+
+        private static float SumOf(StatModifierSet modifiers, StatType axis)
+            => modifiers?.SumOf(axis) ?? 0f;
     }
 }

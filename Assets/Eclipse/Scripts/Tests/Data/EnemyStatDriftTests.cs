@@ -1,0 +1,42 @@
+using System.Collections.Generic;
+using System.Linq;
+using Eclipse.Data;
+using NUnit.Framework;
+using UnityEditor;
+
+namespace Eclipse.Tests
+{
+    /// <summary>
+    /// 적 기본 HP가 기획 표에서 벗어나는 것을 잡는다. 스테이지 난이도 배수가 이 값 위에 곱해지므로
+    /// 여기가 어긋나면 5개 스테이지의 체감 난이도가 통째로 밀린다.
+    /// </summary>
+    public class EnemyStatDriftTests
+    {
+        private static readonly Dictionary<string, int> ExpectedHp = new Dictionary<string, int>
+        {
+            ["enemy_slime"] = 300,
+            ["enemy_beast"] = 1300,
+            ["enemy_hound"] = 1400,
+            ["enemy_guard"] = 1600,
+            ["enemy_boss_ilnoct"] = 4800,
+        };
+
+        [Test]
+        public void 적_기본_HP가_기획표와_일치한다()
+        {
+            var actual = AssetDatabase.FindAssets("t:EnemySO")
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Select(AssetDatabase.LoadAssetAtPath<EnemySO>)
+                .ToDictionary(e => e.id, e => e.baseStats.hp);
+
+            CollectionAssert.AreEquivalent(ExpectedHp.Keys, actual.Keys, "적 에셋 구성이 기획표와 다르다");
+
+            var failures = ExpectedHp
+                .Where(pair => actual[pair.Key] != pair.Value)
+                .Select(pair => $"{pair.Key}: 기대 {pair.Value}, 실제 {actual[pair.Key]}")
+                .ToList();
+
+            Assert.That(failures, Is.Empty, "적 HP 드리프트 감지:\n" + string.Join("\n", failures));
+        }
+    }
+}

@@ -21,6 +21,21 @@ namespace Eclipse.Data
         /// <summary> 스테이지 항목 썸네일 스프라이트. </summary>
         public Sprite thumbnail;
 
+        /// <summary> 전투 배경 스프라이트. 방을 옮겨도 씬은 그대로 두고 이 스프라이트만 교체한다. </summary>
+        public Sprite background;
+
+        /// <summary> 이 스테이지 적 스탯에 곱하는 난이도 배수. </summary>
+        public float enemyStatMultiplier = 1f;
+
+        /// <summary> 스테이지 안에서 얻는 재화에 곱하는 배수. </summary>
+        public float currencyMultiplier = 1f;
+
+        /// <summary> 입장에 드는 스태미나. [보류 스태미나] 읽는 곳이 아직 없다. </summary>
+        public int staminaCost = 6;
+
+        /// <summary> 클리어할 때 캐릭터 픽 보상을 주는지 정한다. 챕터 마지막 스테이지만 true다. </summary>
+        public bool grantsAscensionPick;
+
         /// <summary> 보스 스테이지 여부. 항목에 보스 프레임을 표시하고 장의 마지막 스테이지로 배치한다. </summary>
         public bool isBoss;
 

@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Ilnoct
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.EnemySO
   id: enemy_boss_ilnoct
-  displayName: 침식 거상 일노크트
+  displayName: "\uCE68\uC2DD \uAC70\uC0C1 \uC77C\uB178\uD06C\uD2B8"
   baseStats:
-    hp: 3300
+    hp: 4800
     atk: 175
     def: 90
     spd: 90

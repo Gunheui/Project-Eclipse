@@ -32,7 +32,7 @@ namespace Eclipse.Presentation
     [Serializable]
     public class SaveData
     {
-        /// <summary> 현재 스키마 버전. v2 = 스킬 레벨·가챠 천장 필드 추가, 시작 보석 0. </summary>
+        /// <summary> 현재 스키마 버전. </summary>
         public const int CurrentVersion = 2;
 
         /// <summary> 스키마 버전. 값이 다르면 부분 역직렬화된 반쪽 상태를 쓰지 않고 신규 계정으로 취급한다. </summary>

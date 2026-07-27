@@ -13,15 +13,25 @@ MonoBehaviour:
   m_Name: stage_01
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.StageSO
   id: stage_01
-  displayName: "1-1 검게 굳은 오솔길"
-  description: "보급로 초입, 갓 오염된 작은 것들이 길을 막는다.\n밀도는 옅다 — 되밀어내기엔 지금이 가장 쉽다."
+  displayName: "1-1 \uAC80\uAC8C \uAD73\uC740 \uC624\uC194\uAE38"
+  description: "\uBCF4\uAE09\uB85C \uCD08\uC785, \uAC13 \uC624\uC5FC\uB41C \uC791\uC740
+    \uAC83\uB4E4\uC774 \uAE38\uC744 \uB9C9\uB294\uB2E4.\n\uBC00\uB3C4\uB294 \uC605\uB2E4
+    \u2014 \uB418\uBC00\uC5B4\uB0B4\uAE30\uC5D4 \uC9C0\uAE08\uC774 \uAC00\uC7A5 \uC27D\uB2E4."
   thumbnail: {fileID: 21300000, guid: 473c75e1a4a5542f8aa2f3ce55cfec4c, type: 3}
+  background: {fileID: 0}
+  enemyStatMultiplier: 1
+  currencyMultiplier: 1
+  staminaCost: 6
+  grantsAscensionPick: 0
+  isBoss: 0
   enemies:
   - {fileID: 11400000, guid: 0b7faf62b01a4f6f9eee97f8f05b22ee, type: 2}
   - {fileID: 11400000, guid: 0b7faf62b01a4f6f9eee97f8f05b22ee, type: 2}
-  clearRewards:
-  - type: 1
-    amount: 200
+  clearRewards: []
   firstClearRewards:
+  - type: 1
+    amount: 600
+  - type: 2
+    amount: 3
   - type: 0
     amount: 200

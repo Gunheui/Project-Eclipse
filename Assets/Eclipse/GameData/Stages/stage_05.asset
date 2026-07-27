@@ -13,20 +13,25 @@ MonoBehaviour:
   m_Name: stage_05
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.StageSO
   id: stage_05
-  displayName: "1-5 검은뿌리의 심장"
-  description: "침식이 한 덩어리로 응결한 거상이 심부에서 일어섰다.\n이 하나를 무너뜨리면 벌목지는 되돌아온다."
+  displayName: "1-5 \uAC80\uC740\uBFCC\uB9AC\uC758 \uC2EC\uC7A5"
+  description: "\uCE68\uC2DD\uC774 \uD55C \uB369\uC5B4\uB9AC\uB85C \uC751\uACB0\uD55C
+    \uAC70\uC0C1\uC774 \uC2EC\uBD80\uC5D0\uC11C \uC77C\uC5B4\uC130\uB2E4.\n\uC774
+    \uD558\uB098\uB97C \uBB34\uB108\uB728\uB9AC\uBA74 \uBC8C\uBAA9\uC9C0\uB294 \uB418\uB3CC\uC544\uC628\uB2E4."
   thumbnail: {fileID: 21300000, guid: 850d5d227eb3043ee85f3fe9abb63ae5, type: 3}
+  background: {fileID: 0}
+  enemyStatMultiplier: 1.9
+  currencyMultiplier: 2.2
+  staminaCost: 6
+  grantsAscensionPick: 1
   isBoss: 1
   enemies:
   - {fileID: 11400000, guid: 4eeae767760d45aab9d845e315e0b783, type: 2}
   - {fileID: 11400000, guid: 2af35d4408874bf8aa546ba5a5ca30c9, type: 2}
-  clearRewards:
-  - type: 1
-    amount: 1000
-  - type: 2
-    amount: 2
+  clearRewards: []
   firstClearRewards:
+  - type: 1
+    amount: 4400
+  - type: 2
+    amount: 20
   - type: 0
     amount: 1200
-  - type: 1
-    amount: 1000
