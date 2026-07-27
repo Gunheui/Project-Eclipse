@@ -43,7 +43,7 @@ namespace Eclipse.Tests
             var owned = new OwnedCharacter(so, 1, ascensionTier);
             var wallet = new CurrencyWallet();
             _wallets.Add(wallet);
-            var save = new SaveService(new PlayerSave(new List<OwnedCharacter> { owned }), wallet, new StageProgress(), _path);
+            var save = new SaveService(new PlayerSave(new List<OwnedCharacter> { owned }), wallet, new ChapterProgress(), _path);
             return (owned, new AscensionService(save));
         }
 

@@ -54,7 +54,7 @@ namespace Eclipse.Tests
         {
             var wallet = new CurrencyWallet(0, gold, 0);
             _wallets.Add(wallet);
-            var save = new SaveService(new PlayerSave(new List<OwnedCharacter> { owned }), wallet, new StageProgress(), _path);
+            var save = new SaveService(new PlayerSave(new List<OwnedCharacter> { owned }), wallet, new ChapterProgress(), _path);
             var config = ScriptableObject.CreateInstance<GrowthConfigSO>();
             config.levelUpCostCoefficient = costCoefficient;
             _assets.Add(config);
@@ -107,10 +107,12 @@ namespace Eclipse.Tests
         public void 레벨업_결과가_다음_전투_스탯에_반영되고_SPD_치명은_불변이다()
         {
             var owned = Owned(level: 1);
-            var before = Combatant.FromCharacter(owned, 0).EffectiveStats;
+            var before = Combatant.FromCharacter(owned, 0, CharacterStats.BuildAllyStats(
+                owned.Definition, owned.Level, owned.AscensionTier, null)).EffectiveStats;
 
             Service(owned, gold: 1000).TryLevelUp(owned); // Lv1 → Lv2
-            var after = Combatant.FromCharacter(owned, 0).EffectiveStats;
+            var after = Combatant.FromCharacter(owned, 0, CharacterStats.BuildAllyStats(
+                owned.Definition, owned.Level, owned.AscensionTier, null)).EffectiveStats;
 
             Assert.That(after.hp, Is.GreaterThan(before.hp), "HP 반영");
             Assert.That(after.atk, Is.GreaterThan(before.atk), "ATK 반영");
@@ -128,7 +130,8 @@ namespace Eclipse.Tests
             var owned = Owned(level: 12);
             var domain = CharacterStats.BuildAllyStats(owned.Definition, owned.Level, owned.AscensionTier, null);
 
-            var combat = Combatant.FromCharacter(owned, 0).EffectiveStats; // 버프 없음 → 기본 스탯
+            var combat = Combatant.FromCharacter(owned, 0, CharacterStats.BuildAllyStats(
+                owned.Definition, owned.Level, owned.AscensionTier, null)).EffectiveStats; // 버프 없음 → 기본 스탯
 
             Assert.That(combat.hp, Is.EqualTo(domain.hp));
             Assert.That(combat.atk, Is.EqualTo(domain.atk));

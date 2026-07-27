@@ -7,8 +7,8 @@ using UnityEditor;
 namespace Eclipse.Tests
 {
     /// <summary>
-    /// 적 기본 HP가 기획 표에서 벗어나는 것을 잡는다. 스테이지 난이도 배수가 이 값 위에 곱해지므로
-    /// 여기가 어긋나면 5개 스테이지의 체감 난이도가 통째로 밀린다.
+    /// 적 기본 HP가 기획 표에서 벗어나는 것을 잡는다. 챕터 난이도 배수가 이 값 위에 곱해지므로
+    /// 여기가 달라지면 런 전체의 체감 난이도가 통째로 밀린다.
     /// </summary>
     public class EnemyStatDriftTests
     {

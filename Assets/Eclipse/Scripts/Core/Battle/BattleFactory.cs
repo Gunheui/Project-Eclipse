@@ -1,93 +1,51 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Eclipse.Data;
 using Eclipse.Domain;
 using Eclipse.Presentation;
-using Eclipse.Service;
 
 namespace Eclipse.Core
 {
     /// <summary>
-    /// 전투 뷰모델 조립 전담 팩토리. 컨테이너가 소유하는 서비스(타겟·전투 파이프라인·스킬 실행기·씬 흐름)는
-    /// 생성자로 주입받고, 전투마다 달라지는 값(선택 파티·적 편성·시드·오토 시작)은 <see cref="Create"/> 인자로 받는다.
-    /// LifetimeScope는 이 팩토리를 등록하고 결과를 위임 등록할 뿐, 조립 규칙을 소유하지 않는다.
+    /// 전투 뷰모델 조립 전담 팩토리. 방마다 재호출되어 난수·파이프라인·엔진·전투원을 전부 새로 만든다.
+    /// 파티·버프·챕터 계수는 런 세션에서 읽고, 최종 스탯은 정본 빌더(CharacterStats)로만 계산한다.
     /// </summary>
     public sealed class BattleFactory
     {
         private readonly BattleConstantsSO constants;
-        private readonly TargetResolver targeting;
-        private readonly CombatPipeline combat;
-        private readonly SkillExecutor executor;
-        private readonly ISceneFlow sceneFlow;
-        private readonly StageProgress progress;
-        private readonly IRewardService rewards;
-        private readonly SaveService saveService;
+        private readonly ChapterRunSession session;
+        private readonly EncounterTuningSO tuning;
 
-        public BattleFactory(
-            BattleConstantsSO constants,
-            TargetResolver targeting,
-            CombatPipeline combat,
-            SkillExecutor executor,
-            ISceneFlow sceneFlow,
-            StageProgress progress,
-            IRewardService rewards,
-            SaveService saveService)
+        public BattleFactory(BattleConstantsSO constants, ChapterRunSession session, EncounterTuningSO tuning)
         {
             this.constants = constants;
-            this.targeting = targeting;
-            this.combat = combat;
-            this.executor = executor;
-            this.sceneFlow = sceneFlow;
-            this.progress = progress;
-            this.rewards = rewards;
-            this.saveService = saveService;
+            this.session = session;
+            this.tuning = tuning;
         }
 
         /// <summary>
-        /// 아군 파티와 스테이지 적 편성으로 전투 뷰모델을 조립한다. 장·스테이지·인덱스는 여기서 검증·확정돼
-        /// 뷰모델에 불변으로 들어가며, 순수 조립만 하고 아무 것도 구독/시작하지 않는다.
+        /// 이 방의 인카운터로 전투 뷰모델을 조립한다. 순수 조립만 하고 아무 것도 구독/시작하지 않는다.
         /// </summary>
-        /// <param name="selectedParty">아군 파티. 인덱스 = 진영 자리(0~3), 빈 자리는 null. 유효 아군이 없으면 예외.</param>
-        /// <param name="battleSeed">전투 난수 시드. 같은 값이면 데미지·타겟 난수가 완전히 재현된다.</param>
+        /// <param name="encounter">이 방의 적 편성 스펙. 비어 있으면 예외.</param>
+        /// <param name="battleSeed">이 방의 전투 시드(런 시드에서 방 인덱스로 파생된 값).</param>
         /// <param name="startAuto">true면 오토 모드로 시작.</param>
-        public BattleViewModel Create(
-            IReadOnlyList<OwnedCharacter> selectedParty,
-            ChapterSO chapter,
-            StageSO stage,
-            int battleSeed,
-            bool startAuto)
+        public BattleViewModel Create(EncounterSpec encounter, int battleSeed, bool startAuto)
         {
-            if (selectedParty == null)
-                throw new ArgumentNullException(nameof(selectedParty));
-            if (chapter == null)
-                throw new ArgumentNullException(nameof(chapter));
-            if (stage == null)
-                throw new ArgumentNullException(nameof(stage));
-
-            var enemies = stage.enemies;
-            if (enemies == null || enemies.Length == 0)
-                throw new InvalidOperationException($"스테이지 '{stage.id}'에 적 편성(enemies)이 비어 있다.");
-            for (int i = 0; i < enemies.Length; i++)
-                if (enemies[i] == null)
-                    throw new InvalidOperationException(
-                        $"스테이지 '{stage.id}'의 적 편성 슬롯 {i}가 비어 있다(Inspector EnemySO 참조 누락).");
-
-            // 클리어 마킹이 쓸 인덱스를 지금 확정한다. 장·스테이지 데이터가 어긋난 채 전투가 시작되면
-            // 승리 마킹만 조용히 실패하므로, 불일치는 조립 시점에 즉시 드러낸다.
-            int stageIndex = Array.IndexOf(chapter.stages ?? Array.Empty<StageSO>(), stage);
-            if (stageIndex < 0)
-                throw new InvalidOperationException(
-                    $"스테이지 '{stage.id}'가 장 '{chapter.id}'의 stages에 없다 — 장·스테이지 선택이 어긋났다.");
+            var enemies = encounter.Enemies;
+            if (enemies == null || enemies.Count == 0)
+                throw new InvalidOperationException("인카운터 스펙의 적 편성이 비어 있다.");
+            for (int i = 0; i < enemies.Count; i++)
+                if (enemies[i].Enemy == null)
+                    throw new InvalidOperationException($"인카운터 스펙의 적 슬롯 {i}가 비어 있다(EnemySO 누락).");
 
             // 인덱스가 곧 진영 자리이므로 빈칸(null)을 걷어내되 남은 유닛의 자리 번호는 원래 인덱스를 유지한다.
-            var ownedParty = selectedParty
+            var ownedParty = session.Party
                 .Take(PlayerSave.PartySlotCount)
                 .Select((owned, slot) => (owned, slot))
                 .Where(x => x.owned != null)
                 .ToList();
             if (ownedParty.Count == 0)
-                throw new ArgumentException("선택 파티에 유효한 아군이 하나도 없다.", nameof(selectedParty));
+                throw new InvalidOperationException("런 세션 파티에 유효한 아군이 하나도 없다.");
 
             var enemyParty = enemies.Take(PlayerSave.PartySlotCount).ToList();
 
@@ -95,21 +53,29 @@ namespace Eclipse.Core
             // 아군 얼굴이 비면 그 칸은 비워 그린다. 전신 초상으로 폴백하면 데이터 누락이 감춰지기 때문이다.
             var allyEntries = ownedParty
                 .Select(x => new BattleUnitEntry(
-                    Combatant.FromCharacter(x.owned, x.slot),
+                    Combatant.FromCharacter(x.owned, x.slot, CharacterStats.BuildAllyStats(
+                        x.owned.Definition, x.owned.Level, x.owned.AscensionTier, session.BuffsOf(x.slot))),
                     x.owned.Definition.portraitAssetRef,
                     x.owned.Definition.faceIconAssetRef))
                 .ToList();
             var enemyEntries = enemyParty
-                .Select((so, slot) => new BattleUnitEntry(
-                    Combatant.FromEnemy(so, slot),
-                    so.battlerAssetRef,
-                    so.battlerAssetRef))
+                .Select((spec, slot) => new BattleUnitEntry(
+                    BuildEnemy(spec, slot),
+                    spec.Enemy.battlerAssetRef,
+                    spec.Enemy.battlerAssetRef))
                 .ToList();
 
             // 아군·적은 독립 타겟 난수 스트림을 사용한다. 둘 다 battleSeed에서 결정론적으로 파생되므로
             // 재현성은 유지되고, 한쪽의 난수 소비가 반대쪽 선택에 영향을 주지 않는다.
             var allyTargetRng = new SeededRandom(BattleSeed.For(battleSeed, BattleSeed.Stream.AllyTargeting));
             var enemyTargetRng = new SeededRandom(BattleSeed.For(battleSeed, BattleSeed.Stream.EnemyTargeting));
+
+            // 데미지 난수·파이프라인도 방마다 새로 선다 — 상주 씬에서 7방이 한 시드를 공유하지 않게 한다.
+            var damageRng = new SeededRandom(BattleSeed.For(battleSeed, BattleSeed.Stream.Damage));
+            var targeting = new TargetResolver();
+            var combat = new CombatPipeline(new DamagePipeline(
+                constants.defenseK, constants.varianceMin, constants.varianceMax, damageRng));
+            var executor = new SkillExecutor(combat, targeting);
 
             var autoRule = RuleBasedActionProvider.AllyAuto(targeting, combat, allyTargetRng);
             var manualProvider = new ManualActionProvider(autoRule) { AutoMode = startAuto };
@@ -130,14 +96,22 @@ namespace Eclipse.Core
                 engine,
                 scheduler,
                 manualProvider,
-                targeting,
-                sceneFlow,
-                progress,
-                chapter,
-                stage,
-                stageIndex,
-                rewards,
-                saveService);
+                targeting);
+        }
+
+        // 적 하나를 조립한다. 챕터 계수·변이·정예 배수·런 디버프를 정본 빌더로 접고, 변이 이름 접두를 붙인다.
+        private Combatant BuildEnemy(EnemyInstanceSpec spec, int slot)
+        {
+            var stats = CharacterStats.BuildEnemyStats(
+                spec.Enemy.baseStats,
+                session.Chapter.enemyStatMultiplier,
+                spec.Mutation,
+                spec.IsElite ? tuning.eliteStatMultiplier : 1f,
+                session.EnemyDebuffs);
+            string name = spec.Mutation != null
+                ? spec.Mutation.namePrefix + spec.Enemy.displayName
+                : null;
+            return Combatant.FromEnemy(spec.Enemy, slot, stats, name);
         }
     }
 }

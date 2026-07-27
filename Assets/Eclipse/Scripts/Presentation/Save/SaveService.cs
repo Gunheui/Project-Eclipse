@@ -12,7 +12,7 @@ using System.Runtime.InteropServices;
 namespace Eclipse.Presentation
 {
     /// <summary>
-    /// 플레이어 영속 상태의 저장·복원 서비스. 런타임 홀더 3종(PlayerSave·CurrencyWallet·StageProgress)의
+    /// 플레이어 영속 상태의 저장·복원 서비스. 런타임 홀더 3종(PlayerSave·CurrencyWallet·ChapterProgress)의
     /// 현재 상태를 <see cref="SaveData"/>로 스냅샷해 JSON 파일 하나로 쓴다.
     /// 복원(<see cref="LoadOrNew"/>·<see cref="BuildPlayerSave"/>·<see cref="ApplyChapters"/>)은 정적 메서드로
     /// 분리해 테스트가 프로덕션 경로를 그대로 태운다. 저장 실패는 로그만 남기고 삼킨다 —
@@ -22,14 +22,14 @@ namespace Eclipse.Presentation
     {
         private readonly PlayerSave _save;
         private readonly CurrencyWallet _wallet;
-        private readonly StageProgress _progress;
+        private readonly ChapterProgress _progress;
         private readonly string _filePath;
 
         /// <summary> 기본 저장 경로. 플랫폼별 영속 디렉터리 밑의 player.json. </summary>
         public static string DefaultFilePath => Path.Combine(Application.persistentDataPath, "player.json");
 
         /// <param name="filePath">저장 파일 경로. null이면 <see cref="DefaultFilePath"/>. 테스트가 임시 경로를 주입하는 이음새.</param>
-        public SaveService(PlayerSave save, CurrencyWallet wallet, StageProgress progress, string filePath = null)
+        public SaveService(PlayerSave save, CurrencyWallet wallet, ChapterProgress progress, string filePath = null)
         {
             _save = save;
             _wallet = wallet;
@@ -158,10 +158,10 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// SaveData의 장별 클리어 카운트를 StageProgress에 복원한다. 미등록 장은 StageProgress가
-        /// 보류했다가 첫 접근 때 적용한다(<see cref="StageProgress.Restore"/>).
+        /// SaveData의 장별 클리어 값을 ChapterProgress에 복원한다. 미등록 장은 ChapterProgress가
+        /// 보류했다가 첫 접근 때 적용한다(<see cref="ChapterProgress.Restore"/>).
         /// </summary>
-        public static void ApplyChapters(SaveData data, StageProgress progress)
+        public static void ApplyChapters(SaveData data, ChapterProgress progress)
         {
             foreach (var chapter in data.chapters ?? new List<ChapterEntry>())
                 progress.Restore(chapter.chapterId, chapter.cleared);

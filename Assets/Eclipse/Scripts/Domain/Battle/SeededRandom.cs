@@ -7,7 +7,7 @@ namespace Eclipse.Domain
     /// 플랫폼·런타임(Mono/IL2CPP)·.NET 버전과 무관하게 같은 시드는 항상 같은 수열을 낸다.
     /// System.Random은 결정성이 API로 보장되지 않아 리플레이·회귀 테스트 기반으로 쓰지 않는다.
     /// </summary>
-    public sealed class SeededRandom : IRandomService, IStageRandom
+    public sealed class SeededRandom : IRandomService, IRunRandom
     {
         // 상태 2워드(총 128비트). 매 난수마다 한 워드를 시프트로 섞고 두 워드를 더해 출력한다.
         private ulong _s0, _s1;

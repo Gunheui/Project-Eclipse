@@ -4,17 +4,17 @@ using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Eclipse.Presentation;
-using Eclipse.View.Infra;
 using R3;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using VContainer;
 
 namespace Eclipse.View
 {
     /// <summary>
     /// 전투 화면의 루트 View. <see cref="BattleViewModel"/>을 HUD에 바인딩하고 턴 루프를 구동한다.
+    /// 상주 씬에서 방마다 새 뷰모델이 오므로 Bind/ClearBattle로 재바인딩한다 — 런 진행은
+    /// ChapterRunDriver가 소유하고, 이 뷰는 전투 한 판의 표시·입력만 담당한다.
     /// 스킬 버튼은 행동하는 아군(ActingCombatant)이 정해질 때만 활성화해 클릭을 Submit으로 넘긴다.
     /// </summary>
     public class BattleView : MonoBehaviour
@@ -48,56 +48,90 @@ namespace Eclipse.View
         [SerializeField] private TMP_Text actionCounterLabel;
 
         private BattleViewModel _viewModel;
-        private PopupManager _popups;
+
+        // 방마다 갈리는 뷰모델 구독. Bind에서 다시 채우고 ClearBattle에서 비운다.
+        private readonly CompositeDisposable _vmBindings = new();
 
         // 연출 배속(1 또는 2). View 소유 — 계산엔 무관하고 배틀러 트윈·턴 대기 시간만 나눈다.
         private int _speedMultiplier = 1;
-
-        // 이 화면을 떠나기로 확정된 상태(나가기 클릭). 씬 언로드에 걸리는 몇 프레임 사이 전투가 끝나도
-        // 결과 팝업을 띄우지 않는다(내려가는 계층에 Instantiate 방지).
-        private bool _leaving;
 
         // 조준 모드 상태. 스킬 탭으로 대기 중인 스킬과 그때 계산한 유효 타겟 집합. null이면 조준 중이 아니다.
         private SkillSlotViewModel _pendingSkill;
         private IReadOnlyList<CombatantViewModel> _validTargets;
 
-        [Inject]
-        public void Construct(BattleViewModel viewModel, PopupManager popups)
-        {
-            _viewModel = viewModel;
-            _popups = popups;
-        }
+        /// <summary> 나가기 버튼이 눌리면 발화한다. 런 포기 처리(패배 보고)는 드라이버가 소유한다. </summary>
+        public event Action ExitRequested;
 
+        // 인스턴스 수명에 1회만 묶는 정적 입력(버튼) 구독. 뷰모델 상태 구독은 Bind에서 따로 건다.
         private void Start()
         {
+            for (int i = 0; i < skillButtons.Length; i++)
+            {
+                int index = i;
+                skillButtons[i].OnClickAsObservable()
+                    .Subscribe(_ => OnSkillClicked(index))
+                    .AddTo(this);
+            }
+
+            autoButton.OnClickAsObservable()
+                .Subscribe(_ => { if (_viewModel != null) _viewModel.AutoMode.Value = !_viewModel.AutoMode.Value; })
+                .AddTo(this);
+
+            exitButton.OnClickAsObservable()
+                .Subscribe(_ => ExitRequested?.Invoke())
+                .AddTo(this);
+
+            if (speedButton != null)
+                speedButton.OnClickAsObservable()
+                    .Subscribe(_ => ToggleSpeed())
+                    .AddTo(this);
+            UpdateSpeedLabel();
+        }
+
+        /// <summary>
+        /// 새 전투 뷰모델을 HUD 전체에 바인딩한다. 이전 방의 구독은 정리된다.
+        /// </summary>
+        public void Bind(BattleViewModel viewModel)
+        {
+            _vmBindings.Clear();
+            _viewModel = viewModel;
+
             BindBattlers();
             BindPlates();
-            BindControls();
-            BindSkillButtons();
-            if (turnTimeline != null) turnTimeline.Bind(_viewModel);
+            if (turnTimeline != null) turnTimeline.Bind(viewModel);
 
-            // 바인딩을 모두 건 뒤에 루프를 시작한다. 화면이 파괴되면 토큰이 취소돼 루프가 끊긴다.
-            RunBattleAsync(this.GetCancellationTokenOnDestroy()).Forget();
+            viewModel.ActionCount
+                .Subscribe(n => actionCounterLabel.text = n.ToString())
+                .AddTo(_vmBindings);
+
+            viewModel.AutoMode
+                .Subscribe(on =>
+                {
+                    if (on) ExitTargeting(); // 오토 전환 시 조준 UI 정리(대기 턴은 엔진이 오토 결정으로 해제)
+                    if (autoLabel != null) autoLabel.text = on ? "AUTO ●" : "AUTO ○";
+                })
+                .AddTo(_vmBindings);
+
+            viewModel.ActingCombatant
+                .Subscribe(OnActingCombatantChanged)
+                .AddTo(_vmBindings);
         }
 
-        // 전투 한 판의 전체 흐름: 턴 루프 → 결과 팝업 → 재도전/로비.
-        // 팝업은 RunBattleAsync 완료로 트리거한다(결과 RP 구독은 결정타 연출이 끝나기 전에 발화하므로).
-        // 나가기 버튼이나 씬 파괴로 루프가 끊기면 팝업 없이 종료한다.
-        private async UniTaskVoid RunBattleAsync(CancellationToken ct)
+        /// <summary> 바인딩을 해제하고 배틀러·플레이트를 비운다. 방 전환 사이(재조립 전)에 부른다. </summary>
+        public void ClearBattle()
         {
-            try
-            {
-                // PlayTurnAnimationAsync를 넘겨, 루프가 매 턴 배틀러 연출이 끝날 때까지 기다리게 한다.
-                await _viewModel.RunBattleAsync(PlayTurnAnimationAsync, ct);
-                if (_leaving || ct.IsCancellationRequested) return;
-
-                bool retry = await _popups.Show<bool>(PopupId.BattleResult);
-                await (retry ? _viewModel.RetryAsync() : _viewModel.ExitAsync());
-            }
-            catch (OperationCanceledException)
-            {
-            }
+            _vmBindings.Clear();
+            _viewModel = null;
+            ExitTargeting();
+            foreach (var b in allyBattlers.Concat(enemyBattlers)) b.Clear();
+            foreach (var p in allyPlates.Concat(enemyPlates)) p.Clear();
         }
+
+        /// <summary>
+        /// 바인딩된 전투를 끝까지 구동한다. 매 턴 배틀러 연출이 끝날 때까지 기다린다.
+        /// </summary>
+        public UniTask RunBoundBattleAsync(CancellationToken ct)
+            => _viewModel.RunBattleAsync(PlayTurnAnimationAsync, ct);
 
         // 전장 배틀러를 소속·슬롯으로 유닛 VM에 연결한다. 대응 유닛이 없는 앵커는 숨긴다.
         private void BindBattlers()
@@ -142,45 +176,11 @@ namespace Eclipse.View
 
         private CombatantViewModel FindUnit(bool isAlly, int slot)
         {
+            if (_viewModel == null) return null;
             foreach (var unit in _viewModel.Combatants)
                 if (unit.IsAlly == isAlly && unit.SlotIndex == slot)
                     return unit;
             return null;
-        }
-
-        // 행동 수·오토 토글·나가기를 뷰모델에 잇는다. 결과는 팝업이 맡으므로 여기서 구독하지 않는다.
-        private void BindControls()
-        {
-            _viewModel.ActionCount
-                .Subscribe(n => actionCounterLabel.text = n.ToString())
-                .AddTo(this);
-
-            autoButton.OnClickAsObservable()
-                .Subscribe(_ => _viewModel.AutoMode.Value = !_viewModel.AutoMode.Value)
-                .AddTo(this);
-            _viewModel.AutoMode
-                .Subscribe(on =>
-                {
-                    if (on) ExitTargeting(); // 오토 전환 시 조준 UI 정리(대기 턴은 엔진이 오토 결정으로 해제)
-                    if (autoLabel != null) autoLabel.text = on ? "AUTO ●" : "AUTO ○";
-                })
-                .AddTo(this);
-
-            // 연타·전투 종료와의 경합을 함께 막는다(첫 클릭만 유효, 이후 결과 팝업 경로도 잠긴다).
-            exitButton.OnClickAsObservable()
-                .Where(_ => !_leaving)
-                .Subscribe(_ =>
-                {
-                    _leaving = true;
-                    _viewModel.ExitAsync().Forget();
-                })
-                .AddTo(this);
-
-            if (speedButton != null)
-                speedButton.OnClickAsObservable()
-                    .Subscribe(_ => ToggleSpeed())
-                    .AddTo(this);
-            UpdateSpeedLabel();
         }
 
         private void ToggleSpeed()
@@ -192,23 +192,6 @@ namespace Eclipse.View
         private void UpdateSpeedLabel()
         {
             if (speedLabel != null) speedLabel.text = _speedMultiplier + "x";
-        }
-
-        // 스킬 버튼 클릭을 Submit으로 잇고, 행동자(ActingCombatant)가 바뀔 때마다 버튼을 다시 채운다.
-        private void BindSkillButtons()
-        {
-            // 더블탭은 Submit이 ActingCombatant을 즉시 null로 만들어 막는다(두 번째 클릭은 OnSkillClicked에서 빠짐).
-            for (int i = 0; i < skillButtons.Length; i++)
-            {
-                int index = i;
-                skillButtons[i].OnClickAsObservable()
-                    .Subscribe(_ => OnSkillClicked(index))
-                    .AddTo(this);
-            }
-
-            _viewModel.ActingCombatant
-                .Subscribe(OnActingCombatantChanged)
-                .AddTo(this);
         }
 
         // 행동자가 정해지면 그 유닛의 스킬로 버튼을 채우고 플레이트를 강조한다. null이면(적 턴·오토) 버튼을 잠근다.
@@ -266,6 +249,8 @@ namespace Eclipse.View
 
         private void OnSkillClicked(int index)
         {
+            if (_viewModel == null) return;
+
             // 툴팁을 보려 꾹 눌렀다 뗀 경우(롱프레스)엔 그 릴리즈로 딸려오는 시전을 한 번 건너뛴다.
             if (skillTooltipTriggers != null && index < skillTooltipTriggers.Length
                 && skillTooltipTriggers[index] != null && skillTooltipTriggers[index].ConsumeLongPress())
@@ -316,6 +301,7 @@ namespace Eclipse.View
         {
             _pendingSkill = null;
             _validTargets = null;
+            if (_viewModel == null) return;
             foreach (var u in _viewModel.Combatants)
                 FindBattler(u)?.SetTargetState(TargetState.None);
         }
@@ -360,5 +346,7 @@ namespace Eclipse.View
             if (show && skillCooldownLabels != null && index < skillCooldownLabels.Length)
                 skillCooldownLabels[index].text = turns.ToString();
         }
+
+        private void OnDestroy() => _vmBindings.Dispose();
     }
 }

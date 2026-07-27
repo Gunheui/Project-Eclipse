@@ -51,11 +51,10 @@ namespace Eclipse.Tests
             return so;
         }
 
-        private ChapterSO Chapter(string id, int stageCount)
+        private ChapterSO Chapter(string id)
         {
             var so = ScriptableObject.CreateInstance<ChapterSO>();
             so.id = id;
-            so.stages = new StageSO[stageCount];
             _assets.Add(so);
             return so;
         }
@@ -77,9 +76,9 @@ namespace Eclipse.Tests
             var wallet = new CurrencyWallet();
             new CurrencyService(wallet).Grant(CurrencyType.Gold, 500);
 
-            var progress = new StageProgress();
-            var chapter = Chapter("chapter_01", stageCount: 3);
-            progress.TryMarkCleared(chapter, 0);
+            var progress = new ChapterProgress();
+            var chapter = Chapter("chapter_01");
+            progress.MarkCleared(chapter);
 
             new SaveService(save, wallet, progress, _path).Save();
 
@@ -112,14 +111,12 @@ namespace Eclipse.Tests
             Assert.AreEqual(1500, wallet2.Gold.CurrentValue);
             Assert.AreEqual(0, wallet2.Manual.CurrentValue);
 
-            var progress2 = new StageProgress();
+            var progress2 = new ChapterProgress();
             SaveService.ApplyChapters(data, progress2);
-            Assert.AreEqual(1, progress2.ClearedCountOf(Chapter("chapter_01", 3)).CurrentValue);
+            Assert.IsTrue(progress2.IsCleared(Chapter("chapter_01")));
 
             wallet.Dispose();
             wallet2.Dispose();
-            progress.Dispose();
-            progress2.Dispose();
         }
 
         [Test]

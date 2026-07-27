@@ -22,6 +22,13 @@ namespace Eclipse.Tests
             return new OwnedCharacter(so, 1);
         }
 
+        private static ChapterSO[] Chapters()
+        {
+            var chapter = ScriptableObject.CreateInstance<ChapterSO>();
+            chapter.id = "chapter_t";
+            return new[] { chapter };
+        }
+
         private sealed class FakeSceneFlow : ISceneFlow
         {
             public int ToBattleCount;
@@ -43,7 +50,7 @@ namespace Eclipse.Tests
             var roster = Enumerable.Range(0, rosterCount).Select(i => Owned("C" + i)).ToList();
             var nav = new NavigationContext();
             var flow = new FakeSceneFlow();
-            var vm = new PartyFormationViewModel(new PlayerSave(roster), nav, flow, saveService: null);
+            var vm = new PartyFormationViewModel(Chapters(), new PlayerSave(roster), nav, flow, saveService: null);
             return (vm, nav, flow, roster);
         }
 
@@ -137,13 +144,13 @@ namespace Eclipse.Tests
         }
 
         [Test]
-        public void EnterBattle_슬롯_위치를_보존해_SelectedParty에_기록()
+        public void StartRun_슬롯_위치를_보존해_SelectedParty에_기록()
         {
             var (vm, nav, flow, roster) = Build(4);
             vm.AssignToSlot(0, roster[2]);
             vm.AssignToSlot(2, roster[0]);
 
-            vm.EnterBattle();
+            vm.StartRun();
 
             CollectionAssert.AreEqual(new OwnedCharacter[] { roster[2], null, roster[0], null },
                 nav.SelectedParty.ToList(),
@@ -158,11 +165,11 @@ namespace Eclipse.Tests
         {
             var roster = Enumerable.Range(0, 4).Select(i => Owned("C" + i)).ToList();
             var save = new PlayerSave(roster);
-            var vm = new PartyFormationViewModel(save, new NavigationContext(), new FakeSceneFlow(), saveService: null);
+            var vm = new PartyFormationViewModel(Chapters(), save, new NavigationContext(), new FakeSceneFlow(), saveService: null);
             vm.AssignToSlot(2, roster[1]);
             vm.Dispose(); // 전투 진입으로 씬 스코프가 내려간 상황
 
-            var revisited = new PartyFormationViewModel(save, new NavigationContext(), new FakeSceneFlow(), saveService: null);
+            var revisited = new PartyFormationViewModel(Chapters(), save, new NavigationContext(), new FakeSceneFlow(), saveService: null);
 
             Assert.AreSame(roster[1], revisited.Slots[2].Value, "전투를 다녀와도 편성 위치가 그대로 남는다");
             Assert.IsNull(revisited.Slots[0].Value, "빈 칸도 그대로");
@@ -176,11 +183,11 @@ namespace Eclipse.Tests
         }
 
         [Test]
-        public void EnterBattle_빈_편성이면_아무_일도_하지_않는다()
+        public void StartRun_빈_편성이면_아무_일도_하지_않는다()
         {
             var (vm, nav, flow, _) = Build(4);
 
-            vm.EnterBattle();
+            vm.StartRun();
 
             Assert.IsNull(nav.SelectedParty);
             Assert.AreEqual(0, flow.ToBattleCount, "빈 편성은 진입하지 않는다");
@@ -189,17 +196,17 @@ namespace Eclipse.Tests
         }
 
         [Test]
-        public void EnterBattle_전환에_실패하면_다시_시도할_수_있다()
+        public void StartRun_전환에_실패하면_다시_시도할_수_있다()
         {
             var (vm, _, flow, roster) = Build(4);
             vm.AssignToSlot(0, roster[0]);
             flow.FailTransition = true;
             LogAssert.ignoreFailingMessages = true; // 실패한 전환은 예외를 다시 던져 드러낸다
 
-            vm.EnterBattle();
+            vm.StartRun();
 
             flow.FailTransition = false;
-            vm.EnterBattle();
+            vm.StartRun();
 
             Assert.AreEqual(2, flow.ToBattleCount, "실패로 화면이 남았으면 진입 버튼이 다시 살아나야 한다");
 
@@ -208,15 +215,15 @@ namespace Eclipse.Tests
         }
 
         [Test]
-        public void EnterBattle_재진입은_무시된다()
+        public void StartRun_재진입은_무시된다()
         {
             var (vm, nav, flow, roster) = Build(4);
             vm.AssignToSlot(0, roster[0]);
-            vm.EnterBattle();
+            vm.StartRun();
             var first = nav.SelectedParty;
 
             vm.AssignToSlot(0, roster[1]);
-            vm.EnterBattle();
+            vm.StartRun();
 
             Assert.AreEqual(1, flow.ToBattleCount, "두 번째 진입은 무시된다");
             Assert.AreSame(first, nav.SelectedParty, "첫 기록이 유지된다");

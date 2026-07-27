@@ -16,7 +16,7 @@ namespace Eclipse.Presentation
         public int[] skillLevels;
     }
 
-    /// <summary> 장 하나의 진행도 저장 형태. cleared는 해당 장에서 클리어한 스테이지 수(단조 증가 카운트). </summary>
+    /// <summary> 장 하나의 진행도 저장 형태. cleared는 챕터 클리어 여부(0 또는 1) — 직렬화 키·타입은 v2 그대로다. </summary>
     [Serializable]
     public struct ChapterEntry
     {
@@ -26,7 +26,7 @@ namespace Eclipse.Presentation
 
     /// <summary>
     /// 디스크 저장 전용 DTO. JsonUtility 제약에 맞춰 public 필드만 쓴다(프로퍼티·Dictionary 불가).
-    /// 런타임 홀더(PlayerSave·CurrencyWallet·StageProgress)와 분리되어 있으며, 변환은 SaveService가 담당한다.
+    /// 런타임 홀더(PlayerSave·CurrencyWallet·ChapterProgress)와 분리되어 있으며, 변환은 SaveService가 담당한다.
     /// 필드 초기값이 곧 신규 계정 기본값이다 — 파일이 없거나 손상이면 new SaveData()로 수렴한다.
     /// </summary>
     [Serializable]

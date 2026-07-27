@@ -41,7 +41,9 @@ namespace Eclipse.Tests
             so.growthCurve.maxLevel = 30;
             so.basicSkill = basic;
             so.normalSkill = normal;
-            return Combatant.FromCharacter(new OwnedCharacter(so, 1), slot);
+            var owned = new OwnedCharacter(so, 1);
+            return Combatant.FromCharacter(owned, slot,
+                CharacterStats.BuildAllyStats(so, 1, 0, null));
         }
 
         private static Combatant Enemy(string name, int slot, Stats stats, SkillSO basic)
@@ -50,7 +52,7 @@ namespace Eclipse.Tests
             so.displayName = name;
             so.baseStats = stats;
             so.basicSkill = basic;
-            return Combatant.FromEnemy(so, slot);
+            return Combatant.FromEnemy(so, slot, so.baseStats);
         }
 
         private static BattleEngine Engine(List<Combatant> allies, List<Combatant> enemies, int seed, int cap)
@@ -164,7 +166,7 @@ namespace Eclipse.Tests
             eso.displayName = "E"; eso.baseStats = S(100, 10, 0, 100);
             eso.basicSkill = Skill("eb", 0, Dmg(1f, TargetSelector.SingleEnemy));
             eso.normalSkill = Skill("en", 2, Dmg(1f, TargetSelector.SingleEnemy));
-            var enemy = Combatant.FromEnemy(eso, 0);
+            var enemy = Combatant.FromEnemy(eso, 0, eso.baseStats);
 
             // 아군: 기본·일반 모두 시작부터 준비.
             Assert.IsTrue(ally.Skills[0].IsReady);

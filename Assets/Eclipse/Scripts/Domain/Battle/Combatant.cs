@@ -132,22 +132,29 @@ namespace Eclipse.Domain
             CurrentHp = _maxHp;
         }
 
-        /// <summary> 아군 캐릭터를 전투 유닛으로 만든다. 스탯은 정본 빌더(레벨·돌파)로 계산하고, 스킬 슬롯을 런타임으로 감싼다. </summary>
+        /// <summary>
+        /// 아군 캐릭터를 전투 유닛으로 만든다. 최종 스탯은 정본 빌더(CharacterStats)로 미리 계산해 넘긴다 —
+        /// 여기서 다시 계산하지 않아 계산처가 한 곳으로 유지된다.
+        /// </summary>
         /// <param name="slotIndex">편성 슬롯 번호(0부터).</param>
-        public static Combatant FromCharacter(OwnedCharacter owned, int slotIndex)
+        /// <param name="stats">레벨·돌파·런 버프가 접힌 최종 스탯.</param>
+        public static Combatant FromCharacter(OwnedCharacter owned, int slotIndex, Stats stats)
         {
             var def = owned.Definition;
-            var stats = CharacterStats.BuildAllyStats(def, owned.Level, owned.AscensionTier, null);
             var skills = BuildSkills(false, def.basicSkill, def.normalSkill, def.ultimateSkill);
             return new Combatant(def.displayName, Team.Ally, slotIndex, stats, skills);
         }
 
-        /// <summary> 적을 전투 유닛으로 만든다. 스탯은 스테이지 고정치를 그대로 쓴다(레벨 스케일 없음). </summary>
+        /// <summary>
+        /// 적을 전투 유닛으로 만든다. 최종 스탯은 정본 빌더로 미리 계산해 넘긴다(챕터 계수·변이·정예·디버프 포함).
+        /// </summary>
         /// <param name="slotIndex">편성 슬롯 번호(0부터).</param>
-        public static Combatant FromEnemy(EnemySO enemy, int slotIndex)
+        /// <param name="stats">배수·디버프가 접힌 최종 스탯.</param>
+        /// <param name="displayName">표시명 재정의(변이 접두 등). null이면 정의 표시명.</param>
+        public static Combatant FromEnemy(EnemySO enemy, int slotIndex, Stats stats, string displayName = null)
         {
             var skills = BuildSkills(true, enemy.basicSkill, enemy.normalSkill, enemy.ultimateSkill);
-            return new Combatant(enemy.displayName, Team.Enemy, slotIndex, enemy.baseStats, skills);
+            return new Combatant(displayName ?? enemy.displayName, Team.Enemy, slotIndex, stats, skills);
         }
 
         // 붙어 있는 버프·디버프를 기본 스탯에 접어 유효 스탯을 낸다.

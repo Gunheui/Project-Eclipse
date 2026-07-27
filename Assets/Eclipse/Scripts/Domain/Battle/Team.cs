@@ -6,7 +6,7 @@ namespace Eclipse.Domain
         /// <summary> 플레이어 파티. </summary>
         Ally = 0,
 
-        /// <summary> 스테이지 적. </summary>
+        /// <summary> 적. </summary>
         Enemy = 1,
     }
 }

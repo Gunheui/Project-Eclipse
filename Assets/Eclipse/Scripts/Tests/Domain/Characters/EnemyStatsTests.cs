@@ -28,7 +28,7 @@ namespace Eclipse.Tests
         }
 
         [Test]
-        public void 스테이지_변이_정예_배수를_모두_곱한다()
+        public void 챕터_변이_정예_배수를_모두_곱한다()
         {
             var stats = CharacterStats.BuildEnemyStats(Base(), 2f, Mutation(StatType.Hp, 1.5f), 1.5f, null);
 

@@ -49,16 +49,17 @@ namespace Eclipse.Presentation
         /// <summary> 전투 진입 가능 여부(1명 이상이면 true, 4명 강제 아님). PartyCount에서 파생. </summary>
         public ReadOnlyReactiveProperty<bool> CanEnter { get; }
 
-        /// <summary> 이번 편성이 향하는 스테이지. 진입 직전 StageSelect가 기록한 현재 선택 스테이지. </summary>
-        public StageSO SelectedStage => _nav.SelectedStage;
+        /// <summary> 이번 런이 향하는 챕터. </summary>
+        public ChapterSO SelectedChapter { get; }
 
-        public PartyFormationViewModel(PlayerSave save, NavigationContext nav, ISceneFlow sceneFlow,
-            SaveService saveService)
+        public PartyFormationViewModel(ChapterSO[] chapters, PlayerSave save, NavigationContext nav,
+            ISceneFlow sceneFlow, SaveService saveService)
         {
             _save = save;
             _nav = nav;
             _sceneFlow = sceneFlow;
             _saveService = saveService;
+            SelectedChapter = chapters[0];
 
             _slots = new ReactiveProperty<OwnedCharacter>[SlotCount];
             _slotOccupants = new ReadOnlyReactiveProperty<CharacterSO>[SlotCount];
@@ -122,10 +123,10 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 현재 편성으로 전투 씬에 진입한다. 슬롯 위치를 유지한 4칸 목록(빈칸 null)을 SelectedParty에 실어
+        /// 현재 편성으로 챕터 런을 시작한다. 슬롯 위치를 유지한 4칸 목록(빈칸 null)을 SelectedParty에 실어
         /// 편성 칸이 곧 전투 진영 자리가 된다(압축하지 않는다). 빈 편성은 무시하고, 중복 진입은 가드로 막는다.
         /// </summary>
-        public void EnterBattle()
+        public void StartRun()
         {
             var party = _slots.Select(s => s.Value).ToList();
             if (party.All(c => c == null))
@@ -133,6 +134,7 @@ namespace Eclipse.Presentation
             if (_entering)
                 return;
             _entering = true;
+            _nav.SelectedChapter = SelectedChapter;
             _nav.SelectedParty = party;
             EnterBattleAsync().Forget();
         }

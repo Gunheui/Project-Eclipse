@@ -44,7 +44,9 @@ namespace Eclipse.Tests
             so.growthCurve = ScriptableObject.CreateInstance<GrowthCurve>();
             so.growthCurve.maxLevel = 30;
             so.basicSkill = Skill(name + "_b", 0, 1f);
-            return Combatant.FromCharacter(new OwnedCharacter(so, 1), slot);
+            var owned = new OwnedCharacter(so, 1);
+            return Combatant.FromCharacter(owned, slot,
+                CharacterStats.BuildAllyStats(so, 1, 0, null));
         }
 
         private static Combatant Enemy(string name, int slot, Stats stats)
@@ -53,13 +55,7 @@ namespace Eclipse.Tests
             so.displayName = name;
             so.baseStats = stats;
             so.basicSkill = Skill(name + "_b", 0, 1f);
-            return Combatant.FromEnemy(so, slot);
-        }
-
-        private sealed class FakeSceneFlow : ISceneFlow
-        {
-            public UniTask ToBattleAsync() => UniTask.CompletedTask;
-            public UniTask ToMainAsync() => UniTask.CompletedTask;
+            return Combatant.FromEnemy(so, slot, so.baseStats);
         }
 
         // 아트는 스케줄러·엔진과 무관하므로 스프라이트 없이 유닛만 실어 보낸다.
@@ -82,18 +78,9 @@ namespace Eclipse.Tests
             var engine = new BattleEngine(allies.ToList(), enemies.ToList(), scheduler,
                 executor, manualProvider, enemyAi, actionCap: 200);
 
-            // 장·스테이지는 조립 시점에 확정돼 불변으로 들어간다(프로덕션은 BattleFactory가 검증·계산).
-            var stage = ScriptableObject.CreateInstance<StageSO>();
-            stage.id = "stage_t";
-            var chapter = ScriptableObject.CreateInstance<ChapterSO>();
-            chapter.id = "chapter_t";
-            chapter.stages = new[] { stage };
-
             return new BattleViewModel(
                 allies.Select(Entry).ToArray(), enemies.Select(Entry).ToArray(),
-                engine, scheduler, manualProvider, targeting, new FakeSceneFlow(),
-                new StageProgress(), chapter, stage, stageIndex: 0,
-                new StageRewardService(new CurrencyService(new CurrencyWallet())), saveService: null);
+                engine, scheduler, manualProvider, targeting);
         }
 
         private static BattleViewModel Vm(Combatant ally, Combatant enemy, bool startAuto)
@@ -146,7 +133,7 @@ namespace Eclipse.Tests
         // --- VM 수동 구동: 제출로 턴이 진행되고 적 HP가 깎인다 ---
 
         [UnityTest]
-        public IEnumerator 수동_제출하면_그_턴이_진행되고_적_HP가_깎인다() => UniTask.ToCoroutine(async () =>
+        public IEnumerator 수동_제출하면_그_턴이_진행되고_적_HP가_깎인다() => UniTask.ToCoroutine(() =>
         {
             var ally = Ally("아군", 0, S(5000, 300, 0, 200));   // 빠르고 튼튼 → 먼저·연속 행동
             var enemy = Enemy("적", 0, S(3000, 10, 0, 50));
@@ -169,12 +156,13 @@ namespace Eclipse.Tests
             Assert.AreEqual(enemy.CurrentHp, enemyPlate.CurrentHp.CurrentValue, "명판 HP가 도메인과 일치(턴 신호 파생)");
 
             vm.Dispose();
+            return UniTask.CompletedTask;
         });
 
         // --- VM 수동 지정: 찍은 대상이 자동 기본(슬롯순)을 덮어써 그 적을 맞힌다 ---
 
         [UnityTest]
-        public IEnumerator 수동_지정_대상이_자동기본이_아닌_찍은_적을_맞힌다() => UniTask.ToCoroutine(async () =>
+        public IEnumerator 수동_지정_대상이_자동기본이_아닌_찍은_적을_맞힌다() => UniTask.ToCoroutine(() =>
         {
             var ally = Ally("아군", 0, S(5000, 300, 0, 200)); // 가장 빠름 → 먼저 행동
             var low = Enemy("저HP", 0, S(1000, 10, 0, 50));   // 슬롯 앞 — 자동 기본 폴백이 고를 자리
@@ -196,6 +184,7 @@ namespace Eclipse.Tests
             Assert.AreEqual(lowBefore, low.CurrentHp, "자동 기본 대상(저HP)은 맞지 않았다");
 
             vm.Dispose();
+            return UniTask.CompletedTask;
         });
 
         // --- VM 오토 구동: 강한 파티는 완주해 승리로 끝난다 ---

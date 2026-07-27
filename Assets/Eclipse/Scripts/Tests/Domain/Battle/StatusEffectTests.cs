@@ -23,7 +23,9 @@ namespace Eclipse.Tests
             so.baseStats = stats;
             so.growthCurve = ScriptableObject.CreateInstance<GrowthCurve>(); // Lv1이라 스케일 없음
             so.growthCurve.maxLevel = 30;
-            return Combatant.FromCharacter(new OwnedCharacter(so, 1), slot);
+            var owned = new OwnedCharacter(so, 1);
+            return Combatant.FromCharacter(owned, slot,
+                CharacterStats.BuildAllyStats(so, 1, 0, null));
         }
 
         // --- 버프·디버프: 유효 스탯 반영 ---

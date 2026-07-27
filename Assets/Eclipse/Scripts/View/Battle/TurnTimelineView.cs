@@ -34,7 +34,7 @@ namespace Eclipse.View
             _bindings.Clear();
 
             // 칸 수가 뷰모델의 예보 길이와 다르면 남는 칸이 영영 비거나(더 많을 때) 예보가 잘린다(더 적을 때).
-            // 둘 다 에러 없이 조용히 어긋나므로 여기서 드러낸다.
+            // 둘 다 에러 없이 조용히 달라지므로 여기서 드러낸다.
             if (slots.Length != BattleViewModel.TimelineSlots)
                 Debug.LogWarning($"{name}: 슬롯 {slots.Length}칸이 예보 길이 {BattleViewModel.TimelineSlots}과 다르다.", this);
 

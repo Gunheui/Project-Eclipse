@@ -5,7 +5,7 @@ namespace Eclipse.Presentation
 {
     /// <summary>
     /// 전장에 세울 유닛 하나와 그 아트 묶음. 유닛·스프라이트를 리스트 인덱스로 짝짓지 않고
-    /// 한 덩어리로 넘겨 길이가 어긋난 상태를 표현할 수 없게 한다.
+    /// 한 덩어리로 넘겨 길이가 달라진 상태를 표현할 수 없게 한다.
     /// </summary>
     public readonly struct BattleUnitEntry
     {

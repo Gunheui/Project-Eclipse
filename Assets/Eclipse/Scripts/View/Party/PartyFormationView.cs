@@ -11,16 +11,12 @@ namespace Eclipse.View
 {
     /// <summary>
     /// 파티 편성 화면. 4개 슬롯을 생성해 편성 VM의 슬롯 스트림에 각각 바인딩하고, 슬롯 탭 시 픽 화면을 올린다.
-    /// 상단에 스테이지 요약을, 하단에 인원수·진입 버튼을 바인딩한다. 진입 버튼은 1명 이상일 때만 활성.
+    /// 하단에 인원수·[런 시작] 버튼을 바인딩한다. 시작 버튼은 1명 이상일 때만 활성.
     /// </summary>
     public class PartyFormationView : MonoBehaviour, IScreen
     {
         [Tooltip("SlotGrid에 고정 배치된 4개 슬롯(순서 = 슬롯 0~3). 편성 슬롯 수와 개수가 맞아야 한다.")]
         [SerializeField] private PartySlotView[] slotViews;
-
-        [Header("스테이지 요약")]
-        [SerializeField] private TMP_Text stageNameText;
-        [SerializeField] private TMP_Text stageDescText;
 
         [Header("하단")]
         [SerializeField] private TMP_Text countLabel;
@@ -42,20 +38,11 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// 화면이 스택 전면에 설 때 호출된다. 스테이지 요약을 채우고 슬롯·인원수·진입 버튼을
-        /// 편성 VM에 바인딩한다. 바인딩은 OnExit까지 유지된다.
+        /// 화면이 스택 전면에 설 때 호출된다. 슬롯·인원수·시작 버튼을 편성 VM에 바인딩한다.
+        /// 바인딩은 OnExit까지 유지된다.
         /// </summary>
         public UniTask OnEnter()
         {
-            var stage = _viewModel.SelectedStage;
-            if (stage != null)
-            {
-                if (stageNameText != null)
-                    stageNameText.text = stage.displayName;
-                if (stageDescText != null)
-                    stageDescText.text = stage.description;
-            }
-
             int slotCount = Mathf.Min(slotViews.Length, _viewModel.SlotOccupants.Count);
             for (int i = 0; i < slotCount; i++)
             {
@@ -98,7 +85,7 @@ namespace Eclipse.View
             _screenManager.Push(ScreenId.PartyPick).Forget();
         }
 
-        private void OnEnterBattle() => _viewModel.EnterBattle();
+        private void OnEnterBattle() => _viewModel.StartRun();
         private void OnBack() => _screenManager.Pop().Forget();
     }
 }

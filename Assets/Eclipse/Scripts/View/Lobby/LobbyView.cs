@@ -39,7 +39,7 @@ namespace Eclipse.View
                 .AddTo(this);
 
             battleButton.OnClickAsObservable()
-                .Subscribe(_ => _screens.Push(ScreenId.StageSelect).Forget())
+                .Subscribe(_ => _screens.Push(ScreenId.PartyFormation).Forget())
                 .AddTo(this);
         }
 

@@ -7,7 +7,7 @@ namespace Eclipse.Domain
 {
     /// <summary>
     /// 스탯별 증감량의 합산 보관소. 같은 스탯끼리 가산 누적하며 상한이 없다.
-    /// 한 캐릭터가 스테이지에서 받은 버프가 여기 모여 <see cref="CharacterStats.BuildAllyStats"/>에 전달된다.
+    /// 한 캐릭터가 런에서 받은 버프가 여기 모여 <see cref="CharacterStats.BuildAllyStats"/>에 전달된다.
     /// </summary>
     public sealed class StatModifierSet
     {

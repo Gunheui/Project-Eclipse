@@ -14,11 +14,67 @@ MonoBehaviour:
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.ChapterSO
   id: chapter_01
   number: 1
-  displayName: "제1장 검은뿌리 벌목지"
-  description: "주둔지에 목재를 대던 숲 가장자리에 침식이 번지기 시작했다.\n보급로에 닿기 전에 오염원을 태워 되밀어내라."
-  stages:
-  - {fileID: 11400000, guid: 26f03c0a6a8d94e7b81f3070667d945f, type: 2}
-  - {fileID: 11400000, guid: 2f066905d0d154f0090974d31a959627, type: 2}
-  - {fileID: 11400000, guid: 94991e36f99a84f638aba2791955ad8e, type: 2}
-  - {fileID: 11400000, guid: 7f28de9037a164707b2def74473aa528, type: 2}
-  - {fileID: 11400000, guid: 6fca18f71a21847ebba8eef17fdf0368, type: 2}
+  displayName: "\uC81C1\uC7A5 \uAC80\uC740\uBFCC\uB9AC \uBC8C\uBAA9\uC9C0"
+  description: "\uC8FC\uB454\uC9C0\uC5D0 \uBAA9\uC7AC\uB97C \uB300\uB358 \uC232 \uAC00\uC7A5\uC790\uB9AC\uC5D0
+    \uCE68\uC2DD\uC774 \uBC88\uC9C0\uAE30 \uC2DC\uC791\uD588\uB2E4.\n\uBCF4\uAE09\uB85C\uC5D0
+    \uB2FF\uAE30 \uC804\uC5D0 \uC624\uC5FC\uC6D0\uC744 \uD0DC\uC6CC \uB418\uBC00\uC5B4\uB0B4\uB77C."
+  rooms:
+  - kind: 0
+    depth: 1
+    doorAfter: 1
+    background: {fileID: 0}
+  - kind: 0
+    depth: 2
+    doorAfter: 1
+    background: {fileID: 0}
+  - kind: 0
+    depth: 3
+    doorAfter: 1
+    background: {fileID: 0}
+  - kind: 1
+    depth: 4
+    doorAfter: 1
+    background: {fileID: 0}
+  - kind: 0
+    depth: 5
+    doorAfter: 1
+    background: {fileID: 0}
+  - kind: 0
+    depth: 5
+    doorAfter: 0
+    background: {fileID: 0}
+  - kind: 2
+    depth: 0
+    doorAfter: 0
+    background: {fileID: 0}
+  enemyStatMultiplier: 1
+  currencyMultiplier: 1
+  settlement:
+  - gold: 0
+    manual: 0
+    essence: 0
+  - gold: 60
+    manual: 0
+    essence: 10
+  - gold: 140
+    manual: 1
+    essence: 20
+  - gold: 240
+    manual: 1
+    essence: 35
+  - gold: 400
+    manual: 2
+    essence: 60
+  - gold: 560
+    manual: 3
+    essence: 80
+  - gold: 760
+    manual: 4
+    essence: 110
+  - gold: 1000
+    manual: 5
+    essence: 150
+  victoryBonus:
+    gold: 400
+    manual: 2
+    essence: 100

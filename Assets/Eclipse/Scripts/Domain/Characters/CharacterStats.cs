@@ -5,7 +5,7 @@ using Eclipse.Data.Enums;
 namespace Eclipse.Domain
 {
     /// <summary>
-    /// 캐릭터 최종 스탯의 유일한 계산처. 레벨·돌파·스테이지 버프를 여기서만 계산한다.
+    /// 캐릭터 최종 스탯의 유일한 계산처. 레벨·돌파·런 버프를 여기서만 계산한다.
     /// 표시(상세 화면)와 전투(Combatant 조립)가 같은 공식을 공유하며, 전투 코어는 완성된 Stats만 받는다.
     /// </summary>
     public static class CharacterStats
@@ -13,10 +13,10 @@ namespace Eclipse.Domain
         /// <summary> 돌파 1단계당 HP·ATK 증가율(+8%). </summary>
         private const float AscensionBonusPerTier = 0.08f;
 
-        /// <summary> 아군 최종 스탯을 계산한다. 레벨·돌파·스테이지 버프가 모두 반영된 완성값이다. </summary>
+        /// <summary> 아군 최종 스탯을 계산한다. 레벨·돌파·런 버프가 모두 반영된 완성값이다. </summary>
         /// <param name="level">현재 레벨. 1 이상 curve.maxLevel 이하만 허용한다.</param>
         /// <param name="ascensionTier">돌파 단계. 0 이상 <see cref="OwnedCharacter.MaxAscensionTier"/> 이하만 허용한다.</param>
-        /// <param name="buffs">이 캐릭터가 스테이지에서 받은 버프 합산. 없으면 null.</param>
+        /// <param name="buffs">이 캐릭터가 런에서 받은 버프 합산. 없으면 null.</param>
         /// <exception cref="ArgumentNullException">정의나 성장곡선이 null일 때.</exception>
         /// <exception cref="ArgumentOutOfRangeException">level·ascensionTier가 허용 범위를 벗어날 때.</exception>
         public static Stats BuildAllyStats(CharacterSO definition, int level, int ascensionTier, StatModifierSet buffs)
@@ -46,16 +46,16 @@ namespace Eclipse.Domain
             };
         }
 
-        /// <summary> 적 최종 스탯을 계산한다. 스테이지 난이도·변이·정예 배수와 디버프가 모두 반영된 완성값이다. </summary>
+        /// <summary> 적 최종 스탯을 계산한다. 챕터 난이도·변이·정예 배수와 디버프가 모두 반영된 완성값이다. </summary>
         /// <param name="baseStats">적 정의의 고정 스탯. 적은 레벨 스케일이 없다.</param>
-        /// <param name="stageMultiplier">스테이지 난이도 배수(<see cref="StageSO.enemyStatMultiplier"/>).</param>
+        /// <param name="chapterMultiplier">챕터 난이도 배수(<see cref="ChapterSO.enemyStatMultiplier"/>).</param>
         /// <param name="mutation">침식 변이. 없으면 null. 변이가 지정한 스탯 하나에만 배수가 걸린다.</param>
-        /// <param name="eliteMultiplier">정예 배수. 일반 조우면 1을 넘긴다.</param>
-        /// <param name="enemyDebuffs">스테이지 전역으로 적에게 걸린 디버프 합. 없으면 null.</param>
-        public static Stats BuildEnemyStats(Stats baseStats, float stageMultiplier, MutationSO mutation,
+        /// <param name="eliteMultiplier">정예 배수. 일반 인카운터면 1을 넘긴다.</param>
+        /// <param name="enemyDebuffs">런 전역으로 적에게 걸린 디버프 합. 없으면 null.</param>
+        public static Stats BuildEnemyStats(Stats baseStats, float chapterMultiplier, MutationSO mutation,
             float eliteMultiplier, StatModifierSet enemyDebuffs)
         {
-            float common = stageMultiplier * eliteMultiplier; // 배수는 HP·ATK·DEF·SPD에만 걸린다
+            float common = chapterMultiplier * eliteMultiplier; // 배수는 HP·ATK·DEF·SPD에만 걸린다
             return new Stats
             {
                 hp = ApplyDebuffAndRound(baseStats.hp * common * MutationMultiplier(mutation, StatType.Hp), enemyDebuffs, StatType.Hp),

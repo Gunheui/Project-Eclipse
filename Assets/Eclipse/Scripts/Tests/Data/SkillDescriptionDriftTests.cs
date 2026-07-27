@@ -9,7 +9,7 @@ using UnityEngine;
 namespace Eclipse.Tests
 {
     /// <summary>
-    /// 스킬 설명문과 effects 수치의 어긋남(드리프트)을 잡는 휴리스틱 검사.
+    /// 스킬 설명문과 effects 수치가 달라지는 드리프트를 잡는 휴리스틱 검사.
     /// 숫자가 설명문에 존재하는지만 확인하며, 문장의 의미까지 검증하지는 않는다.
     /// </summary>
     public class SkillDescriptionDriftTests
@@ -24,7 +24,7 @@ namespace Eclipse.Tests
                 .OrderBy(s => s.id);
 
         [Test]
-        public void 설명문_수치가_effects와_어긋나지_않는다()
+        public void 설명문_수치가_effects와_달라지지_않는다()
         {
             var failures = new List<string>();
 

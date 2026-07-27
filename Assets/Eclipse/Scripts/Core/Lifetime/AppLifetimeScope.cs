@@ -43,14 +43,14 @@ namespace Eclipse.Core
             builder.Register<ICurrencyService, CurrencyService>(Lifetime.Singleton);
             builder.Register(_ =>
             {
-                var progress = new StageProgress();
+                var progress = new ChapterProgress();
                 SaveService.ApplyChapters(data, progress);
                 return progress;
             }, Lifetime.Singleton);
             builder.Register<ISpriteProvider, DirectSpriteProvider>(Lifetime.Singleton);
-            builder.Register<IRewardService, StageRewardService>(Lifetime.Singleton);
+            builder.Register<IRewardService, RunRewardService>(Lifetime.Singleton);
             builder.Register(r => new SaveService(
-                r.Resolve<PlayerSave>(), r.Resolve<CurrencyWallet>(), r.Resolve<StageProgress>()), Lifetime.Singleton);
+                r.Resolve<PlayerSave>(), r.Resolve<CurrencyWallet>(), r.Resolve<ChapterProgress>()), Lifetime.Singleton);
             builder.RegisterInstance(growthConfig);
             builder.Register<GrowthService>(Lifetime.Singleton);
             builder.Register<SkillEnhanceService>(Lifetime.Singleton);

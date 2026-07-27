@@ -13,7 +13,7 @@ namespace Eclipse.Presentation
     /// <summary>
     /// 돌파의 유일한 권위. 단계 증가·세이브를 하나의 트랜잭션으로 묶는다.
     /// [이음새] 돌파 재료(가챠 중복)가 아직 없어 재료 검사 없이 올린다.
-    /// 현재 진입 경로는 에디터 디버그(AppLifetimeScope)뿐이고, 챕터 승천 보상(S8)은 스테이지 루프에서 연결된다.
+    /// 현재 진입 경로는 에디터 디버그(AppLifetimeScope)뿐이다(돌파 재료 공급은 가챠 확장에서 열린다).
     /// </summary>
     public sealed class AscensionService
     {

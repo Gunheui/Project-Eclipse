@@ -104,7 +104,7 @@ namespace Eclipse.Tests
         }
 
         // 조준 UI가 칠하는 후보(ValidManualTargets)를 찍으면 반드시 그 대상이 맞아야 한다 —
-        // 화면과 판정이 어긋나지 않음을 계약으로 못박는다.
+        // 화면과 판정이 달라지지 않음을 계약으로 못박는다.
         [Test]
         public void 유효_수동타겟은_모두_지정이_존중된다()
         {

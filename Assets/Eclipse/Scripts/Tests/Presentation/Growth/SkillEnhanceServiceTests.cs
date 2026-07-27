@@ -49,7 +49,7 @@ namespace Eclipse.Tests
         {
             _wallet = new CurrencyWallet(0, gold, manual);
             _wallets.Add(_wallet);
-            var save = new SaveService(new PlayerSave(new List<OwnedCharacter> { owned }), _wallet, new StageProgress(), _path);
+            var save = new SaveService(new PlayerSave(new List<OwnedCharacter> { owned }), _wallet, new ChapterProgress(), _path);
             var config = ScriptableObject.CreateInstance<GrowthConfigSO>(); // 기본값: 골드 500×스킬Lv + 교본 5
             _assets.Add(config);
             return new SkillEnhanceService(new CurrencyService(_wallet), save, config);

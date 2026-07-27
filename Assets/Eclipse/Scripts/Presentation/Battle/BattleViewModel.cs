@@ -3,11 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Eclipse.Data;
 using Eclipse.Domain;
-using Eclipse.Service;
 using R3;
-using UnityEngine;
 
 namespace Eclipse.Presentation
 {
@@ -17,6 +14,7 @@ namespace Eclipse.Presentation
     /// <summary>
     /// 전투 화면의 ViewModel. 엔진을 턴 단위로 구동하고 유닛·스킬·행동 수·결과를 리액티브로 노출한다.
     /// 뷰 상태는 전부 턴 신호(_stateChanged)에서 파생된다(폴링 없음).
+    /// 승패만 보고한다 — 클리어 기록·보상·저장·씬 이탈은 런 층(ChapterRunFlow) 소관이다.
     /// </summary>
     public sealed class BattleViewModel : ViewModelBase
     {
@@ -28,27 +26,13 @@ namespace Eclipse.Presentation
 
         private readonly BattleEngine _engine;
         private readonly ManualActionProvider _manualProvider;
-        private readonly ISceneFlow _sceneFlow;
-
-        // 승리 시 클리어를 기록할 대상. 장·스테이지·인덱스(0-기반)는 조립 시점(BattleFactory)에
-        // 검증된 불변 값이라, 승리 순간의 외부 상태를 다시 읽지 않는다.
-        private readonly StageProgress _progress;
-        private readonly ChapterSO _chapter;
-        private readonly StageSO _stage;
-        private readonly int _stageIndex;
-
-        // 승리 보상 지급 창구. 초회 여부는 진행도 기록의 반환값이 정한다.
-        private readonly IRewardService _rewards;
-
-        // 승리 처리(클리어 기록·보상 지급) 완료 직후 스냅샷을 저장하는 창구. null이면 저장을 건너뛴다(테스트 조립).
-        private readonly SaveService _saveService;
 
         // 조준 UI 후보 산출용(수동 후보). 오토 타겟 정책과 같은 리졸버 인스턴스를 공유한다.
         private readonly TargetResolver _targeting;
 
         // 뷰가 상태를 다시 읽어야 할 때 발화하는 신호(턴 종료 + 스킬 선택 시). HP·쿨·행동 수·결과가 전부 여기서 파생된다.
         private readonly Subject<Unit> _stateChanged = new();
-        
+
         private readonly ReactiveProperty<CombatantViewModel> _actingCombatant = new(null);
         private readonly ReactiveProperty<bool> _autoMode;
         private readonly CompositeDisposable _subscriptions = new();
@@ -62,26 +46,12 @@ namespace Eclipse.Presentation
             BattleEngine engine,
             ITurnScheduler scheduler,
             ManualActionProvider manualProvider,
-            TargetResolver targeting,
-            ISceneFlow sceneFlow,
-            StageProgress progress,
-            ChapterSO chapter,
-            StageSO stage,
-            int stageIndex,
-            IRewardService rewards,
-            SaveService saveService)
+            TargetResolver targeting)
         {
-            _rewards = rewards;
-            _saveService = saveService;
             _engine = engine;
             _scheduler = scheduler;
             _manualProvider = manualProvider;
-            _sceneFlow = sceneFlow;
             _targeting = targeting;
-            _progress = progress;
-            _chapter = chapter;
-            _stage = stage;
-            _stageIndex = stageIndex;
 
             // 순서는 아군 먼저, 그다음 적(스케줄러 입력 순과 동일).
             var all = allies.Concat(enemies).ToList();
@@ -132,9 +102,6 @@ namespace Eclipse.Presentation
         /// <summary> 오토 전투 토글. View가 값을 바꾸면 프로바이더에 반영된다. </summary>
         public ReactiveProperty<bool> AutoMode => _autoMode;
 
-        /// <summary> 이번 승리로 실제 지급된 보상(재화별 1건). 결과 팝업 표시용. 승리 전·패배·지급 스킵이면 빈 목록. </summary>
-        public IReadOnlyList<RewardEntry> GrantedRewards { get; private set; } = Array.Empty<RewardEntry>();
-
         /// <summary>
         /// 전투가 끝날 때까지 턴을 반복 구동한다. 아군 수동 턴에서는 엔진이 Submit을 기다리며 이 안에서 멈춘다.
         /// </summary>
@@ -156,13 +123,7 @@ namespace Eclipse.Presentation
                 if (playTurnAnimation != null)
                     await playTurnAnimation(linked.Token);
             }
-
-            if (_outcome == BattleOutcome.Victory)
-                MarkStageCleared();
         }
-
-        /// <summary> 같은 스테이지로 전투 씬을 다시 로드한다. 스코프가 새로 서서 시드도 새로 뽑힌다. </summary>
-        public UniTask RetryAsync() => _sceneFlow.ToBattleAsync();
 
         /// <summary> 플레이어가 고른 스킬(과 대상)로 대기 중이던 아군 턴을 재개한다. </summary>
         /// <param name="target">지정 대상. null이면 각 효과의 TargetSelector가 정한다.</param>
@@ -184,18 +145,6 @@ namespace Eclipse.Presentation
             var models = pool.Select(u => (ICombatant)u.Model).ToList();
             var valid = toAllies ? _targeting.ValidAllyTargets(models) : _targeting.ValidEnemyTargets(models);
             return pool.Where(u => valid.Contains(u.Model)).ToList();
-        }
-
-        /// <summary> 전투 씬을 떠나 메인 씬으로 돌아간다. </summary>
-        public UniTask ExitAsync() => _sceneFlow.ToMainAsync();
-
-        // 스테이지 클리어를 기록하고 초회 여부에 따라 보상을 지급한다.
-        private void MarkStageCleared()
-        {
-            bool firstClear = _progress.TryMarkCleared(_chapter, _stageIndex);
-            GrantedRewards = _rewards.GrantVictory(_stage, firstClear);
-            // 클리어 기록·보상 지급이 모두 끝난 스냅샷만 저장한다(부분 상태 저장 금지).
-            _saveService?.Save();
         }
 
         // 입력 대기가 시작된 행동자를 ActingCombatant에 세우고, 이번 턴 상태(쿨은 턴 시작에 감소)를
