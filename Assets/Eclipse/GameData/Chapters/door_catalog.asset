@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f90821eeac8b414c987095a3df1f475, type: 3}
+  m_Name: door_catalog
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.DoorCatalogSO
+  doors:
+  - kind: 0
+    displayName: "\uACF5\uACA9\uC758 \uBB38"
+    weight: 15
+    promiseText: "\uACF5\uACA9\uB825\uC744 \uC62C\uB9AC\uB294 \uCE74\uB4DC"
+    icon: {fileID: 0}
+  - kind: 1
+    displayName: "\uC218\uD638\uC758 \uBB38"
+    weight: 15
+    promiseText: "\uC0DD\uBA85\uB825\xB7\uBC29\uC5B4\uB825\uC744 \uC62C\uB9AC\uB294
+      \uCE74\uB4DC"
+    icon: {fileID: 0}
+  - kind: 2
+    displayName: "\uC9C8\uD48D\uC758 \uBB38"
+    weight: 13
+    promiseText: "\uC18D\uB3C4\xB7\uCE58\uBA85\uC744 \uC62C\uB9AC\uB294 \uCE74\uB4DC"
+    icon: {fileID: 0}
+  - kind: 3
+    displayName: "\uC778\uC5F0\uC758 \uBB38"
+    weight: 11
+    promiseText: "\uD30C\uD2F0\uC6D0 \uD55C \uBA85\uC758 \uC804\uC6A9 \uCE74\uB4DC"
+    icon: {fileID: 0}
+  - kind: 4
+    displayName: "\uC800\uC8FC\uC758 \uBB38"
+    weight: 13
+    promiseText: "\uC774 \uB7F0\uC758 \uC801\uC744 \uC57D\uD654"
+    icon: {fileID: 0}
+  - kind: 5
+    displayName: "\uACE8\uB4DC\uC758 \uBB38"
+    weight: 15
+    promiseText: "\uACE8\uB4DC"
+    icon: {fileID: 0}
+  - kind: 6
+    displayName: "\uAD50\uBCF8\uC758 \uBB38"
+    weight: 8
+    promiseText: "\uAD50\uBCF8"
+    icon: {fileID: 0}
+  - kind: 7
+    displayName: "\uBCF4\uC11D\uC758 \uBB38"
+    weight: 10
+    promiseText: "\uBCF4\uC11D"
+    icon: {fileID: 0}
+  goldPerDepth: 300
+  essencePerDepth: 60
+  manualBase: 1
+  manualPerDepth: 2
+  currencyJitter: 0.3

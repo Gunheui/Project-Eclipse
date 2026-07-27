@@ -3100,8 +3100,6 @@ MonoBehaviour:
     Prefab: {fileID: 3219000866919621237, guid: 3f6350f34c60d43d5bc1f111cab36400, type: 3}
   - Id: 2
     Prefab: {fileID: 3634229259187252125, guid: 6d3624c69dddd49c487319853303e7cd, type: 3}
-  - Id: 3
-    Prefab: {fileID: 4898913718549415834, guid: 9f221baf122b54f558ae35e21c723699, type: 3}
   - Id: 4
     Prefab: {fileID: 6462304288042612214, guid: 4cc868606595c4894bf8e0052694283c, type: 3}
   - Id: 5

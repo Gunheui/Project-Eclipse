@@ -1,0 +1,241 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79e6b049a3d2244759ccc97c4b70acf9, type: 3}
+  m_Name: buff_card_catalog
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.BuffCardCatalogSO
+  cards:
+  - id: card_a1
+    displayName: "\uBCBC\uB824\uC9C4 \uCE7C\uB0A0"
+    tag: 0
+    deltas:
+    - axis: 2
+      value: 0.15
+    requiredCharacterId: 
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 0
+  - id: card_a2
+    displayName: "\uCC98\uD615 \uC120\uC5B8"
+    tag: 0
+    deltas:
+    - axis: 2
+      value: 0.25
+    - axis: 3
+      value: -0.12
+    requiredCharacterId: 
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 0
+  - id: card_a3
+    displayName: "\uC0AC\uB0E5\uC758 \uAC10\uAC01"
+    tag: 0
+    deltas:
+    - axis: 2
+      value: 0.1
+    - axis: 5
+      value: 0.06
+    requiredCharacterId: 
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 0
+  - id: card_b1
+    displayName: "\uAD73\uC740 \uB300\uC5F4"
+    tag: 1
+    deltas:
+    - axis: 3
+      value: 0.18
+    requiredCharacterId: 
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 0
+  - id: card_b2
+    displayName: "\uC2EC\uBD80\uC758 \uD65C\uB825"
+    tag: 1
+    deltas:
+    - axis: 1
+      value: 0.2
+    requiredCharacterId: 
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 0
+  - id: card_b3
+    displayName: "\uCE68\uC2DD \uC801\uC751"
+    tag: 1
+    deltas:
+    - axis: 1
+      value: 0.12
+    - axis: 3
+      value: 0.12
+    requiredCharacterId: 
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 0
+  - id: card_c1
+    displayName: "\uBE68\uB77C\uC9C4 \uB9E5\uBC15"
+    tag: 2
+    deltas:
+    - axis: 4
+      value: 0.15
+    requiredCharacterId: 
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 0
+  - id: card_c2
+    displayName: "\uAE09\uC18C \uAC04\uD30C"
+    tag: 2
+    deltas:
+    - axis: 5
+      value: 0.12
+    requiredCharacterId: 
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 0
+  - id: card_c3
+    displayName: "\uD30C\uC5F4\uC758 \uC77C\uACA9"
+    tag: 2
+    deltas:
+    - axis: 6
+      value: 0.3
+    requiredCharacterId: 
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 0
+  - id: card_d1
+    displayName: "\uBB34\uB108\uC9C0\uC9C0 \uC54A\uB294 \uBCBD"
+    tag: 4
+    deltas:
+    - axis: 3
+      value: 0.3
+    - axis: 1
+      value: 0.12
+    requiredCharacterId: rien
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 0
+  - id: card_d2
+    displayName: "\uC5F0\uACA9 \uBCF8\uB2A5"
+    tag: 4
+    deltas:
+    - axis: 5
+      value: 0.12
+    - axis: 6
+      value: 0.35
+    requiredCharacterId: kai
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 0
+  - id: card_d3
+    displayName: "\uD3ED\uC8FC\uC758 \uBD88\uC528"
+    tag: 4
+    deltas:
+    - axis: 2
+      value: 0.25
+    - axis: 3
+      value: -0.1
+    requiredCharacterId: sera
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 0
+  - id: card_d4
+    displayName: "\uC804\uC220 \uC9C0\uD718"
+    tag: 4
+    deltas:
+    - axis: 4
+      value: 0.18
+    - axis: 2
+      value: 0.12
+    requiredCharacterId: noel
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 0
+  - id: card_d5
+    displayName: "\uC0DD\uBA85\uC758 \uC0D8"
+    tag: 4
+    deltas:
+    - axis: 2
+      value: 0.25
+    - axis: 1
+      value: 0.12
+    requiredCharacterId: mira
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 0
+  - id: card_e1
+    displayName: "\uAC01\uC131\uC758 \uC12C\uAD11"
+    tag: 3
+    deltas:
+    - axis: 1
+      value: 0.07
+    - axis: 2
+      value: 0.07
+    - axis: 3
+      value: 0.07
+    requiredCharacterId: 
+    weight: 12
+    specialPointRestricted: 1
+    targetsEnemies: 0
+  - id: card_e2
+    displayName: "\uADE0\uC5F4\uC758 \uCD95\uBCF5"
+    tag: 3
+    deltas:
+    - axis: 1
+      value: 0.07
+    - axis: 2
+      value: 0.07
+    - axis: 3
+      value: 0.07
+    - axis: 4
+      value: 0.07
+    requiredCharacterId: 
+    weight: 12
+    specialPointRestricted: 1
+    targetsEnemies: 0
+  - id: card_f1
+    displayName: "\uC1E0\uC57D\uD55C \uC721\uC2E0"
+    tag: 5
+    deltas:
+    - axis: 1
+      value: 0.12
+    requiredCharacterId: 
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 1
+  - id: card_f2
+    displayName: "\uBB34\uB518 \uBC1C\uD1B1"
+    tag: 5
+    deltas:
+    - axis: 2
+      value: 0.12
+    requiredCharacterId: 
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 1
+  - id: card_f3
+    displayName: "\uAC08\uB77C\uC9C4 \uAC01\uC9C8"
+    tag: 5
+    deltas:
+    - axis: 3
+      value: 0.15
+    requiredCharacterId: 
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 1
+  - id: card_f4
+    displayName: "\uAD7C\uB72C \uCD09\uC218"
+    tag: 5
+    deltas:
+    - axis: 4
+      value: 0.1
+    requiredCharacterId: 
+    weight: 25
+    specialPointRestricted: 0
+    targetsEnemies: 1
