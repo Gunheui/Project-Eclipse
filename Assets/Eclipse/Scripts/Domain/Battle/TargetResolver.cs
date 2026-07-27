@@ -42,7 +42,7 @@ namespace Eclipse.Domain
         /// <see cref="ValidEnemyTargets"/>/<see cref="ValidAllyTargets"/>에 든 대상일 때만 존중하고
         /// (단일-적은 도발자 우선 규칙 안에서), 그 외에는 selector 기본 규칙으로 폴백한다.
         /// </summary>
-        /// <param name="chosenTarget">플레이어가 찍은 대상. null이면 selector가 정한다.</param>
+        /// <param name="chosenTarget">플레이어가 지정한 대상. null이면 selector가 정한다.</param>
         public IReadOnlyList<ICombatant> Resolve(
             TargetSelector selector, ICombatant actor,
             IReadOnlyList<ICombatant> allies, IReadOnlyList<ICombatant> enemies,
@@ -70,7 +70,7 @@ namespace Eclipse.Domain
 
         /// <summary>
         /// 단일-적 스킬로 직접 지정할 수 있는 후보(생존 적, 도발자가 있으면 그들만).
-        /// <see cref="Resolve"/>의 지정 존중 조건과 같은 규칙이라, 조준 UI가 이 목록만 선택 가능으로 칠하면
+        /// <see cref="Resolve"/>의 지정 존중 조건과 같은 규칙이라, 조준 UI가 이 목록만 선택 가능으로 표시하면
         /// 화면과 판정이 일치한다. 생존한 적이 없으면 빈 목록.
         /// </summary>
         public IReadOnlyList<ICombatant> ValidEnemyTargets(IReadOnlyList<ICombatant> enemies)

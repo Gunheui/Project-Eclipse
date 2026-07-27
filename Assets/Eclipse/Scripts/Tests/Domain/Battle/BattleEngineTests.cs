@@ -14,7 +14,7 @@ namespace Eclipse.Tests
 {
     public class BattleEngineTests
     {
-        // --- 인메모리 데이터 빌더 (에셋 없이 SO를 즉석 생성) ---
+        // --- 인메모리 데이터 조립 (에셋 없이 SO를 즉석 생성) ---
 
         private static Stats S(int hp, int atk, int def, int spd, float cr = 0f, float cd = 1.5f)
             => new Stats { hp = hp, atk = atk, def = def, spd = spd, critRate = cr, critDamage = cd };

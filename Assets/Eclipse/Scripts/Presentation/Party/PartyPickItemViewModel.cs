@@ -6,7 +6,7 @@ namespace Eclipse.Presentation
 {
     /// <summary>
     /// 픽 화면 로스터 항목 하나를 감싸는 얇은 래퍼. 표시 데이터(초상·이름·등급·레벨)는 공유 항목 VM에 위임하고,
-    /// 이 화면에만 있는 상태(점유 슬롯 번호)만 얹는다. 편성 상태를 공유 항목 VM에 넣지 않기 위한 경계다.
+    /// 이 화면에만 있는 상태(점유 슬롯 번호)만 추가한다. 편성 상태를 공유 항목 VM에 넣지 않기 위한 경계다.
     /// </summary>
     public sealed class PartyPickItemViewModel : ViewModelBase
     {

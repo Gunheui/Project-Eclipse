@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace Eclipse.Tests
 {
-    // BattleFactory가 프로덕션(ChapterRunDriver)이 위임하는 그 조립 경로를 실제로 타는지 못박는다.
+    // BattleFactory가 프로덕션(ChapterRunDriver)이 위임하는 그 조립 경로를 실제로 거치는지 못박는다.
     // 파티·버프·챕터 계수는 런 세션에서 읽고, 방마다 재호출되어 전부 새 인스턴스가 선다.
     public class BattleFactoryTests
     {

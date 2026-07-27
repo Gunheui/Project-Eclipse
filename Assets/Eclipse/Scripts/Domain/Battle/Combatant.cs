@@ -133,7 +133,7 @@ namespace Eclipse.Domain
         }
 
         /// <summary>
-        /// 아군 캐릭터를 전투 유닛으로 만든다. 최종 스탯은 정본 빌더(CharacterStats)로 미리 계산해 넘긴다 —
+        /// 아군 캐릭터를 전투 유닛으로 만든다. 최종 스탯은 CharacterStats로 미리 계산해 넘긴다 —
         /// 여기서 다시 계산하지 않아 계산처가 한 곳으로 유지된다.
         /// </summary>
         /// <param name="slotIndex">편성 슬롯 번호(0부터).</param>
@@ -146,7 +146,7 @@ namespace Eclipse.Domain
         }
 
         /// <summary>
-        /// 적을 전투 유닛으로 만든다. 최종 스탯은 정본 빌더로 미리 계산해 넘긴다(챕터 계수·변이·정예·디버프 포함).
+        /// 적을 전투 유닛으로 만든다. 최종 스탯은 CharacterStats로 미리 계산해 넘긴다(챕터 계수·변이·정예·디버프 포함).
         /// </summary>
         /// <param name="slotIndex">편성 슬롯 번호(0부터).</param>
         /// <param name="stats">배수·디버프가 접힌 최종 스탯.</param>

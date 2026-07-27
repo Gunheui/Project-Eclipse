@@ -13,7 +13,7 @@ namespace Eclipse.Domain
 
         /// <summary>
         /// 용도별 난수 시드. 같은 runSeed면 항상 같은 값을 낸다(재현 유지).
-        /// 스트림 id를 XOR로 얹기만 하고, 실제 분산은 SeededRandom 생성자의 SplitMix64가 담당한다.
+        /// 스트림 id를 XOR로 합치기만 하고, 실제 분산은 SeededRandom 생성자의 SplitMix64가 담당한다.
         /// </summary>
         public static int For(int runSeed, Stream stream) => runSeed ^ (int)stream;
 

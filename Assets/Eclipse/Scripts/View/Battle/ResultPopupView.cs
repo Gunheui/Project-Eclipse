@@ -84,7 +84,7 @@ namespace Eclipse.View
         }
 
         // 공개 보상이 있으면 칩 행을, 없으면 "획득 보상 없음" 한 줄을 띄운다.
-        // 칩은 재화 종류와 1:1 배선이라 종류로 짝을 찾아 채우고, 이번 공개에 없는 재화의 칩은 끈다.
+        // 칩은 재화 종류와 1:1 매핑이라 종류로 짝을 찾아 채우고, 이번 공개에 없는 재화의 칩은 끈다.
         private void BindRewards(RunOffer offer)
         {
             var rewards = offer.Receipts;

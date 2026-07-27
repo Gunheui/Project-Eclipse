@@ -10,7 +10,7 @@ namespace Eclipse.Tests
 {
     public class StatusEffectTests
     {
-        // --- 빌더 ---
+        // --- 조립 ---
 
         private static Stats S(int hp, int atk, int def, int spd, float cr = 0f, float cd = 1.5f)
             => new Stats { hp = hp, atk = atk, def = def, spd = spd, critRate = cr, critDamage = cd };

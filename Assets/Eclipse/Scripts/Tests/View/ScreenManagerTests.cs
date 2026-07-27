@@ -14,7 +14,7 @@ namespace Eclipse.Tests.View
 {
     /// <summary>
     /// ScreenManager의 다중 Pop 되감기·재진입 가드·예외 시 파괴 보장을 PlayMode에서 관측한다.
-    /// MonoBehaviour라 private 직렬화 필드는 리플렉션으로 배선하고, 화면 클론은 screenRoot 자식으로
+    /// MonoBehaviour라 private 직렬화 필드는 리플렉션으로 연결하고, 화면 클론은 screenRoot 자식으로
     /// 붙는 성질을 이용해 파괴 여부를 확인한다.
     /// </summary>
     public class ScreenManagerTests
@@ -37,7 +37,7 @@ namespace Eclipse.Tests.View
             _resolver?.Dispose();
         }
 
-        // 3종 화면(Lobby/CharacterList/CharacterDetail)의 소스 프리팹을 만들고 매니저를 배선한다.
+        // 3종 화면(Lobby/CharacterList/CharacterDetail)의 소스 프리팹을 만들고 매니저를 연결한다.
         private void CreateManager()
         {
             _resolver = new ContainerBuilder().Build();

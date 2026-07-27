@@ -5,7 +5,7 @@ using Eclipse.Data;
 namespace Eclipse.Domain
 {
     /// <summary>
-    /// 플레이어가 보유한 캐릭터 한 명. 캐릭터 정의(CharacterSO)에 계정별 진행값(레벨·스킬 레벨·돌파)을 얹는다.
+    /// 플레이어가 보유한 캐릭터 한 명. 캐릭터 정의(CharacterSO)에 계정별 진행값(레벨·스킬 레벨·돌파)을 덧붙인다.
     /// 초상·등급·기본 스탯은 Definition에서 읽고, 성장값만 이 객체가 보유한다.
     /// </summary>
     public class OwnedCharacter

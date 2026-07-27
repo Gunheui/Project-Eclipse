@@ -15,7 +15,7 @@ namespace Eclipse.Presentation
     /// 플레이어 영속 상태의 저장·복원 서비스. 런타임 홀더 3종(PlayerSave·CurrencyWallet·ChapterProgress)의
     /// 현재 상태를 <see cref="SaveData"/>로 스냅샷해 JSON 파일 하나로 쓴다.
     /// 복원(<see cref="LoadOrNew"/>·<see cref="BuildPlayerSave"/>·<see cref="ApplyChapters"/>)은 정적 메서드로
-    /// 분리해 테스트가 프로덕션 경로를 그대로 태운다. 저장 실패는 로그만 남기고 삼킨다 —
+    /// 분리해 테스트가 프로덕션 경로를 그대로 거친다. 저장 실패는 로그만 남기고 삼킨다 —
     /// 저장이 게임 진행을 죽여선 안 된다.
     /// </summary>
     public sealed class SaveService

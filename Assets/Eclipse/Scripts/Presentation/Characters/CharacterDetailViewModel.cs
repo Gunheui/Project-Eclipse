@@ -40,8 +40,8 @@ namespace Eclipse.Presentation
             => _spriteProvider.LoadPortraitAsync(_owned.Definition, ct);
 
         /// <summary>
-        /// 현재 레벨·돌파 기준 스탯 6종. 전투 조립과 같은 정본 빌더(<see cref="CharacterStats.BuildAllyStats"/>)를
-        /// 태워 표시와 전투가 달라지지 않는다. 생성 시점에 한 번 계산해 캐싱한다.
+        /// 현재 레벨·돌파 기준 스탯 6종. 전투 조립과 같은 스탯 계산(<see cref="CharacterStats.BuildAllyStats"/>)을
+        /// 써 표시와 전투가 달라지지 않는다. 생성 시점에 한 번 계산해 캐싱한다.
         /// </summary>
         public Stats CurrentStats => _currentStats;
 

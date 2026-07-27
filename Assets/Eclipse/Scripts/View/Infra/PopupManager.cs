@@ -48,7 +48,7 @@ namespace Eclipse.View.Infra
         public async UniTask<TResult> Show<TResult>(PopupId id)
         {
             if (!_prefabs.TryGetValue(id, out var prefab))
-                throw new InvalidOperationException($"PopupManager: '{id}'에 등록된 프리팹이 없습니다. entries 배선을 확인하세요.");
+                throw new InvalidOperationException($"PopupManager: '{id}'에 등록된 프리팹이 없습니다. entries 매핑을 확인하세요.");
 
             var go = _resolver.Instantiate(prefab, popupRoot);
             var popup = go.GetComponent<IPopup<TResult>>();

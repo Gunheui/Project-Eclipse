@@ -29,7 +29,7 @@ namespace Eclipse.View.Theme
                 return;
 
             Color badge;
-            Color iconColor;   // 배지(IconBg) 위에 얹히는 글리프 색
+            Color iconColor;   // 배지(IconBg) 위에 놓이는 글리프 색
             Color labelColor;  // 밝은 바 배경 위에 놓이는 라벨 색
             bool bold;
 

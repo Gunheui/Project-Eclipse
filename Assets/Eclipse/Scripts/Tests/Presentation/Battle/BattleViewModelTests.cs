@@ -18,7 +18,7 @@ namespace Eclipse.Tests
 {
     public class BattleViewModelTests
     {
-        // --- 인메모리 데이터 빌더 ---
+        // --- 인메모리 데이터 조립 ---
 
         private static Stats S(int hp, int atk, int def, int spd)
             => new Stats { hp = hp, atk = atk, def = def, spd = spd, critRate = 0f, critDamage = 1.5f };
@@ -61,7 +61,7 @@ namespace Eclipse.Tests
         // 아트는 스케줄러·엔진과 무관하므로 스프라이트 없이 유닛만 실어 보낸다.
         private static BattleUnitEntry Entry(Combatant unit) => new BattleUnitEntry(unit, null, null);
 
-        // 엔진·스케줄러·프로바이더를 프로덕션(BattleLifetimeScope)과 같은 배선으로 조립한 VM. 타겟난수는 데미지난수와 분리된 스트림.
+        // 엔진·스케줄러·프로바이더를 프로덕션(BattleLifetimeScope)과 같은 구성으로 조립한 VM. 타겟난수는 데미지난수와 분리된 스트림.
         private static BattleViewModel BuildVm(Combatant[] allies, Combatant[] enemies, int seed, bool startAuto)
         {
             var targeting = new TargetResolver();
@@ -86,7 +86,7 @@ namespace Eclipse.Tests
         private static BattleViewModel Vm(Combatant ally, Combatant enemy, bool startAuto)
             => BuildVm(new[] { ally }, new[] { enemy }, seed: 1, startAuto);
 
-        // AutoMode 위임용 규칙 프로바이더(아군 프로파일). 타겟 정책까지 실제로 배선한다.
+        // AutoMode 위임용 규칙 프로바이더(아군 프로파일). 타겟 정책까지 실제로 연결한다.
         private static RuleBasedActionProvider AutoRule(int seed = 1)
         {
             var targeting = new TargetResolver();
@@ -159,10 +159,10 @@ namespace Eclipse.Tests
             return UniTask.CompletedTask;
         });
 
-        // --- VM 수동 지정: 찍은 대상이 자동 기본(슬롯순)을 덮어써 그 적을 맞힌다 ---
+        // --- VM 수동 지정: 지정한 대상이 자동 기본(슬롯순)을 덮어써 그 적을 맞힌다 ---
 
         [UnityTest]
-        public IEnumerator 수동_지정_대상이_자동기본이_아닌_찍은_적을_맞힌다() => UniTask.ToCoroutine(() =>
+        public IEnumerator 수동_지정_대상이_자동기본이_아닌_지정한_적을_맞힌다() => UniTask.ToCoroutine(() =>
         {
             var ally = Ally("아군", 0, S(5000, 300, 0, 200)); // 가장 빠름 → 먼저 행동
             var low = Enemy("저HP", 0, S(1000, 10, 0, 50));   // 슬롯 앞 — 자동 기본 폴백이 고를 자리

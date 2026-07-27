@@ -63,7 +63,7 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// 화면이 전면에 설 때 호출된다. 표시 값을 UI에 한 번 대입하고 뒤로가기를 배선한다.
+        /// 화면이 전면에 설 때 호출된다. 표시 값을 UI에 한 번 대입하고 뒤로가기를 연결한다.
         /// 값이 정적이라 구독은 만들지 않는다.
         /// </summary>
         public UniTask OnEnter()

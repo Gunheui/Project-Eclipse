@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Eclipse.Tests
 {
-    /// <summary> 런 루프 테스트가 공유하는 인메모리 데이터 빌더(챕터·튜닝·카탈로그·파티). </summary>
+    /// <summary> 런 루프 테스트가 공유하는 인메모리 데이터 조립기(챕터·튜닝·카탈로그·파티). </summary>
     public static class RunFixtures
     {
         public static Stats S(int hp, int atk, int def, int spd)

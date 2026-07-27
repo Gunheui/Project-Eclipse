@@ -9,7 +9,7 @@ using UnityEngine;
 namespace Eclipse.Tests
 {
     /// <summary>
-    /// 스킬 강화 트랜잭션 검증. 실제 지갑·세이브(임시 파일)로 프로덕션 경로를 태우고,
+    /// 스킬 강화 트랜잭션 검증. 실제 지갑·세이브(임시 파일)로 프로덕션 경로를 거치고,
     /// 특히 골드+교본 2재화 원자 차감(한쪽만 빠지는 반쪽 결제 금지)을 확인한다.
     /// </summary>
     public sealed class SkillEnhanceServiceTests

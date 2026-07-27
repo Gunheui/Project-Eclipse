@@ -135,7 +135,7 @@ namespace Eclipse.Presentation
 
         /// <summary>
         /// 행동자가 이 스킬로 직접 지정할 수 있는 대상 유닛. 도메인 규칙(적은 도발 반영)을 그대로 받아,
-        /// 여기 든 대상을 <see cref="Submit"/>에 넘기면 반드시 적용된다 — 조준 UI는 이 목록만 선택 가능으로 칠한다.
+        /// 여기 든 대상을 <see cref="Submit"/>에 넘기면 반드시 적용된다 — 조준 UI는 이 목록만 선택 가능으로 표시한다.
         /// </summary>
         /// <returns>지정 가능한 대상 유닛 VM. 생존한 대상이 없으면 빈 목록.</returns>
         public IReadOnlyList<CombatantViewModel> ValidManualTargets(CombatantViewModel actor, SkillSlotViewModel skill)

@@ -8,7 +8,7 @@ namespace Eclipse.Core
 {
     /// <summary>
     /// 전투 뷰모델 조립 전담 팩토리. 방마다 재호출되어 난수·파이프라인·엔진·전투원을 전부 새로 만든다.
-    /// 파티·버프·챕터 계수는 런 세션에서 읽고, 최종 스탯은 정본 빌더(CharacterStats)로만 계산한다.
+    /// 파티·버프·챕터 계수는 런 세션에서 읽고, 최종 스탯은 CharacterStats 한 곳에서만 계산한다.
     /// </summary>
     public sealed class BattleFactory
     {
@@ -99,7 +99,7 @@ namespace Eclipse.Core
                 targeting);
         }
 
-        // 적 하나를 조립한다. 챕터 계수·변이·정예 배수·런 디버프를 정본 빌더로 접고, 변이 이름 접두를 붙인다.
+        // 적 하나를 조립한다. 챕터 계수·변이·정예 배수·런 디버프를 CharacterStats 계산으로 접고, 변이 이름 접두를 붙인다.
         private Combatant BuildEnemy(EnemyInstanceSpec spec, int slot)
         {
             var stats = CharacterStats.BuildEnemyStats(

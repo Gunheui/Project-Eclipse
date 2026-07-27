@@ -90,7 +90,7 @@ namespace Eclipse.View
             if (nameLabel != null) nameLabel.text = unit.Name;
             SetActing(false);
 
-            // 실드 구간의 위치가 현재 HP에 물려 있어 두 값이 함께 필요하다. 둘 다 같은 턴 신호에서
+            // 실드 구간의 위치가 현재 HP에 연동돼 있어 두 값이 함께 필요하다. 둘 다 같은 턴 신호에서
             // 파생되므로 한 턴에 두 번 발화하지만, 바 갱신은 멱등이라 무해하다.
             unit.CurrentHp
                 .CombineLatest(unit.ShieldAbsorb, (hp, shield) => (hp, shield))

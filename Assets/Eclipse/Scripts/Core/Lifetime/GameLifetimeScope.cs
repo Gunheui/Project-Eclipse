@@ -14,7 +14,7 @@ namespace Eclipse.Core
     /// </summary>
     public class GameLifetimeScope : LifetimeScope
     {
-        // 런 입구(파티 편성)에 넘길 장 정의. 인스펙터에서 배선한다.
+        // 런 입구(파티 편성)에 넘길 장 정의. 인스펙터에서 연결한다.
         [SerializeField] private ChapterSO[] chapters;
 
         protected override void Configure(IContainerBuilder builder)

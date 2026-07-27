@@ -76,7 +76,7 @@ namespace Eclipse.Tests
                 new SaveService(new PlayerSave(System.Array.Empty<OwnedCharacter>().ToList()),
                     wallet, progress, path).Save();
 
-                // 키 이름이 바뀌면 구 세이브가 조용히 초기화된다 — JSON 원문에서 키를 직접 박제한다.
+                // 키 이름이 바뀌면 구 세이브가 조용히 초기화된다 — JSON 원문에서 키를 직접 하드코딩한다.
                 var json = File.ReadAllText(path);
                 StringAssert.Contains("\"chapterId\":\"chapter_01\"", json);
                 StringAssert.Contains("\"cleared\":1", json);

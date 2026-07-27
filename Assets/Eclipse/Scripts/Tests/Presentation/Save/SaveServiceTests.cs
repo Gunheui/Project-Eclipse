@@ -12,7 +12,7 @@ namespace Eclipse.Tests
 {
     /// <summary>
     /// 세이브 저장→로드 라운드트립 검증. 임시 경로에 실제 파일을 쓰고, 프로덕션 복원 경로
-    /// (LoadOrNew·BuildPlayerSave·ApplyChapters)를 그대로 태워 되읽는다.
+    /// (LoadOrNew·BuildPlayerSave·ApplyChapters)를 그대로 거쳐 되읽는다.
     /// </summary>
     public sealed class SaveServiceTests
     {

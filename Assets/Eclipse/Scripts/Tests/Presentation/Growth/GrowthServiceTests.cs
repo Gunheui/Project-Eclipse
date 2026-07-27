@@ -10,7 +10,7 @@ using UnityEngine;
 namespace Eclipse.Tests
 {
     /// <summary>
-    /// 레벨업 트랜잭션 검증. 실제 지갑·세이브(임시 파일)로 프로덕션 경로를 태우고,
+    /// 레벨업 트랜잭션 검증. 실제 지갑·세이브(임시 파일)로 프로덕션 경로를 거치고,
     /// 성공/거부 각 경로의 부수효과(재화 차감·레벨 증가·영속)를 되읽어 확인한다.
     /// </summary>
     public sealed class GrowthServiceTests
@@ -125,8 +125,8 @@ namespace Eclipse.Tests
         [Test]
         public void 전투_생성_스탯은_도메인_스케일과_동일하다_MAR22()
         {
-            // 상세 화면(CharacterDetailViewModel)과 전투(Combatant.FromCharacter)가 같은 정본 빌더
-            // (CharacterStats.BuildAllyStats)를 태우는지 확증한다. 전투가 도메인 스케일을 벗어나 하드코딩되면 이 테스트가 깨진다.
+            // 상세 화면(CharacterDetailViewModel)과 전투(Combatant.FromCharacter)가 같은 스탯 계산
+            // (CharacterStats.BuildAllyStats)을 쓰는지 확증한다. 전투가 도메인 스케일을 벗어나 하드코딩되면 이 테스트가 깨진다.
             var owned = Owned(level: 12);
             var domain = CharacterStats.BuildAllyStats(owned.Definition, owned.Level, owned.AscensionTier, null);
 

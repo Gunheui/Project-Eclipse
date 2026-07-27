@@ -83,7 +83,7 @@ namespace Eclipse.Tests
                         doorPoints++;
                         Assert.AreEqual(3, offer.Doors.Count, "문 지점은 3종 제시다");
                         Assert.AreEqual(3, offer.Doors.Select(d => d.Kind).Distinct().Count(), "비복원이라 중복이 없다");
-                        // 재화 문이 있으면 그 문을 골라 지연 지급 경로를 태운다. 없으면 첫 문(버프)을 고른다.
+                        // 재화 문이 있으면 그 문을 골라 지연 지급 경로를 거친다. 없으면 첫 문(버프)을 고른다.
                         var currency = offer.Doors.Where(d =>
                             d.Kind == DoorKind.Gold || d.Kind == DoorKind.Manual || d.Kind == DoorKind.Essence).ToList();
                         var picked = currency.Count > 0 ? currency[0].Kind : offer.Doors[0].Kind;

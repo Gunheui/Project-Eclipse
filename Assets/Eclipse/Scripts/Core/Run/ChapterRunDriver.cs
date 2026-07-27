@@ -88,7 +88,7 @@ namespace Eclipse.Core
             await _flow.ReportBattleResult(won, offer.Token);
         }
 
-        // 나가기 = 런 포기. 이 방 패배로 보고해 몰수·정산·복귀가 정규 실패 경로를 그대로 탄다.
+        // 나가기 = 런 포기. 이 방 패배로 보고해 몰수·정산·복귀가 정규 실패 경로를 그대로 거친다.
         private void OnExitRequested()
         {
             _battleCts?.Cancel();

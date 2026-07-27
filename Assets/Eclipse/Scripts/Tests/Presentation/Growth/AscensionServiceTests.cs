@@ -9,7 +9,7 @@ using UnityEngine;
 namespace Eclipse.Tests
 {
     /// <summary>
-    /// 돌파 트랜잭션 검증. 실제 세이브(임시 파일)로 프로덕션 경로를 태우고,
+    /// 돌파 트랜잭션 검증. 실제 세이브(임시 파일)로 프로덕션 경로를 거치고,
     /// 단계 증가·영속과 상한 거부를 확인한다.
     /// </summary>
     public sealed class AscensionServiceTests

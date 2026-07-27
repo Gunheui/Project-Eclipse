@@ -78,7 +78,7 @@ namespace Eclipse.View.Infra
                 }
 
                 if (!_prefabs.TryGetValue(id, out var prefab))
-                    throw new InvalidOperationException($"ScreenManager: '{id}'에 등록된 프리팹이 없습니다. entries 배선을 확인하세요.");
+                    throw new InvalidOperationException($"ScreenManager: '{id}'에 등록된 프리팹이 없습니다. entries 매핑을 확인하세요.");
 
                 var go = _resolver.Instantiate(prefab, screenRoot);
                 var screen = go.GetComponent<IScreen>();

@@ -103,7 +103,7 @@ namespace Eclipse.Tests
             Assert.IsFalse(valid.Contains(dead), "죽은 적은 지정 후보가 아니다");
         }
 
-        // 조준 UI가 칠하는 후보(ValidManualTargets)를 찍으면 반드시 그 대상이 맞아야 한다 —
+        // 조준 UI가 강조 표시하는 후보(ValidManualTargets)를 지정하면 반드시 그 대상이 맞아야 한다 —
         // 화면과 판정이 달라지지 않음을 계약으로 못박는다.
         [Test]
         public void 유효_수동타겟은_모두_지정이_존중된다()
@@ -117,7 +117,7 @@ namespace Eclipse.Tests
             foreach (var candidate in resolver.ValidEnemyTargets(enemies))
             {
                 var result = resolver.Resolve(TargetSelector.SingleEnemy, actor: t1, NoAllies, enemies, candidate);
-                Assert.AreSame(candidate, result[0], "후보로 제시된 대상은 찍으면 그대로 맞아야 한다");
+                Assert.AreSame(candidate, result[0], "후보로 제시된 대상은 지정하면 그대로 맞아야 한다");
             }
         }
 
@@ -205,7 +205,7 @@ namespace Eclipse.Tests
             Assert.IsFalse(valid.Contains(dead), "죽은 아군은 힐/버프 지정 후보가 아니다");
         }
 
-        // 조준 UI가 칠하는 아군 후보를 찍으면 반드시 그 대상이 맞아야 한다(화면 = 판정 계약).
+        // 조준 UI가 강조 표시하는 아군 후보를 지정하면 반드시 그 대상이 맞아야 한다(화면 = 판정 계약).
         [Test]
         public void 유효_아군타겟은_모두_지정이_존중된다()
         {
@@ -217,7 +217,7 @@ namespace Eclipse.Tests
             foreach (var candidate in resolver.ValidAllyTargets(allies))
             {
                 var result = resolver.Resolve(TargetSelector.SingleAlly, actor: a, allies, NoEnemies, candidate);
-                Assert.AreSame(candidate, result[0], "아군 후보로 제시된 대상은 찍으면 그대로 맞아야 한다");
+                Assert.AreSame(candidate, result[0], "아군 후보로 제시된 대상은 지정하면 그대로 맞아야 한다");
             }
         }
 

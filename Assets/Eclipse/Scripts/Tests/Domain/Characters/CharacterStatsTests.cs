@@ -9,7 +9,7 @@ namespace Eclipse.Tests
 {
     public class CharacterStatsTests
     {
-        // 기본 스탯·성장곡선(g=0.07)을 얹은 인메모리 캐릭터 정의. 공식: base × (1 + g×(level−1)).
+        // 기본 스탯·성장곡선(g=0.07)을 포함한 인메모리 캐릭터 정의. 공식: base × (1 + g×(level−1)).
         private static CharacterSO Definition(int hp, int atk, int def, int spd, float cr, float cd)
         {
             var so = ScriptableObject.CreateInstance<CharacterSO>();
