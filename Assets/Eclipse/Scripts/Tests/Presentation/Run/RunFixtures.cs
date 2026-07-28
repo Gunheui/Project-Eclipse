@@ -108,15 +108,14 @@ namespace Eclipse.Tests
             => Chapter(Normal(1, true), Normal(2, true), Normal(3, true), Elite(4, true),
                 Normal(5, true), Normal(5, false), Boss());
 
-        /// <summary> 문 8종 카탈로그(가중 15/15/13/11/13/15/8/10). 재화 계수는 기획 §4-4 값. </summary>
+        /// <summary> 문 5종 카탈로그(가중 27/26/30/16/20 — 라인업 합 200). 재화 계수는 기획 §4-4 값. </summary>
         public static DoorCatalogSO DoorCatalog()
         {
             var catalog = ScriptableObject.CreateInstance<DoorCatalogSO>();
             catalog.doors = new[]
             {
-                Door(DoorKind.Attack, 15), Door(DoorKind.Guard, 15), Door(DoorKind.Haste, 13),
-                Door(DoorKind.Bond, 11), Door(DoorKind.Curse, 13), Door(DoorKind.Gold, 15),
-                Door(DoorKind.Manual, 8), Door(DoorKind.Essence, 10),
+                Door(DoorKind.CharacterBuff, 27), Door(DoorKind.Curse, 26), Door(DoorKind.Gold, 30),
+                Door(DoorKind.Manual, 16), Door(DoorKind.Essence, 20),
             };
             catalog.goldPerDepth = 300;
             catalog.essencePerDepth = 60;
@@ -125,7 +124,13 @@ namespace Eclipse.Tests
         }
 
         private static DoorDefinition Door(DoorKind kind, int weight)
-            => new DoorDefinition { kind = kind, displayName = kind.ToString(), weight = weight, promiseText = kind.ToString() };
+            => new DoorDefinition
+            {
+                kind = kind,
+                displayName = kind == DoorKind.CharacterBuff ? "{0}" : kind.ToString(),
+                weight = weight,
+                promiseText = kind == DoorKind.CharacterBuff ? "{0}" : kind.ToString(),
+            };
 
         /// <summary>
         /// 계열 3장 × (공격/수호/질풍) + 특수 2장 + 저주 4장 + 인연 카드(대상 id 지정)로 이루어진 카탈로그.

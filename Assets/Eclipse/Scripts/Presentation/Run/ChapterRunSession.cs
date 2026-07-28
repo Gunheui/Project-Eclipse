@@ -7,16 +7,16 @@ using Eclipse.Domain;
 
 namespace Eclipse.Presentation
 {
-    /// <summary> 에스크로 보류분 = 고른 문 종류 + 그 문 지점의 깊이. 보상 payload는 공개 시점에 롤한다. </summary>
+    /// <summary> 에스크로 보류분 = 고른 문 + 그 문 지점의 깊이. 보상 payload는 공개 시점에 롤한다. </summary>
     public readonly struct EscrowedDoor
     {
-        public EscrowedDoor(DoorKind kind, int depth)
+        public EscrowedDoor(DoorChoice choice, int depth)
         {
-            Kind = kind;
+            Choice = choice;
             Depth = depth;
         }
 
-        public DoorKind Kind { get; }
+        public DoorChoice Choice { get; }
         public int Depth { get; }
     }
 
@@ -84,12 +84,12 @@ namespace Eclipse.Presentation
         /// 고른 문을 보류분으로 기록하고 문 지점 수를 1 올린다. 깊이는 그 지점 번호로 함께 확정된다.
         /// </summary>
         /// <exception cref="InvalidOperationException">이미 보류분이 있을 때(공개 전 중복 선택).</exception>
-        public void HoldEscrow(DoorKind kind)
+        public void HoldEscrow(DoorChoice choice)
         {
             if (HasEscrow)
                 throw new InvalidOperationException("이미 보류 중인 문이 있다 — 공개 전에 다시 고를 수 없다.");
             DoorPointsPassed++;
-            _escrow = new EscrowedDoor(kind, DoorPointsPassed);
+            _escrow = new EscrowedDoor(choice, DoorPointsPassed);
             HasEscrow = true;
         }
 

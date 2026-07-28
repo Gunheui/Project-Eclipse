@@ -97,7 +97,7 @@ namespace Eclipse.View
                 .Subscribe(t => OnHpChanged(t.hp, t.shield, unit.MaxHp))
                 .AddTo(_bindings);
             unit.IsAlive
-                .Subscribe(alive => { if (canvasGroup != null) canvasGroup.alpha = alive ? 1f : 0.35f; })
+                .Subscribe(SetAlive)
                 .AddTo(_bindings);
             unit.ActiveEffects
                 .Subscribe(OnEffectsChanged)
@@ -223,6 +223,17 @@ namespace Eclipse.View
             _unit = null;
             _onTapped = null;
             gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// 사망한 유닛의 플레이트를 숨긴다. 배틀러 스프라이트도 함께 사라지므로 전장에는 생존자만 남는다.
+        /// </summary>
+        private void SetAlive(bool alive)
+        {
+            if (canvasGroup == null) return;
+            canvasGroup.alpha = alive ? 1f : 0f;
+            // 숨긴 플레이트가 뒤쪽 탭을 가로채지 않게 레이캐스트도 함께 끊는다.
+            canvasGroup.blocksRaycasts = alive;
         }
 
         /// <summary>지금 이 유닛이 행동할 차례인지 표시한다(행동자 강조).</summary>

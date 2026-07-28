@@ -6,27 +6,34 @@ using Eclipse.Data;
 using Eclipse.Domain;
 using Eclipse.Service;
 using R3;
+using UnityEngine;
 
 namespace Eclipse.Presentation
 {
     /// <summary> 런 진행 스텝. 화면은 이 값이 아니라 Offer를 보고 그린다. </summary>
     public enum RunStep { EnteringRoom, InBattle, BuffPick, DoorPoint, RunClear, RunFail }
 
-    /// <summary> 문 지점 선택지 하나의 표시 데이터. View가 도메인을 만지지 않도록 문구까지 풀어서 담는다. </summary>
+    /// <summary> 문 지점 선택지 하나의 표시 데이터. View가 도메인을 만지지 않도록 문구·그림까지 풀어서 담는다. </summary>
     public readonly struct DoorOption
     {
-        public DoorOption(DoorKind kind, string displayName, string promise)
+        public DoorOption(DoorChoice choice, string displayName, string promise, Sprite icon)
         {
-            Kind = kind;
+            Choice = choice;
             DisplayName = displayName;
             Promise = promise;
+            Icon = icon;
         }
 
-        public DoorKind Kind { get; }
+        /// <summary> 이 선택지가 확정될 때 그대로 보고되는 값. </summary>
+        public DoorChoice Choice { get; }
+
         public string DisplayName { get; }
 
         /// <summary> 문에 적히는 약속. 금액은 적지 않는다. </summary>
         public string Promise { get; }
+
+        /// <summary> 문에 거는 그림. 캐릭터 문은 그 파티원의 초상, 나머지는 카탈로그 아이콘이다. </summary>
+        public Sprite Icon { get; }
     }
 
     /// <summary> 3택1 후보 하나의 표시 데이터. </summary>
@@ -69,8 +76,17 @@ namespace Eclipse.Presentation
         /// <summary> BuffPick: 배정 화면용 파티 슬롯 정의(빈칸 null). 인덱스가 곧 배정 슬롯이다. </summary>
         public IReadOnlyList<CharacterSO> PartySlots;
 
-        /// <summary> DoorPoint: 추첨된 문 3종의 표시 데이터. </summary>
+        /// <summary> BuffPick: 배정 슬롯이 이미 정해진 픽이면 그 슬롯, 아니면 -1(사용자가 고른다). </summary>
+        public int BuffTargetPartySlot = DoorChoice.NoPartySlot;
+
+        /// <summary> DoorPoint: 추첨된 문 3개의 표시 데이터. </summary>
         public IReadOnlyList<DoorOption> Doors;
+
+        /// <summary> 진행도 표시용 방 번호(1부터). </summary>
+        public int RoomNumber;
+
+        /// <summary> 진행도 표시용 챕터 전체 방 수. </summary>
+        public int RoomCount;
 
         /// <summary> 터미널: 승리 여부. </summary>
         public bool Victory;
@@ -97,12 +113,22 @@ namespace Eclipse.Presentation
         private readonly ReactiveProperty<RunOffer> _offer = new(null);
 
         // 이번 방 결과에서 아직 처리하지 않은 3택1 목록(에스크로 버프 문 + 미드보스 버프 문).
-        private readonly Queue<IReadOnlyList<BuffCard>> _pendingPicks = new();
+        private readonly Queue<PendingBuffPick> _pendingPicks = new();
 
         private bool _committed;
 
-        // 파티 조건으로 제시 불가한 문(인연 후보 3장 미만). 런 중 편성이 불변이라 런 시작 시 1회 판정한다.
-        private DoorKind? _excludedDoor;
+        /// <summary> 아직 제시하지 않은 3택1 하나 = 후보 카드 + 배정 대상 슬롯(-1이면 사용자가 고른다). </summary>
+        private readonly struct PendingBuffPick
+        {
+            public PendingBuffPick(IReadOnlyList<BuffCard> cards, int targetPartySlot)
+            {
+                Cards = cards;
+                TargetPartySlot = targetPartySlot;
+            }
+
+            public IReadOnlyList<BuffCard> Cards { get; }
+            public int TargetPartySlot { get; }
+        }
 
         public ChapterRunFlow(ChapterRunSession session, EncounterGenerator generator, DoorDraw doorDraw,
             CardPool cardPool, IRunRandom currencyRng, DoorCatalogSO doorCatalog, IRewardService rewards,
@@ -130,9 +156,14 @@ namespace Eclipse.Presentation
         public ReadOnlyReactiveProperty<RunOffer> Offer => _offer;
 
         /// <summary> 첫 방을 제시하며 런을 시작한다. </summary>
+        /// <exception cref="InvalidOperationException">파티 4칸이 다 차 있지 않을 때.</exception>
         public UniTask BeginRun()
         {
-            _excludedDoor = _cardPool.CanOfferBond(_session.Party) ? (DoorKind?)null : DoorKind.Bond;
+            // 문 라인업이 캐릭터 문 4개를 전제하므로 빈칸이 있으면 여기서 끊는다.
+            if (_session.Party.Count != PlayerSave.PartySlotCount || _session.Party.Any(o => o == null))
+                throw new InvalidOperationException(
+                    $"런은 파티 {PlayerSave.PartySlotCount}칸이 다 차야 시작할 수 있다.");
+
             OfferRoom();
             return UniTask.CompletedTask;
         }
@@ -165,7 +196,7 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 3택1 배정 결과 보고. 인연 카드는 슬롯을 대상 캐릭터로 바로잡는다(자동 배정).
+        /// 3택1 배정 결과 보고. 대상이 이미 정해진 픽(캐릭터 문)은 보고된 슬롯을 무시하고 그 대상에 붙인다.
         /// 남은 픽이 있으면 다음 픽, 없으면 문 지점/전진으로 넘어간다.
         /// </summary>
         public UniTask ReportCardAssigned(BuffCard card, int partySlot, int token)
@@ -173,7 +204,10 @@ namespace Eclipse.Presentation
             if (token != StepToken || Current != RunStep.BuffPick)
                 return UniTask.CompletedTask;
 
-            if (!card.targetsEnemies && !string.IsNullOrEmpty(card.requiredCharacterId))
+            int forced = _offer.Value.BuffTargetPartySlot;
+            if (forced >= 0)
+                partySlot = forced;
+            else if (!card.targetsEnemies && !string.IsNullOrEmpty(card.requiredCharacterId))
                 partySlot = SlotOf(card.requiredCharacterId);
             _session.AttachCard(card, partySlot);
             ProceedAfterReveal();
@@ -186,17 +220,21 @@ namespace Eclipse.Presentation
             for (int i = 0; i < _session.Party.Count; i++)
                 if (_session.Party[i] != null && _session.Party[i].Definition.id == characterId)
                     return i;
-            // 인연 카드는 파티 조건을 통과해 후보에 들었으므로 반드시 있다.
-            throw new InvalidOperationException($"인연 카드 대상 '{characterId}'이 파티에 없다.");
+            // 전용 카드는 파티 조건을 통과해 후보에 들었으므로 반드시 있다.
+            throw new InvalidOperationException($"전용 카드 대상 '{characterId}'이 파티에 없다.");
         }
 
         /// <summary> 문 선택 보고. 보류분으로 기록만 하고(지연 지급) 다음 방으로 전진한다. </summary>
-        public UniTask ReportDoorPicked(DoorKind kind, int token)
+        public UniTask ReportDoorPicked(DoorChoice choice, int token)
         {
             if (token != StepToken || Current != RunStep.DoorPoint)
                 return UniTask.CompletedTask;
 
-            _session.HoldEscrow(kind);
+            // 제시하지 않은 문은 받지 않는다. 토큰만으로는 화면이 만들어 낸 값을 거를 수 없다.
+            if (_offer.Value.Doors == null || _offer.Value.Doors.All(d => d.Choice != choice))
+                return UniTask.CompletedTask;
+
+            _session.HoldEscrow(choice);
             _session.AdvanceRoom();
             OfferRoom();
             return UniTask.CompletedTask;
@@ -236,13 +274,13 @@ namespace Eclipse.Presentation
             if (_session.HasEscrow)
             {
                 var door = _session.ClaimEscrow();
-                RevealDoor(door.Kind, door.Depth, receipts);
+                RevealDoor(door.Choice, door.Depth, receipts);
             }
 
-            // 미드보스 보상: 문 2종 비복원 즉시 처리(이미 이긴 위험이라 지연시키지 않는다).
+            // 미드보스 보상: 문 2개 비복원 즉시 처리(이미 이긴 위험이라 지연시키지 않는다).
             if (_session.CurrentRoom.kind == RoomKind.Elite)
-                foreach (var kind in _doorDraw.DrawDistinct(2, _excludedDoor))
-                    RevealDoor(kind, Math.Max(1, _session.DoorPointsPassed), receipts);
+                foreach (var choice in _doorDraw.DrawDistinct(2))
+                    RevealDoor(choice, Math.Max(1, _session.DoorPointsPassed), receipts);
 
             if (receipts.Count > 0)
                 _session.RecordIncome(receipts);
@@ -254,17 +292,18 @@ namespace Eclipse.Presentation
         /// 문 하나를 공개 처리한다. 재화 문은 여기서 롤·지급되고, 버프 문은 3택1 대기열에 쌓인다.
         /// </summary>
         /// <param name="receipts"> 재화 문 지급 영수증을 여기에 덧붙인다. </param>
-        private void RevealDoor(DoorKind kind, int depth, List<RewardEntry> receipts)
+        private void RevealDoor(DoorChoice choice, int depth, List<RewardEntry> receipts)
         {
-            if (CurrencyDoor.IsCurrency(kind))
+            if (CurrencyDoor.IsCurrency(choice.Kind))
             {
-                var rolled = CurrencyDoor.Roll(kind, depth, _session.Chapter.currencyMultiplier,
+                var rolled = CurrencyDoor.Roll(choice.Kind, depth, _session.Chapter.currencyMultiplier,
                     _doorCatalog, _currencyRng);
                 receipts.AddRange(_rewards.Grant(new[] { rolled }));
             }
             else
             {
-                _pendingPicks.Enqueue(_cardPool.Pick3(kind, depth, _session.Party));
+                _pendingPicks.Enqueue(new PendingBuffPick(
+                    _cardPool.Pick3(choice, depth, _session.Party), choice.TargetPartySlot));
             }
         }
 
@@ -275,13 +314,14 @@ namespace Eclipse.Presentation
         {
             if (_pendingPicks.Count > 0)
             {
-                var cards = _pendingPicks.Dequeue();
+                var pick = _pendingPicks.Dequeue();
                 Current = RunStep.BuffPick;
                 Emit(new RunOffer
                 {
                     Step = RunStep.BuffPick,
-                    Cards = cards.Select(c => new CardOption(c)).ToList(),
+                    Cards = pick.Cards.Select(c => new CardOption(c)).ToList(),
                     PartySlots = _session.Party.Select(o => o?.Definition).ToList(),
+                    BuffTargetPartySlot = pick.TargetPartySlot,
                 });
                 return;
             }
@@ -292,7 +332,7 @@ namespace Eclipse.Presentation
             if (doorAfter)
             {
                 Current = RunStep.DoorPoint;
-                Emit(new RunOffer { Step = RunStep.DoorPoint, Doors = BuildDoorOptions(_doorDraw.DrawDistinct(3, _excludedDoor)) });
+                Emit(new RunOffer { Step = RunStep.DoorPoint, Doors = BuildDoorOptions(_doorDraw.DrawDistinct(3)) });
                 return;
             }
 
@@ -335,13 +375,21 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 문 종류 목록을 표시 데이터로 바꾼다. 표시명·약속 문구는 추첨과 같은 카탈로그에서 나온다.
+        /// 뽑힌 문을 표시 데이터로 바꾼다. 표시명·약속 문구는 추첨과 같은 카탈로그에서 나오고,
+        /// 캐릭터 문만 대상 파티원의 이름·초상으로 채워진다.
         /// </summary>
-        private IReadOnlyList<DoorOption> BuildDoorOptions(IReadOnlyList<DoorKind> kinds)
-            => kinds.Select(kind =>
+        private IReadOnlyList<DoorOption> BuildDoorOptions(IReadOnlyList<DoorChoice> choices)
+            => choices.Select(choice =>
             {
-                var definition = _doorCatalog.doors.First(d => d.kind == kind);
-                return new DoorOption(kind, definition.displayName, definition.promiseText);
+                var definition = _doorCatalog.doors.First(d => d.kind == choice.Kind);
+                if (!choice.IsCharacterDoor)
+                    return new DoorOption(choice, definition.displayName, definition.promiseText, definition.icon);
+
+                var character = _session.Party[choice.TargetPartySlot].Definition;
+                return new DoorOption(choice,
+                    string.Format(definition.displayName, character.displayName),
+                    string.Format(definition.promiseText, character.displayName),
+                    character.portraitAssetRef);
             }).ToList();
 
         /// <summary>
@@ -351,6 +399,9 @@ namespace Eclipse.Presentation
         {
             StepToken++;
             offer.Token = StepToken;
+            offer.RoomCount = _session.Chapter.rooms.Length;
+            // 마지막 방을 넘긴 뒤(정산)에도 커서가 방 수를 넘지 않게 잘라 표시한다.
+            offer.RoomNumber = Math.Min(_session.RoomIndex + 1, offer.RoomCount);
             _offer.Value = offer;
         }
     }

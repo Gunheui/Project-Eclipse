@@ -28,6 +28,10 @@ namespace Eclipse.Core
         [SerializeField] private RosterEntry[] dummyRoster;
         [SerializeField] private GrowthConfigSO growthConfig;
 
+        [Header("디버그")]
+        [Tooltip("켜면 앱 시작 시 보유 전원의 레벨·스킬 레벨·돌파를 상한까지 올린다. 테스트 플레이용 — 이후 저장 시점에 세이브에도 남는다.")]
+        [SerializeField] private bool debugMaxGrowth;
+
         private SaveService _saveService;
 
         protected override void Configure(IContainerBuilder builder)
@@ -74,7 +78,7 @@ namespace Eclipse.Core
 
             var restored = SaveService.BuildPlayerSave(data, catalog);
             if (restored.OwnedCharacters.Count > 0)
-                return restored;
+                return ApplyDebugMaxGrowth(restored);
 
             // 복원해도 보유 캐릭터가 없으면(신규 계정이거나 카탈로그와 id가 하나도 안 맞는 경우)
             // 인스펙터 로스터로 시드한다.
@@ -82,7 +86,31 @@ namespace Eclipse.Core
                 .Where(e => e.character != null)
                 .Select(e => new OwnedCharacter(e.character, e.level))
                 .ToList();
-            return new PlayerSave(owned);
+            return ApplyDebugMaxGrowth(new PlayerSave(owned));
+        }
+
+        /// <summary>
+        /// <see cref="debugMaxGrowth"/>가 켜져 있으면 보유 전원의 성장치를 상한으로 덮어쓴다.
+        /// 여기서 파일을 쓰지는 않지만 이후 아무 저장 시점(포커스 이탈·레벨업 등)에 이 값이 세이브에 남는다 —
+        /// 원래 진행값으로 되돌리려면 세이브 파일을 지운다.
+        /// </summary>
+        private PlayerSave ApplyDebugMaxGrowth(PlayerSave save)
+        {
+            if (!debugMaxGrowth)
+                return save;
+
+            foreach (var owned in save.OwnedCharacters)
+            {
+                int maxLevel = owned.Definition.growthCurve != null ? owned.Definition.growthCurve.maxLevel : owned.Level;
+                while (owned.Level < maxLevel)
+                    owned.IncreaseLevel();
+                for (int slot = 0; slot < OwnedCharacter.SkillSlotCount; slot++)
+                    while (owned.SkillLevels[slot] < OwnedCharacter.MaxSkillLevel)
+                        owned.IncreaseSkillLevel(slot);
+                owned.AscensionTier = OwnedCharacter.MaxAscensionTier;
+            }
+            Debug.LogWarning($"[디버그] 보유 {save.OwnedCharacters.Count}명을 만렙으로 시작한다 — debugMaxGrowth를 끄면 세이브 값으로 돌아온다.");
+            return save;
         }
 
         /// <summary>

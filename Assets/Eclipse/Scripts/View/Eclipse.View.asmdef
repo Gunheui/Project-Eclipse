@@ -3,6 +3,7 @@
     "rootNamespace": "Eclipse.View",
     "references": [
         "Eclipse.Presentation",
+        "Eclipse.Domain",
         "Eclipse.Data",
         "R3.Unity",
         "VContainer",

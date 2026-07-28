@@ -21,13 +21,14 @@ namespace Eclipse.View
 
         public BuffCard Card { get; }
 
-        /// <summary> 배정 슬롯. 자동 배정 카드(저주·인연)는 0이 들어가고 Flow가 바로잡는다. </summary>
+        /// <summary> 배정 슬롯. 배정을 사용자가 고르지 않는 픽은 0이 들어가고 Flow가 바로잡는다. </summary>
         public int Slot { get; }
     }
 
     /// <summary>
     /// 버프 카드 3택1 + 배정 팝업. 카드 선택 후 배정 슬롯을 고르면 완료된다.
-    /// 인연·저주 카드는 배정 화면 없이 즉시 완료된다(배정은 Flow가 정한다). 닫기 없는 강제 선택이다.
+    /// 대상이 이미 정해진 픽(캐릭터 문·저주·전용 카드)은 배정 화면 없이 즉시 완료된다(배정은 Flow가 정한다).
+    /// 닫기 없는 강제 선택이다.
     /// </summary>
     public class CardPickPopupView : MonoBehaviour, IPopup<CardPickChoice>
     {
@@ -43,6 +44,7 @@ namespace Eclipse.View
         [SerializeField] private TMP_Text[] slotNames;
 
         private IReadOnlyList<CharacterSO> _partySlots;
+        private int _forcedSlot;
         private BuffCard _picked;
 
         private readonly UniTaskCompletionSource<CardPickChoice> _choice = new();
@@ -55,6 +57,7 @@ namespace Eclipse.View
         {
             var offer = flow.Offer.CurrentValue;
             _partySlots = offer.PartySlots;
+            _forcedSlot = offer.BuffTargetPartySlot;
             var candidates = offer.Cards;
 
             for (int i = 0; i < cardButtons.Length; i++)
@@ -81,12 +84,12 @@ namespace Eclipse.View
                 assignSection.SetActive(false);
         }
 
-        /// <summary>카드 확정. 자동 배정 카드(저주·인연)는 즉시 완료하고, 그 외에는 배정 슬롯 선택으로 넘어간다.</summary>
+        /// <summary>카드 확정. 배정이 이미 정해진 픽은 즉시 완료하고, 그 외에는 배정 슬롯 선택으로 넘어간다.</summary>
         private void OnCardPicked(BuffCard card)
         {
             _picked = card;
 
-            if (card.targetsEnemies || !string.IsNullOrEmpty(card.requiredCharacterId))
+            if (_forcedSlot >= 0 || card.targetsEnemies || !string.IsNullOrEmpty(card.requiredCharacterId))
             {
                 _choice.TrySetResult(new CardPickChoice(card, 0));
                 return;

@@ -13,45 +13,29 @@ MonoBehaviour:
   m_Name: door_catalog
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.DoorCatalogSO
   doors:
-  - kind: 0
-    displayName: "\uACF5\uACA9\uC758 \uBB38"
-    weight: 15
-    promiseText: "\uACF5\uACA9\uB825\uC744 \uC62C\uB9AC\uB294 \uCE74\uB4DC"
-    icon: {fileID: 0}
-  - kind: 1
-    displayName: "\uC218\uD638\uC758 \uBB38"
-    weight: 15
-    promiseText: "\uC0DD\uBA85\uB825\xB7\uBC29\uC5B4\uB825\uC744 \uC62C\uB9AC\uB294
-      \uCE74\uB4DC"
-    icon: {fileID: 0}
-  - kind: 2
-    displayName: "\uC9C8\uD48D\uC758 \uBB38"
-    weight: 13
-    promiseText: "\uC18D\uB3C4\xB7\uCE58\uBA85\uC744 \uC62C\uB9AC\uB294 \uCE74\uB4DC"
-    icon: {fileID: 0}
   - kind: 3
-    displayName: "\uC778\uC5F0\uC758 \uBB38"
-    weight: 11
-    promiseText: "\uD30C\uD2F0\uC6D0 \uD55C \uBA85\uC758 \uC804\uC6A9 \uCE74\uB4DC"
+    displayName: "{0}\uC758 \uBB38"
+    weight: 27
+    promiseText: "{0} \uC804\uC6A9 \uBC84\uD504 \uCE74\uB4DC"
     icon: {fileID: 0}
   - kind: 4
     displayName: "\uC800\uC8FC\uC758 \uBB38"
-    weight: 13
+    weight: 26
     promiseText: "\uC774 \uB7F0\uC758 \uC801\uC744 \uC57D\uD654"
     icon: {fileID: 0}
   - kind: 5
     displayName: "\uACE8\uB4DC\uC758 \uBB38"
-    weight: 15
+    weight: 30
     promiseText: "\uACE8\uB4DC"
     icon: {fileID: 0}
   - kind: 6
     displayName: "\uAD50\uBCF8\uC758 \uBB38"
-    weight: 8
+    weight: 16
     promiseText: "\uAD50\uBCF8"
     icon: {fileID: 0}
   - kind: 7
     displayName: "\uBCF4\uC11D\uC758 \uBB38"
-    weight: 10
+    weight: 20
     promiseText: "\uBCF4\uC11D"
     icon: {fileID: 0}
   goldPerDepth: 300

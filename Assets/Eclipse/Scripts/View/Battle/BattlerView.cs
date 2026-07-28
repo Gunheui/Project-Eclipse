@@ -102,7 +102,7 @@ namespace Eclipse.View
                 .AddTo(_bindings);
 
             unit.IsAlive
-                .Subscribe(alive => { if (spriteRenderer != null) spriteRenderer.enabled = alive; })
+                .Subscribe(SetAlive)
                 .AddTo(_bindings);
         }
 
@@ -123,6 +123,15 @@ namespace Eclipse.View
         /// 바인딩된 유닛을 그대로 통지처에 넘기며, 조준 중인지·유효 대상인지 판단은 BattleView가 한다.
         /// </summary>
         public void OnPointerClick(PointerEventData eventData) => _onTapped?.Invoke(_unit);
+
+        /// <summary>
+        /// 사망한 배틀러를 숨기고 탭 판정도 함께 끊는다. 연출은 부모 앵커 밑에 스폰되므로 그대로 남는다.
+        /// </summary>
+        private void SetAlive(bool alive)
+        {
+            if (spriteRenderer != null) spriteRenderer.enabled = alive;
+            if (tapArea != null) tapArea.enabled = alive;
+        }
 
         /// <summary>
         /// 조준 모드의 대상 상태를 시각으로 반영한다. Selectable=아웃라인, Ineligible=어둡게, None=평상시 원복.

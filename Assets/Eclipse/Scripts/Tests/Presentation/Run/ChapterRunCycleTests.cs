@@ -82,12 +82,11 @@ namespace Eclipse.Tests
                         break;
                     case RunStep.DoorPoint:
                         doorPoints++;
-                        Assert.AreEqual(3, offer.Doors.Count, "문 지점은 3종 제시다");
-                        Assert.AreEqual(3, offer.Doors.Select(d => d.Kind).Distinct().Count(), "비복원이라 중복이 없다");
+                        Assert.AreEqual(3, offer.Doors.Count, "문 지점은 3개 제시다");
+                        Assert.AreEqual(3, offer.Doors.Select(d => d.Choice).Distinct().Count(), "비복원이라 중복이 없다");
                         // 재화 문이 있으면 그 문을 골라 지연 지급 경로를 거친다. 없으면 첫 문(버프)을 고른다.
-                        var currency = offer.Doors.Where(d =>
-                            d.Kind == DoorKind.Gold || d.Kind == DoorKind.Manual || d.Kind == DoorKind.Essence).ToList();
-                        var picked = currency.Count > 0 ? currency[0].Kind : offer.Doors[0].Kind;
+                        var currency = offer.Doors.Where(d => CurrencyDoor.IsCurrency(d.Choice.Kind)).ToList();
+                        var picked = currency.Count > 0 ? currency[0].Choice : offer.Doors[0].Choice;
                         flow.ReportDoorPicked(picked, offer.Token).Forget();
                         break;
                     default:
@@ -172,8 +171,9 @@ namespace Eclipse.Tests
                         flow.ReportCardAssigned(offer.Cards[0].Card, 0, offer.Token).Forget();
                         break;
                     case RunStep.DoorPoint:
-                        trace.Add("doors:" + string.Join(",", offer.Doors.Select(d => d.Kind)));
-                        flow.ReportDoorPicked(offer.Doors[0].Kind, offer.Token).Forget();
+                        // 지문에는 종류만이 아니라 슬롯까지 남긴다 — 종류만 적으면 캐릭터 4문이 한 문으로 뭉친다.
+                        trace.Add("doors:" + string.Join(",", offer.Doors.Select(d => d.Choice)));
+                        flow.ReportDoorPicked(offer.Doors[0].Choice, offer.Token).Forget();
                         break;
                 }
             }

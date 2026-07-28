@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -156,35 +157,70 @@ namespace Eclipse.Tests
         }
 
         [Test]
-        public void 이인_파티는_인연의_문이_추첨에서_빠진_채_완주한다()
+        public void 파티가_다_차지_않으면_런이_시작되지_않는다()
         {
-            // 파티 2인 → 전용 카드 2장뿐 → 인연의 문은 제시 불가. 문 지점·미드보스 추첨 모두에서 빠져야 한다.
-            foreach (int seed in new[] { 1, 7, 42, 20260727 })
-            {
-                var h = Build(RunFixtures.DocChapter(), seed, RunFixtures.Party(2));
-                h.Flow.BeginRun().Forget();
+            var h = Build(RunFixtures.DocChapter(), party: RunFixtures.Party(3));
 
-                int guard = 0;
-                while (h.Flow.Current != RunStep.RunClear && guard++ < 200)
-                {
-                    var offer = h.Offer;
-                    switch (offer.Step)
-                    {
-                        case RunStep.EnteringRoom:
-                            h.Flow.ReportBattleResult(true, offer.Token).Forget();
-                            break;
-                        case RunStep.BuffPick:
-                            h.Flow.ReportCardAssigned(offer.Cards[0].Card, 0, offer.Token).Forget();
-                            break;
-                        case RunStep.DoorPoint:
-                            Assert.IsFalse(offer.Doors.Any(d => d.Kind == DoorKind.Bond),
-                                $"시드 {seed}: 인연의 문이 제시되면 안 된다");
-                            h.Flow.ReportDoorPicked(offer.Doors[0].Kind, offer.Token).Forget();
-                            break;
-                    }
-                }
-                Assert.AreEqual(RunStep.RunClear, h.Flow.Current, $"시드 {seed}: 예외 없이 완주한다");
-            }
+            Assert.Throws<InvalidOperationException>(() => h.Flow.BeginRun().Forget());
+        }
+
+        // --- 캐릭터 문: 슬롯이 에스크로를 지나 배정까지 간다 ---
+
+        [Test]
+        public void 캐릭터_문은_고른_슬롯에_카드가_배정된다()
+        {
+            var h = Build(RunFixtures.Chapter(
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+            h.Flow.BeginRun().Forget();
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+            Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step);
+
+            // 캐릭터 문이 안 뽑힌 시드면 문 자체를 검증할 수 없으므로 뽑힌 문 중에서 고른다.
+            var character = h.Offer.Doors.FirstOrDefault(d => d.Choice.IsCharacterDoor);
+            if (character.DisplayName == null)
+                Assert.Ignore("이 시드의 문 지점에 캐릭터 문이 없다");
+            int slot = character.Choice.TargetPartySlot;
+
+            h.Flow.ReportDoorPicked(character.Choice, h.Offer.Token).Forget();
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+
+            Assert.AreEqual(RunStep.BuffPick, h.Offer.Step);
+            Assert.AreEqual(slot, h.Offer.BuffTargetPartySlot, "에스크로를 지나도 대상 슬롯이 남는다");
+
+            // 화면이 엉뚱한 슬롯을 보고해도 강제 대상이 이긴다.
+            int other = (slot + 1) % PlayerSave.PartySlotCount;
+            var card = h.Offer.Cards[0].Card;
+            var axis = card.deltas[0].axis;
+            h.Flow.ReportCardAssigned(card, other, h.Offer.Token).Forget();
+
+            Assert.AreNotEqual(0f, h.Session.BuffsOf(slot).SumOf(axis), "강제 대상 슬롯에 붙었다");
+            Assert.AreEqual(0f, h.Session.BuffsOf(other).SumOf(axis), "보고된 슬롯은 무시됐다");
+        }
+
+        [Test]
+        public void 제시되지_않은_문은_받지_않는다()
+        {
+            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, true), RunFixtures.Boss()));
+            h.Flow.BeginRun().Forget();
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+            Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step);
+
+            var offered = h.Offer.Doors.Select(d => d.Choice).ToList();
+            var absent = AllDoors().First(c => !offered.Contains(c));
+            h.Flow.ReportDoorPicked(absent, h.Offer.Token).Forget();
+
+            Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step, "제시 밖 선택은 상태를 바꾸지 못한다");
+            Assert.IsFalse(h.Session.HasEscrow);
+        }
+
+        private static IEnumerable<DoorChoice> AllDoors()
+        {
+            for (int slot = 0; slot < PlayerSave.PartySlotCount; slot++)
+                yield return new DoorChoice(DoorKind.CharacterBuff, slot);
+            yield return new DoorChoice(DoorKind.Curse);
+            yield return new DoorChoice(DoorKind.Gold);
+            yield return new DoorChoice(DoorKind.Manual);
+            yield return new DoorChoice(DoorKind.Essence);
         }
 
         // --- 멱등·커밋 순서 (§3-2a 검증) ---
@@ -199,14 +235,14 @@ namespace Eclipse.Tests
             Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step);
             int doorToken = h.Offer.Token;
 
-            var kind = h.Offer.Doors[0].Kind;
-            h.Flow.ReportDoorPicked(kind, doorToken).Forget();
+            var choice = h.Offer.Doors[0].Choice;
+            h.Flow.ReportDoorPicked(choice, doorToken).Forget();
             Assert.AreEqual(RunStep.EnteringRoom, h.Offer.Step);
             int gold = h.Wallet.Gold.CurrentValue;
             int grantCalls = h.Rewards.GrantCalls;
 
             // 문 지점 화면의 늦은 콜백(같은 종류의 이전 스텝)이 다시 도착해도 무시된다.
-            h.Flow.ReportDoorPicked(kind, doorToken).Forget();
+            h.Flow.ReportDoorPicked(choice, doorToken).Forget();
 
             Assert.AreEqual(RunStep.EnteringRoom, h.Offer.Step);
             Assert.AreEqual(gold, h.Wallet.Gold.CurrentValue);
@@ -251,8 +287,8 @@ namespace Eclipse.Tests
             Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step);
 
             // 골드 문을 골라 보류시킨 채 다음 방에서 패배한다 — 보류분은 지급되지 않아야 한다.
-            var goldDoor = h.Offer.Doors.FirstOrDefault(d => d.Kind == DoorKind.Gold);
-            var picked = goldDoor.DisplayName != null ? goldDoor.Kind : h.Offer.Doors[0].Kind;
+            var goldDoor = h.Offer.Doors.FirstOrDefault(d => d.Choice.Kind == DoorKind.Gold);
+            var picked = goldDoor.DisplayName != null ? goldDoor.Choice : h.Offer.Doors[0].Choice;
             h.Flow.ReportDoorPicked(picked, h.Offer.Token).Forget();
             h.Flow.ReportBattleResult(won: false, h.Offer.Token).Forget();
 

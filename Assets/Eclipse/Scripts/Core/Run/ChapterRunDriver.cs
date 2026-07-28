@@ -1,10 +1,12 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Eclipse.Domain;
 using Eclipse.Presentation;
 using Eclipse.View;
 using Eclipse.View.Infra;
 using R3;
+using TMPro;
 using UnityEngine;
 using VContainer;
 
@@ -12,13 +14,16 @@ namespace Eclipse.Core
 {
     /// <summary>
     /// BattleScene의 런 구동 글루. <see cref="ChapterRunFlow"/>의 제시물을 구독해 전투 조립·배경 스왑·
-    /// 팝업 표시를 실행하고, 사용자 선택을 토큰과 함께 Flow에 보고만 한다 — 진행 판단은 전부 Flow 소관이다.
+    /// 문 지점 표시·팝업 표시를 실행하고, 사용자 선택을 토큰과 함께 Flow에 보고만 한다 —
+    /// 진행 판단은 전부 Flow 소관이다.
     /// </summary>
     public class ChapterRunDriver : MonoBehaviour
     {
         [SerializeField] private BattleView battleView;
         [SerializeField] private SpriteRenderer backgroundRenderer;
         [SerializeField] private RoomTransitionFader fader;
+        [SerializeField] private WorldDoorPointView doorPoint;
+        [SerializeField] private TMP_Text roomProgressLabel;
         [SerializeField] private bool startAuto;
 
         private ChapterRunFlow _flow;
@@ -47,6 +52,8 @@ namespace Eclipse.Core
         private void OnOffer(RunOffer offer)
         {
             if (offer == null) return;
+            if (roomProgressLabel != null)
+                roomProgressLabel.text = $"방 {offer.RoomNumber}/{offer.RoomCount}";
             switch (offer.Step)
             {
                 case RunStep.EnteringRoom: EnterRoomAsync(offer).Forget(); break;
@@ -63,8 +70,9 @@ namespace Eclipse.Core
             _battleToken = offer.Token;
             await fader.FadeOutAsync();
 
-            // 페이드 아웃 뒤 이전 전투 파기·배경 스왑·재조립.
+            // 페이드 아웃 뒤 이전 전투 파기·문 정리·배경 스왑·재조립.
             battleView.ClearBattle();
+            doorPoint.Clear();
             _battle?.Dispose();
             if (backgroundRenderer != null && offer.Room.background != null)
                 backgroundRenderer.sprite = offer.Room.background;
@@ -105,8 +113,16 @@ namespace Eclipse.Core
 
         private async UniTaskVoid ShowDoorAsync(RunOffer offer)
         {
-            var kind = await _popups.Show<Eclipse.Data.DoorKind>(PopupId.DoorPoint);
-            await _flow.ReportDoorPicked(kind, offer.Token);
+            DoorChoice choice;
+            try
+            {
+                choice = await doorPoint.ShowAsync(offer.Doors);
+            }
+            catch (OperationCanceledException)
+            {
+                return; // 문이 선택 전에 내려갔다(씬 파괴·다음 제시로 교체) — 보고할 선택이 없다
+            }
+            await _flow.ReportDoorPicked(choice, offer.Token);
         }
 
         private async UniTaskVoid ShowSettlementAsync(RunOffer offer)

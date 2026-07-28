@@ -9,7 +9,8 @@
         "Eclipse.View",
         "VContainer",
         "UniTask",
-        "R3.Unity"
+        "R3.Unity",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
