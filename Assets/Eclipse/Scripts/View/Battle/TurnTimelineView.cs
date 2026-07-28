@@ -43,7 +43,7 @@ namespace Eclipse.View
                 .AddTo(_bindings);
         }
 
-        // 다가올 순서를 왼쪽부터 칸에 채우고, 순서보다 많은 칸은 숨긴다.
+        /// <summary>다가올 순서를 왼쪽부터 칸에 채우고, 순서보다 많은 칸은 숨긴다.</summary>
         private void Render(IReadOnlyList<CombatantViewModel> order)
         {
             for (int i = 0; i < slots.Length; i++)

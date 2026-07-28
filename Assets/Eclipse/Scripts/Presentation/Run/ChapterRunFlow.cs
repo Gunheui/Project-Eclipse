@@ -10,40 +10,34 @@ using R3;
 namespace Eclipse.Presentation
 {
     /// <summary> 런 진행 스텝. 화면은 이 값이 아니라 Offer를 보고 그린다. </summary>
-    public enum RunStep { EnteringRoom, InBattle, RevealReward, BuffPick, DoorPoint, RunClear, RunFail }
+    public enum RunStep { EnteringRoom, InBattle, BuffPick, DoorPoint, RunClear, RunFail }
 
-    /// <summary> 문 지점 선택지 하나의 표시 데이터. 확률 공시까지 실어 View가 도메인을 만지지 않게 한다. </summary>
+    /// <summary> 문 지점 선택지 하나의 표시 데이터. View가 도메인을 만지지 않도록 문구까지 풀어서 담는다. </summary>
     public readonly struct DoorOption
     {
-        public DoorOption(DoorKind kind, string displayName, string promise, int weight, int totalWeight)
+        public DoorOption(DoorKind kind, string displayName, string promise)
         {
             Kind = kind;
             DisplayName = displayName;
             Promise = promise;
-            Weight = weight;
-            TotalWeight = totalWeight;
         }
 
         public DoorKind Kind { get; }
         public string DisplayName { get; }
 
-        /// <summary> 문에 적히는 약속. 재화 문은 "약 N"이 붙는다(폭 미적용 기대값). </summary>
+        /// <summary> 문에 적히는 약속. 금액은 적지 않는다. </summary>
         public string Promise { get; }
-        public int Weight { get; }
-        public int TotalWeight { get; }
     }
 
-    /// <summary> 3택1 후보 하나의 표시 데이터. 확률은 후보 배제 후 재정규화된 실확률이다. </summary>
+    /// <summary> 3택1 후보 하나의 표시 데이터. </summary>
     public readonly struct CardOption
     {
-        public CardOption(BuffCard card, float odds)
+        public CardOption(BuffCard card)
         {
             Card = card;
-            Odds = odds;
         }
 
         public BuffCard Card { get; }
-        public float Odds { get; }
     }
 
     /// <summary>
@@ -63,13 +57,13 @@ namespace Eclipse.Presentation
         /// <summary> EnteringRoom: 이번 방 전투 시드(런 시드에서 방 인덱스로 파생). </summary>
         public int BattleSeed;
 
-        /// <summary> RevealReward·터미널: 이번에 지급된 보상 영수증. </summary>
+        /// <summary> 터미널: 이번에 지급된 보상 영수증. </summary>
         public IReadOnlyList<RewardEntry> Receipts;
 
         /// <summary> 터미널: 런 중 획득 재화 누계(이미 지급된 장부 블록). </summary>
         public IReadOnlyList<RewardEntry> RunIncome;
 
-        /// <summary> BuffPick: 후보 3장 + 공시 확률. </summary>
+        /// <summary> BuffPick: 후보 3장. </summary>
         public IReadOnlyList<CardOption> Cards;
 
         /// <summary> BuffPick: 배정 화면용 파티 슬롯 정의(빈칸 null). 인덱스가 곧 배정 슬롯이다. </summary>
@@ -78,7 +72,7 @@ namespace Eclipse.Presentation
         /// <summary> DoorPoint: 추첨된 문 3종의 표시 데이터. </summary>
         public IReadOnlyList<DoorOption> Doors;
 
-        /// <summary> RevealReward·터미널: 승리 여부. </summary>
+        /// <summary> 터미널: 승리 여부. </summary>
         public bool Victory;
     }
 
@@ -93,7 +87,7 @@ namespace Eclipse.Presentation
         private readonly EncounterGenerator _generator;
         private readonly DoorDraw _doorDraw;
         private readonly CardPool _cardPool;
-        private readonly IRunRandom _doorRng;
+        private readonly IRunRandom _currencyRng;
         private readonly DoorCatalogSO _doorCatalog;
         private readonly IRewardService _rewards;
         private readonly ChapterProgress _progress;
@@ -103,7 +97,7 @@ namespace Eclipse.Presentation
         private readonly ReactiveProperty<RunOffer> _offer = new(null);
 
         // 이번 방 결과에서 아직 처리하지 않은 3택1 목록(에스크로 버프 문 + 미드보스 버프 문).
-        private readonly Queue<(DoorKind source, CardDrawResult cards)> _pendingPicks = new();
+        private readonly Queue<IReadOnlyList<BuffCard>> _pendingPicks = new();
 
         private bool _committed;
 
@@ -111,14 +105,14 @@ namespace Eclipse.Presentation
         private DoorKind? _excludedDoor;
 
         public ChapterRunFlow(ChapterRunSession session, EncounterGenerator generator, DoorDraw doorDraw,
-            CardPool cardPool, IRunRandom doorRng, DoorCatalogSO doorCatalog, IRewardService rewards,
+            CardPool cardPool, IRunRandom currencyRng, DoorCatalogSO doorCatalog, IRewardService rewards,
             ChapterProgress progress, SaveService saveService, ISceneFlow sceneFlow)
         {
             _session = session;
             _generator = generator;
             _doorDraw = doorDraw;
             _cardPool = cardPool;
-            _doorRng = doorRng;
+            _currencyRng = currencyRng;
             _doorCatalog = doorCatalog;
             _rewards = rewards;
             _progress = progress;
@@ -154,27 +148,20 @@ namespace Eclipse.Presentation
                 CommitTerminal(victory: false);
                 return UniTask.CompletedTask;
             }
-            OfferReveal();
+            RevealRewards();
             return UniTask.CompletedTask;
         }
 
-        /// <summary> 결과/정산 팝업의 [확인] 보고. 터미널 스텝이면 여기서 로비로 돌아간다. </summary>
+        /// <summary> 정산 팝업의 [확인] 보고. 여기서 로비로 돌아간다. </summary>
         public async UniTask ReportResultConfirmed(int token)
         {
             if (token != StepToken)
                 return;
+            if (Current != RunStep.RunClear && Current != RunStep.RunFail)
+                return;
 
-            switch (Current)
-            {
-                case RunStep.RevealReward:
-                    ProceedAfterReveal();
-                    break;
-                case RunStep.RunClear:
-                case RunStep.RunFail:
-                    StepToken++; // 재보고 차단 — 복귀는 1회다(정산 팝업 확인 더블 탭 방어)
-                    await _sceneFlow.ToMainAsync();
-                    break;
-            }
+            StepToken++; // 재보고 차단 — 복귀는 1회다(정산 팝업 확인 더블 탭 방어)
+            await _sceneFlow.ToMainAsync();
         }
 
         /// <summary>
@@ -193,12 +180,13 @@ namespace Eclipse.Presentation
             return UniTask.CompletedTask;
         }
 
-        // 파티에서 캐릭터의 슬롯을 찾는다. 인연 카드는 파티 조건을 통과해 후보에 들었으므로 반드시 있다.
+        /// <summary> 파티에서 캐릭터의 슬롯을 찾는다. </summary>
         private int SlotOf(string characterId)
         {
             for (int i = 0; i < _session.Party.Count; i++)
                 if (_session.Party[i] != null && _session.Party[i].Definition.id == characterId)
                     return i;
+            // 인연 카드는 파티 조건을 통과해 후보에 들었으므로 반드시 있다.
             throw new InvalidOperationException($"인연 카드 대상 '{characterId}'이 파티에 없다.");
         }
 
@@ -236,8 +224,11 @@ namespace Eclipse.Presentation
             });
         }
 
-        // 승리 직후: 직전 에스크로 공개(재화=즉시 롤·지급 / 버프=픽 대기열) + 미드보스 보상 2종을 만든다.
-        private void OfferReveal()
+        /// <summary>
+        /// 승리 직후 직전 에스크로와 미드보스 보상 2종을 공개한다.
+        /// 공개 결과를 보여 주는 화면은 없다. 처리만 하고 곧장 다음 진행으로 넘어간다.
+        /// </summary>
+        private void RevealRewards()
         {
             var receipts = new List<RewardEntry>();
 
@@ -256,38 +247,40 @@ namespace Eclipse.Presentation
             if (receipts.Count > 0)
                 _session.RecordIncome(receipts);
 
-            Current = RunStep.RevealReward;
-            Emit(new RunOffer { Step = RunStep.RevealReward, Receipts = receipts, Victory = true });
+            ProceedAfterReveal();
         }
 
-        // 문 하나를 공개 처리한다. 재화 문은 여기서 롤·지급되고, 버프 문은 3택1 대기열에 쌓인다.
+        /// <summary>
+        /// 문 하나를 공개 처리한다. 재화 문은 여기서 롤·지급되고, 버프 문은 3택1 대기열에 쌓인다.
+        /// </summary>
+        /// <param name="receipts"> 재화 문 지급 영수증을 여기에 덧붙인다. </param>
         private void RevealDoor(DoorKind kind, int depth, List<RewardEntry> receipts)
         {
             if (CurrencyDoor.IsCurrency(kind))
             {
                 var rolled = CurrencyDoor.Roll(kind, depth, _session.Chapter.currencyMultiplier,
-                    _doorCatalog, _doorRng);
+                    _doorCatalog, _currencyRng);
                 receipts.AddRange(_rewards.Grant(new[] { rolled }));
             }
             else
             {
-                _pendingPicks.Enqueue((kind, _cardPool.Pick3(kind, depth, _session.Party)));
+                _pendingPicks.Enqueue(_cardPool.Pick3(kind, depth, _session.Party));
             }
         }
 
-        // 공개 확인/카드 배정 후의 공통 진행: 남은 픽 → 문 지점 → 전진(마지막 방이면 런 클리어).
+        /// <summary>
+        /// 공개 확인/카드 배정 후의 공통 진행: 남은 픽 → 문 지점 → 전진(마지막 방이면 런 클리어).
+        /// </summary>
         private void ProceedAfterReveal()
         {
             if (_pendingPicks.Count > 0)
             {
-                var (_, cards) = _pendingPicks.Dequeue();
+                var cards = _pendingPicks.Dequeue();
                 Current = RunStep.BuffPick;
                 Emit(new RunOffer
                 {
                     Step = RunStep.BuffPick,
-                    Cards = cards.Candidates
-                        .Select(c => new CardOption(c, cards.DisclosedOdds.First(o => o.card.id == c.id).odds))
-                        .ToList(),
+                    Cards = cards.Select(c => new CardOption(c)).ToList(),
                     PartySlots = _session.Party.Select(o => o?.Definition).ToList(),
                 });
                 return;
@@ -312,14 +305,17 @@ namespace Eclipse.Presentation
             OfferRoom();
         }
 
-        // 런 종료 커밋. 순서 고정: ①몰수 ②정산 계산 ③(승리만)클리어 기록 ④지급 1회 ⑤저장 1회 ⑥정산 팝업 제시.
-        // committed는 어떤 대기보다 먼저 세워 종료 스텝이 두 번 불려도 지급·저장이 정확히 1회가 되게 한다.
+        /// <summary>
+        /// 런 종료 커밋. 종료 스텝이 두 번 불려도 지급과 저장은 정확히 1회다.
+        /// </summary>
         private void CommitTerminal(bool victory)
         {
+            // committed는 어떤 대기보다 먼저 세운다.
             if (_committed)
                 return;
             _committed = true;
 
+            // 순서 고정: ①몰수 ②정산 계산 ③(승리만)클리어 기록 ④지급 1회 ⑤저장 1회 ⑥정산 팝업 제시.
             _session.ForfeitEscrow();
             _pendingPicks.Clear();
             var entries = RunSettlement.EntriesFor(_session.Chapter, _session.RoomIndex, victory);
@@ -338,23 +334,19 @@ namespace Eclipse.Presentation
             });
         }
 
-        // 문 종류 목록을 표시 데이터로 바꾼다. 약속 문구·공시 가중치가 추첨과 같은 카탈로그에서 나오고,
-        // 배제된 문(인연)은 가중 합에서도 빠져 공시가 실제 추첨과 일치한다.
+        /// <summary>
+        /// 문 종류 목록을 표시 데이터로 바꾼다. 표시명·약속 문구는 추첨과 같은 카탈로그에서 나온다.
+        /// </summary>
         private IReadOnlyList<DoorOption> BuildDoorOptions(IReadOnlyList<DoorKind> kinds)
-        {
-            int total = _doorCatalog.doors.Where(d => d.kind != _excludedDoor).Sum(d => d.weight);
-            int depth = _session.DoorPointsPassed + 1; // 지금 여는 문 지점의 깊이
-            return kinds.Select(kind =>
+            => kinds.Select(kind =>
             {
                 var definition = _doorCatalog.doors.First(d => d.kind == kind);
-                string promise = CurrencyDoor.IsCurrency(kind)
-                    ? $"{definition.promiseText} 약 {CurrencyDoor.PromisedAmount(kind, depth, _session.Chapter.currencyMultiplier, _doorCatalog):N0}"
-                    : definition.promiseText;
-                return new DoorOption(kind, definition.displayName, promise, definition.weight, total);
+                return new DoorOption(kind, definition.displayName, definition.promiseText);
             }).ToList();
-        }
 
-        // 토큰을 올리며 페이로드를 내보낸다. 전이의 유일한 출구라 토큰과 페이로드가 항상 함께 움직인다.
+        /// <summary>
+        /// 토큰을 올리며 페이로드를 내보낸다. 전이의 유일한 출구라 토큰과 페이로드가 항상 함께 움직인다.
+        /// </summary>
         private void Emit(RunOffer offer)
         {
             StepToken++;

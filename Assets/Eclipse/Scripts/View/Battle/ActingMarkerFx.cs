@@ -26,7 +26,10 @@ namespace Eclipse.View
         private Vector2 _home;
         private Sequence _tween;
 
-        // 마커는 비활성으로 시작하므로 Awake는 첫 활성화 직전(OnEnable 앞)에 한 번 돈다 — _home은 항상 원위치.
+        /// <summary>
+        /// 부유 연출의 기준이 되는 원위치를 기억한다. 마커는 비활성으로 시작하므로 Awake는 첫 활성화
+        /// 직전(OnEnable 앞)에 한 번 돌고, 기억한 위치는 항상 원위치가 된다.
+        /// </summary>
         private void Awake()
         {
             _rt = (RectTransform)transform;

@@ -157,12 +157,10 @@ namespace Eclipse.Domain
             return new Combatant(displayName ?? enemy.displayName, Team.Enemy, slotIndex, stats, skills);
         }
 
-        // 붙어 있는 버프·디버프를 기본 스탯에 접어 유효 스탯을 낸다.
-        // 스탯별 배수 = 1 + 버프율 합 − 디버프율 합(percent-add). atk·spd는 1 미만,
-        // def는 0 미만으로 내려가지 않는다(spd는 게이지 나눗셈 분모라 0 금지).
-        // 최대 HP·치명 계열은 수정자 대상이 아니라 기본값을 그대로 쓴다.
+        /// <summary> 붙어 있는 버프·디버프를 기본 스탯에 접어 유효 스탯을 낸다. </summary>
         private Stats ComputeEffectiveStats()
         {
+            // 스탯별 배수 = 1 + 버프율 합 − 디버프율 합(percent-add).
             float atkM = 1f, defM = 1f, spdM = 1f;
             foreach (var e in _effects)
             {
@@ -177,6 +175,8 @@ namespace Eclipse.Domain
                 }
             }
 
+            // atk·spd는 1 미만, def는 0 미만으로 내려가지 않는다(spd는 게이지 나눗셈 분모라 0 금지).
+            // 최대 HP·치명 계열은 수정자 대상이 아니라 기본값을 그대로 쓴다.
             return new Stats
             {
                 hp = _baseStats.hp,
@@ -188,8 +188,8 @@ namespace Eclipse.Domain
             };
         }
 
-        // null이 아닌 슬롯만 런타임으로 감싼다(적은 슬롯이 비어 있을 수 있다).
-        // startOnCooldown이면 각 액티브를 자기 쿨만큼 잠근 채 시작한다(기본공격은 쿨 0이라 그대로 열림).
+        /// <summary> null이 아닌 슬롯만 런타임으로 감싼다(적은 슬롯이 비어 있을 수 있다). </summary>
+        /// <param name="startOnCooldown">각 액티브를 자기 쿨만큼 잠근 채 시작한다(기본공격은 쿨 0이라 그대로 열림).</param>
         private static List<SkillRuntime> BuildSkills(bool startOnCooldown, params SkillSO[] slots)
         {
             var list = new List<SkillRuntime>();

@@ -41,10 +41,10 @@ namespace Eclipse.Presentation
         /// 지정 재화 잔액을 amount만큼 더한다(음수면 소모). 결과가 0 미만이면 0으로 고정한다.
         /// 증감 정책은 <see cref="ICurrencyService"/>가 강제하므로 여기서는 금액 부호를 검증하지 않는다.
         /// </summary>
-        // ponytail: int 오버플로 미가드 — 현실 잔액 범위(수만~수백만) 밖. 상한이 필요해지면 Add에 clamp 추가.
         internal void Add(CurrencyType type, int amount)
         {
             var rp = Select(type);
+            // ponytail: int 오버플로 미가드 — 현실 잔액 범위(수만~수백만) 밖. 상한이 필요해지면 Add에 clamp 추가.
             rp.Value = Math.Max(0, rp.Value + amount);
         }
 

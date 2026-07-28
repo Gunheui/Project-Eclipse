@@ -70,8 +70,9 @@ namespace Eclipse.View
                     cardNames[i].text = option.Card.displayName;
                 if (cardEffects != null && i < cardEffects.Length)
                     cardEffects[i].text = RunTexts.FormatCard(option.Card);
+                // 확률 공시 폐지. 프리팹 교체 전까지는 텍스트 오브젝트만 꺼 둔다.
                 if (cardOdds != null && i < cardOdds.Length)
-                    cardOdds[i].text = $"등장 확률 {option.Odds * 100f:0.#}%";
+                    cardOdds[i].gameObject.SetActive(false);
 
                 cardButtons[i].onClick.AddListener(() => OnCardPicked(option.Card));
             }
@@ -80,7 +81,7 @@ namespace Eclipse.View
                 assignSection.SetActive(false);
         }
 
-        // 카드 확정 → 자동 배정 카드(저주·인연)는 즉시 완료, 그 외에는 배정 슬롯 선택으로 넘어간다.
+        /// <summary>카드 확정. 자동 배정 카드(저주·인연)는 즉시 완료하고, 그 외에는 배정 슬롯 선택으로 넘어간다.</summary>
         private void OnCardPicked(BuffCard card)
         {
             _picked = card;

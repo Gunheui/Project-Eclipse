@@ -135,7 +135,9 @@ namespace Eclipse.View
             ApplyOutline(state == TargetState.Selectable, allyTarget);
         }
 
-        // 탭 영역을 바인딩된 스프라이트 크기에 맞춘다. 유닛마다 크기·PPU가 달라 에디터에서 미리 맞출 수 없다.
+        /// <summary>
+        /// 탭 영역을 바인딩된 스프라이트 크기에 맞춘다. 유닛마다 크기·PPU가 달라 에디터에서 미리 맞출 수 없다.
+        /// </summary>
         private void ResizeTapArea()
         {
             if (tapArea == null || spriteRenderer == null || spriteRenderer.sprite == null) return;
@@ -150,7 +152,9 @@ namespace Eclipse.View
             tapArea.offset = transform.InverseTransformPoint(bounds.center);
         }
 
-        // 아웃라인을 이 배틀러에만 켠다. 머티리얼이 Eclipse/SpriteOutlineURP2D가 아니면 이 프로퍼티들은 무시된다.
+        /// <summary>
+        /// 아웃라인을 이 배틀러에만 켠다. 머티리얼이 Eclipse/SpriteOutlineURP2D가 아니면 이 프로퍼티들은 무시된다.
+        /// </summary>
         private void ApplyOutline(bool on, bool allyTarget)
         {
             _mpb ??= new MaterialPropertyBlock();
@@ -174,16 +178,20 @@ namespace Eclipse.View
             else if (delta > 0) SpawnFloatingText(delta, isHeal: true);
         }
 
-        // 이번 턴의 하위 연출을 합류시킨다. 같은 턴에 여러 신호(시전·피격·HP변화)를 받아도
-        // 마지막 것이 앞선 것을 덮지 않도록 WhenAll로 묶는다. 완료 상태면 새 턴이므로 새로 시작한다.
+        /// <summary>
+        /// 이번 턴의 하위 연출을 합류시킨다. 같은 턴에 여러 신호(시전·피격·HP변화)를 받아도
+        /// 마지막 것이 앞선 것을 덮지 않는다.
+        /// </summary>
         private void AddAnimation(UniTask next)
         {
+            // 완료 상태면 새 턴이므로 새로 시작하고, 진행 중이면 WhenAll로 묶는다.
             _animation = _animation.Status.IsCompleted()
                 ? next.Preserve()
                 : UniTask.WhenAll(_animation, next).Preserve();
         }
 
-        // 피격: 데미지 숫자를 띄우고 짧게 흔들린다. 반환 태스크는 흔들림이 끝나면 완료된다.
+        /// <summary>피격: 데미지 숫자를 띄우고 짧게 흔들린다.</summary>
+        /// <returns>흔들림이 끝나면 완료된다.</returns>
         private UniTask PlayHitAsync(int amount)
         {
             SpawnFloatingText(amount, isHeal: false);
@@ -193,7 +201,8 @@ namespace Eclipse.View
                 .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
         }
 
-        // 시전: 대면 방향 돌진 + (있으면) 시전 이펙트를 함께 재생한다. 둘 다 끝나면 완료된다.
+        /// <summary>시전: 대면 방향 돌진과 (있으면) 시전 이펙트를 함께 재생한다.</summary>
+        /// <returns>둘 다 끝나면 완료된다.</returns>
         private UniTask PlayCastAsync(SkillSO skill)
         {
             var lunge = PlayLungeAsync();
@@ -201,7 +210,8 @@ namespace Eclipse.View
             return UniTask.WhenAll(lunge, effect);
         }
 
-        // 대면 방향으로 살짝 돌진했다 제자리로. 반환 태스크는 복귀가 끝나면 완료된다.
+        /// <summary>대면 방향으로 살짝 돌진했다 제자리로 돌아간다.</summary>
+        /// <returns>복귀가 끝나면 완료된다.</returns>
         private UniTask PlayLungeAsync()
         {
             float dur = 0.25f / _speed();
@@ -212,8 +222,10 @@ namespace Eclipse.View
                 .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
         }
 
-        // 연출은 부모 앵커 밑에 스폰한다(사망으로 배틀러가 숨어도 연출은 남아야 하므로).
-        // 씬 종료 등으로 앵커가 파괴 중이면 null을 반환해 스폰을 건너뛴다.
+        /// <summary>
+        /// 연출을 스폰할 부모 앵커를 반환한다. 사망으로 배틀러가 숨어도 연출은 남아야 하므로 부모 앵커 밑에 스폰한다.
+        /// </summary>
+        /// <returns>씬 종료 등으로 앵커가 파괴 중이면 null. 호출부는 스폰을 건너뛴다.</returns>
         private Transform SpawnParentOrNull()
         {
             var parent = transform.parent;
@@ -221,7 +233,8 @@ namespace Eclipse.View
             return gameObject.IsDestroying() ? null : parent;
         }
 
-        // 이펙트 스펙을 이 배틀러 위치에 스폰해 재생한다. 스펙·프리팹이 없으면 즉시 완료.
+        /// <summary>이펙트 스펙을 이 배틀러 위치에 스폰해 재생한다.</summary>
+        /// <returns>스펙·프리팹이 없으면 즉시 완료된다.</returns>
         private UniTask SpawnEffect(EffectSpec spec)
         {
             if (spec == null || effectPlayerPrefab == null) return UniTask.CompletedTask;

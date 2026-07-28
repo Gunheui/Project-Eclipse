@@ -9,7 +9,7 @@ namespace Eclipse.Domain
     public static class RunSeed
     {
         /// <summary> 난수 용도. 값은 "서로 다르다"만 의미 있다. Door·Card는 문·카드 구현이 소비한다. </summary>
-        public enum Stream { Encounter = 0, Mutation = 1, Door = 2, Card = 3 }
+        public enum Stream { Encounter = 0, Mutation = 1, Door = 2, Card = 3, Currency = 4 }
 
         /// <summary>
         /// 용도별 난수 시드. 같은 runSeed면 항상 같은 값을 낸다(재현 유지).

@@ -80,11 +80,12 @@ namespace Eclipse.View
 
         private void OnRoleFilterSelected(Role? role) => _viewModel.RoleFilter.Value = role;
 
-        // 정렬이 바뀌면 라벨을 갱신하고 항목 뷰를 VM의 새 순서대로 다시 만든다(로스터 규모에서 재배치보다 단순).
+        /// <summary>정렬이 바뀌면 라벨을 갱신하고 항목 뷰를 VM의 새 순서대로 다시 만든다.</summary>
         private void OnSortKeyChanged(CharacterSortKey key)
         {
             sortLabel.text = $"정렬: {CharacterSort.Label(key)}";
 
+            // 로스터 규모에서 재배치보다 단순하다.
             DestroyItems();
             foreach (var itemViewModel in _viewModel.Items)
                 AddItem(itemViewModel);

@@ -146,7 +146,9 @@ namespace Eclipse.Presentation
         public IReadOnlyList<RewardEntry> RunIncome
             => _income.Select(p => new RewardEntry { type = p.Key, amount = p.Value }).ToList();
 
-        // 방 배치·정산 표의 정합성을 런 시작 시 1회 검증한다(잘못된 데이터는 방마다 다른 곳에서 터진다).
+        /// <summary>
+        /// 방 배치·정산 표의 정합성을 런 시작 시 1회 검증한다. 잘못된 데이터는 여기서 예외로 끊는다.
+        /// </summary>
         private static void Validate(ChapterSO chapter, EncounterTuningSO tuning)
         {
             var rooms = chapter.rooms;

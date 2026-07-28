@@ -51,7 +51,7 @@ namespace Eclipse.Domain
             return picked;
         }
 
-        // 잘못된 카탈로그로 추첨하면 방마다 다른 곳에서 터지므로 로드 시점에 한 번 걸러 낸다.
+        /// <summary> 잘못된 카탈로그로 추첨하면 방마다 다른 곳에서 터지므로 로드 시점에 한 번 걸러 낸다. </summary>
         private static void Validate(DoorCatalogSO catalog)
         {
             if (catalog.doors == null || catalog.doors.Length == 0)

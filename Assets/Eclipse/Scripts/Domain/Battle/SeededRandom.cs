@@ -54,13 +54,13 @@ namespace Eclipse.Domain
 
         private ulong NextUpper32() => NextULong() >> 32;
 
-        // xorshift128+ 한 스텝 = 64비트 난수 한 개. 시프트 상수 23·18·5는 Vigna가 BigCrush를
-        // 통과하도록 찾은 값(튜닝 대상 아님).
+        /// <summary> xorshift128+ 한 스텝 = 64비트 난수 한 개. </summary>
         private ulong NextULong()
         {
             ulong t = _s0;
             ulong s = _s1;
             _s0 = s;
+            // 시프트 상수 23·18·5는 Vigna가 BigCrush를 통과하도록 찾은 값(튜닝 대상 아님).
             t ^= t << 23;
             t ^= t >> 18;
             t ^= s ^ (s >> 5);
@@ -68,10 +68,10 @@ namespace Eclipse.Domain
             return t + s;
         }
 
-        // 단일 시드를 서로 다른 워드로 흩뿌리는 splitmix64(상태 초기화 전용). 황금비 증분 +
-        // Stafford Mix13 애벌런치 곱셈수를 쓰는 표준 시딩(Vigna 권장).
+        /// <summary> 단일 시드를 서로 다른 워드로 흩뿌리는 splitmix64(상태 초기화 전용). </summary>
         private static ulong SplitMix64(ref ulong s)
         {
+            // 황금비 증분 + Stafford Mix13 애벌런치 곱셈수를 쓰는 표준 시딩(Vigna 권장).
             s += 0x9E3779B97F4A7C15UL;
             ulong z = s;
             z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9UL;

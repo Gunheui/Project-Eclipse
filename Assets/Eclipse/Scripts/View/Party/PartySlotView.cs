@@ -38,7 +38,7 @@ namespace Eclipse.View
             selectButton.onClick.AddListener(() => onSelected());
         }
 
-        // 슬롯 점유자를 빈칸/채움 시각에 반영한다. 초상은 정의의 스프라이트를 직접 대입한다(비동기 로딩 불필요).
+        /// <summary>슬롯 점유자를 빈칸/채움 시각에 반영한다.</summary>
         private void ApplyOccupant(CharacterSO def)
         {
             bool filled = def != null;
@@ -49,6 +49,7 @@ namespace Eclipse.View
 
             if (!filled)
                 return;
+            // 초상은 정의의 스프라이트를 직접 대입한다(비동기 로딩 불필요).
             if (portrait != null)
                 portrait.sprite = def.portraitAssetRef;
             if (nameText != null)

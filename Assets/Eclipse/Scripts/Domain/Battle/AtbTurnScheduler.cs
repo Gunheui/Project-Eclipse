@@ -20,6 +20,9 @@ namespace Eclipse.Domain
         private readonly List<ICombatant> _units;
         private readonly Dictionary<ICombatant, long> _gauge;
 
+        // 아군 선공을 이미 썼는지. 전투당 한 번만 쓰고 그 뒤로는 평범한 ATB로 돌아간다.
+        private bool _openingConsumed;
+
         /// <summary> 참가 유닛(아군+적) 전체로 스케줄러를 만든다. 게이지는 모두 0에서 시작한다. </summary>
         public AtbTurnScheduler(IEnumerable<ICombatant> units)
         {
@@ -27,22 +30,26 @@ namespace Eclipse.Domain
             _gauge = _units.ToDictionary(u => u, _ => 0L);
         }
 
-        // 테스트 전용: 특정 게이지 상태(고정소수점)에서 시작한다. 미지정 유닛은 0. 프로덕션 진입점은 위 공개 생성자뿐이다.
+        /// <summary> 테스트 전용: 특정 게이지 상태에서 시작한다. 프로덕션 진입점은 위 공개 생성자뿐이다. </summary>
+        /// <param name="initialGauges">시작 게이지(고정소수점). 미지정 유닛은 0.</param>
         internal AtbTurnScheduler(IEnumerable<ICombatant> units, IReadOnlyDictionary<ICombatant, long> initialGauges)
         {
             _units = units.ToList();
-            _gauge = _units.ToDictionary(u => u, u => initialGauges.TryGetValue(u, out var g) ? g : 0L);
+            _gauge = _units.ToDictionary(u => u, u => initialGauges.GetValueOrDefault(u, 0L));
         }
 
         /// <summary>
         /// 다음 행동자를 계산해 반환한다. 전원 게이지를 그 도달 시점까지 전진시킨다(상태 변경).
-        /// 생존 유닛이 없으면 null.
+        /// 전투의 첫 행동자는 SPD와 무관하게 아군이다. 생존 유닛이 없으면 null.
         /// </summary>
         public ICombatant GetNextActor()
         {
             var alive = _units.Where(u => u.IsAlive).ToList();
             if (alive.Count == 0) return null;
-            return Advance(_gauge, alive);
+
+            var actor = Advance(_gauge, alive, !_openingConsumed);
+            _openingConsumed = true;
+            return actor;
         }
 
         /// <summary>
@@ -65,45 +72,68 @@ namespace Eclipse.Domain
             if (count <= 0 || alive.Count == 0) return order;
 
             var gauge = new Dictionary<ICombatant, long>(_gauge); // 사본 — 실제 _gauge는 불변
+            bool opening = !_openingConsumed;
             for (int i = 0; i < count; i++)
             {
-                var actor = Advance(gauge, alive);
+                var actor = Advance(gauge, alive, opening);
+                opening = false;
                 order.Add(actor);
                 gauge[actor] -= Threshold; // OnActionResolved와 동일한 이월
             }
             return order;
         }
 
-        // 다음 행동자 = 임계값에 먼저 도달하는(잔여거리/SPD 최소) 유닛. 전원 게이지를 그 도달 시점까지
-        // 전진시키고 행동자를 반환한다. 동시 도달·동률은 ArrivesBefore가 결정적으로 가른다.
-        //
-        // ※ 인자로 받은 gauge를 직접 변경한다. 실제 진행은 _gauge를, 예보는 사본을 넘긴다 —
-        //   조회 경로에서 _gauge를 넘기면 전투 순서가 조용히 망가진다.
-        //   static이라 이 함수는 _gauge에 접근할 수 없다(실수 여지를 인자 선택 한 곳으로 좁힌다).
-        private static ICombatant Advance(IDictionary<ICombatant, long> gauge, IReadOnlyList<ICombatant> alive)
+        /// <summary> 다음 행동자를 정하고 전원 게이지를 그 도달 시점까지 전진시킨다. </summary>
+        private static ICombatant Advance(IDictionary<ICombatant, long> gauge, IReadOnlyList<ICombatant> alive,
+            bool opening)
         {
-            var actor = alive.Aggregate((best, u) => ArrivesBefore(gauge, u, best) ? u : best);
+            // opening=true면 행동자 후보를 아군으로 좁힌다(아군 선공). 게이지 전진은 그래도 전원 대상이라
+            // SPD 우위는 그대로 남는다.
+            IReadOnlyList<ICombatant> candidates = alive;
+            if (opening)
+            {
+                var allies = alive.Where(u => u.Team == Team.Ally).ToList();
+                if (allies.Count > 0) // 아군이 하나도 없으면 제한을 걸 수 없다
+                    candidates = allies;
+            }
+
+            // 다음 행동자 = 임계값에 먼저 도달하는(잔여거리/SPD 최소) 유닛. 동시 도달·동률은 ArrivesBefore가
+            // 결정적으로 가른다.
+            var actor = candidates.Aggregate((best, u) => ArrivesBefore(gauge, u, best) ? u : best);
 
             long remActor = Remaining(gauge, actor);
             if (remActor > 0)
             {
                 // EffectiveStats는 접근마다 버프·디버프를 다시 계산하므로 행동자 것을 미리 읽는다.
                 int actorSpd = actor.EffectiveStats.spd;
+                // 인자로 받은 gauge를 직접 변경한다. 실제 진행은 _gauge를, 예보는 사본을 넘긴다 —
+                // 조회 경로에서 _gauge를 넘기면 전투 순서가 조용히 망가진다. static이라 이 함수는 _gauge에
+                // 접근할 수 없다(실수 여지를 인자 선택 한 곳으로 좁힌다).
                 foreach (var u in alive)
                     gauge[u] += u.EffectiveStats.spd * remActor / actorSpd;
+
+                // 개전 전진에서 임계값을 넘어선 유닛은 게이지를 0으로 되돌린다. 초과분을 남기면 그 유닛이
+                // 잔여 0으로 곧바로 이어 행동해, 선공한 아군 뒤에 빠른 적이 이월분으로 턴을 얻는다.
+                if (opening)
+                    foreach (var u in alive.Where(u => gauge[u] > Threshold))
+                        gauge[u] = 0;
             }
 
             return actor;
         }
 
-        // 임계값까지 남은 게이지 거리. 이미 도달·초과했으면 0(도달 시각 0 → 즉시 행동).
+        /// <summary> 임계값까지 남은 게이지 거리. </summary>
+        /// <returns>이미 도달·초과했으면 0(도달 시각 0 → 즉시 행동).</returns>
         private static long Remaining(IDictionary<ICombatant, long> gauge, ICombatant u) => Math.Max(0, Threshold - gauge[u]);
 
-        // x가 y보다 먼저 도달하는가. 도달 시각 rem/spd 비교를 나눗셈 없이 교차곱(rem_x*spd_y < rem_y*spd_x)으로
-        // 정확히 판정하고, 동시 도달이면 SPD 내림차순 → 아군 우선(Team) → 슬롯 오름차순으로 가른다(랜덤 없음).
+        /// <summary>
+        /// x가 y보다 먼저 도달하는가. 동시 도달이면 SPD 내림차순 → 아군 우선(Team) → 슬롯 오름차순으로
+        /// 가른다(랜덤 없음).
+        /// </summary>
         private static bool ArrivesBefore(IDictionary<ICombatant, long> gauge, ICombatant x, ICombatant y)
         {
             int sx = x.EffectiveStats.spd, sy = y.EffectiveStats.spd; // 접근마다 재계산되므로 한 번만 읽는다
+            // 도달 시각 rem/spd 비교를 나눗셈 없이 교차곱(rem_x*spd_y < rem_y*spd_x)으로 정확히 판정한다.
             long lhs = Remaining(gauge, x) * sy;
             long rhs = Remaining(gauge, y) * sx;
             if (lhs != rhs) return lhs < rhs;

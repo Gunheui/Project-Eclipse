@@ -57,7 +57,9 @@ namespace Eclipse.Presentation
             }
         }
 
-        // 직렬화 준비(홀더 → DTO)와 파일 쓰기를 나누는 지점. 원격 백엔드가 생기면 이 DTO가 곧 요청 본문이 된다.
+        /// <summary>
+        /// 직렬화 준비(홀더 → DTO)와 파일 쓰기를 나누는 지점. 원격 백엔드가 생기면 이 DTO가 곧 요청 본문이 된다.
+        /// </summary>
         private SaveData Snapshot()
         {
             return new SaveData
@@ -172,15 +174,18 @@ namespace Eclipse.Presentation
         private static extern void EclipseSyncFs();
 #endif
 
-        // WebGL의 File.WriteAllText는 브라우저 메모리(IDBFS 캐시)까지만 쓴다 — IndexedDB로 내리려면 명시적 sync가 필요하다.
+        /// <summary> WebGL에서 저장 파일을 IndexedDB로 내린다. 다른 플랫폼에서는 하는 일이 없다. </summary>
         private static void SyncWebGLFileSystem()
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
+            // WebGL의 File.WriteAllText는 브라우저 메모리(IDBFS 캐시)까지만 쓴다 — IndexedDB로 내리려면 명시적 sync가 필요하다.
             EclipseSyncFs();
 #endif
         }
 
-        // 세이브를 iCloud 백업 대상에서 제외한다. 파일을 다시 쓰면 풀릴 수 있어 매 저장 후 재적용한다.
+        /// <summary>
+        /// 세이브를 iCloud 백업 대상에서 제외한다. 파일을 다시 쓰면 풀릴 수 있어 매 저장 후 재적용한다.
+        /// </summary>
         private void ApplyIosNoBackupFlag()
         {
 #if UNITY_IOS && !UNITY_EDITOR

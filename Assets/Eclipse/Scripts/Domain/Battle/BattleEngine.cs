@@ -98,7 +98,7 @@ namespace Eclipse.Domain
             return outcome;
         }
 
-        // 행동자의 편에 따라 행동 결정 주체를 고른다.
+        /// <summary> 행동자의 편에 따라 행동 결정 주체를 고른다. </summary>
         private IActionProvider ProviderFor(ICombatant actor)
             => actor.Team == Team.Ally ? _allyProvider : _enemyProvider;
 
@@ -110,8 +110,9 @@ namespace Eclipse.Domain
             return BattleOutcome.Ongoing;
         }
 
-        // 행동자 관점의 아군/적 목록. IReadOnlyList 공변성으로 Combatant 목록을 그대로 넘긴다.
+        /// <summary> 행동자 관점의 아군 목록. </summary>
         private IReadOnlyList<ICombatant> AlliesOf(ICombatant actor)
+            // IReadOnlyList 공변성으로 Combatant 목록을 그대로 넘긴다.
             => actor.Team == Team.Ally ? (IReadOnlyList<ICombatant>)_allies : _enemies;
 
         private IReadOnlyList<ICombatant> EnemiesOf(ICombatant actor)

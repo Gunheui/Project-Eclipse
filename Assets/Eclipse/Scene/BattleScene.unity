@@ -7245,8 +7245,6 @@ MonoBehaviour:
   popupRoot: {fileID: 370329861}
   dim: {fileID: 1132012034}
   entries:
-  - Id: 1
-    Prefab: {fileID: 385294926735722799, guid: f3cf45c99ac5a4a768b4a6a5e77af98c, type: 3}
   - Id: 2
     Prefab: {fileID: 6442805699621801088, guid: aa8b51c78c6934556bb1fedab3682b60, type: 3}
   - Id: 3

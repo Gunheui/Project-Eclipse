@@ -90,14 +90,16 @@ namespace Eclipse.Presentation
             _pending?.TrySetResult(new BattleAction(skill, target));
         }
 
-        // Auto가 켜지는 순간 대기 중인 수동 턴을 오토 규칙 결정으로 즉시 완료시킨다. 대기가 없으면 무시한다.
+        /// <summary>
+        /// Auto가 켜지는 순간 대기 중인 수동 턴을 오토 규칙 결정으로 즉시 완료시킨다. 대기가 없으면 무시한다.
+        /// </summary>
         private void ResolvePendingWithAuto()
         {
             if (_pending == null) return;
             ForwardAutoDecision(_pending, PendingActor, _pendingAllies, _pendingEnemies, _pendingCt).Forget();
         }
 
-        // 오토 규칙에 이번 턴 결정을 위임하고 그 결과로 대기를 완료한다(_auto는 즉시 완료됨).
+        /// <summary> 오토 규칙에 이번 턴 결정을 위임하고 그 결과로 대기를 완료한다. </summary>
         private async UniTaskVoid ForwardAutoDecision(
             UniTaskCompletionSource<BattleAction> pending,
             ICombatant actor,
@@ -105,6 +107,7 @@ namespace Eclipse.Presentation
             IReadOnlyList<ICombatant> enemies,
             CancellationToken ct)
         {
+            // _auto는 즉시 완료된다.
             var action = await _auto.ChooseActionAsync(actor, allies, enemies, ct);
             pending.TrySetResult(action);
         }

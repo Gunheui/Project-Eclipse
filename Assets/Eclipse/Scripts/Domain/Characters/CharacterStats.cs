@@ -68,21 +68,22 @@ namespace Eclipse.Domain
             };
         }
 
-        // 이 스탯에 걸리는 변이 배수를 돌려준다. 변이가 없거나 다른 스탯을 올리는 변이면 1이다.
+        /// <summary> 이 스탯에 걸리는 변이 배수를 돌려준다. 변이가 없거나 다른 스탯을 올리는 변이면 1이다. </summary>
         private static float MutationMultiplier(MutationSO mutation, StatType axis)
             => mutation != null && mutation.statAxis == axis ? mutation.multiplier : 1f;
 
-        // 버프 %가산을 곱한 뒤 한 번만 반올림한다.
+        /// <summary> 버프 %가산을 곱한 뒤 한 번만 반올림한다. </summary>
         private static int ApplyBuffAndRound(float value, StatModifierSet buffs, StatType axis)
             => Round(value * (1f + SumOf(buffs, axis)));
 
-        // 디버프 합만큼 깎은 뒤 한 번만 반올림한다. 버프 경로와 부호만 다르다.
+        /// <summary> 디버프 합만큼 깎은 뒤 한 번만 반올림한다. 버프 경로와 부호만 다르다. </summary>
         private static int ApplyDebuffAndRound(float value, StatModifierSet debuffs, StatType axis)
             => Round(value * (1f - SumOf(debuffs, axis)));
 
-        // 반올림한 뒤 하한 1을 적용한다. AwayFromZero는 전투 파이프라인과 맞춘 것으로, .5 처리 방식이 갈리면
-        // 결정성이 흔들린다. 하한 1은 spd가 게이지 나눗셈 분모라 0이 금지되는 규칙을 겸한다.
+        /// <summary> 반올림한 뒤 하한 1을 적용한다. </summary>
         private static int Round(float value)
+            // AwayFromZero는 전투 파이프라인과 맞춘 것으로, .5 처리 방식이 갈리면 결정성이 흔들린다.
+            // 하한 1은 spd가 게이지 나눗셈 분모라 0이 금지되는 규칙을 겸한다.
             => Math.Max(1, (int)Math.Round(value, MidpointRounding.AwayFromZero));
 
         private static float SumOf(StatModifierSet modifiers, StatType axis)

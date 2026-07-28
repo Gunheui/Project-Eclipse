@@ -37,15 +37,14 @@ namespace Eclipse.Tests
             var session = new ChapterRunSession(chapter, tuning, party, seed);
             var doorCatalog = RunFixtures.DoorCatalog();
             var cardCatalog = RunFixtures.CardCatalog(party.Select(o => o.Definition.id).ToArray());
-            var doorRng = new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Door));
             var flow = new ChapterRunFlow(
                 session,
                 new EncounterGenerator(tuning,
                     new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Encounter)),
                     new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Mutation))),
-                new DoorDraw(doorCatalog, doorRng),
+                new DoorDraw(doorCatalog, new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Door))),
                 new CardPool(cardCatalog, new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Card))),
-                doorRng,
+                new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Currency)),
                 doorCatalog,
                 rewards,
                 progress,
@@ -54,7 +53,10 @@ namespace Eclipse.Tests
 
             int battles = 0, doorPoints = 0, cardPicks = 0;
             var battleSeeds = new List<int>();
-            var revealAtRoom = new Dictionary<int, IReadOnlyList<RewardEntry>>();
+
+            // 미드보스 보상은 화면을 안 거치므로 방 진입 사이의 보상 건수 증가분으로 관측한다.
+            // 재화 문은 장부에, 버프 문은 3택1 횟수에 잡히므로 둘을 합쳐 센다.
+            int rewardsAtEliteEntry = -1, midBossRewards = -1;
 
             flow.BeginRun().Forget();
             int guard = 0;
@@ -66,17 +68,16 @@ namespace Eclipse.Tests
                     case RunStep.EnteringRoom:
                         battles++;
                         battleSeeds.Add(offer.BattleSeed);
+                        if (offer.Room.kind == RoomKind.Elite)
+                            rewardsAtEliteEntry = session.RunIncome.Count + cardPicks;
+                        else if (rewardsAtEliteEntry >= 0 && midBossRewards < 0)
+                            midBossRewards = session.RunIncome.Count + cardPicks - rewardsAtEliteEntry;
                         Assert.IsNotNull(offer.Encounter.Enemies, "인카운터가 생성돼 실려 온다");
                         flow.ReportBattleResult(won: true, offer.Token).Forget();
-                        break;
-                    case RunStep.RevealReward:
-                        revealAtRoom[session.RoomIndex] = offer.Receipts;
-                        flow.ReportResultConfirmed(offer.Token).Forget();
                         break;
                     case RunStep.BuffPick:
                         cardPicks++;
                         Assert.AreEqual(3, offer.Cards.Count, "3택1 후보는 항상 3장이다");
-                        Assert.IsTrue(offer.Cards.All(c => c.Odds > 0f && c.Odds <= 1f), "공시 확률이 실려 온다");
                         flow.ReportCardAssigned(offer.Cards[0].Card, 0, offer.Token).Forget();
                         break;
                     case RunStep.DoorPoint:
@@ -103,8 +104,9 @@ namespace Eclipse.Tests
             Assert.AreEqual(7, session.RoomIndex, "넘긴 방 7 = 정산 입력");
             Assert.IsTrue(progress.IsCleared(chapter), "챕터 클리어 기록");
 
-            // 미드보스(방4, RoomIndex 3에서 공개) 결과는 문③ 공개 + 2종 즉시 지급이 겹치는 지점이다.
-            Assert.IsTrue(revealAtRoom.ContainsKey(3), "미드보스 방 결과가 있었다");
+            // 인런 공개는 화면을 거치지 않으므로 세션 장부로만 관측된다.
+            Assert.IsNotEmpty(session.RunIncome, "런 중 공개된 재화가 장부에 쌓인다");
+            Assert.GreaterOrEqual(midBossRewards, 2, "미드보스 방은 문 2종 보상을 추가로 낸다");
 
             // 정산: 표 7행(700) + 승리 보너스(400). 런 중 재화 문 수입은 시드에 따라 다르므로 하한만 본다.
             var terminal = flow.Offer.CurrentValue;
@@ -139,15 +141,14 @@ namespace Eclipse.Tests
             var session = new ChapterRunSession(chapter, tuning, party, seed);
             var doorCatalog = RunFixtures.DoorCatalog();
             var cardCatalog = RunFixtures.CardCatalog(party.Select(o => o.Definition.id).ToArray());
-            var doorRng = new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Door));
             var flow = new ChapterRunFlow(
                 session,
                 new EncounterGenerator(tuning,
                     new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Encounter)),
                     new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Mutation))),
-                new DoorDraw(doorCatalog, doorRng),
+                new DoorDraw(doorCatalog, new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Door))),
                 new CardPool(cardCatalog, new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Card))),
-                doorRng,
+                new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Currency)),
                 doorCatalog,
                 new RunRewardService(new CurrencyService(wallet)),
                 new ChapterProgress(),
@@ -166,10 +167,6 @@ namespace Eclipse.Tests
                         trace.Add("room:" + string.Join(",", offer.Encounter.Enemies.Select(e => e.Enemy.id)));
                         flow.ReportBattleResult(true, offer.Token).Forget();
                         break;
-                    case RunStep.RevealReward:
-                        trace.Add("reveal:" + string.Join(",", offer.Receipts.Select(r => $"{r.type}{r.amount}")));
-                        flow.ReportResultConfirmed(offer.Token).Forget();
-                        break;
                     case RunStep.BuffPick:
                         trace.Add("pick:" + string.Join(",", offer.Cards.Select(c => c.Card.id)));
                         flow.ReportCardAssigned(offer.Cards[0].Card, 0, offer.Token).Forget();
@@ -180,6 +177,8 @@ namespace Eclipse.Tests
                         break;
                 }
             }
+            // 재화 문 롤은 화면에 안 뜨므로 장부를 지문에 넣는다. 재화 스트림 재현이 깨지면 여기서 잡힌다.
+            trace.Add("income:" + string.Join(",", session.RunIncome.Select(r => $"{r.type}{r.amount}")));
             return trace;
         }
     }

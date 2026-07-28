@@ -35,7 +35,7 @@ namespace Eclipse.View
             if (this != null) Destroy(gameObject);
         }
 
-        // 레이어 하나를 자식 SpriteRenderer로 생성해 애니메이션한다. startDelay 동안은 숨겼다가 시작한다.
+        /// <summary>레이어 하나를 자식 SpriteRenderer로 생성해 애니메이션한다.</summary>
         private async UniTask PlayLayer(EffectLayer layer, float div, CancellationToken ct)
         {
             var go = new GameObject("EffectLayer");
@@ -53,6 +53,7 @@ namespace Eclipse.View
             float delay = layer.startDelay / div;
             if (delay > 0f)
             {
+                // startDelay 동안은 숨겼다가 시작한다.
                 sr.enabled = false;
                 await UniTask.WaitForSeconds(delay, cancellationToken: ct);
                 if (sr == null) return;
@@ -80,7 +81,9 @@ namespace Eclipse.View
             await UniTask.WhenAll(parts);
         }
 
-        // Data 레이어의 EffectEase를 DOTween Ease로 매핑한다(Data는 DOTween을 참조하지 않으므로 여기서 변환).
+        /// <summary>
+        /// Data 레이어의 EffectEase를 DOTween Ease로 매핑한다(Data는 DOTween을 참조하지 않으므로 여기서 변환).
+        /// </summary>
         private static Ease Map(EffectEase e) => e switch
         {
             EffectEase.Linear => Ease.Linear,

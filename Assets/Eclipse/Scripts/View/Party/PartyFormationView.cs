@@ -78,7 +78,7 @@ namespace Eclipse.View
             return UniTask.CompletedTask;
         }
 
-        // 슬롯을 탭하면 그 슬롯으로 픽 세션을 열고 픽 화면을 전면에 올린다.
+        /// <summary>슬롯을 탭하면 그 슬롯으로 픽 세션을 열고 픽 화면을 전면에 올린다.</summary>
         private void OnSlotTapped(int index)
         {
             _viewModel.BeginPick(index);

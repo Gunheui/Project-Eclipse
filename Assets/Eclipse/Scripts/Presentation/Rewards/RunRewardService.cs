@@ -26,9 +26,10 @@ namespace Eclipse.Presentation
             return granted;
         }
 
-        // 재화별 1건으로 합산한다. 결과 팝업의 칩이 재화 종류와 1:1이라 같은 재화가 두 건이면 표시가 깨진다.
+        /// <summary> 재화별 1건으로 합산한다. </summary>
         private static IReadOnlyList<RewardEntry> Sum(IEnumerable<RewardEntry> entries) => entries
             .Where(e => e.amount > 0)
+            // 결과 팝업의 칩이 재화 종류와 1:1이라 같은 재화가 두 건이면 표시가 깨진다.
             .GroupBy(e => e.type)
             .Select(g => new RewardEntry { type = g.Key, amount = g.Sum(e => e.amount) })
             .ToList();

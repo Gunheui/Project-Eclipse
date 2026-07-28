@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Eclipse.Data;
 using Eclipse.Domain;
@@ -37,7 +36,7 @@ namespace Eclipse.Core
             builder.RegisterComponentInHierarchy<BattleView>();
             builder.RegisterComponentInHierarchy<ChapterRunDriver>();
 
-            // 팝업 매니저는 씬 인프라라 씬마다 하나씩 선다. 방 사이 화면(결과·문·3택1·정산)이 전부 이 스택 위에 뜬다.
+            // 팝업 매니저는 씬 인프라라 씬마다 하나씩 선다. 방 사이 화면(문·3택1·정산)이 전부 이 스택 위에 뜬다.
             builder.RegisterComponentInHierarchy<PopupManager>();
 
             builder.RegisterInstance(battleConstants);
@@ -50,19 +49,11 @@ namespace Eclipse.Core
             {
                 var nav = c.Resolve<NavigationContext>();
                 var chapter = nav.SelectedChapter;
-                if (chapter == null)
+                var party = nav.SelectedParty;
+                if (chapter == null || party == null || party.All(x => x == null))
                     throw new InvalidOperationException(
-                        "BattleScene 진입에 선택 챕터가 없다. 파티 편성(S11)의 [런 시작]을 거쳐 진입해야 한다 " +
-                        "— 단독 씬 Play는 지원하지 않는다(debugSeedOverride는 시드만 고정할 뿐 챕터를 대신하지 않는다).");
-
-                // 선택 파티가 비어 있으면 세이브 로스터 앞 4명으로 대체한다(테스트용 폴백).
-                var party = nav.SelectedParty?.ToList() ?? new List<OwnedCharacter>();
-                if (party.All(x => x == null))
-                    party = c.Resolve<PlayerSave>().OwnedCharacters
-                        .Where(x => x != null).Take(PlayerSave.PartySlotCount).ToList();
-                if (party.All(x => x == null))
-                    throw new InvalidOperationException(
-                        "전투에 세울 아군이 없다 — 선택 파티도 세이브 로스터도 비어 있다.");
+                        "BattleScene 진입에 선택 챕터·파티가 없다. 파티 편성(S11)의 [런 시작]을 거쳐 진입해야 한다 " +
+                        "— 단독 씬 Play는 지원하지 않는다(debugSeedOverride는 시드만 고정할 뿐 진입 경로를 대신하지 않는다).");
 
                 return new ChapterRunSession(chapter, encounterTuning, party, runSeed);
             }, Lifetime.Scoped);
@@ -74,13 +65,15 @@ namespace Eclipse.Core
                 var generator = new EncounterGenerator(encounterTuning,
                     new SeededRandom(RunSeed.For(runSeed, RunSeed.Stream.Encounter)),
                     new SeededRandom(RunSeed.For(runSeed, RunSeed.Stream.Mutation)));
-                // 문 추첨과 재화 문 폭은 같은 Door 스트림 인스턴스를 공유한다(§5 — 새 스트림을 만들지 않는다).
-                var doorRng = new SeededRandom(RunSeed.For(runSeed, RunSeed.Stream.Door));
-                var doorDraw = new DoorDraw(doorCatalog, doorRng);
+                var doorDraw = new DoorDraw(doorCatalog,
+                    new SeededRandom(RunSeed.For(runSeed, RunSeed.Stream.Door)));
                 var cardPool = new CardPool(buffCardCatalog,
                     new SeededRandom(RunSeed.For(runSeed, RunSeed.Stream.Card)));
+                // 재화 문 폭은 문 추첨과 다른 스트림에서 굴린다. 공유하면 재화 문이 몇 번 공개됐는지가
+                // 이후 문 추첨 수열을 밀어낸다.
+                var currencyRng = new SeededRandom(RunSeed.For(runSeed, RunSeed.Stream.Currency));
 
-                return new ChapterRunFlow(session, generator, doorDraw, cardPool, doorRng, doorCatalog,
+                return new ChapterRunFlow(session, generator, doorDraw, cardPool, currencyRng, doorCatalog,
                     c.Resolve<IRewardService>(), c.Resolve<ChapterProgress>(), c.Resolve<SaveService>(),
                     c.Resolve<Eclipse.Service.ISceneFlow>());
             }, Lifetime.Scoped);

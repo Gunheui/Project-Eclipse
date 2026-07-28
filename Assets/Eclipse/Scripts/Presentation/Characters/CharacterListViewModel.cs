@@ -53,8 +53,10 @@ namespace Eclipse.Presentation
             _sortKey.Value = next;
         }
 
-        // 지정 기준으로 _items를 제자리 재배열한다(항목 VM 인스턴스는 그대로 재사용).
-        // 반드시 CurrentSortKey 통지보다 먼저 돌아야 View가 재배열된 Items로 항목 뷰를 다시 만든다.
+        /// <summary>
+        /// 지정 기준으로 _items를 제자리 재배열한다(항목 VM 인스턴스는 그대로 재사용).
+        /// 반드시 CurrentSortKey 통지보다 먼저 돌아야 View가 재배열된 Items로 항목 뷰를 다시 만든다.
+        /// </summary>
         private void ApplySort(CharacterSortKey key)
         {
             var sorted = CharacterSort.Apply(_items, item => item, key);

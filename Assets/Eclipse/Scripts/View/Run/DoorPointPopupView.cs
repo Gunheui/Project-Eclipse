@@ -10,7 +10,7 @@ using VContainer;
 namespace Eclipse.View
 {
     /// <summary>
-    /// 문 지점 팝업. 추첨된 문 3종을 약속 문구·확률 공시와 함께 보여 주고 선택을 결과로 돌려준다.
+    /// 문 지점 팝업. 추첨된 문 3종을 약속 문구와 함께 보여 주고 선택을 결과로 돌려준다.
     /// 닫기 없는 강제 선택이다 — 문을 골라야만 닫힌다.
     /// </summary>
     public class DoorPointPopupView : MonoBehaviour, IPopup<DoorKind>
@@ -43,8 +43,9 @@ namespace Eclipse.View
                     doorNames[i].text = option.DisplayName;
                 if (doorPromises != null && i < doorPromises.Length)
                     doorPromises[i].text = option.Promise;
+                // 가중치 공시 폐지. 프리팹 교체 전까지는 텍스트 오브젝트만 꺼 둔다.
                 if (doorOdds != null && i < doorOdds.Length)
-                    doorOdds[i].text = $"등장 가중치 {option.Weight}/{option.TotalWeight}";
+                    doorOdds[i].gameObject.SetActive(false);
 
                 doorButtons[i].onClick.AddListener(() => _choice.TrySetResult(option.Kind));
             }

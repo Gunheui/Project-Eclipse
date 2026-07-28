@@ -56,6 +56,4 @@ MonoBehaviour:
     icon: {fileID: 0}
   goldPerDepth: 300
   essencePerDepth: 60
-  manualBase: 1
-  manualPerDepth: 2
   currencyJitter: 0.3

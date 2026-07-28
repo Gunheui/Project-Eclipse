@@ -70,9 +70,10 @@ namespace Eclipse.View
                 entry.Button?.onClick.RemoveAllListeners();
         }
 
-        // 버튼 한 개의 배경·테두리·아이콘·라벨 색을 선택 상태에 맞춰 칠한다. 색은 전부 테마 토큰에서 읽는다.
+        /// <summary>버튼 한 개의 배경·테두리·아이콘·라벨 색을 선택 상태에 맞춰 칠한다.</summary>
         private void Paint(Transform button, bool selected)
         {
+            // 색은 전부 테마 토큰에서 읽는다.
             button.GetComponent<Image>().color = selected ? theme.primarySubtle : theme.surface2;
             button.Find("Border").GetComponent<Image>().color = selected ? theme.primary : theme.borderDefault;
             button.Find("Icon").GetComponent<Image>().color = selected ? theme.primary : theme.textMedium;

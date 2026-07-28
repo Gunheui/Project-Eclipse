@@ -139,8 +139,7 @@ namespace Eclipse.Presentation
             EnterBattleAsync().Forget();
         }
 
-        // 전환이 성공하면 이 VM은 씬과 함께 내려가므로 가드를 풀 일이 없지만, 실패하면 화면이 그대로 남는다.
-        // 그때 가드를 풀지 않으면 진입 버튼이 영구히 죽으므로 되돌린 뒤 예외를 다시 던져 드러낸다.
+        /// <summary> 전투 씬으로 전환한다. 전환에 실패하면 중복 진입 가드를 되돌린다. </summary>
         private async UniTaskVoid EnterBattleAsync()
         {
             try
@@ -149,15 +148,20 @@ namespace Eclipse.Presentation
             }
             catch
             {
+                // 전환이 성공하면 이 VM은 씬과 함께 내려가므로 가드를 풀 일이 없지만, 실패하면 화면이 그대로 남는다.
+                // 그때 가드를 풀지 않으면 진입 버튼이 영구히 죽으므로 되돌린 뒤 예외를 다시 던져 드러낸다.
                 _entering = false;
                 throw;
             }
         }
 
-        // 현재 슬롯 상태를 편성 저장에 그대로 복사하고 즉시 디스크에 저장한다. 위치가 의미를 가지므로
-        // 인덱스를 맞춰 넣는다. 성공한 변경(AssignToSlot·ClearSlot)에서만 불린다 — 거부·무변화는 저장하지 않는다.
+        /// <summary>
+        /// 현재 슬롯 상태를 편성 저장에 그대로 복사하고 즉시 디스크에 저장한다.
+        /// 성공한 변경(AssignToSlot·ClearSlot)에서만 불린다 — 거부·무변화는 저장하지 않는다.
+        /// </summary>
         private void SyncToSave()
         {
+            // 위치가 의미를 가지므로 인덱스를 맞춰 넣는다.
             for (int i = 0; i < SlotCount; i++)
                 _save.Party[i] = _slots[i].Value;
             _saveService?.Save();

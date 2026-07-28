@@ -40,7 +40,9 @@ namespace Eclipse.Presentation
                 yield return (pair.Key, pair.Value);
         }
 
-        // 진행도 키를 검증해 꺼낸다. id 없는 챕터는 데이터 오류이므로 즉시 드러낸다.
+        /// <summary>
+        /// 진행도 키를 검증해 꺼낸다. id 없는 챕터는 데이터 오류이므로 즉시 드러낸다.
+        /// </summary>
         private static string KeyOf(ChapterSO chapter)
         {
             if (chapter == null)

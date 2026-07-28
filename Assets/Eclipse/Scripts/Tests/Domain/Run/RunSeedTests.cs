@@ -14,6 +14,7 @@ namespace Eclipse.Tests
             Assert.AreEqual(1001, RunSeed.For(1000, RunSeed.Stream.Mutation));
             Assert.AreEqual(1002, RunSeed.For(1000, RunSeed.Stream.Door));
             Assert.AreEqual(1003, RunSeed.For(1000, RunSeed.Stream.Card));
+            Assert.AreEqual(1004, RunSeed.For(1000, RunSeed.Stream.Currency));
         }
 
         [Test]

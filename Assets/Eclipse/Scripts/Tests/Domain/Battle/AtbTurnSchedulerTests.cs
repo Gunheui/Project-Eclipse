@@ -126,6 +126,68 @@ namespace Eclipse.Tests
             Assert.AreEqual("B", scheduler.GetNextActor().DisplayName);
         }
 
+        // 아군 선공 검증용 편성. 적 SPD가 아군의 3배라 규칙이 없으면 적이 첫 행동자다.
+        private static List<ICombatant> AllyVsFasterEnemy() => new List<ICombatant>
+        {
+            new FakeCombatant("빠른적", Team.Enemy, 0, 300),
+            new FakeCombatant("아군", Team.Ally, 0, 100),
+        };
+
+        [Test]
+        public void 개전_첫_행동자는_적이_더_빨라도_아군이다()
+        {
+            var seq = Sequence(new AtbTurnScheduler(AllyVsFasterEnemy()), 2);
+
+            Assert.AreEqual("아군", seq[0], "개전 첫 행동은 아군 몫이다");
+            Assert.AreEqual("빠른적", seq[1], "개전 이후에는 SPD가 높은 적이 먼저 게이지를 채운다");
+        }
+
+        [Test]
+        public void 아군_선공이_빠른_적의_연속_행동을_만들지_않는다()
+        {
+            var units = new List<ICombatant>
+            {
+                new FakeCombatant("적", Team.Enemy, 0, 140),
+                new FakeCombatant("아군", Team.Ally, 0, 100),
+            };
+
+            var seq = Sequence(new AtbTurnScheduler(units), 3);
+
+            Assert.AreEqual(new[] { "아군", "적", "아군" }, seq,
+                "개전 전진에서 넘어선 초과분을 버리므로 적이 이월분으로 이어 행동하지 않는다");
+        }
+
+        [Test]
+        public void 개전_제한은_첫_행동_한_번뿐이다()
+        {
+            var seq = Sequence(new AtbTurnScheduler(AllyVsFasterEnemy()), 9);
+
+            Assert.Greater(seq.Count(n => n == "빠른적"), seq.Count(n => n == "아군"),
+                "개전 이후에는 기존 ATB로 돌아가 SPD 3배인 적이 더 자주 행동한다");
+        }
+
+        [Test]
+        public void 개전_SPD_동률에서도_아군이_먼저다()
+        {
+            var units = new List<ICombatant>
+            {
+                new FakeCombatant("적", Team.Enemy, 0, 100),
+                new FakeCombatant("아군", Team.Ally, 0, 100),
+            };
+
+            Assert.AreEqual("아군", new AtbTurnScheduler(units).GetNextActor().DisplayName);
+        }
+
+        [Test]
+        public void PreviewOrder는_개전_규칙까지_실제_진행과_일치()
+        {
+            var units = AllyVsFasterEnemy();
+            var expected = Sequence(new AtbTurnScheduler(units), 6);
+            var preview = new AtbTurnScheduler(units).PreviewOrder(6).Select(a => a.DisplayName).ToList();
+
+            Assert.AreEqual(expected, preview);
+        }
+
         [Test]
         public void PreviewOrder는_실제_진행_순서와_일치()
         {

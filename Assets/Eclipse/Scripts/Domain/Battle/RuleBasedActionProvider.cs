@@ -74,7 +74,7 @@ namespace Eclipse.Domain
             return UniTask.FromResult(new BattleAction(skill, target));
         }
 
-        // 우선순위 규칙을 위에서부터 평가해 이번 턴 사용할 스킬을 고른다. 쓸 스킬이 없으면 null.
+        /// <summary> 우선순위 규칙을 위에서부터 평가해 이번 턴 사용할 스킬을 고른다. 쓸 스킬이 없으면 null. </summary>
         private SkillRuntime ChooseSkill(IReadOnlyList<SkillRuntime> skills, IReadOnlyList<ICombatant> allies)
         {
             if (_useHealRule && AnyAllyBelowThreshold(allies))
@@ -92,11 +92,11 @@ namespace Eclipse.Domain
         private bool AnyAllyBelowThreshold(IReadOnlyList<ICombatant> allies)
             => allies.Any(u => u.IsAlive && (float)u.CurrentHp / u.MaxHp <= _healHpThreshold);
 
-        // 준비된 스킬 중 힐 효과를 가진 첫 스킬. 없으면 null.
+        /// <summary> 준비된 스킬 중 힐 효과를 가진 첫 스킬. 없으면 null. </summary>
         private static SkillRuntime ReadyHealSkill(IReadOnlyList<SkillRuntime> skills)
             => skills.FirstOrDefault(s => s.IsReady && HasEffect(s.Skill, EffectType.Heal));
 
-        // 기본공격(슬롯 0)을 제외한 준비된 공격 액티브 중 가장 상위 슬롯. 없으면 null.
+        /// <summary> 기본공격(슬롯 0)을 제외한 준비된 공격 액티브 중 가장 상위 슬롯. 없으면 null. </summary>
         private static SkillRuntime StrongestReadyOffensive(IReadOnlyList<SkillRuntime> skills)
         {
             for (int i = skills.Count - 1; i >= 1; i--)
@@ -105,7 +105,7 @@ namespace Eclipse.Domain
             return null;
         }
 
-        // 기본공격 = 슬롯 0(쿨 0이라 항상 준비).
+        /// <summary> 기본공격 = 슬롯 0(쿨 0이라 항상 준비). </summary>
         private static SkillRuntime BasicSkill(IReadOnlyList<SkillRuntime> skills)
             => skills.Count > 0 ? skills[0] : null;
 

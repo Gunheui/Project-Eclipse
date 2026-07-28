@@ -42,13 +42,7 @@ namespace Eclipse.Data
         /// <summary> 보석 문 기본량 = 이 값 × 문 지점 깊이. </summary>
         public int essencePerDepth = 60;
 
-        /// <summary> 교본 문 기본량의 상수항(기본량 = perDepth × 깊이 + base). </summary>
-        public int manualBase = 1;
-
-        /// <summary> 교본 문 기본량의 깊이 계수. </summary>
-        public int manualPerDepth = 2;
-
-        /// <summary> 골드·보석 문 지급액의 랜덤 폭(비율). 교본은 이 값과 무관하게 ±1 고정 폭이다. </summary>
+        /// <summary> 골드·보석 문 지급액의 랜덤 폭(비율). </summary>
         [Range(0f, 1f)] public float currencyJitter = 0.30f;
     }
 }

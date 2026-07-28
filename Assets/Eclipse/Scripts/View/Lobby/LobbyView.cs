@@ -31,7 +31,9 @@ namespace Eclipse.View
             _screens = screens;
         }
 
-        // 버튼 구독은 인스턴스 수명(this)에 1회만 묶는다. 화면 재진입에 영향받지 않고 파괴 시 자동 해제된다.
+        /// <summary>
+        /// 버튼 구독은 인스턴스 수명(this)에 1회만 묶는다. 화면 재진입에 영향받지 않고 파괴 시 자동 해제된다.
+        /// </summary>
         private void Start()
         {
             characterButton.OnClickAsObservable()

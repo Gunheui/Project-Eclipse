@@ -38,7 +38,8 @@ namespace Eclipse.View
                 .AddTo(this);
         }
 
-        // 점유 슬롯 번호를 배지·강조에 반영한다. 0이면 미편성(배지/강조 끔), 1~4면 그 숫자를 배지에 표시.
+        /// <summary>점유 슬롯 번호를 배지·강조에 반영한다.</summary>
+        /// <param name="slotNumber">0이면 미편성(배지/강조 끔), 1~4면 그 숫자를 배지에 표시.</param>
         private void ApplySlotNumber(int slotNumber)
         {
             bool assigned = slotNumber > 0;

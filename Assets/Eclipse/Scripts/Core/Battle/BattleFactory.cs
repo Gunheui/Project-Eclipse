@@ -99,7 +99,9 @@ namespace Eclipse.Core
                 targeting);
         }
 
-        // 적 하나를 조립한다. 챕터 계수·변이·정예 배수·런 디버프를 CharacterStats 계산으로 접고, 변이 이름 접두를 붙인다.
+        /// <summary>
+        /// 적 하나를 조립한다. 챕터 계수·변이·정예 배수·런 디버프가 스탯에 접히고, 변이면 이름에 접두가 붙는다.
+        /// </summary>
         private Combatant BuildEnemy(EnemyInstanceSpec spec, int slot)
         {
             var stats = CharacterStats.BuildEnemyStats(

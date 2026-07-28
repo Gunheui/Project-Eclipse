@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace Eclipse.Tests
 {
-    /// <summary> 카드 풀 배제·재정규화 공시와 인연의 문 제시 가능 판정 검증. </summary>
+    /// <summary> 카드 풀 배제 규칙과 비복원 추첨, 인연의 문 제시 가능 판정 검증. </summary>
     public class CardPoolTests
     {
         private sealed class FixedRunRandom : IRunRandom
@@ -14,32 +14,28 @@ namespace Eclipse.Tests
         }
 
         [Test]
-        public void 공시_확률은_최종_3장_포함_실확률이다()
+        public void 뽑힌_3장은_서로_다르다()
         {
-            // 특수 카드 2장이 섞인 공격 풀(지점 2 이후): 계열 25×3 + 특수 12×2. 포함 확률 합은 3이다.
-            var pool = new CardPool(RunFixtures.CardCatalog(), new FixedRunRandom());
+            var pool = new CardPool(RunFixtures.CardCatalog(),
+                new SeededRandom(RunSeed.For(99, RunSeed.Stream.Card)));
 
-            var result = pool.Pick3(DoorKind.Attack, doorPoint: 2, RunFixtures.Party(1));
-
-            Assert.AreEqual(5, result.DisclosedOdds.Count, "배제 후 풀 전체가 공시된다");
-            Assert.That(result.DisclosedOdds.Sum(o => o.odds), Is.EqualTo(3f).Within(0.001f),
-                "포함 확률의 합 = 뽑는 장 수");
-            Assert.IsTrue(result.DisclosedOdds.All(o => o.odds > 0f && o.odds <= 1f));
-            // 가중이 높은 계열 카드가 특수 카드보다 포함 확률이 높다.
-            float series = result.DisclosedOdds.First(o => o.card.tag == CardTag.Attack).odds;
-            float special = result.DisclosedOdds.First(o => o.card.tag == CardTag.Special).odds;
-            Assert.Greater(series, special);
+            for (int i = 0; i < 50; i++)
+            {
+                var picked = pool.Pick3(DoorKind.Attack, doorPoint: 2, RunFixtures.Party(1));
+                Assert.AreEqual(3, picked.Count);
+                Assert.AreEqual(3, picked.Select(c => c.id).Distinct().Count(), "비복원이라 중복이 없다");
+            }
         }
 
         [Test]
-        public void 풀이_정확히_3장이면_전_카드_포함_확률이_1이다()
+        public void 특수_카드는_문_지점_1에서_후보에_들지_않는다()
         {
-            // 지점 1은 특수 카드가 배제돼 공격 풀이 계열 3장뿐이다.
-            var pool = new CardPool(RunFixtures.CardCatalog(), new FixedRunRandom());
+            var pool = new CardPool(RunFixtures.CardCatalog(),
+                new SeededRandom(RunSeed.For(99, RunSeed.Stream.Card)));
 
-            var result = pool.Pick3(DoorKind.Attack, doorPoint: 1, RunFixtures.Party(1));
-
-            Assert.IsTrue(result.DisclosedOdds.All(o => o.odds > 0.999f), "3장 풀에서 3장을 뽑으면 확정 등장이다");
+            for (int i = 0; i < 50; i++)
+                Assert.IsTrue(pool.Pick3(DoorKind.Attack, doorPoint: 1, RunFixtures.Party(1))
+                    .All(c => c.tag != CardTag.Special), "지점 1은 특수 카드가 배제된다");
         }
 
         [Test]

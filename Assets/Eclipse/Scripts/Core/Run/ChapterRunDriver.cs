@@ -50,7 +50,6 @@ namespace Eclipse.Core
             switch (offer.Step)
             {
                 case RunStep.EnteringRoom: EnterRoomAsync(offer).Forget(); break;
-                case RunStep.RevealReward: ShowResultAsync(offer).Forget(); break;
                 case RunStep.BuffPick: ShowCardPickAsync(offer).Forget(); break;
                 case RunStep.DoorPoint: ShowDoorAsync(offer).Forget(); break;
                 case RunStep.RunClear:
@@ -58,12 +57,13 @@ namespace Eclipse.Core
             }
         }
 
-        // 방 진입: 페이드 아웃 → 이전 전투 파기·배경 스왑·재조립 → 페이드 인 → 전투 구동 → 승패 보고.
+        /// <summary> 방에 진입해 전투를 구동하고 승패를 보고한다. </summary>
         private async UniTaskVoid EnterRoomAsync(RunOffer offer)
         {
             _battleToken = offer.Token;
             await fader.FadeOutAsync();
 
+            // 페이드 아웃 뒤 이전 전투 파기·배경 스왑·재조립.
             battleView.ClearBattle();
             _battle?.Dispose();
             if (backgroundRenderer != null && offer.Room.background != null)
@@ -88,17 +88,13 @@ namespace Eclipse.Core
             await _flow.ReportBattleResult(won, offer.Token);
         }
 
-        // 나가기 = 런 포기. 이 방 패배로 보고해 몰수·정산·복귀가 정규 실패 경로를 그대로 거친다.
+        /// <summary>
+        /// 나가기 = 런 포기. 이 방 패배로 보고해 몰수·정산·복귀가 정규 실패 경로를 그대로 거친다.
+        /// </summary>
         private void OnExitRequested()
         {
             _battleCts?.Cancel();
             _flow.ReportBattleResult(false, _battleToken).Forget();
-        }
-
-        private async UniTaskVoid ShowResultAsync(RunOffer offer)
-        {
-            await _popups.Show<bool>(PopupId.BattleResult);
-            await _flow.ReportResultConfirmed(offer.Token);
         }
 
         private async UniTaskVoid ShowCardPickAsync(RunOffer offer)

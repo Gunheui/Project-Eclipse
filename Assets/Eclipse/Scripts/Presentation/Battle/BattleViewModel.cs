@@ -147,18 +147,19 @@ namespace Eclipse.Presentation
             return pool.Where(u => valid.Contains(u.Model)).ToList();
         }
 
-        // 입력 대기가 시작된 행동자를 ActingCombatant에 세우고, 이번 턴 상태(쿨은 턴 시작에 감소)를
-        // 반영하도록 재읽기 신호도 함께 흘린다.
+        /// <summary> 입력 대기가 시작된 행동자를 <see cref="ActingCombatant"/>에 세운다. </summary>
         private void OnInputRequested(ICombatant actor)
         {
             _actingCombatant.Value = Combatants.FirstOrDefault(u => u.Model == actor);
+            // 이번 턴 상태(쿨은 턴 시작에 감소)를 반영하도록 재읽기 신호도 함께 흘린다.
             _stateChanged.OnNext(Unit.Default);
         }
 
-        // 행동자에 Acted(시전), 대상마다 Hit(피격)을 발화한다. 스킬을 안 쓴 턴(도트 사망 등)은 연출 없음.
+        /// <summary> 행동자에 Acted(시전), 대상마다 Hit(피격)을 발화한다. </summary>
         private void NotifyActor()
         {
             var turn = _engine.LastTurn;
+            // 스킬을 안 쓴 턴(도트 사망 등)은 연출이 없다.
             if (!turn.UsedSkill) return;
 
             var actor = Combatants.FirstOrDefault(u => u.Model == turn.Actor);
@@ -168,7 +169,9 @@ namespace Eclipse.Presentation
                 Combatants.FirstOrDefault(u => u.Model == target)?.RaiseHit(turn.Skill);
         }
 
-        // 도메인 유닛 순서를 유닛 VM 순서로 옮긴다. 매칭 실패 = 조립 오류이므로 First로 드러낸다.
+        /// <summary>
+        /// 도메인 유닛 순서를 유닛 VM 순서로 옮긴다. 매칭 실패 = 조립 오류이므로 First로 드러낸다.
+        /// </summary>
         private IReadOnlyList<CombatantViewModel> MapOrder(IReadOnlyList<ICombatant> order)
             => order.Select(actor => Combatants.First(u => u.Model == actor)).ToList();
 

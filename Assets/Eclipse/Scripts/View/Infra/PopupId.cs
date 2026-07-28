@@ -7,7 +7,7 @@ namespace Eclipse.View.Infra
     {
         Confirm = 0,
 
-        /// <summary> 방 결과(승/패 + 공개 보상) 팝업. 결과 타입은 bool — 확인 신호로만 쓴다. </summary>
+        /// <summary> 옛 방 결과 팝업 자리. 승리 후 자동 진행으로 바뀌어 쓰지 않는다. 값은 비워 둔다. </summary>
         BattleResult = 1,
 
         /// <summary> 문 지점(3택) 팝업. 결과 타입은 DoorKind. </summary>

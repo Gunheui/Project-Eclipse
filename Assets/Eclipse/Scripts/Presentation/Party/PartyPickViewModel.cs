@@ -77,8 +77,10 @@ namespace Eclipse.Presentation
             _sortKey.Value = next;
         }
 
-        // 지정 기준으로 _items를 제자리 재배열한다(항목 VM 인스턴스는 그대로 재사용).
-        // 반드시 CurrentSortKey 통지보다 먼저 돌아야 View가 재배열된 Items로 항목을 다시 만든다.
+        /// <summary>
+        /// 지정 기준으로 _items를 제자리 재배열한다(항목 VM 인스턴스는 그대로 재사용).
+        /// 반드시 CurrentSortKey 통지보다 먼저 돌아야 View가 재배열된 Items로 항목을 다시 만든다.
+        /// </summary>
         private void ApplySort(CharacterSortKey key)
         {
             var sorted = CharacterSort.Apply(_items, item => item.Character, key);
@@ -86,7 +88,9 @@ namespace Eclipse.Presentation
             _items.AddRange(sorted);
         }
 
-        // 각 항목의 배지를 현재 점유 슬롯 번호(1~4)로 다시 매긴다. 어느 슬롯에도 없으면 0.
+        /// <summary>
+        /// 각 항목의 배지를 현재 점유 슬롯 번호(1~4)로 다시 매긴다. 어느 슬롯에도 없으면 0.
+        /// </summary>
         private void RefreshSlotNumbers()
         {
             var slots = _formation.Slots;

@@ -45,12 +45,14 @@ namespace Eclipse.View
             _released.AddTo(this);
         }
 
-        // PC: 마우스가 올라오면 바로 표시.
+        /// <summary>PC: 마우스가 올라오면 툴팁을 바로 표시한다.</summary>
         public void OnPointerEnter(PointerEventData eventData) => TryShow();
 
         public void OnPointerExit(PointerEventData eventData) => Release();
 
-        // 누른 순간 롱프레스 타이머를 건다. 임계 시간을 넘기면 툴팁을 띄우고 시전 억제 플래그를 세운다.
+        /// <summary>
+        /// 누른 순간 롱프레스 타이머를 건다. 임계 시간을 넘기면 툴팁을 띄우고 시전 억제 플래그를 세운다.
+        /// </summary>
         public void OnPointerDown(PointerEventData eventData)
         {
             _longPressed = false;

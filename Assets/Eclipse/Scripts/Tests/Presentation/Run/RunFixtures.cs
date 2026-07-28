@@ -120,8 +120,6 @@ namespace Eclipse.Tests
             };
             catalog.goldPerDepth = 300;
             catalog.essencePerDepth = 60;
-            catalog.manualBase = 1;
-            catalog.manualPerDepth = 2;
             catalog.currencyJitter = 0.30f;
             return catalog;
         }

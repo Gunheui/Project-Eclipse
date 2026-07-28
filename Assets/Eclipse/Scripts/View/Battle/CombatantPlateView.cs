@@ -104,15 +104,16 @@ namespace Eclipse.View
                 .AddTo(_bindings);
         }
 
-        // 상태 아이콘 행을 갱신한다. 효과가 슬롯 수를 넘으면 마지막 슬롯을 +N 표시로 전환해
-        // 잘림을 드러낸다. 남는 슬롯은 통째로 숨긴다.
+        /// <summary>상태 아이콘 행을 갱신한다.</summary>
         private void OnEffectsChanged(IReadOnlyList<ActiveEffect> effects)
         {
             if (effectSlots == null || effectSlots.Length == 0) return;
 
+            // 효과가 슬롯 수를 넘으면 마지막 슬롯을 +N 표시로 전환해 잘림을 드러낸다.
             bool overflow = effects.Count > effectSlots.Length;
             int iconCount = overflow ? effectSlots.Length - 1 : effects.Count;
 
+            // 남는 슬롯은 통째로 숨긴다.
             for (int i = 0; i < effectSlots.Length; i++)
             {
                 if (i < iconCount) ShowEffect(effectSlots[i], effects[i]);
@@ -121,7 +122,7 @@ namespace Eclipse.View
             }
         }
 
-        // 슬롯 하나에 효과 아이콘·프레임 색·남은 턴을 채운다. 상시(-1)는 턴 라벨을 숨긴다.
+        /// <summary>슬롯 하나에 효과 아이콘·프레임 색·남은 턴을 채운다.</summary>
         private void ShowEffect(EffectSlot slot, ActiveEffect effect)
         {
             if (slot.root == null) return;
@@ -136,17 +137,19 @@ namespace Eclipse.View
                 slot.frame.color = IsBeneficial(effect.Type) ? beneficialFrameColor : harmfulFrameColor;
             if (slot.turnsLabel != null)
             {
+                // 상시(-1)는 턴 라벨을 숨긴다.
                 slot.turnsLabel.alignment = TextAlignmentOptions.BottomRight;
                 slot.turnsLabel.text = effect.RemainingTurns < 0 ? string.Empty : effect.RemainingTurns.ToString();
             }
         }
 
-        // 마지막 슬롯을 넘침 표시로 전환한다. 아이콘을 끄고 어두운 프레임 중앙에 +N을 적는다.
+        /// <summary>마지막 슬롯을 넘침 표시로 전환한다.</summary>
         private void ShowOverflow(EffectSlot slot, int hiddenCount)
         {
             if (slot.root == null) return;
             slot.root.SetActive(true);
 
+            // 아이콘을 끄고 어두운 프레임 중앙에 +N을 적는다.
             if (slot.icon != null) slot.icon.enabled = false;
             if (slot.frame != null) slot.frame.color = overflowFrameColor;
             if (slot.turnsLabel != null)
@@ -156,7 +159,8 @@ namespace Eclipse.View
             }
         }
 
-        // 효과 타입에 매핑된 아이콘을 찾는다. 매핑 누락은 경고를 남기고 폴백 아이콘으로 대체한다.
+        /// <summary>효과 타입에 매핑된 아이콘을 찾는다.</summary>
+        /// <returns>매핑 누락은 경고를 남기고 폴백 아이콘으로 대체한다.</returns>
         private Sprite LookupIcon(EffectType type)
         {
             if (effectIcons != null)
@@ -168,14 +172,14 @@ namespace Eclipse.View
             return fallbackEffectIcon;
         }
 
-        // 프레임 틴트 분류. 이로움(버프·리젠·실드)이면 true.
+        /// <summary>프레임 틴트 분류. 이로움(버프·리젠·실드)이면 true.</summary>
         private static bool IsBeneficial(EffectType type)
             => type is EffectType.Buff or EffectType.Regen or EffectType.Shield;
 
-        // HP 바 채움·실드 구간(마스크 폭)과 "현재/최대 +실드" 숫자 라벨을 함께 갱신한다.
-        // 바의 눈금은 항상 최대 HP 기준이라 실드가 붙어도 바 길이나 HP 한 칸의 의미가 변하지 않는다.
+        /// <summary>HP 바 채움·실드 구간(마스크 폭)과 "현재/최대 +실드" 숫자 라벨을 함께 갱신한다.</summary>
         private void OnHpChanged(int hp, int shield, int maxHp)
         {
+            // 바의 눈금은 항상 최대 HP 기준이라 실드가 붙어도 바 길이나 HP 한 칸의 의미가 변하지 않는다.
             float hpFraction = maxHp > 0 ? (float)hp / maxHp : 0f;
             SetMaskWidth(hpFillMask, hpFraction);
             UpdateShieldBand(hp, shield, maxHp);
@@ -183,26 +187,30 @@ namespace Eclipse.View
                 hpLabel.text = shield > 0 ? $"{hp}/{maxHp} +{shield}" : $"{hp}/{maxHp}";
         }
 
-        // 실드 구간을 HP 채움 위에 오른쪽 정렬로 배치한다. 구간의 오른쪽 끝을 hp+shield 위치에 맞추고
-        // 폭만큼 왼쪽으로 되짚어 시작점을 잡는다. 풀피처럼 hp+shield가 바 끝을 넘는 경우 구간이 바 끝에
-        // 붙은 채 HP 채움 위로 파고들어, 실드가 폭 0으로 사라지지 않고 항상 실드량만큼 보인다.
+        /// <summary>실드 구간을 HP 채움 위에 오른쪽 정렬로 배치한다.</summary>
         private void UpdateShieldBand(int hp, int shield, int maxHp)
         {
             if (shieldFillMask == null) return;
 
+            // 풀피처럼 hp+shield가 바 끝을 넘는 경우 구간이 바 끝에 붙은 채 HP 채움 위로 파고들어,
+            // 실드가 폭 0으로 사라지지 않고 항상 실드량만큼 보인다.
             float width = maxHp > 0 ? Mathf.Clamp01((float)shield / maxHp) : 0f;
             float right = maxHp > 0 ? Mathf.Clamp01((float)(hp + shield) / maxHp) : 0f;
 
             SetMaskWidth(shieldFillMask, width);
+
+            // 구간의 오른쪽 끝을 hp+shield 위치에 맞추고 폭만큼 왼쪽으로 되짚어 시작점을 잡는다.
             var pos = shieldFillMask.anchoredPosition;
             pos.x = _shieldFillLeftX + _hpFillFullWidth * (right - width);
             shieldFillMask.anchoredPosition = pos;
         }
 
-        // 마스크 폭을 바 전체 폭 대비 비율로 세팅한다. 안쪽 Sliced 이미지는 그대로 두고 마스크만 줄인다.
+        /// <summary>마스크 폭을 바 전체 폭 대비 비율로 세팅한다.</summary>
         private void SetMaskWidth(RectTransform mask, float fraction)
         {
             if (mask == null) return;
+
+            // 안쪽 Sliced 이미지는 그대로 두고 마스크만 줄인다.
             var size = mask.sizeDelta;
             size.x = _hpFillFullWidth * fraction;
             mask.sizeDelta = size;

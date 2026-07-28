@@ -74,15 +74,14 @@ namespace Eclipse.Tests
             var doorCatalog = RunFixtures.DoorCatalog();
             var cardCatalog = RunFixtures.CardCatalog(
                 runParty.Where(o => o != null).Select(o => o.Definition.id).ToArray());
-            var doorRng = new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Door));
             h.Flow = new ChapterRunFlow(
                 h.Session,
                 new EncounterGenerator(h.Tuning,
                     new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Encounter)),
                     new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Mutation))),
-                new DoorDraw(doorCatalog, doorRng),
+                new DoorDraw(doorCatalog, new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Door))),
                 new CardPool(cardCatalog, new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Card))),
-                doorRng,
+                new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Currency)),
                 doorCatalog,
                 h.Rewards,
                 h.Progress,
@@ -112,7 +111,7 @@ namespace Eclipse.Tests
 
             int firstToken = h.Offer.Token;
             h.Flow.ReportBattleResult(won: true, firstToken).Forget();
-            Assert.AreEqual(RunStep.RevealReward, h.Offer.Step);
+            Assert.AreEqual(RunStep.EnteringRoom, h.Offer.Step, "문 없는 방은 승리 즉시 다음 방이 제시된다");
 
             // 전투 사이 버프: 생명력 +50%를 0번 슬롯에 배정한다(HP는 MaxHp로 밖에서 관찰 가능한 축).
             h.Session.AttachCard(new BuffCard
@@ -120,9 +119,6 @@ namespace Eclipse.Tests
                 id = "hp", displayName = "hp", tag = CardTag.Guard, weight = 1,
                 deltas = new[] { new StatDelta { axis = StatType.Hp, value = 0.5f } },
             }, 0);
-
-            h.Flow.ReportResultConfirmed(h.Offer.Token).Forget();
-            Assert.AreEqual(RunStep.EnteringRoom, h.Offer.Step, "문 없는 방은 확인 즉시 다음 방이 제시된다");
 
             var second = factory.Create(h.Offer.Encounter, h.Offer.BattleSeed, startAuto: true);
             var secondAlly = second.Combatants.First(u => u.IsAlly);
@@ -149,7 +145,6 @@ namespace Eclipse.Tests
             h.Flow.BeginRun().Forget();
 
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
-            h.Flow.ReportResultConfirmed(h.Offer.Token).Forget();
             Assert.AreEqual(RunStep.EnteringRoom, h.Offer.Step);
 
             h.Flow.ReportBattleResult(won: false, h.Offer.Token).Forget();
@@ -178,16 +173,12 @@ namespace Eclipse.Tests
                         case RunStep.EnteringRoom:
                             h.Flow.ReportBattleResult(true, offer.Token).Forget();
                             break;
-                        case RunStep.RevealReward:
-                            h.Flow.ReportResultConfirmed(offer.Token).Forget();
-                            break;
                         case RunStep.BuffPick:
                             h.Flow.ReportCardAssigned(offer.Cards[0].Card, 0, offer.Token).Forget();
                             break;
                         case RunStep.DoorPoint:
                             Assert.IsFalse(offer.Doors.Any(d => d.Kind == DoorKind.Bond),
                                 $"시드 {seed}: 인연의 문이 제시되면 안 된다");
-                            Assert.AreEqual(89, offer.Doors[0].TotalWeight, "공시 가중 합도 인연(11) 제외분이다");
                             h.Flow.ReportDoorPicked(offer.Doors[0].Kind, offer.Token).Forget();
                             break;
                     }
@@ -205,7 +196,6 @@ namespace Eclipse.Tests
             h.Flow.BeginRun().Forget();
 
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
-            h.Flow.ReportResultConfirmed(h.Offer.Token).Forget();
             Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step);
             int doorToken = h.Offer.Token;
 
@@ -230,14 +220,11 @@ namespace Eclipse.Tests
             h.Flow.BeginRun().Forget();
 
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
-            h.Flow.ReportResultConfirmed(h.Offer.Token).Forget();
 
-            // 보스 방 승리 → 결과 공개 → 확인 → 종료 커밋.
+            // 보스 방 승리는 보상 공개를 거쳐 종료 커밋까지 한 번에 간다.
             int bossToken = h.Offer.Token;
             h.Flow.ReportBattleResult(won: true, bossToken).Forget();
-            Assert.AreEqual(RunStep.RevealReward, h.Offer.Step, "보스 승리도 결과 공개를 먼저 거친다");
             h.Flow.ReportBattleResult(won: true, bossToken).Forget(); // 늦은 중복 보고 — 무시
-            h.Flow.ReportResultConfirmed(h.Offer.Token).Forget();
 
             Assert.AreEqual(RunStep.RunClear, h.Offer.Step);
             int grantCalls = h.Rewards.GrantCalls;
@@ -261,7 +248,6 @@ namespace Eclipse.Tests
             h.Flow.BeginRun().Forget();
 
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
-            h.Flow.ReportResultConfirmed(h.Offer.Token).Forget();
             Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step);
 
             // 골드 문을 골라 보류시킨 채 다음 방에서 패배한다 — 보류분은 지급되지 않아야 한다.

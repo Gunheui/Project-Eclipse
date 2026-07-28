@@ -97,21 +97,21 @@ namespace Eclipse.Domain
         private static bool AnyTaunting(IReadOnlyList<ICombatant> enemies)
             => enemies.Any(u => u.IsAlive && u.IsTaunting);
 
-        // 도발 중인 생존 적이 있으면 그들만 후보로 좁힌다. 없으면 원래 후보 그대로.
+        /// <summary> 도발 중인 생존 적이 있으면 그들만 후보로 좁힌다. 없으면 원래 후보 그대로. </summary>
         private static IReadOnlyList<ICombatant> TauntFiltered(IReadOnlyList<ICombatant> enemies)
         {
             var taunters = enemies.Where(u => u.IsAlive && u.IsTaunting).ToList();
             return taunters.Count > 0 ? taunters : enemies;
         }
 
-        // 생존 유닛 중 최저 HP 하나. 동률은 슬롯 번호가 낮은 쪽. 없으면 null.
+        /// <summary> 생존 유닛 중 최저 HP 하나. 동률은 슬롯 번호가 낮은 쪽. 없으면 null. </summary>
         private static ICombatant LowestHp(IReadOnlyList<ICombatant> units)
             => units.Where(u => u.IsAlive)
                     .OrderBy(u => u.CurrentHp)
                     .ThenBy(u => u.SlotIndex)
                     .FirstOrDefault();
 
-        // 생존 유닛 중 슬롯 번호가 가장 낮은 하나. SingleEnemy 폴백 기본값. 없으면 null.
+        /// <summary> 생존 유닛 중 슬롯 번호가 가장 낮은 하나. SingleEnemy 폴백 기본값. 없으면 null. </summary>
         private static ICombatant FirstAliveBySlot(IReadOnlyList<ICombatant> units)
             => units.Where(u => u.IsAlive)
                     .OrderBy(u => u.SlotIndex)

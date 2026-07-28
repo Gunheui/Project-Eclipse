@@ -77,19 +77,20 @@ namespace Eclipse.Domain
             return new EncounterSpec(enemies);
         }
 
-        // 이 깊이에 나올 마리수를 하한과 상한 사이에서 균등하게 뽑는다. 정예는 상한 고정이라 부르지 않는다.
+        /// <summary> 이 깊이에 나올 마리수를 하한과 상한 사이에서 균등하게 뽑는다. 정예는 상한 고정이라 부르지 않는다. </summary>
         private int RollCount(DepthPool rule)
             => rule.minCount + _encounterRng.NextInt(rule.maxCount - rule.minCount + 1);
 
-        // 적 한 마리에 붙일 변이를 뽑는다. 적중하지 못하면 null이고, 그 적은 변이 없이 나온다. 적중 판정은
-        // 확률이 0이든 100이든 마리당 1회 추첨하는데, 소비량이 고정돼야 변이율을 튜닝해도 기대 수열이 안 흔들린다.
+        /// <summary> 적 한 마리에 붙일 변이를 뽑는다. 적중하지 못하면 null이고, 그 적은 변이 없이 나온다. </summary>
         private MutationSO RollMutation(int threshold)
         {
+            // 적중 판정은 확률이 0이든 100이든 마리당 1회 추첨하는데, 소비량이 고정돼야 변이율을 튜닝해도
+            // 기대 수열이 안 흔들린다.
             bool hit = _mutationRng.NextInt(ProbabilityScale) < threshold;
             return hit ? _tuning.mutations[_mutationRng.NextInt(_tuning.mutations.Length)] : null;
         }
 
-        // 보스 방 편성을 만든다. 보스 1기에 수하를 붙이며, 변이도 정예도 붙지 않는다.
+        /// <summary> 보스 방 편성을 만든다. 보스 1기에 수하를 붙이며, 변이도 정예도 붙지 않는다. </summary>
         private EncounterSpec BossEncounter()
         {
             var enemies = new List<EnemyInstanceSpec> { new EnemyInstanceSpec(_tuning.boss, null, false) };
@@ -98,8 +99,10 @@ namespace Eclipse.Domain
             return new EncounterSpec(enemies);
         }
 
-        // 튜닝 데이터를 검사하고 잘못된 데가 있으면 예외를 던진다. 잘못된 채로 추첨하면 방마다 다른 곳에서
-        // 터져 원인을 찾기 어려우므로 로드 시점에 한 번 걸러 낸다.
+        /// <summary>
+        /// 튜닝 데이터를 검사하고 잘못된 데가 있으면 예외를 던진다. 잘못된 채로 추첨하면 방마다 다른 곳에서
+        /// 터져 원인을 찾기 어려우므로 로드 시점에 한 번 걸러 낸다.
+        /// </summary>
         private static void Validate(EncounterTuningSO tuning)
         {
             var depths = tuning.depths;

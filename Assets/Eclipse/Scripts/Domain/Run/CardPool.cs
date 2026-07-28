@@ -5,28 +5,9 @@ using Eclipse.Data;
 
 namespace Eclipse.Domain
 {
-    /// <summary> 3택1 후보와 공시용 확률. 확률은 후보 배제 후 재정규화한 값이다. </summary>
-    public readonly struct CardDrawResult
-    {
-        public CardDrawResult(IReadOnlyList<BuffCard> candidates, IReadOnlyList<(BuffCard card, float odds)> disclosedOdds)
-        {
-            Candidates = candidates;
-            DisclosedOdds = disclosedOdds;
-        }
-
-        /// <summary> 뽑힌 후보 3장(비복원). </summary>
-        public IReadOnlyList<BuffCard> Candidates { get; }
-
-        /// <summary>
-        /// 배제 후 풀의 카드별 등장 확률 — 최종 3장에 포함될 확률이라 합은 3이다.
-        /// 추첨과 같은 가중 계산에서 나와 공시가 달라질 수 없다.
-        /// </summary>
-        public IReadOnlyList<(BuffCard card, float odds)> DisclosedOdds { get; }
-    }
-
     /// <summary>
-    /// 버프 카드 3택1 추첨. 문 계열 풀 + 조건부 배제(특수 카드 지점 제한 · 인연 카드 파티 조건)를 적용하고,
-    /// 배제 후 재정규화한 확률을 공시용으로 함께 낸다.
+    /// 버프 카드 3택1 추첨. 문 계열 풀에 조건부 배제(특수 카드 지점 제한 · 인연 카드 파티 조건)를 적용한 뒤
+    /// 가중 비복원으로 뽑는다.
     /// </summary>
     public sealed class CardPool
     {
@@ -53,14 +34,11 @@ namespace Eclipse.Domain
         /// <param name="door">고른 버프 문. 재화 문을 넘기면 예외.</param>
         /// <param name="doorPoint">문 지점 번호(1부터). 특수 카드는 2 이후에만 후보에 든다.</param>
         /// <param name="party">현재 파티(빈칸 null 포함). 인연 카드의 등장 조건 판정에 쓴다.</param>
-        public CardDrawResult Pick3(DoorKind door, int doorPoint, IReadOnlyList<OwnedCharacter> party)
+        public IReadOnlyList<BuffCard> Pick3(DoorKind door, int doorPoint, IReadOnlyList<OwnedCharacter> party)
         {
             var pool = EligiblePool(door, doorPoint, party);
             if (pool.Count < 3)
                 throw new InvalidOperationException($"{door} 문의 후보가 3장 미만이다(현재 {pool.Count}장).");
-
-            var inclusion = InclusionOdds(pool);
-            var odds = pool.Select((c, i) => (c, inclusion[i])).ToList();
 
             var remaining = pool.ToList();
             var picked = new List<BuffCard>(3);
@@ -79,37 +57,10 @@ namespace Eclipse.Domain
                     }
                 }
             }
-            return new CardDrawResult(picked, odds);
+            return picked;
         }
 
-        // 각 후보가 최종 3장에 포함될 실확률. 가중 비복원 추첨의 순서 경우(3-순열)를 전부 전개해 합산한다 —
-        // 추첨과 같은 풀·가중치에서 나오므로 공시가 실제 확률과 달라질 수 없다. 풀이 3장뿐이면 전부 1이다.
-        private static float[] InclusionOdds(List<BuffCard> pool)
-        {
-            int n = pool.Count;
-            var odds = new double[n];
-            double total = pool.Sum(c => (double)c.weight);
-            for (int i = 0; i < n; i++)
-                for (int j = 0; j < n; j++)
-                {
-                    if (j == i) continue;
-                    for (int k = 0; k < n; k++)
-                    {
-                        if (k == i || k == j) continue;
-                        double p = pool[i].weight / total
-                            * pool[j].weight / (total - pool[i].weight)
-                            * pool[k].weight / (total - pool[i].weight - pool[j].weight);
-                        odds[i] += p;
-                        odds[j] += p;
-                        odds[k] += p;
-                    }
-                }
-            return odds.Select(o => (float)o).ToArray();
-        }
-
-        /// <summary>
-        /// 문 종류별 후보 풀을 만든다. 배제 규칙이 전부 여기 모여 공시 계산과 추첨이 같은 풀을 쓴다.
-        /// </summary>
+        /// <summary> 문 종류별 후보 풀을 만든다. 배제 규칙이 전부 여기 모인다. </summary>
         private List<BuffCard> EligiblePool(DoorKind door, int doorPoint, IReadOnlyList<OwnedCharacter> party)
         {
             switch (door)
@@ -142,7 +93,7 @@ namespace Eclipse.Domain
             }
         }
 
-        // 잘못된 카탈로그로 추첨하면 문마다 다른 곳에서 터지므로 로드 시점에 한 번 걸러 낸다.
+        /// <summary> 잘못된 카탈로그로 추첨하면 문마다 다른 곳에서 터지므로 로드 시점에 한 번 걸러 낸다. </summary>
         private static void Validate(BuffCardCatalogSO catalog)
         {
             if (catalog.cards == null || catalog.cards.Length == 0)

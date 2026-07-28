@@ -112,17 +112,19 @@ namespace Eclipse.Presentation
         /// <summary> Hit 신호를 발화한다. 이번 턴 스킬 대상마다 BattleViewModel이 호출한다. </summary>
         internal void RaiseHit(SkillSO skill) => _hit.OnNext(skill);
 
-        // 도메인 효과 목록을 표시 순서로 확정해 변환한다. 해로움(디버프→도트→도발) 먼저,
-        // 이로움(실드→리젠→버프) 다음, 그룹 안에서는 남은 턴 오름차순에 상시(-1)가 마지막이다.
-        // _effects의 삽입 순서에 기대지 않으므로 같은 효과를 다시 걸어도 아이콘 위치가 튀지 않는다.
+        /// <summary>
+        /// 도메인 효과 목록을 표시 순서로 확정해 변환한다. 해로움(디버프→도트→도발) 먼저,
+        /// 이로움(실드→리젠→버프) 다음, 그룹 안에서는 남은 턴 오름차순에 상시(-1)가 마지막이다.
+        /// </summary>
         public static IReadOnlyList<ActiveEffect> BuildActiveEffects(IReadOnlyList<StatusEffect> effects)
+            // _effects의 삽입 순서에 기대지 않으므로 같은 효과를 다시 걸어도 아이콘 위치가 튀지 않는다.
             => effects
                 .OrderBy(e => DisplayRank(e.Type))
                 .ThenBy(e => e.RemainingTurns < 0 ? int.MaxValue : e.RemainingTurns)
                 .Select(e => new ActiveEffect(e.Type, e.Stat, e.RemainingTurns))
                 .ToList();
 
-        // 아이콘 행 정렬 순위. 값이 작을수록 앞에 놓인다.
+        /// <summary> 아이콘 행 정렬 순위. 값이 작을수록 앞에 놓인다. </summary>
         private static int DisplayRank(EffectType type) => type switch
         {
             EffectType.Debuff => 0,

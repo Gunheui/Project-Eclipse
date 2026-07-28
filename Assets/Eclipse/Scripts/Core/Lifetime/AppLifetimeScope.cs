@@ -61,9 +61,10 @@ namespace Eclipse.Core
             builder.RegisterBuildCallback(c => _saveService = c.Resolve<SaveService>());
         }
 
-        // 세이브 데이터에서 PlayerSave를 복원한다. 복원해도 보유 캐릭터가 없으면(신규 계정이거나
-        // 카탈로그와 id가 하나도 안 맞는 경우) 인스펙터 로스터로 시드한다.
-        // Configure 중에 불리므로 절대 던지면 안 된다. 여기서 실패하면 컨테이너 빌드가 깨져 검은 화면이 뜬다.
+        /// <summary>
+        /// 세이브 데이터에서 PlayerSave를 복원한다.
+        /// Configure 중에 불리므로 절대 던지면 안 된다. 여기서 실패하면 컨테이너 빌드가 깨져 검은 화면이 뜬다.
+        /// </summary>
         private PlayerSave LoadOrSeedSave(SaveData data)
         {
             var catalog = dummyRoster
@@ -75,6 +76,8 @@ namespace Eclipse.Core
             if (restored.OwnedCharacters.Count > 0)
                 return restored;
 
+            // 복원해도 보유 캐릭터가 없으면(신규 계정이거나 카탈로그와 id가 하나도 안 맞는 경우)
+            // 인스펙터 로스터로 시드한다.
             var owned = dummyRoster
                 .Where(e => e.character != null)
                 .Select(e => new OwnedCharacter(e.character, e.level))
@@ -82,10 +85,13 @@ namespace Eclipse.Core
             return new PlayerSave(owned);
         }
 
-        // iOS는 suspend라 OnApplicationQuit이 안 불리고 WebGL은 종료 콜백 자체가 없어서
-        // 백그라운드 전환 신호에서 저장한다. 컨테이너 빌드 전(_saveService == null)에는 저장할 상태가 없다.
+        /// <summary>
+        /// 백그라운드 전환 신호에서 저장한다.
+        /// iOS는 suspend라 OnApplicationQuit이 안 불리고 WebGL은 종료 콜백 자체가 없다.
+        /// </summary>
         private void OnApplicationPause(bool paused)
         {
+            // 컨테이너 빌드 전(_saveService == null)에는 저장할 상태가 없다.
             if (paused) _saveService?.Save(); // iOS suspend
         }
 
@@ -94,7 +100,9 @@ namespace Eclipse.Core
             if (!hasFocus) _saveService?.Save(); // 브라우저 탭 이탈
         }
 
-        // 개발용 돌파 부여 경로. 돌파 재료(가챠 중복)가 아직 없어, 플레이 중 인스펙터 컨텍스트 메뉴로 검증한다.
+        /// <summary>
+        /// 개발용 돌파 부여 경로. 돌파 재료(가챠 중복)가 아직 없어, 플레이 중 인스펙터 컨텍스트 메뉴로 검증한다.
+        /// </summary>
         [ContextMenu("디버그: 보유 전원 돌파 +1")]
         private void DebugAscendAll()
         {

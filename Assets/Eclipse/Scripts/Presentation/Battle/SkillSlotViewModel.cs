@@ -48,11 +48,13 @@ namespace Eclipse.Presentation
         /// </summary>
         public bool ManualTargetsAllies { get; }
 
-        // 효과 중 단일-적 스코프가 하나라도 있는지. 판정은 도메인 규칙(TargetResolver)을 그대로 호출한다.
+        /// <summary>
+        /// 효과 중 단일-적 스코프가 하나라도 있는지. 판정은 도메인 규칙(TargetResolver)을 그대로 호출한다.
+        /// </summary>
         private static bool HasSingleEnemyEffect(SkillSO skill)
             => skill.effects.Any(e => TargetResolver.IsSingleEnemy(e.target));
 
-        // 효과 중 단일-아군 스코프가 하나라도 있는지.
+        /// <summary> 효과 중 단일-아군 스코프가 하나라도 있는지. </summary>
         private static bool HasSingleAllyEffect(SkillSO skill)
             => skill.effects.Any(e => TargetResolver.IsSingleAlly(e.target));
 

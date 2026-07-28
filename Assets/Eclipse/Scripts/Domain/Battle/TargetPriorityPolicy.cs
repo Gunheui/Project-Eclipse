@@ -77,27 +77,32 @@ namespace Eclipse.Domain
             return null;
         }
 
-        // 어떤 난수값에도(치명 없음·변동 하한) 처치되는 후보 중 유효 HP가 가장 낮은 하나. 동률은 슬롯 낮은 쪽. 없으면 null.
+        /// <summary> 어떤 난수값에도 처치되는 후보 중 유효 HP가 가장 낮은 하나. 동률은 슬롯 낮은 쪽. 없으면 null. </summary>
         private ICombatant LethalTarget(ICombatant actor, float skillPower, IReadOnlyList<ICombatant> candidates)
             => candidates
+                // 어떤 난수값에도 처치된다 = 치명 없음·변동 하한 데미지가 유효 HP 이상이다.
                 .Where(t => _combat.PreviewDamage(actor.EffectiveStats, t.EffectiveStats, skillPower) >= EffectiveHp(t))
                 .OrderBy(EffectiveHp)
                 .ThenBy(t => t.SlotIndex)
                 .FirstOrDefault();
 
-        // 처치 가능한 대상을 실제로 마무리할지 LethalChance로 난수를 소비해 판정한다. 실패하면 호출부가 기저 층으로 내려간다.
-        // 확률 1(아군 오토)이면 난수를 소비하지 않고 통과시킨다 — 난수 소비가 없어야 막타 층 도입 전과 난수 수열이
-        // 같아지고, 기존 시드 재현(같은 시드 = 같은 타겟)이 깨지지 않는다.
+        /// <summary>
+        /// 처치 가능한 대상을 실제로 마무리할지 LethalChance로 난수를 소비해 판정한다.
+        /// 실패하면 호출부가 기저 층으로 내려간다.
+        /// </summary>
         private bool ShouldTakeLethal()
+            // 확률 1(아군 오토)이면 난수를 소비하지 않고 통과시킨다 — 난수 소비가 없어야 막타 층 도입 전과
+            // 난수 수열이 같아지고, 기존 시드 재현(같은 시드 = 같은 타겟)이 깨지지 않는다.
             => _profile.LethalChance >= 1f || _rng.NextFloat() < _profile.LethalChance;
 
-        // 현재 실드값을 포함한 전체 체력
+        /// <summary> 현재 실드값을 포함한 전체 체력 </summary>
         private static int EffectiveHp(ICombatant unit) => unit.CurrentHp + unit.ShieldAbsorb;
 
-        // 최저 HP비율 후보(동률 버킷)에서 시드 난수로 하나. 전원 풀피면 버킷=전체라 무작위 타겟이 된다.
+        /// <summary> 최저 HP비율 후보(동률 버킷)에서 시드 난수로 하나를 고른다. </summary>
         private ICombatant LowestHpBucketPick(IReadOnlyList<ICombatant> candidates)
         {
             float min = candidates.Min(HpRatio);
+            // 전원 풀피면 버킷=전체라 무작위 타겟이 된다.
             var bucket = candidates
                 .Where(t => HpRatio(t) <= min + RatioEpsilon)
                 .OrderBy(t => t.SlotIndex)
@@ -105,11 +110,12 @@ namespace Eclipse.Domain
             return PickUniform(bucket);
         }
 
-        // 저HP일수록 약하게 가중한 시드 랜덤. 가중치 = 1 + LowHpBias × (1 − HP비율). 전원 풀피면 균등 랜덤.
+        /// <summary> 저HP일수록 약하게 가중한 시드 랜덤. 전원 풀피면 균등 랜덤. </summary>
         private ICombatant WeightedLowHpPick(IReadOnlyList<ICombatant> candidates)
         {
             var ordered = candidates.OrderBy(t => t.SlotIndex).ToList();
 
+            // 가중치 = 1 + LowHpBias × (1 − HP비율).
             float total = 0f;
             foreach (var t in ordered) total += Weight(t);
 
@@ -123,22 +129,24 @@ namespace Eclipse.Domain
             return ordered[ordered.Count - 1]; // 부동소수 잔차 방어(roll이 total에 근접한 경우).
         }
 
-        // ordered(슬롯 오름차순)에서 시드 난수로 균등 추첨. NextFloat는 [0,1)이라 idx는 항상 범위 내.
+        /// <summary> ordered(슬롯 오름차순)에서 시드 난수로 균등 추첨한다. </summary>
         private ICombatant PickUniform(IReadOnlyList<ICombatant> ordered)
         {
             if (ordered.Count == 1) return ordered[0];
             int idx = (int)(_rng.NextFloat() * ordered.Count);
-            if (idx >= ordered.Count) idx = ordered.Count - 1; // 방어적 클램프.
+            if (idx >= ordered.Count) idx = ordered.Count - 1; // 방어적 클램프. NextFloat는 [0,1)이라 idx는 항상 범위 내.
             return ordered[idx];
         }
 
-        // 저HP 가중 × 전열 가중. 전열 계수 1(아군 프로파일 기본)이면 기존 저HP 가중과 동일하다.
+        /// <summary> 저HP 가중과 전열 가중을 곱한 값. 전열 계수 1(아군 프로파일 기본)이면 기존 저HP 가중과 동일하다. </summary>
         private float Weight(ICombatant unit)
             => (1f + _profile.LowHpBias * (1f - HpRatio(unit)))
                * (IsFrontLine(unit) ? _profile.FrontLineWeight : 1f);
 
-        // 아군 편성 앵커 기준 전열 = 편성 2·4번(slotIndex 1·3). 적 진영 앵커는 전열이 0·1이라
-        // 이 술어가 성립하지 않는다 — 적 프로파일(=아군을 후보로 삼는 경로) 전용.
+        /// <summary>
+        /// 아군 편성 앵커 기준 전열 = 편성 2·4번(slotIndex 1·3). 적 진영 앵커는 전열이 0·1이라
+        /// 이 술어가 성립하지 않는다 — 적 프로파일(=아군을 후보로 삼는 경로) 전용.
+        /// </summary>
         private static bool IsFrontLine(ICombatant unit) => unit.SlotIndex % 2 == 1;
 
         private static float HpRatio(ICombatant unit) => (float)unit.CurrentHp / unit.MaxHp;

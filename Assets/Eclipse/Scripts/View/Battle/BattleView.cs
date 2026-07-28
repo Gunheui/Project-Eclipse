@@ -62,7 +62,9 @@ namespace Eclipse.View
         /// <summary> 나가기 버튼이 눌리면 발화한다. 런 포기 처리(패배 보고)는 드라이버가 소유한다. </summary>
         public event Action ExitRequested;
 
-        // 인스턴스 수명에 1회만 묶는 정적 입력(버튼) 구독. 뷰모델 상태 구독은 Bind에서 따로 건다.
+        /// <summary>
+        /// 정적 입력(버튼) 구독을 인스턴스 수명에 1회만 묶는다. 뷰모델 상태 구독은 Bind에서 따로 건다.
+        /// </summary>
         private void Start()
         {
             for (int i = 0; i < skillButtons.Length; i++)
@@ -133,7 +135,9 @@ namespace Eclipse.View
         public UniTask RunBoundBattleAsync(CancellationToken ct)
             => _viewModel.RunBattleAsync(PlayTurnAnimationAsync, ct);
 
-        // 전장 배틀러를 소속·슬롯으로 유닛 VM에 연결한다. 대응 유닛이 없는 앵커는 숨긴다.
+        /// <summary>
+        /// 전장 배틀러를 소속·슬롯으로 유닛 VM에 연결한다. 대응 유닛이 없는 앵커는 숨긴다.
+        /// </summary>
         private void BindBattlers()
         {
             AssignBattlers(allyBattlers, isAlly: true);
@@ -150,14 +154,18 @@ namespace Eclipse.View
             }
         }
 
-        // 이번 턴에 시작된 배틀러 연출이 모두 끝날 때까지 기다린다. VM 루프가 매 턴 이 함수를 await 한다.
+        /// <summary>
+        /// 이번 턴에 시작된 배틀러 연출이 모두 끝날 때까지 기다린다. VM 루프가 매 턴 이 함수를 await 한다.
+        /// </summary>
         private async UniTask PlayTurnAnimationAsync(CancellationToken ct)
         {
             var animations = allyBattlers.Concat(enemyBattlers).Select(b => b.WaitForAnimation());
             await UniTask.WhenAll(animations).AttachExternalCancellation(ct);
         }
 
-        // 플레이트를 소속·슬롯으로 유닛 VM에 연결한다. 대응 유닛이 없는 플레이트는 숨긴다.
+        /// <summary>
+        /// 플레이트를 소속·슬롯으로 유닛 VM에 연결한다. 대응 유닛이 없는 플레이트는 숨긴다.
+        /// </summary>
         private void BindPlates()
         {
             AssignPlates(allyPlates, isAlly: true);
@@ -194,7 +202,10 @@ namespace Eclipse.View
             if (speedLabel != null) speedLabel.text = _speedMultiplier + "x";
         }
 
-        // 행동자가 정해지면 그 유닛의 스킬로 버튼을 채우고 플레이트를 강조한다. null이면(적 턴·오토) 버튼을 잠근다.
+        /// <summary>
+        /// 행동자가 정해지면 그 유닛의 스킬로 버튼을 채우고 플레이트를 강조한다.
+        /// </summary>
+        /// <param name="unit">null이면(적 턴·오토) 버튼을 잠근다.</param>
         private void OnActingCombatantChanged(CombatantViewModel unit)
         {
             ExitTargeting(); // 행동자가 바뀌면(턴 종료·적 턴·오토) 이전 조준 상태를 정리한다
@@ -237,7 +248,9 @@ namespace Eclipse.View
             }
         }
 
-        // 스킬 툴팁 슬롯에 표시할 스킬명·설명을 채운다. 대응 트리거가 없으면(빈 슬롯) 조용히 넘어간다.
+        /// <summary>
+        /// 스킬 툴팁 슬롯에 표시할 스킬명·설명을 채운다. 대응 트리거가 없으면(빈 슬롯) 조용히 넘어간다.
+        /// </summary>
         private void SetTooltipContent(int index, string skillName, string description)
         {
             if (skillTooltipTriggers == null || index >= skillTooltipTriggers.Length) return;
@@ -283,8 +296,10 @@ namespace Eclipse.View
             EnterTargeting(slot, valid);
         }
 
-        // 스킬 탭으로 조준 모드에 들어간다. 유효 타겟을 기억하고 배틀러에 대상 상태를 칠한다.
-        // 스킬을 다시(혹은 다른 스킬로) 탭하면 유효 집합을 새로 계산해 상태가 갱신된다.
+        /// <summary>
+        /// 스킬 탭으로 조준 모드에 들어간다. 유효 타겟을 기억하고 배틀러에 대상 상태를 칠한다.
+        /// 스킬을 다시(혹은 다른 스킬로) 탭하면 유효 집합을 새로 계산해 상태가 갱신된다.
+        /// </summary>
         private void EnterTargeting(SkillSlotViewModel skill, IReadOnlyList<CombatantViewModel> valid)
         {
             _pendingSkill = skill;
@@ -296,7 +311,9 @@ namespace Eclipse.View
                     skill.ManualTargetsAllies);
         }
 
-        // 조준 모드를 빠져나오고 모든 배틀러를 평상시 상태로 되돌린다. 조준 중이 아니어도 호출 안전(멱등).
+        /// <summary>
+        /// 조준 모드를 빠져나오고 모든 배틀러를 평상시 상태로 되돌린다. 조준 중이 아니어도 호출 안전(멱등).
+        /// </summary>
         private void ExitTargeting()
         {
             _pendingSkill = null;
@@ -306,7 +323,9 @@ namespace Eclipse.View
                 FindBattler(u)?.SetTargetState(TargetState.None);
         }
 
-        // 배틀러 몸통·플레이트 탭의 공통 처리. 조준 중이고 유효 타겟일 때만 그 대상으로 스킬을 제출한다.
+        /// <summary>
+        /// 배틀러 몸통·플레이트 탭의 공통 처리. 조준 중이고 유효 타겟일 때만 그 대상으로 스킬을 제출한다.
+        /// </summary>
         private void OnUnitTapped(CombatantViewModel unit)
         {
             if (_pendingSkill == null) return;                                  // 조준 중이 아니면 무시
@@ -317,7 +336,8 @@ namespace Eclipse.View
             _viewModel.Submit(skill, unit);
         }
 
-        // 유닛에 대응하는 배틀러를 소속·슬롯으로 찾는다. 대응이 없으면 null(빈 슬롯).
+        /// <summary>유닛에 대응하는 배틀러를 소속·슬롯으로 찾는다.</summary>
+        /// <returns>대응이 없으면 null(빈 슬롯).</returns>
         private BattlerView FindBattler(CombatantViewModel unit)
         {
             var battlers = unit.IsAlly ? allyBattlers : enemyBattlers;
