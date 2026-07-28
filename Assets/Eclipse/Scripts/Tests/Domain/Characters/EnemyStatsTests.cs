@@ -48,7 +48,7 @@ namespace Eclipse.Tests
         [Test]
         public void 디버프_합만큼_깎는다()
         {
-            var stats = CharacterStats.BuildEnemyStats(Base(), 1f, null, 1f, Debuffs(StatType.Def, 0.25f));
+            var stats = CharacterStats.BuildEnemyStats(Base(), 1f, null, 1f, Debuffs(StatType.Def, -0.25f));
 
             Assert.AreEqual(75, stats.def);
             Assert.AreEqual(100, stats.atk, "디버프는 지정한 스탯만 건드린다");
@@ -57,7 +57,7 @@ namespace Eclipse.Tests
         [Test]
         public void 정수_스탯의_하한은_1이다()
         {
-            var stats = CharacterStats.BuildEnemyStats(Base(hp: 1), 1f, null, 1f, Debuffs(StatType.Hp, 0.99f));
+            var stats = CharacterStats.BuildEnemyStats(Base(hp: 1), 1f, null, 1f, Debuffs(StatType.Hp, -0.99f));
 
             Assert.AreEqual(1, stats.hp);
         }
@@ -82,7 +82,7 @@ namespace Eclipse.Tests
         [Test]
         public void 치명확률은_0아래로_내려가지_않는다()
         {
-            var stats = CharacterStats.BuildEnemyStats(Base(), 1f, null, 1f, Debuffs(StatType.CritRate, 0.5f));
+            var stats = CharacterStats.BuildEnemyStats(Base(), 1f, null, 1f, Debuffs(StatType.CritRate, -0.5f));
 
             Assert.AreEqual(0f, stats.critRate);
         }
@@ -90,7 +90,7 @@ namespace Eclipse.Tests
         [Test]
         public void 치명피해는_0아래로_내려가지_않는다()
         {
-            var stats = CharacterStats.BuildEnemyStats(Base(), 1f, null, 1f, Debuffs(StatType.CritDamage, 2f));
+            var stats = CharacterStats.BuildEnemyStats(Base(), 1f, null, 1f, Debuffs(StatType.CritDamage, -2f));
 
             Assert.AreEqual(0f, stats.critDamage);
         }

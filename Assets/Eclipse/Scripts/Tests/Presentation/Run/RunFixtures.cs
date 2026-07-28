@@ -133,41 +133,33 @@ namespace Eclipse.Tests
             };
 
         /// <summary>
-        /// 계열 3장 × (공격/수호/질풍) + 특수 2장 + 저주 4장 + 인연 카드(대상 id 지정)로 이루어진 카탈로그.
+        /// 정본 카탈로그와 같은 모양의 축소판 — 범용 3축 × 3등급 + 저주 4축 × 3등급 + 지정한 캐릭터의 유니크.
         /// </summary>
-        public static BuffCardCatalogSO CardCatalog(params string[] bondTargetIds)
+        /// <param name="uniqueTargetIds">유니크 카드를 만들어 줄 캐릭터 id. 비우면 유니크 없는 카탈로그다.</param>
+        public static BuffCardCatalogSO CardCatalog(params string[] uniqueTargetIds)
         {
+            var grades = new[] { CardGrade.Common, CardGrade.Rare, CardGrade.Epic };
             var cards = new List<BuffCard>();
-            foreach (var (tag, axis) in new[]
-                     {
-                         (CardTag.Attack, StatType.Atk), (CardTag.Guard, StatType.Def), (CardTag.Haste, StatType.Spd)
-                     })
-                for (int i = 0; i < 3; i++)
+            foreach (var axis in new[] { StatType.Atk, StatType.Def, StatType.Spd })
+                foreach (var grade in grades)
                     cards.Add(new BuffCard
                     {
-                        id = $"{tag}_{i}", displayName = $"{tag}_{i}", tag = tag, weight = 25,
+                        id = $"buff_{axis}_{grade}", displayName = $"buff_{axis}", grade = grade,
                         deltas = new[] { new StatDelta { axis = axis, value = 0.15f } },
                     });
-            for (int i = 0; i < 2; i++)
+            foreach (var axis in new[] { StatType.Hp, StatType.Atk, StatType.Def, StatType.Spd })
+                foreach (var grade in grades)
+                    cards.Add(new BuffCard
+                    {
+                        id = $"curse_{axis}_{grade}", displayName = $"curse_{axis}", grade = grade,
+                        targetsEnemies = true,
+                        deltas = new[] { new StatDelta { axis = axis, value = -0.12f } },
+                    });
+            foreach (var id in uniqueTargetIds)
                 cards.Add(new BuffCard
                 {
-                    id = $"special_{i}", displayName = $"special_{i}", tag = CardTag.Special, weight = 12,
-                    specialPointRestricted = true,
-                    deltas = new[] { new StatDelta { axis = StatType.Hp, value = 0.07f } },
-                });
-            foreach (var (axis, i) in new[] { StatType.Hp, StatType.Atk, StatType.Def, StatType.Spd }
-                         .Select((a, i) => (a, i)))
-                cards.Add(new BuffCard
-                {
-                    id = $"curse_{i}", displayName = $"curse_{i}", tag = CardTag.Curse, weight = 25,
-                    targetsEnemies = true,
-                    deltas = new[] { new StatDelta { axis = axis, value = 0.12f } },
-                });
-            foreach (var id in bondTargetIds)
-                cards.Add(new BuffCard
-                {
-                    id = $"bond_{id}", displayName = $"bond_{id}", tag = CardTag.Bond, weight = 25,
-                    requiredCharacterId = id,
+                    id = $"unique_{id}", displayName = $"unique_{id}", grade = CardGrade.Unique,
+                    description = $"{id} 전용 효과", requiredCharacterId = id,
                     deltas = new[] { new StatDelta { axis = StatType.Atk, value = 0.25f } },
                 });
 

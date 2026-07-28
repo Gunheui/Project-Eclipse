@@ -1,3 +1,4 @@
+using System.Linq;
 using Eclipse.Data;
 using Eclipse.Data.Enums;
 
@@ -35,18 +36,13 @@ namespace Eclipse.View
             return $"{StatName(delta.axis)} {sign}{delta.value * 100f:0.#}%{(point ? "p" : "")}";
         }
 
-        /// <summary> 카드 효과 전체 표기(증감을 " · "로 잇는다). 저주 카드는 약화 문구로 바꾼다. </summary>
+        /// <summary> 카드 효과 표기. 유니크는 적어 둔 설명을 그대로 쓰고, 저주는 적 전체를 대상으로 밝힌다. </summary>
         public static string FormatCard(BuffCard card)
         {
-            var parts = new string[card.deltas.Length];
-            for (int i = 0; i < card.deltas.Length; i++)
-            {
-                var d = card.deltas[i];
-                parts[i] = card.targetsEnemies
-                    ? $"적 전체 {StatName(d.axis)} -{d.value * 100f:0.#}%"
-                    : FormatDelta(d);
-            }
-            return string.Join(" · ", parts);
+            if (card.grade == CardGrade.Unique)
+                return card.description;
+            string prefix = card.targetsEnemies ? "적 전체 " : "";
+            return string.Join(" · ", card.deltas.Select(d => prefix + FormatDelta(d)));
         }
     }
 }

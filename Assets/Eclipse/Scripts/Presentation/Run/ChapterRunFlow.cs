@@ -312,7 +312,7 @@ namespace Eclipse.Presentation
             else
             {
                 _pendingPicks.Enqueue(new PendingBuffPick(
-                    _cardPool.Pick3(choice, depth, _session.Party), choice.TargetPartySlot));
+                    _cardPool.Pick3(choice, _session.Party), choice.TargetPartySlot));
             }
         }
 

@@ -13,229 +13,277 @@ MonoBehaviour:
   m_Name: buff_card_catalog
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.BuffCardCatalogSO
   cards:
-  - id: card_a1
-    displayName: "\uBCBC\uB824\uC9C4 \uCE7C\uB0A0"
-    tag: 0
-    deltas:
-    - axis: 2
-      value: 0.15
-    requiredCharacterId: 
-    weight: 25
-    specialPointRestricted: 0
-    targetsEnemies: 0
-  - id: card_a2
-    displayName: "\uCC98\uD615 \uC120\uC5B8"
-    tag: 0
-    deltas:
-    - axis: 2
-      value: 0.25
-    - axis: 3
-      value: -0.12
-    requiredCharacterId: 
-    weight: 25
-    specialPointRestricted: 0
-    targetsEnemies: 0
-  - id: card_a3
-    displayName: "\uC0AC\uB0E5\uC758 \uAC10\uAC01"
-    tag: 0
-    deltas:
-    - axis: 2
-      value: 0.1
-    - axis: 5
-      value: 0.06
-    requiredCharacterId: 
-    weight: 25
-    specialPointRestricted: 0
-    targetsEnemies: 0
-  - id: card_b1
-    displayName: "\uAD73\uC740 \uB300\uC5F4"
-    tag: 1
-    deltas:
-    - axis: 3
-      value: 0.18
-    requiredCharacterId: 
-    weight: 25
-    specialPointRestricted: 0
-    targetsEnemies: 0
-  - id: card_b2
+  - id: buff_hp_common
     displayName: "\uC2EC\uBD80\uC758 \uD65C\uB825"
-    tag: 1
+    grade: 0
+    deltas:
+    - axis: 1
+      value: 0.12
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 0
+  - id: buff_hp_rare
+    displayName: "\uC2EC\uBD80\uC758 \uD65C\uB825"
+    grade: 1
+    deltas:
+    - axis: 1
+      value: 0.16
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 0
+  - id: buff_hp_epic
+    displayName: "\uC2EC\uBD80\uC758 \uD65C\uB825"
+    grade: 2
     deltas:
     - axis: 1
       value: 0.2
+    description: 
     requiredCharacterId: 
-    weight: 25
-    specialPointRestricted: 0
     targetsEnemies: 0
-  - id: card_b3
-    displayName: "\uCE68\uC2DD \uC801\uC751"
-    tag: 1
-    deltas:
-    - axis: 1
-      value: 0.12
-    - axis: 3
-      value: 0.12
-    requiredCharacterId: 
-    weight: 25
-    specialPointRestricted: 0
-    targetsEnemies: 0
-  - id: card_c1
-    displayName: "\uBE68\uB77C\uC9C4 \uB9E5\uBC15"
-    tag: 2
-    deltas:
-    - axis: 4
-      value: 0.15
-    requiredCharacterId: 
-    weight: 25
-    specialPointRestricted: 0
-    targetsEnemies: 0
-  - id: card_c2
-    displayName: "\uAE09\uC18C \uAC04\uD30C"
-    tag: 2
-    deltas:
-    - axis: 5
-      value: 0.12
-    requiredCharacterId: 
-    weight: 25
-    specialPointRestricted: 0
-    targetsEnemies: 0
-  - id: card_c3
-    displayName: "\uD30C\uC5F4\uC758 \uC77C\uACA9"
-    tag: 2
-    deltas:
-    - axis: 6
-      value: 0.3
-    requiredCharacterId: 
-    weight: 25
-    specialPointRestricted: 0
-    targetsEnemies: 0
-  - id: card_d1
-    displayName: "\uBB34\uB108\uC9C0\uC9C0 \uC54A\uB294 \uBCBD"
-    tag: 4
-    deltas:
-    - axis: 3
-      value: 0.3
-    - axis: 1
-      value: 0.12
-    requiredCharacterId: rien
-    weight: 25
-    specialPointRestricted: 0
-    targetsEnemies: 0
-  - id: card_d2
-    displayName: "\uC5F0\uACA9 \uBCF8\uB2A5"
-    tag: 4
-    deltas:
-    - axis: 5
-      value: 0.12
-    - axis: 6
-      value: 0.35
-    requiredCharacterId: kai
-    weight: 25
-    specialPointRestricted: 0
-    targetsEnemies: 0
-  - id: card_d3
-    displayName: "\uD3ED\uC8FC\uC758 \uBD88\uC528"
-    tag: 4
+  - id: buff_atk_common
+    displayName: "\uBCBC\uB824\uC9C4 \uCE7C\uB0A0"
+    grade: 0
     deltas:
     - axis: 2
-      value: 0.25
-    - axis: 3
-      value: -0.1
-    requiredCharacterId: sera
-    weight: 25
-    specialPointRestricted: 0
+      value: 0.09
+    description: 
+    requiredCharacterId: 
     targetsEnemies: 0
-  - id: card_d4
-    displayName: "\uC804\uC220 \uC9C0\uD718"
-    tag: 4
+  - id: buff_atk_rare
+    displayName: "\uBCBC\uB824\uC9C4 \uCE7C\uB0A0"
+    grade: 1
     deltas:
-    - axis: 4
+    - axis: 2
+      value: 0.12
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 0
+  - id: buff_atk_epic
+    displayName: "\uBCBC\uB824\uC9C4 \uCE7C\uB0A0"
+    grade: 2
+    deltas:
+    - axis: 2
+      value: 0.15
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 0
+  - id: buff_def_common
+    displayName: "\uAD73\uC740 \uB300\uC5F4"
+    grade: 0
+    deltas:
+    - axis: 3
+      value: 0.11
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 0
+  - id: buff_def_rare
+    displayName: "\uAD73\uC740 \uB300\uC5F4"
+    grade: 1
+    deltas:
+    - axis: 3
+      value: 0.14
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 0
+  - id: buff_def_epic
+    displayName: "\uAD73\uC740 \uB300\uC5F4"
+    grade: 2
+    deltas:
+    - axis: 3
       value: 0.18
-    - axis: 2
-      value: 0.12
-    requiredCharacterId: noel
-    weight: 25
-    specialPointRestricted: 0
-    targetsEnemies: 0
-  - id: card_d5
-    displayName: "\uC0DD\uBA85\uC758 \uC0D8"
-    tag: 4
-    deltas:
-    - axis: 2
-      value: 0.25
-    - axis: 1
-      value: 0.12
-    requiredCharacterId: mira
-    weight: 25
-    specialPointRestricted: 0
-    targetsEnemies: 0
-  - id: card_e1
-    displayName: "\uAC01\uC131\uC758 \uC12C\uAD11"
-    tag: 3
-    deltas:
-    - axis: 1
-      value: 0.07
-    - axis: 2
-      value: 0.07
-    - axis: 3
-      value: 0.07
+    description: 
     requiredCharacterId: 
-    weight: 12
-    specialPointRestricted: 1
     targetsEnemies: 0
-  - id: card_e2
-    displayName: "\uADE0\uC5F4\uC758 \uCD95\uBCF5"
-    tag: 3
+  - id: buff_spd_common
+    displayName: "\uBE68\uB77C\uC9C4 \uB9E5\uBC15"
+    grade: 0
     deltas:
-    - axis: 1
-      value: 0.07
-    - axis: 2
-      value: 0.07
-    - axis: 3
-      value: 0.07
     - axis: 4
-      value: 0.07
+      value: 0.09
+    description: 
     requiredCharacterId: 
-    weight: 12
-    specialPointRestricted: 1
     targetsEnemies: 0
-  - id: card_f1
-    displayName: "\uC1E0\uC57D\uD55C \uC721\uC2E0"
-    tag: 5
+  - id: buff_spd_rare
+    displayName: "\uBE68\uB77C\uC9C4 \uB9E5\uBC15"
+    grade: 1
     deltas:
-    - axis: 1
+    - axis: 4
       value: 0.12
+    description: 
     requiredCharacterId: 
-    weight: 25
-    specialPointRestricted: 0
-    targetsEnemies: 1
-  - id: card_f2
-    displayName: "\uBB34\uB518 \uBC1C\uD1B1"
-    tag: 5
+    targetsEnemies: 0
+  - id: buff_spd_epic
+    displayName: "\uBE68\uB77C\uC9C4 \uB9E5\uBC15"
+    grade: 2
     deltas:
-    - axis: 2
-      value: 0.12
-    requiredCharacterId: 
-    weight: 25
-    specialPointRestricted: 0
-    targetsEnemies: 1
-  - id: card_f3
-    displayName: "\uAC08\uB77C\uC9C4 \uAC01\uC9C8"
-    tag: 5
-    deltas:
-    - axis: 3
+    - axis: 4
       value: 0.15
+    description: 
     requiredCharacterId: 
-    weight: 25
-    specialPointRestricted: 0
+    targetsEnemies: 0
+  - id: buff_crit_common
+    displayName: "\uAE09\uC18C \uAC04\uD30C"
+    grade: 0
+    deltas:
+    - axis: 5
+      value: 0.07
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 0
+  - id: buff_crit_rare
+    displayName: "\uAE09\uC18C \uAC04\uD30C"
+    grade: 1
+    deltas:
+    - axis: 5
+      value: 0.1
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 0
+  - id: buff_crit_epic
+    displayName: "\uAE09\uC18C \uAC04\uD30C"
+    grade: 2
+    deltas:
+    - axis: 5
+      value: 0.12
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 0
+  - id: buff_critdmg_common
+    displayName: "\uD30C\uC5F4\uC758 \uC77C\uACA9"
+    grade: 0
+    deltas:
+    - axis: 6
+      value: 0.18
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 0
+  - id: buff_critdmg_rare
+    displayName: "\uD30C\uC5F4\uC758 \uC77C\uACA9"
+    grade: 1
+    deltas:
+    - axis: 6
+      value: 0.24
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 0
+  - id: buff_critdmg_epic
+    displayName: "\uD30C\uC5F4\uC758 \uC77C\uACA9"
+    grade: 2
+    deltas:
+    - axis: 6
+      value: 0.3
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 0
+  - id: curse_hp_common
+    displayName: "\uC1E0\uC57D\uD55C \uC721\uC2E0"
+    grade: 0
+    deltas:
+    - axis: 1
+      value: -0.07
+    description: 
+    requiredCharacterId: 
     targetsEnemies: 1
-  - id: card_f4
+  - id: curse_hp_rare
+    displayName: "\uC1E0\uC57D\uD55C \uC721\uC2E0"
+    grade: 1
+    deltas:
+    - axis: 1
+      value: -0.1
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 1
+  - id: curse_hp_epic
+    displayName: "\uC1E0\uC57D\uD55C \uC721\uC2E0"
+    grade: 2
+    deltas:
+    - axis: 1
+      value: -0.12
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 1
+  - id: curse_atk_common
+    displayName: "\uBB34\uB518 \uBC1C\uD1B1"
+    grade: 0
+    deltas:
+    - axis: 2
+      value: -0.07
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 1
+  - id: curse_atk_rare
+    displayName: "\uBB34\uB518 \uBC1C\uD1B1"
+    grade: 1
+    deltas:
+    - axis: 2
+      value: -0.1
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 1
+  - id: curse_atk_epic
+    displayName: "\uBB34\uB518 \uBC1C\uD1B1"
+    grade: 2
+    deltas:
+    - axis: 2
+      value: -0.12
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 1
+  - id: curse_def_common
+    displayName: "\uAC08\uB77C\uC9C4 \uAC01\uC9C8"
+    grade: 0
+    deltas:
+    - axis: 3
+      value: -0.09
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 1
+  - id: curse_def_rare
+    displayName: "\uAC08\uB77C\uC9C4 \uAC01\uC9C8"
+    grade: 1
+    deltas:
+    - axis: 3
+      value: -0.12
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 1
+  - id: curse_def_epic
+    displayName: "\uAC08\uB77C\uC9C4 \uAC01\uC9C8"
+    grade: 2
+    deltas:
+    - axis: 3
+      value: -0.15
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 1
+  - id: curse_spd_common
     displayName: "\uAD7C\uB72C \uCD09\uC218"
-    tag: 5
+    grade: 0
     deltas:
     - axis: 4
-      value: 0.1
+      value: -0.06
+    description: 
     requiredCharacterId: 
-    weight: 25
-    specialPointRestricted: 0
     targetsEnemies: 1
+  - id: curse_spd_rare
+    displayName: "\uAD7C\uB72C \uCD09\uC218"
+    grade: 1
+    deltas:
+    - axis: 4
+      value: -0.08
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 1
+  - id: curse_spd_epic
+    displayName: "\uAD7C\uB72C \uCD09\uC218"
+    grade: 2
+    deltas:
+    - axis: 4
+      value: -0.1
+    description: 
+    requiredCharacterId: 
+    targetsEnemies: 1
+  commonWeight: 60
+  rareWeight: 30
+  epicWeight: 10
+  uniqueWeight: 60

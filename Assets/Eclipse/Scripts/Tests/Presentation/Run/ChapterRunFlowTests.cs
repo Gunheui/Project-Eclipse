@@ -117,7 +117,7 @@ namespace Eclipse.Tests
             // 전투 사이 버프: 생명력 +50%를 0번 슬롯에 배정한다(HP는 MaxHp로 밖에서 관찰 가능한 축).
             h.Session.AttachCard(new BuffCard
             {
-                id = "hp", displayName = "hp", tag = CardTag.Guard, weight = 1,
+                id = "hp", displayName = "hp", grade = CardGrade.Common,
                 deltas = new[] { new StatDelta { axis = StatType.Hp, value = 0.5f } },
             }, 0);
 

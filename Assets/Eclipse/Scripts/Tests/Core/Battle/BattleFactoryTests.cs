@@ -79,7 +79,7 @@ namespace Eclipse.Tests
             var session = Session(party);
             session.AttachCard(new BuffCard
             {
-                id = "hp", displayName = "hp", tag = CardTag.Guard, weight = 1,
+                id = "hp", displayName = "hp", grade = CardGrade.Common,
                 deltas = new[] { new StatDelta { axis = StatType.Hp, value = 0.5f } },
             }, 0);
 
@@ -96,8 +96,8 @@ namespace Eclipse.Tests
             var session = Session(party, enemyMultiplier: 2f);
             session.AttachCard(new BuffCard
             {
-                id = "curse", displayName = "curse", tag = CardTag.Curse, weight = 1, targetsEnemies = true,
-                deltas = new[] { new StatDelta { axis = StatType.Hp, value = 0.1f } },
+                id = "curse", displayName = "curse", grade = CardGrade.Common, targetsEnemies = true,
+                deltas = new[] { new StatDelta { axis = StatType.Hp, value = -0.1f } },
             }, 0);
 
             var enemy = RunFixtures.Enemy("E0"); // HP 500
@@ -108,7 +108,7 @@ namespace Eclipse.Tests
             var vm = Factory(session).Create(spec, 1, false);
 
             var unit = vm.Combatants.First(u => !u.IsAlly);
-            // 500 × 챕터2.0 × 정예1.15 × 변이1.5 × (1 − 디버프0.1) = 1552.5 → 1553
+            // 500 × 챕터2.0 × 정예1.15 × 변이1.5 × (1 + 디버프-0.1) = 1552.5 → 1553
             Assert.AreEqual(1553, unit.MaxHp);
             Assert.AreEqual("강화된 E0", unit.Name, "변이 이름 접두가 붙는다");
         }

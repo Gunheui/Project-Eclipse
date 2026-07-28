@@ -51,20 +51,20 @@ namespace Eclipse.Domain
         /// <param name="chapterMultiplier">챕터 난이도 배수(<see cref="ChapterSO.enemyStatMultiplier"/>).</param>
         /// <param name="mutation">침식 변이. 없으면 null. 변이가 지정한 스탯 하나에만 배수가 걸린다.</param>
         /// <param name="eliteMultiplier">정예 배수. 일반 인카운터면 1을 넘긴다.</param>
-        /// <param name="enemyDebuffs">런 전역으로 적에게 걸린 디버프 합. 없으면 null.</param>
+        /// <param name="enemyDebuffs">런 전역으로 적에게 걸린 디버프 합. 깎는 값이라 음수이며, 없으면 null.</param>
         public static Stats BuildEnemyStats(Stats baseStats, float chapterMultiplier, MutationSO mutation,
             float eliteMultiplier, StatModifierSet enemyDebuffs)
         {
             float common = chapterMultiplier * eliteMultiplier; // 배수는 HP·ATK·DEF·SPD에만 걸린다
             return new Stats
             {
-                hp = ApplyDebuffAndRound(baseStats.hp * common * MutationMultiplier(mutation, StatType.Hp), enemyDebuffs, StatType.Hp),
-                atk = ApplyDebuffAndRound(baseStats.atk * common * MutationMultiplier(mutation, StatType.Atk), enemyDebuffs, StatType.Atk),
-                def = ApplyDebuffAndRound(baseStats.def * common * MutationMultiplier(mutation, StatType.Def), enemyDebuffs, StatType.Def),
-                spd = ApplyDebuffAndRound(baseStats.spd * common * MutationMultiplier(mutation, StatType.Spd), enemyDebuffs, StatType.Spd),
-                // 치명 계열에는 배수를 곱하지 않고 디버프만 뺀다.
-                critRate = Math.Clamp(baseStats.critRate - SumOf(enemyDebuffs, StatType.CritRate), 0f, 1f),
-                critDamage = Math.Max(0f, baseStats.critDamage - SumOf(enemyDebuffs, StatType.CritDamage)),
+                hp = ApplyBuffAndRound(baseStats.hp * common * MutationMultiplier(mutation, StatType.Hp), enemyDebuffs, StatType.Hp),
+                atk = ApplyBuffAndRound(baseStats.atk * common * MutationMultiplier(mutation, StatType.Atk), enemyDebuffs, StatType.Atk),
+                def = ApplyBuffAndRound(baseStats.def * common * MutationMultiplier(mutation, StatType.Def), enemyDebuffs, StatType.Def),
+                spd = ApplyBuffAndRound(baseStats.spd * common * MutationMultiplier(mutation, StatType.Spd), enemyDebuffs, StatType.Spd),
+                // 치명 계열에는 배수를 곱하지 않고 디버프만 더한다.
+                critRate = Math.Clamp(baseStats.critRate + SumOf(enemyDebuffs, StatType.CritRate), 0f, 1f),
+                critDamage = Math.Max(0f, baseStats.critDamage + SumOf(enemyDebuffs, StatType.CritDamage)),
             };
         }
 
@@ -72,13 +72,9 @@ namespace Eclipse.Domain
         private static float MutationMultiplier(MutationSO mutation, StatType axis)
             => mutation != null && mutation.statAxis == axis ? mutation.multiplier : 1f;
 
-        /// <summary> 버프 %가산을 곱한 뒤 한 번만 반올림한다. </summary>
+        /// <summary> 증감 합을 %가산으로 곱한 뒤 한 번만 반올림한다. 아군 버프와 적 디버프가 이 경로를 같이 쓴다. </summary>
         private static int ApplyBuffAndRound(float value, StatModifierSet buffs, StatType axis)
             => Round(value * (1f + SumOf(buffs, axis)));
-
-        /// <summary> 디버프 합만큼 깎은 뒤 한 번만 반올림한다. 버프 경로와 부호만 다르다. </summary>
-        private static int ApplyDebuffAndRound(float value, StatModifierSet debuffs, StatType axis)
-            => Round(value * (1f - SumOf(debuffs, axis)));
 
         /// <summary> 반올림한 뒤 하한 1을 적용한다. </summary>
         private static int Round(float value)
