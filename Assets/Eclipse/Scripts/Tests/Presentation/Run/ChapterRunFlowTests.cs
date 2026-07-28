@@ -223,6 +223,105 @@ namespace Eclipse.Tests
             yield return new DoorChoice(DoorKind.Essence);
         }
 
+        // --- 재화 월드 드랍 페이로드 ---
+
+        [Test]
+        public void 재화_문_보상은_다음_제시물에_드랍으로_한_번만_실린다()
+        {
+            var h = Build(RunFixtures.Chapter(
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+            h.Flow.BeginRun().Forget();
+            Assert.IsNull(h.Offer.RoomDrops, "첫 방 진입은 공개할 보상이 없다");
+
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+            Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step);
+            Assert.IsNull(h.Offer.RoomDrops, "에스크로 없는 방 승리에는 드랍이 없다");
+
+            var currency = h.Offer.Doors.FirstOrDefault(d => CurrencyDoor.IsCurrency(d.Choice.Kind));
+            if (currency.DisplayName == null)
+                Assert.Ignore("이 시드의 문 지점에 재화 문이 없다");
+            var expectedType = CurrencyDoor.CurrencyOf(currency.Choice.Kind);
+
+            h.Flow.ReportDoorPicked(currency.Choice, h.Offer.Token).Forget();
+            Assert.AreEqual(RunStep.EnteringRoom, h.Offer.Step);
+            Assert.IsNull(h.Offer.RoomDrops, "보류 중인 에스크로는 아직 공개되지 않는다");
+
+            int before = Balance(h, expectedType);
+            int battleToken = h.Offer.Token;
+            h.Flow.ReportBattleResult(won: true, battleToken).Forget();
+
+            var drop = h.Offer.RoomDrops.Single();
+            Assert.AreEqual(expectedType, drop.type);
+            Assert.AreEqual(before, Balance(h, expectedType), "드랍은 적립일 뿐 지갑은 런 종료까지 그대로다");
+
+            // 같은 토큰 재보고(전투 종료 콜백 중복)는 드랍을 다시 만들지 않는다.
+            h.Flow.ReportBattleResult(won: true, battleToken).Forget();
+            Assert.AreEqual(drop.amount, h.Offer.RoomDrops.Single().amount);
+            Assert.AreEqual(before, Balance(h, expectedType), "적립도 한 번뿐이다");
+
+            // 보스 방 승리에는 공개할 문 보상이 없어 드랍이 비고, 여기서 적립분이 정산과 함께 지급된다.
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+            Assert.AreEqual(RunStep.RunClear, h.Offer.Step);
+            Assert.IsNull(h.Offer.RoomDrops, "드랍은 1회성이라 다음 제시물에는 남지 않는다");
+            Assert.AreEqual(drop.amount, h.Offer.RunIncome.Single(e => e.type == expectedType).amount,
+                "드랍으로 공개한 수량이 종료 시 그대로 지급된다");
+        }
+
+        [Test]
+        public void 런_중_적립분은_전멸해도_정산과_함께_지급된다()
+        {
+            var h = Build(RunFixtures.Chapter(
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+            h.Flow.BeginRun().Forget();
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+
+            var currency = h.Offer.Doors.FirstOrDefault(d => CurrencyDoor.IsCurrency(d.Choice.Kind));
+            if (currency.DisplayName == null)
+                Assert.Ignore("이 시드의 문 지점에 재화 문이 없다");
+            var type = CurrencyDoor.CurrencyOf(currency.Choice.Kind);
+
+            // 문을 고르고 다음 방을 넘겨 적립시킨 뒤, 보스 방에서 전멸한다.
+            h.Flow.ReportDoorPicked(currency.Choice, h.Offer.Token).Forget();
+            int before = Balance(h, type);
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+            int earned = h.Offer.RoomDrops.Single().amount;
+            Assert.AreEqual(before, Balance(h, type), "적립 단계에서는 지갑이 그대로다");
+
+            h.Flow.ReportBattleResult(won: false, h.Offer.Token).Forget();
+
+            Assert.AreEqual(RunStep.RunFail, h.Offer.Step);
+            Assert.AreEqual(earned, h.Offer.RunIncome.Single(e => e.type == type).amount,
+                "전멸도 런을 끝낸 것이라 적립분이 살아 지급된다");
+            int settlement = h.Offer.Receipts.Where(e => e.type == type).Sum(e => e.amount);
+            Assert.AreEqual(before + earned + settlement, Balance(h, type), "지갑 = 적립분 + 정산");
+        }
+
+        [Test]
+        public void 버프_문_에스크로는_드랍_없이_3택1로_직행한다()
+        {
+            var h = Build(RunFixtures.Chapter(
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+            h.Flow.BeginRun().Forget();
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+
+            var buff = h.Offer.Doors.FirstOrDefault(d => !CurrencyDoor.IsCurrency(d.Choice.Kind));
+            if (buff.DisplayName == null)
+                Assert.Ignore("이 시드의 문 지점에 버프 문이 없다");
+
+            h.Flow.ReportDoorPicked(buff.Choice, h.Offer.Token).Forget();
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+
+            Assert.AreEqual(RunStep.BuffPick, h.Offer.Step);
+            Assert.IsNull(h.Offer.RoomDrops, "버프 문은 지급할 재화가 없다");
+        }
+
+        private static int Balance(Harness h, CurrencyType type) => type switch
+        {
+            CurrencyType.Gold => h.Wallet.Gold.CurrentValue,
+            CurrencyType.Essence => h.Wallet.Essence.CurrentValue,
+            _ => h.Wallet.Manual.CurrentValue,
+        };
+
         // --- 멱등·커밋 순서 (§3-2a 검증) ---
 
         [Test]
@@ -294,8 +393,8 @@ namespace Eclipse.Tests
 
             Assert.AreEqual(RunStep.RunFail, h.Offer.Step);
             Assert.IsFalse(h.Session.HasEscrow, "종료 커밋 첫 단계에서 몰수됐다");
-            Assert.AreEqual(1, h.Rewards.GrantCalls, "지급은 정산 1회뿐이다(몰수분 지급 없음)");
-            Assert.AreEqual(100, h.Wallet.Gold.CurrentValue - 1000, "지갑 증가분 = 정산(방 1)뿐");
+            Assert.AreEqual(2, h.Rewards.GrantCalls, "종료 지급은 적립분·정산 2회 고정");
+            Assert.AreEqual(100, h.Wallet.Gold.CurrentValue - 1000, "지갑 증가분 = 정산(방 1)뿐 — 몰수분은 적립되지 않았다");
         }
     }
 }

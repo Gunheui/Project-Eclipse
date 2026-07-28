@@ -573,6 +573,7 @@ MonoBehaviour:
   backgroundRenderer: {fileID: 862141700}
   fader: {fileID: 445669394}
   doorPoint: {fileID: 1516624582}
+  dropSpawner: {fileID: 1880179368}
   roomProgressLabel: {fileID: 399142792}
   startAuto: 0
 --- !u!4 &132289559
@@ -7653,6 +7654,59 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -16, y: -16}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &1880179367
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1880179369}
+  - component: {fileID: 1880179368}
+  m_Layer: 0
+  m_Name: CurrencyDropSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1880179368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1880179367}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 533c1a3f87c284f1586c24dba1d6ac9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.CurrencyDropSpawner
+  dropPrefab: {fileID: 7921984984777458953, guid: 22841c3a4df4f4d53875d1147576faf3, type: 3}
+  currencyIcons:
+  - {fileID: 21300000, guid: 38190622f7804480fbac3cc97f2018a9, type: 3}
+  - {fileID: 21300000, guid: f3274a9dcaf0e4f498090804f289ba59, type: 3}
+  - {fileID: 21300000, guid: b98823d88a23b43f79edbbb350ab1f2b, type: 3}
+  amountTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
+  amountColor: {r: 1, g: 0.87, b: 0.45, a: 1}
+  popInDuration: 0.12
+  vanishDuration: 0.15
+--- !u!4 &1880179369
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1880179367}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1890862352
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9232,3 +9286,4 @@ SceneRoots:
   - {fileID: 1946741879}
   - {fileID: 445669395}
   - {fileID: 132289559}
+  - {fileID: 1880179369}

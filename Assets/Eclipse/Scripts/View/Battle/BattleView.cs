@@ -119,6 +119,16 @@ namespace Eclipse.View
                 .AddTo(_vmBindings);
         }
 
+        /// <summary> 나가기 버튼을 잠그거나 푼다. 입력을 받지 않는 연출 구간에 잠근다. </summary>
+        public void SetExitEnabled(bool on) => exitButton.interactable = on;
+
+        /// <summary>
+        /// 이번 전투에 나온 적들의 자리. 재화 드랍이 스폰 위치로 쓴다.
+        /// </summary>
+        /// <returns>빈 슬롯은 이미 비활성이라 제외된다. <see cref="ClearBattle"/> 뒤에는 빈 목록이다.</returns>
+        public IReadOnlyList<Vector3> EnemyPositions()
+            => enemyBattlers.Where(b => b.gameObject.activeSelf).Select(b => b.transform.position).ToList();
+
         /// <summary> 바인딩을 해제하고 배틀러·플레이트를 비운다. 방 전환 사이(재조립 전)에 부른다. </summary>
         public void ClearBattle()
         {

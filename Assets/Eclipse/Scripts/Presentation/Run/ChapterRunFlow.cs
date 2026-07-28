@@ -67,8 +67,11 @@ namespace Eclipse.Presentation
         /// <summary> 터미널: 이번에 지급된 보상 영수증. </summary>
         public IReadOnlyList<RewardEntry> Receipts;
 
-        /// <summary> 터미널: 런 중 획득 재화 누계(이미 지급된 장부 블록). </summary>
+        /// <summary> 터미널: 런 중 적립 재화 누계. 이번 종료에서 정산과 함께 지급된 블록이다. </summary>
         public IReadOnlyList<RewardEntry> RunIncome;
+
+        /// <summary> 직전 방에서 적립이 끝난 재화. 화면이 드랍 연출로 공개한다. 없으면 null. </summary>
+        public IReadOnlyList<RewardEntry> RoomDrops;
 
         /// <summary> BuffPick: 후보 3장. </summary>
         public IReadOnlyList<CardOption> Cards;
@@ -93,7 +96,7 @@ namespace Eclipse.Presentation
     }
 
     /// <summary>
-    /// 런 진행 상태기계 — 방 전진·전투 생성 요청·에스크로 지급/몰수·정산·저장·씬 이탈의 유일한 권위.
+    /// 런 진행 상태기계 — 방 전진·전투 생성 요청·에스크로 해소/몰수·적립·정산·저장·씬 이탈의 유일한 권위.
     /// 화면은 <see cref="Offer"/>를 구독해 그리고, 결과를 Report*로 보고만 한다. 토큰이 다른 보고는
     /// 조용히 무시된다(중복 탭·늦은 애니 콜백 방어).
     /// </summary>
@@ -114,6 +117,9 @@ namespace Eclipse.Presentation
 
         // 이번 방 결과에서 아직 처리하지 않은 3택1 목록(에스크로 버프 문 + 미드보스 버프 문).
         private readonly Queue<PendingBuffPick> _pendingPicks = new();
+
+        // 이번 방에서 적립했지만 아직 화면에 알리지 않은 재화. 다음 Emit이 RoomDrops로 옮기고 비운다.
+        private IReadOnlyList<RewardEntry> _pendingDrops;
 
         private bool _committed;
 
@@ -264,13 +270,14 @@ namespace Eclipse.Presentation
 
         /// <summary>
         /// 승리 직후 직전 에스크로와 미드보스 보상 2종을 공개한다.
-        /// 공개 결과를 보여 주는 화면은 없다. 처리만 하고 곧장 다음 진행으로 넘어간다.
+        /// 장부 적립까지 여기서 끝내고, 공개 연출은 다음 제시물의 <see cref="RunOffer.RoomDrops"/>에 맡긴다 —
+        /// 연출이 끊겨도 재화가 새지 않는 순서다. 지갑 반영은 런 종료 시 한 번이다(<see cref="CommitTerminal"/>).
         /// </summary>
         private void RevealRewards()
         {
             var receipts = new List<RewardEntry>();
 
-            // 에스크로는 지급 전에 소진한다 — 지급 후에 비우면 중복 보고가 같은 보상을 두 번 태울 수 있다.
+            // 에스크로는 적립 전에 소진한다 — 적립 후에 비우면 중복 보고가 같은 보상을 두 번 태울 수 있다.
             if (_session.HasEscrow)
             {
                 var door = _session.ClaimEscrow();
@@ -283,22 +290,24 @@ namespace Eclipse.Presentation
                     RevealDoor(choice, Math.Max(1, _session.DoorPointsPassed), receipts);
 
             if (receipts.Count > 0)
+            {
                 _session.RecordIncome(receipts);
+                _pendingDrops = receipts;
+            }
 
             ProceedAfterReveal();
         }
 
         /// <summary>
-        /// 문 하나를 공개 처리한다. 재화 문은 여기서 롤·지급되고, 버프 문은 3택1 대기열에 쌓인다.
+        /// 문 하나를 공개 처리한다. 재화 문은 여기서 금액이 굴려져 적립되고, 버프 문은 3택1 대기열에 쌓인다.
         /// </summary>
-        /// <param name="receipts"> 재화 문 지급 영수증을 여기에 덧붙인다. </param>
+        /// <param name="receipts"> 재화 문 적립분을 여기에 덧붙인다. </param>
         private void RevealDoor(DoorChoice choice, int depth, List<RewardEntry> receipts)
         {
             if (CurrencyDoor.IsCurrency(choice.Kind))
             {
-                var rolled = CurrencyDoor.Roll(choice.Kind, depth, _session.Chapter.currencyMultiplier,
-                    _doorCatalog, _currencyRng);
-                receipts.AddRange(_rewards.Grant(new[] { rolled }));
+                receipts.Add(CurrencyDoor.Roll(choice.Kind, depth, _session.Chapter.currencyMultiplier,
+                    _doorCatalog, _currencyRng));
             }
             else
             {
@@ -346,7 +355,8 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 런 종료 커밋. 종료 스텝이 두 번 불려도 지급과 저장은 정확히 1회다.
+        /// 런 종료 커밋. 런 중 적립분이 지갑에 닿는 유일한 지점이며, 종료 스텝이 두 번 불려도
+        /// 지급과 저장은 정확히 1회다.
         /// </summary>
         private void CommitTerminal(bool victory)
         {
@@ -355,12 +365,14 @@ namespace Eclipse.Presentation
                 return;
             _committed = true;
 
-            // 순서 고정: ①몰수 ②정산 계산 ③(승리만)클리어 기록 ④지급 1회 ⑤저장 1회 ⑥정산 팝업 제시.
+            // 순서 고정: ①몰수 ②정산 계산 ③(승리만)클리어 기록 ④적립분·정산 지급 ⑤저장 1회 ⑥정산 팝업 제시.
             _session.ForfeitEscrow();
             _pendingPicks.Clear();
             var entries = RunSettlement.EntriesFor(_session.Chapter, _session.RoomIndex, victory);
             if (victory)
                 _progress.MarkCleared(_session.Chapter);
+            // 적립분과 정산을 따로 지급한다 — 정산 팝업이 둘을 별개 블록으로 보여 주기 때문이다.
+            var income = _rewards.Grant(_session.RunIncome);
             var receipts = _rewards.Grant(entries);
             _saveService?.Save();
 
@@ -369,7 +381,7 @@ namespace Eclipse.Presentation
             {
                 Step = Current,
                 Receipts = receipts,
-                RunIncome = _session.RunIncome,
+                RunIncome = income,
                 Victory = victory,
             });
         }
@@ -399,6 +411,8 @@ namespace Eclipse.Presentation
         {
             StepToken++;
             offer.Token = StepToken;
+            offer.RoomDrops = _pendingDrops;
+            _pendingDrops = null;
             offer.RoomCount = _session.Chapter.rooms.Length;
             // 마지막 방을 넘긴 뒤(정산)에도 커서가 방 수를 넘지 않게 잘라 표시한다.
             offer.RoomNumber = Math.Min(_session.RoomIndex + 1, offer.RoomCount);
