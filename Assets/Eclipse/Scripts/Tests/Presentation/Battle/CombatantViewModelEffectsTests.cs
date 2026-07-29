@@ -37,6 +37,34 @@ namespace Eclipse.Tests
         }
 
         [Test]
+        public void 런_버프는_같은_그룹의_전투_효과_뒤에_서고_저주는_맨_앞이다()
+        {
+            var effects = new List<StatusEffect>
+            {
+                StatusEffect.StatModifier(EffectType.Buff, StatType.Atk, 0.4f, 2),
+                StatusEffect.Shield(100, 3),
+                StatusEffect.StatModifier(EffectType.Debuff, StatType.Def, 0.3f, 1),
+            };
+            var runEffects = new[]
+            {
+                new ActiveEffect(EffectType.Buff, StatType.None, -1),
+                new ActiveEffect(EffectType.Debuff, StatType.None, -1),
+            };
+
+            var result = CombatantViewModel.BuildActiveEffects(effects, runEffects);
+
+            var expected = new[]
+            {
+                (EffectType.Debuff, 1),
+                (EffectType.Debuff, -1),
+                (EffectType.Shield, 3),
+                (EffectType.Buff, 2),
+                (EffectType.Buff, -1),
+            };
+            CollectionAssert.AreEqual(expected, result.Select(e => (e.Type, e.RemainingTurns)).ToArray());
+        }
+
+        [Test]
         public void 삽입_순서가_달라도_표시_순서는_같다()
         {
             var forward = new List<StatusEffect>

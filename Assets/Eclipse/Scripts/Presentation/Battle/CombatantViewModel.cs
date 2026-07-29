@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Eclipse.Data;
@@ -16,7 +17,7 @@ namespace Eclipse.Presentation
     {
         public EffectType Type { get; }
 
-        /// <summary> 버프·디버프가 바꾸는 스탯. 그 외 타입은 None. </summary>
+        /// <summary> 버프·디버프가 바꾸는 스탯. 축이 하나로 정해지지 않거나 그 외 타입이면 None. </summary>
         public StatType Stat { get; }
 
         /// <summary> 남은 지속턴. -1이면 상시(턴 라벨을 표시하지 않는다). </summary>
@@ -45,11 +46,14 @@ namespace Eclipse.Presentation
         // 스킬 대상이 됐음을 알리는 신호(원인 스킬 포함). 배틀러가 구독해 피격 연출을 재생한다.
         private readonly Subject<SkillSO> _hit = new();
 
-        public CombatantViewModel(Combatant model, Observable<Unit> stateChanged, Sprite battler = null, Sprite timelineIcon = null)
+        /// <param name="runEffects">표시 전용 상시 효과(런 버프·저주). 도메인 효과가 아니라 아이콘 행에만 선다.</param>
+        public CombatantViewModel(Combatant model, Observable<Unit> stateChanged, Sprite battler,
+            Sprite timelineIcon, MutationSO mutation, IReadOnlyList<ActiveEffect> runEffects)
         {
             Model = model;
             BattlerSprite = battler;
             TimelineIcon = timelineIcon;
+            Mutation = mutation;
             CurrentHp = stateChanged
                 .Select(_ => model.CurrentHp)
                 .ToReadOnlyReactiveProperty(model.CurrentHp);
@@ -60,8 +64,8 @@ namespace Eclipse.Presentation
                 .Select(_ => model.ShieldAbsorb)
                 .ToReadOnlyReactiveProperty(model.ShieldAbsorb);
             ActiveEffects = stateChanged
-                .Select(_ => BuildActiveEffects(model.Effects))
-                .ToReadOnlyReactiveProperty(BuildActiveEffects(model.Effects));
+                .Select(_ => BuildActiveEffects(model.Effects, runEffects))
+                .ToReadOnlyReactiveProperty(BuildActiveEffects(model.Effects, runEffects));
             Skills = model.Skills
                 .Select(s => new SkillSlotViewModel(s, stateChanged))
                 .ToList();
@@ -84,6 +88,15 @@ namespace Eclipse.Presentation
 
         /// <summary> 턴 순서 타임라인 아이콘. 아군은 얼굴 크롭, 적은 배틀러 스프라이트. </summary>
         public Sprite TimelineIcon { get; }
+
+        /// <summary> 이 적에게 붙은 침식 변이. 없으면 null(아군은 항상 null). </summary>
+        public MutationSO Mutation { get; }
+
+        /// <summary> 배틀러 스프라이트에 곱하는 색. 변이가 없으면 흰색이라 원래 색이 그대로 남는다. </summary>
+        public Color Tint => Mutation != null ? Mutation.tintColor : Color.white;
+
+        /// <summary> 지금 이 유닛의 최종 스탯. 런 버프도 전투 중 스킬 효과도 전부 반영된 값이다. </summary>
+        public Stats EffectiveStats => Model.EffectiveStats;
 
         /// <summary> 현재 HP. HP 바 바인딩용. 턴마다 갱신. </summary>
         public ReadOnlyReactiveProperty<int> CurrentHp { get; }
@@ -116,12 +129,15 @@ namespace Eclipse.Presentation
         /// 도메인 효과 목록을 표시 순서로 확정해 변환한다. 해로움(디버프→도트→도발) 먼저,
         /// 이로움(실드→리젠→버프) 다음, 그룹 안에서는 남은 턴 오름차순에 상시(-1)가 마지막이다.
         /// </summary>
-        public static IReadOnlyList<ActiveEffect> BuildActiveEffects(IReadOnlyList<StatusEffect> effects)
+        /// <param name="persistent">함께 세울 표시 전용 상시 효과. 전투 효과와 같은 정렬을 탄다.</param>
+        public static IReadOnlyList<ActiveEffect> BuildActiveEffects(IReadOnlyList<StatusEffect> effects,
+            IReadOnlyList<ActiveEffect> persistent = null)
             // _effects의 삽입 순서에 기대지 않으므로 같은 효과를 다시 걸어도 아이콘 위치가 튀지 않는다.
             => effects
+                .Select(e => new ActiveEffect(e.Type, e.Stat, e.RemainingTurns))
+                .Concat(persistent ?? Array.Empty<ActiveEffect>())
                 .OrderBy(e => DisplayRank(e.Type))
                 .ThenBy(e => e.RemainingTurns < 0 ? int.MaxValue : e.RemainingTurns)
-                .Select(e => new ActiveEffect(e.Type, e.Stat, e.RemainingTurns))
                 .ToList();
 
         /// <summary> 아이콘 행 정렬 순위. 값이 작을수록 앞에 놓인다. </summary>

@@ -59,7 +59,8 @@ namespace Eclipse.Tests
         }
 
         // 아트는 스케줄러·엔진과 무관하므로 스프라이트 없이 유닛만 실어 보낸다.
-        private static BattleUnitEntry Entry(Combatant unit) => new BattleUnitEntry(unit, null, null);
+        private static BattleUnitEntry Entry(Combatant unit)
+            => new BattleUnitEntry(unit, null, null, null, null);
 
         // 엔진·스케줄러·프로바이더를 프로덕션(BattleLifetimeScope)과 같은 구성으로 조립한 VM. 타겟난수는 데미지난수와 분리된 스트림.
         private static BattleViewModel BuildVm(Combatant[] allies, Combatant[] enemies, int seed, bool startAuto)

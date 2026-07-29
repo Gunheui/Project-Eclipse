@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Eclipse.Data;
+using Eclipse.Data.Enums;
 using Eclipse.Domain;
 using Eclipse.Presentation;
+using UnityEngine;
 
 namespace Eclipse.Core
 {
@@ -12,6 +15,9 @@ namespace Eclipse.Core
     /// </summary>
     public sealed class BattleFactory
     {
+        // 상시 효과의 남은 턴. 플레이트가 음수를 턴 라벨 숨김으로 읽는다.
+        private const int PersistentTurns = -1;
+
         private readonly BattleConstantsSO constants;
         private readonly ChapterRunSession session;
         private readonly EncounterTuningSO tuning;
@@ -56,13 +62,19 @@ namespace Eclipse.Core
                     Combatant.FromCharacter(x.owned, x.slot, CharacterStats.BuildAllyStats(
                         x.owned.Definition, x.owned.Level, x.owned.AscensionTier, session.BuffsOf(x.slot))),
                     x.owned.Definition.portraitAssetRef,
-                    x.owned.Definition.faceIconAssetRef))
+                    x.owned.Definition.faceIconAssetRef,
+                    null,
+                    RunEffectsFor(x.slot)))
                 .ToList();
+            // 저주는 개체별로 갈리지 않아 적 전부가 같은 목록을 쓴다.
+            var curseEffects = RunEffectsFor(DoorChoice.NoPartySlot);
             var enemyEntries = enemyParty
                 .Select((spec, slot) => new BattleUnitEntry(
                     BuildEnemy(spec, slot),
                     spec.Enemy.battlerAssetRef,
-                    spec.Enemy.battlerAssetRef))
+                    spec.Enemy.battlerAssetRef,
+                    spec.Mutation,
+                    curseEffects))
                 .ToList();
 
             // 아군·적은 독립 타겟 난수 스트림을 사용한다. 둘 다 battleSeed에서 결정론적으로 파생되므로
@@ -97,6 +109,20 @@ namespace Eclipse.Core
                 scheduler,
                 manualProvider,
                 targeting);
+        }
+
+        /// <summary>
+        /// 이 자리가 받은 런 카드를 표시 전용 효과로 바꾼다. 스탯은 이미 최종값에 접혀 있어 아이콘만 낸다.
+        /// </summary>
+        /// <param name="partySlot">아군 자리. <see cref="DoorChoice.NoPartySlot"/>이면 적 전체 저주를 낸다.</param>
+        private IReadOnlyList<ActiveEffect> RunEffectsFor(int partySlot)
+        {
+            bool toEnemies = partySlot == DoorChoice.NoPartySlot;
+            return session.AcquiredCards
+                .Where(c => toEnemies ? c.TargetsEnemies : c.PartySlot == partySlot)
+                .Select(_ => new ActiveEffect(
+                    toEnemies ? EffectType.Debuff : EffectType.Buff, StatType.None, PersistentTurns))
+                .ToList();
         }
 
         /// <summary>

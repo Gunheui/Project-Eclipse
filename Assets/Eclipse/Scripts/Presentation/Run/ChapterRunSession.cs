@@ -14,7 +14,7 @@ namespace Eclipse.Presentation
         public const int MaxChoices = 2;
 
         /// <exception cref="ArgumentOutOfRangeException">보상이 없거나 <see cref="MaxChoices"/>를 넘을 때.</exception>
-        public EscrowedDoor(IReadOnlyList<DoorChoice> choices, int depth)
+        public EscrowedDoor(IReadOnlyList<DoorChoice> choices, int depth, bool engagesMidBoss)
         {
             if (choices == null)
                 throw new ArgumentNullException(nameof(choices));
@@ -24,12 +24,36 @@ namespace Eclipse.Presentation
 
             Choices = choices.ToArray();
             Depth = depth;
+            EngagesMidBoss = engagesMidBoss;
         }
 
         /// <summary> 이 문에 걸린 보상. 순서 = 화면 좌→우이자 해소 순서다. </summary>
         public IReadOnlyList<DoorChoice> Choices { get; }
 
         public int Depth { get; }
+
+        /// <summary> 미드보스 문인지. 바로 다음 정예 자리의 방을 정예로 세운다. </summary>
+        public bool EngagesMidBoss { get; }
+    }
+
+    /// <summary>
+    /// 런에서 받은 카드 하나와 그 귀속. 스탯 합계만으로는 어떤 카드였는지가 남지 않아 따로 보관한다.
+    /// </summary>
+    public readonly struct AcquiredCard
+    {
+        public AcquiredCard(BuffCard card, int partySlot)
+        {
+            Card = card;
+            PartySlot = partySlot;
+        }
+
+        public BuffCard Card { get; }
+
+        /// <summary> 이 카드가 붙은 캐릭터 자리. 저주 카드는 <see cref="DoorChoice.NoPartySlot"/>이다. </summary>
+        public int PartySlot { get; }
+
+        /// <summary> 저주 카드인지. 캐릭터가 아니라 적 전체에 붙는다. </summary>
+        public bool TargetsEnemies => PartySlot == DoorChoice.NoPartySlot;
     }
 
     /// <summary>
@@ -41,6 +65,7 @@ namespace Eclipse.Presentation
     {
         private readonly StatModifierSet[] _buffs;
         private readonly Dictionary<CurrencyType, int> _income = new();
+        private readonly List<AcquiredCard> _cards = new();
         private EscrowedDoor _escrow;
 
         /// <exception cref="ArgumentException">방 배치·정산 표·보스 행이 로드 검증을 통과하지 못할 때.</exception>
@@ -89,9 +114,9 @@ namespace Eclipse.Presentation
         public bool HasEscrow { get; private set; }
 
         /// <summary>
-        /// 미드보스 문을 골랐는지. 바로 다음 정예 자리의 방을 정예로 세우고, 보류분이 풀릴 때 내려간다.
+        /// 보류 중인 문이 미드보스 문인지. 문이 풀리거나 몰수되면 함께 꺼져서 뒤따르는 정예 자리로 번지지 않는다.
         /// </summary>
-        public bool MidBossEngaged { get; private set; }
+        public bool MidBossEngaged => HasEscrow && _escrow.EngagesMidBoss;
 
         /// <summary> 다음 방이 정예 후보 자리인지. 미드보스 문을 섞을 문 지점을 이 값으로 가른다. </summary>
         public bool NextRoomIsEliteCandidate()
@@ -115,10 +140,8 @@ namespace Eclipse.Presentation
             if (HasEscrow)
                 throw new InvalidOperationException("이미 보류 중인 문이 있다 — 공개 전에 다시 고를 수 없다.");
             DoorPointsPassed++;
-            _escrow = new EscrowedDoor(choices, DoorPointsPassed);
+            _escrow = new EscrowedDoor(choices, DoorPointsPassed, engagesMidBoss);
             HasEscrow = true;
-            if (engagesMidBoss)
-                MidBossEngaged = true;
         }
 
         /// <summary> 보류분을 비우면서 꺼낸다. 지급 전에 소진해야 중복 보고가 같은 보상을 두 번 태우지 못한다. </summary>
@@ -128,34 +151,35 @@ namespace Eclipse.Presentation
             if (!HasEscrow)
                 throw new InvalidOperationException("보류 중인 문이 없다.");
             HasEscrow = false;
-            // 정예 방 전투가 끝난 뒤에 내린다. 켠 채로 두면 뒤따르는 정예 자리까지 정예로 선다.
-            MidBossEngaged = false;
             return _escrow;
         }
 
         /// <summary> 보류분을 지급 없이 몰수한다. 런 종료 커밋의 첫 단계이며 없으면 무동작이다. </summary>
-        public void ForfeitEscrow()
-        {
-            HasEscrow = false;
-            MidBossEngaged = false;
-        }
+        public void ForfeitEscrow() => HasEscrow = false;
+
+        /// <summary> 지금까지 받은 카드를 획득 순서로 보관한다. 전투 화면의 버프 표시가 읽어 간다. </summary>
+        public IReadOnlyList<AcquiredCard> AcquiredCards => _cards;
 
         /// <summary>
         /// 카드를 배정한다. 저주 카드는 슬롯과 무관하게 런 전역 적 디버프로 쌓인다.
         /// </summary>
         /// <param name="partySlot">배정 슬롯. 저주 카드면 무시된다.</param>
+        /// <exception cref="ArgumentOutOfRangeException">빈 슬롯에 배정할 때.</exception>
+        /// <exception cref="ArgumentException">증감 축이 비어 있는 카드일 때.</exception>
         public void AttachCard(BuffCard card, int partySlot)
         {
-            if (card.targetsEnemies)
-            {
-                foreach (var delta in card.deltas)
-                    EnemyDebuffs.Add(delta);
-                return;
-            }
-            if (partySlot < 0 || partySlot >= Party.Count || Party[partySlot] == null)
+            // 검증을 먼저 끝낸다. 중간에 끊기면 스탯 합계와 기록이 어긋난다.
+            bool toEnemies = card.targetsEnemies;
+            if (!toEnemies && (partySlot < 0 || partySlot >= Party.Count || Party[partySlot] == null))
                 throw new ArgumentOutOfRangeException(nameof(partySlot), partySlot, "빈 슬롯에는 배정할 수 없다.");
+            // 축이 비면 합산이 예외로 끊긴다. 증감 하나라도 그러면 아무것도 반영하지 않고 여기서 끝낸다.
+            if (card.deltas.Any(d => d.axis == StatType.None))
+                throw new ArgumentException($"카드 '{card.id}'에 축이 비어 있는 증감이 있다.", nameof(card));
+
+            var target = toEnemies ? EnemyDebuffs : BuffsOf(partySlot);
             foreach (var delta in card.deltas)
-                BuffsOf(partySlot).Add(delta);
+                target.Add(delta);
+            _cards.Add(new AcquiredCard(card, toEnemies ? DoorChoice.NoPartySlot : partySlot));
         }
 
         /// <summary> 방 커서를 전진시킨다. 승리에만 부른다 — 그래서 RoomIndex가 곧 넘긴 방 수다. </summary>
@@ -190,8 +214,14 @@ namespace Eclipse.Presentation
                 throw new ArgumentException($"챕터 '{chapter.id}'의 방 배치가 비어 있다.", nameof(chapter));
             if (rooms.Count(r => r.kind == RoomKind.Boss) != 1 || rooms[^1].kind != RoomKind.Boss)
                 throw new ArgumentException($"챕터 '{chapter.id}'의 보스 방은 정확히 1개, 마지막 행이어야 한다.", nameof(chapter));
-            foreach (var room in rooms)
+            for (int i = 0; i < rooms.Length; i++)
             {
+                var room = rooms[i];
+                // 미드보스 문은 정예 자리 바로 앞 문 지점에만 섞인다. 그 문이 없으면 정예 자리가 조용히 일반 전투로 선다.
+                if (room.kind == RoomKind.Elite && (i == 0 || !rooms[i - 1].doorAfter))
+                    throw new ArgumentException(
+                        $"챕터 '{chapter.id}'의 정예 자리({i}행) 앞에 문 지점이 없다 — 미드보스 문이 나올 자리가 없다.",
+                        nameof(chapter));
                 if (room.kind == RoomKind.Boss) continue;
                 if (tuning.depths == null || tuning.depths.All(d => d.depth != room.depth))
                     throw new ArgumentException(

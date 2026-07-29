@@ -18,9 +18,11 @@ namespace Eclipse.View
     /// <summary>
     /// 전장에 세우는 배틀러 하나. 유닛 VM의 스프라이트를 월드 SpriteRenderer로 그리고,
     /// 자기 상태(HP·행동·생존)를 구독해 스스로 연출한다(피격 흔들림·플로팅 숫자·시전 돌진·사망 숨김).
-    /// 조준 모드에서는 몸통 탭으로 대상 선택 입력을 보낸다(Bind의 onTapped).
+    /// 조준 모드에서는 몸통 탭으로 대상 선택 입력을 보내고(Bind의 onTapped),
+    /// 그 외에는 마우스를 올리거나 꾹 누르는 동안 상세 표시를 요청한다(Bind의 onHovered).
     /// </summary>
-    public class BattlerView : MonoBehaviour, IPointerClickHandler
+    public class BattlerView : MonoBehaviour,
+        IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IPointerUpHandler
     {
         [SerializeField] private Transform visualRoot;
         [SerializeField] private SpriteRenderer spriteRenderer;
@@ -32,6 +34,11 @@ namespace Eclipse.View
 
         // 탭 영역을 스프라이트보다 이만큼 넓힌다(월드 단위). 손가락 여유.
         private const float TapAreaPadding = 0.15f;
+
+        // 탭 판정의 최대 가로 폭(월드 단위). 아군 초상은 정규화 규격이라 망토·무기까지 폭 3에 가까운데
+        // 앞뒤 줄 자리 간격은 1.5뿐이라, 그대로 두면 앞줄이 뒷줄의 몸통 탭을 가로챈다.
+        // 자리 간격보다 좁게 잘라 서로의 중심을 덮지 않게 한다. 이 값보다 좁은 스프라이트는 그대로 둔다.
+        [SerializeField] private float tapAreaMaxWidth = 1.4f;
 
         // 선택 불가(Ineligible) 대상 스프라이트에 곱하는 색. 채도는 유지하고 밝기만 낮춰 어둡게 보이게 한다.
         private static readonly Color DimColor = new(0.35f, 0.35f, 0.35f, 1f);
@@ -53,9 +60,13 @@ namespace Eclipse.View
         // 아웃라인 오버라이드 전달용. 첫 사용 때 만들어 재사용한다(머티리얼 인스턴스 복제를 피한다).
         private MaterialPropertyBlock _mpb;
 
-        // 이 배틀러가 표시 중인 유닛과 몸통 탭 통지처. Bind에서 세우고 Clear에서 지워 바인딩과 수명을 맞춘다.
+        // 이 배틀러가 표시 중인 유닛과 탭·호버 통지처. Bind에서 세우고 Clear에서 지워 바인딩과 수명을 맞춘다.
         private CombatantViewModel _unit;
         private Action<CombatantViewModel> _onTapped;
+        private Action<CombatantViewModel, bool> _onHovered;
+
+        // 이 배틀러의 평상시 스프라이트 색. 변이가 있으면 그 틴트, 없으면 흰색이다.
+        private Color _baseColor = Color.white;
 
         private Func<int> _speed = () => 1;
         private Vector3 _home;
@@ -72,18 +83,23 @@ namespace Eclipse.View
         /// </summary>
         /// <param name="speed">현재 연출 배속(1 또는 2)을 읽는 함수. 트윈 시간을 나눈다.</param>
         /// <param name="onTapped">몸통을 탭했을 때 이 유닛으로 호출된다. null이면 탭이 무시된다.</param>
-        public void Bind(CombatantViewModel unit, Func<int> speed, Action<CombatantViewModel> onTapped = null)
+        /// <param name="onHovered">포인터가 올라오거나(true) 벗어날 때(false) 호출된다. 상세 표시용.</param>
+        public void Bind(CombatantViewModel unit, Func<int> speed, Action<CombatantViewModel> onTapped = null,
+            Action<CombatantViewModel, bool> onHovered = null)
         {
             _bindings.Clear();
+            HideDetail();
             gameObject.SetActive(true);
             _unit = unit;
             _onTapped = onTapped;
+            _onHovered = onHovered;
             _speed = speed ?? (() => 1);
             if (visualRoot == null) visualRoot = transform;
             _home = visualRoot.localPosition;
             _facingRight = unit.IsAlly;
             _prevHp = unit.CurrentHp.CurrentValue;
             if (spriteRenderer != null) spriteRenderer.sprite = unit.BattlerSprite;
+            _baseColor = unit.Tint;
             SetTargetState(TargetState.None); // 평상시 밝기로 초기화(재바인딩 시 이전 dim 잔상 제거)
             ResizeTapArea();
 
@@ -113,16 +129,38 @@ namespace Eclipse.View
         public void Clear()
         {
             _bindings.Clear();
+            HideDetail();
             _unit = null;
             _onTapped = null;
+            _onHovered = null;
             gameObject.SetActive(false);
         }
 
         /// <summary>
         /// EventSystem 클릭 콜백. Collider2D + 카메라의 Physics2DRaycaster로 월드 스프라이트 탭이 전달된다.
+        /// 같은 경로로 호버·프레스 콜백도 함께 들어온다.
         /// 바인딩된 유닛을 그대로 통지처에 넘기며, 조준 중인지·유효 대상인지 판단은 BattleView가 한다.
         /// </summary>
         public void OnPointerClick(PointerEventData eventData) => _onTapped?.Invoke(_unit);
+
+        /// <summary>포인터가 올라오면 바로 상세를 띄운다(스킬 툴팁과 같은 방식).</summary>
+        public void OnPointerEnter(PointerEventData eventData) => ShowDetail();
+
+        public void OnPointerExit(PointerEventData eventData) => HideDetail();
+
+        /// <summary>손을 떼면 내린다. 터치는 뗀 자리에서 포인터가 사라져 나감 통지가 늦을 수 있다.</summary>
+        public void OnPointerUp(PointerEventData eventData) => HideDetail();
+
+        private void ShowDetail()
+        {
+            if (_unit != null) _onHovered?.Invoke(_unit, true);
+        }
+
+        /// <summary>상세를 내린다. 켜져 있지 않아도 호출 안전(멱등).</summary>
+        private void HideDetail()
+        {
+            if (_unit != null) _onHovered?.Invoke(_unit, false);
+        }
 
         /// <summary>
         /// 사망한 배틀러를 숨기고 탭 판정도 함께 끊는다. 연출은 부모 앵커 밑에 스폰되므로 그대로 남는다.
@@ -131,6 +169,8 @@ namespace Eclipse.View
         {
             if (spriteRenderer != null) spriteRenderer.enabled = alive;
             if (tapArea != null) tapArea.enabled = alive;
+            // 탭 판정을 끄면 포인터가 벗어나는 이벤트가 오지 않는다. 상세가 떠 있으면 여기서 직접 내린다.
+            if (!alive) HideDetail();
         }
 
         /// <summary>
@@ -140,7 +180,8 @@ namespace Eclipse.View
         public void SetTargetState(TargetState state, bool allyTarget = false)
         {
             if (spriteRenderer == null) return;
-            spriteRenderer.color = state == TargetState.Ineligible ? DimColor : Color.white;
+            // 변이 틴트 위에 dim을 곱한다 — 대입하면 변이색이 사라지고 조준이 끝난 뒤에도 흰색으로 남는다.
+            spriteRenderer.color = state == TargetState.Ineligible ? _baseColor * DimColor : _baseColor;
             ApplyOutline(state == TargetState.Selectable, allyTarget);
         }
 
@@ -157,7 +198,10 @@ namespace Eclipse.View
                 bounds.size.x / Mathf.Max(Mathf.Abs(scale.x), 1e-4f),
                 bounds.size.y / Mathf.Max(Mathf.Abs(scale.y), 1e-4f));
 
-            tapArea.size = size + new Vector2(TapAreaPadding * 2f, TapAreaPadding * 2f);
+            size += new Vector2(TapAreaPadding * 2f, TapAreaPadding * 2f);
+            if (tapAreaMaxWidth > 0f) size.x = Mathf.Min(size.x, tapAreaMaxWidth);
+
+            tapArea.size = size;
             tapArea.offset = transform.InverseTransformPoint(bounds.center);
         }
 

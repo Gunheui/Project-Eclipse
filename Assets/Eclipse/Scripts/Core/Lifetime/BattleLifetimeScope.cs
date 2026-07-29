@@ -34,6 +34,7 @@ namespace Eclipse.Core
             int runSeed = debugSeedOverride != 0 ? debugSeedOverride : new System.Random().Next(int.MinValue, int.MaxValue);
 
             builder.RegisterComponentInHierarchy<BattleView>();
+            builder.RegisterComponentInHierarchy<BattleBuffPanelView>();
             builder.RegisterComponentInHierarchy<ChapterRunDriver>();
 
             // 팝업 매니저는 씬 인프라라 씬마다 하나씩 선다. 방 사이 화면(문·3택1·정산)이 전부 이 스택 위에 뜬다.

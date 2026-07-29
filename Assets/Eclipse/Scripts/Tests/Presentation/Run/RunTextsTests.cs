@@ -5,6 +5,31 @@ using NUnit.Framework;
 
 namespace Eclipse.Tests
 {
+    public class RunTextsBattlePanelTests
+    {
+        [Test]
+        public void 변이_표기는_이름_접두를_빼고_배수만_적는다()
+        {
+            var mutation = RunFixtures.Mutation("mut_spd", StatType.Spd, 1.5f);
+            mutation.namePrefix = "신속한 ";
+
+            string line = RunTexts.MutationEffect(mutation);
+
+            Assert.AreEqual("속도 1.5배", line, "접두는 유닛 표시명이 이미 달고 있다");
+        }
+
+        [Test]
+        public void 스탯_한줄은_생명력을_빼고_치명을_확률과_배율로_묶는다()
+        {
+            var stats = new Stats { hp = 3569, atk = 1240, def = 310, spd = 118, critRate = 0.15f, critDamage = 1.5f };
+
+            string line = RunTexts.StatLine(stats);
+
+            Assert.AreEqual("공격력 1,240   방어력 310   속도 118   치명 15% / 150%", line);
+            StringAssert.DoesNotContain("생명력", line, "HP는 머리 위 바가 이미 보여준다");
+        }
+    }
+
     public class RunTextsTests
     {
         private static BuffCard Card(CardGrade grade, params StatDelta[] deltas)

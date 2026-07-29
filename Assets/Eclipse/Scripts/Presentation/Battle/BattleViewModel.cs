@@ -57,7 +57,8 @@ namespace Eclipse.Presentation
             var all = allies.Concat(enemies).ToList();
 
             Combatants = all
-                .Select(e => new CombatantViewModel(e.Unit, _stateChanged, e.Battler, e.TimelineIcon))
+                .Select(e => new CombatantViewModel(e.Unit, _stateChanged, e.Battler, e.TimelineIcon,
+                    e.Mutation, e.RunEffects))
                 .ToList();
 
             ActionCount = _stateChanged

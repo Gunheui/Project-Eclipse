@@ -26,6 +26,7 @@ namespace Eclipse.Core
         [SerializeField] private WorldDoorPointView doorPoint;
         [SerializeField] private CurrencyDropSpawner dropSpawner;
         [SerializeField] private TMP_Text roomProgressLabel;
+        [SerializeField] private GameObject eliteBadge;
         [SerializeField] private bool startAuto;
 
         private ChapterRunFlow _flow;
@@ -64,6 +65,10 @@ namespace Eclipse.Core
         {
             if (roomProgressLabel != null)
                 roomProgressLabel.text = $"방 {offer.RoomNumber}/{offer.RoomCount}";
+
+            // 정예는 방 진입 제시물에만 실린다. 다른 스텝은 방이 끝났다는 뜻이라 함께 내린다.
+            if (eliteBadge != null)
+                eliteBadge.SetActive(offer.Step == RunStep.EnteringRoom && offer.IsEliteEncounter);
 
             // 스텝 처리(ClearBattle) 전에 재생해야 적 좌표에 재화를 표시할 수 있음.
             await PlayRoomDropsAsync(offer);

@@ -114,6 +114,63 @@ namespace Eclipse.Tests
         }
 
         [Test]
+        public void 런_버프_표시가_스탯이나_도메인_효과로_새지_않는다()
+        {
+            var party = new List<OwnedCharacter> { RunFixtures.Owned("A0") };
+            var session = Session(party);
+            session.AttachCard(new BuffCard
+            {
+                id = "hp", displayName = "hp", grade = CardGrade.Common,
+                deltas = new[] { new StatDelta { axis = StatType.Hp, value = 0.5f } },
+            }, 0);
+            session.AttachCard(new BuffCard
+            {
+                id = "curse", displayName = "curse", grade = CardGrade.Common, targetsEnemies = true,
+                deltas = new[] { new StatDelta { axis = StatType.Atk, value = -0.1f } },
+            }, 0);
+
+            var vm = Factory(session).Create(Encounter(RunFixtures.Enemy("E0")), 1, false);
+
+            var ally = vm.Combatants.First(u => u.IsAlly);
+            Assert.AreEqual(1500, ally.MaxHp, "표시용 변환이 최종 스탯을 한 번 더 올리지 않는다");
+
+            // 도메인 효과로 들어갔다면 남은 턴이 붙은 항목이 함께 서고 스탯도 한 번 더 올랐을 것이다.
+            var allyIcons = ally.ActiveEffects.CurrentValue;
+            Assert.AreEqual(1, allyIcons.Count);
+            Assert.AreEqual(EffectType.Buff, allyIcons[0].Type);
+            Assert.AreEqual(-1, allyIcons[0].RemainingTurns, "상시라 턴 라벨이 없다");
+
+            var enemyIcons = vm.Combatants.First(u => !u.IsAlly).ActiveEffects.CurrentValue;
+            Assert.AreEqual(1, enemyIcons.Count);
+            Assert.AreEqual(EffectType.Debuff, enemyIcons[0].Type, "저주는 적 쪽에 디버프로 선다");
+        }
+
+        [Test]
+        public void 변이가_적_유닛에_실려_오고_틴트가_그_색으로_파생된다()
+        {
+            var party = new List<OwnedCharacter> { RunFixtures.Owned("A0") };
+            var mutation = RunFixtures.Mutation("mut_hp", StatType.Hp, 1.5f);
+            mutation.tintColor = new Color(0.78f, 0.24f, 0.20f);
+            var spec = new EncounterSpec(new[]
+            {
+                new EnemyInstanceSpec(RunFixtures.Enemy("E0"), mutation, isElite: false),
+                new EnemyInstanceSpec(RunFixtures.Enemy("E1"), null, isElite: false),
+            });
+
+            var vm = Factory(Session(party)).Create(spec, 1, false);
+
+            var enemies = vm.Combatants.Where(u => !u.IsAlly).OrderBy(u => u.SlotIndex).ToList();
+            Assert.AreSame(mutation, enemies[0].Mutation, "상세 패널이 배수를 읽을 수 있게 변이가 그대로 실린다");
+            Assert.AreEqual(mutation.tintColor, enemies[0].Tint);
+            Assert.IsNull(enemies[1].Mutation, "변이가 없는 적은 null이다");
+            Assert.AreEqual(Color.white, enemies[1].Tint, "변이가 없으면 평상시 흰색이다");
+
+            var ally = vm.Combatants.First(u => u.IsAlly);
+            Assert.IsNull(ally.Mutation, "아군에는 변이가 붙지 않는다");
+            Assert.AreEqual(Color.white, ally.Tint);
+        }
+
+        [Test]
         public void 방마다_새_인스턴스가_선다()
         {
             var party = new List<OwnedCharacter> { RunFixtures.Owned("A0") };

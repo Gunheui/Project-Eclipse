@@ -39,13 +39,15 @@ namespace Eclipse.View
         [Header("Turn timeline")]
         [SerializeField] private TurnTimelineView turnTimeline;
 
+        [Header("Buff detail")]
+        [SerializeField] private BattleBuffPanelView buffPanel;
+
         [Header("Controls")]
         [SerializeField] private Button exitButton;
         [SerializeField] private Button autoButton;
         [SerializeField] private TMP_Text autoLabel;
         [SerializeField] private Button speedButton;
         [SerializeField] private TMP_Text speedLabel;
-        [SerializeField] private TMP_Text actionCounterLabel;
 
         private BattleViewModel _viewModel;
 
@@ -87,6 +89,7 @@ namespace Eclipse.View
                 speedButton.OnClickAsObservable()
                     .Subscribe(_ => ToggleSpeed())
                     .AddTo(this);
+
             UpdateSpeedLabel();
         }
 
@@ -101,10 +104,6 @@ namespace Eclipse.View
             BindBattlers();
             BindPlates();
             if (turnTimeline != null) turnTimeline.Bind(viewModel);
-
-            viewModel.ActionCount
-                .Subscribe(n => actionCounterLabel.text = n.ToString())
-                .AddTo(_vmBindings);
 
             viewModel.AutoMode
                 .Subscribe(on =>
@@ -135,6 +134,7 @@ namespace Eclipse.View
             _vmBindings.Clear();
             _viewModel = null;
             ExitTargeting();
+            CloseBuffPanel();
             foreach (var b in allyBattlers.Concat(enemyBattlers)) b.Clear();
             foreach (var p in allyPlates.Concat(enemyPlates)) p.Clear();
         }
@@ -159,7 +159,7 @@ namespace Eclipse.View
             for (int slot = 0; slot < battlers.Length; slot++)
             {
                 var unit = FindUnit(isAlly, slot);
-                if (unit != null) battlers[slot].Bind(unit, () => _speedMultiplier, OnUnitTapped);
+                if (unit != null) battlers[slot].Bind(unit, () => _speedMultiplier, OnUnitTapped, OnUnitHovered);
                 else battlers[slot].Clear();
             }
         }
@@ -314,6 +314,8 @@ namespace Eclipse.View
         {
             _pendingSkill = skill;
             _validTargets = valid;
+            CloseBuffPanel(); // 조준이 100% 우선한다
+
             // 아군 힐/버프 조준은 녹색, 적 공격 조준은 빨강 아웃라인(색 선택은 BattlerView가 소유).
             foreach (var u in _viewModel.Combatants)
                 FindBattler(u)?.SetTargetState(
@@ -375,6 +377,26 @@ namespace Eclipse.View
                 skillCooldownOverlays[index].SetActive(show);
             if (show && skillCooldownLabels != null && index < skillCooldownLabels.Length)
                 skillCooldownLabels[index].text = turns.ToString();
+        }
+
+        /// <summary>
+        /// 배틀러 호버·롱프레스의 공통 처리. 조준이 우선이라 조준 중에는 상세를 열지 않는다.
+        /// </summary>
+        /// <param name="show">포인터가 올라왔으면 true, 벗어났으면 false.</param>
+        private void OnUnitHovered(CombatantViewModel unit, bool show)
+        {
+            if (buffPanel == null || unit == null) return;
+            if (show)
+            {
+                if (_pendingSkill != null) return;
+                buffPanel.Show(unit);
+            }
+            else buffPanel.Close(unit);
+        }
+
+        private void CloseBuffPanel()
+        {
+            if (buffPanel != null) buffPanel.Close();
         }
 
         private void OnDestroy() => _vmBindings.Dispose();

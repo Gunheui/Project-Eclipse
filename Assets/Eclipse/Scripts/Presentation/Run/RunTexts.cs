@@ -76,6 +76,18 @@ namespace Eclipse.Presentation
             return string.Join(" ‧ ", card.deltas.Select(FormatDelta));
         }
 
+        /// <summary> 변이가 거는 배수 한 줄("생명력 1.5배"). 변이 이름은 유닛 표시명에 이미 접두로 붙는다. </summary>
+        public static string MutationEffect(MutationSO mutation)
+            => $"{StatName(mutation.statAxis)} {mutation.multiplier:0.##}배";
+
+        /// <summary>
+        /// 최종 스탯 한 줄("공격력 1240   방어력 310   속도 118   치명 15% / 150%").
+        /// 생명력은 머리 위 HP 바가 이미 보여주므로 빼고, 치명은 확률과 배율을 한 칸에 묶는다.
+        /// </summary>
+        public static string StatLine(Stats stats)
+            => $"{StatName(StatType.Atk)} {stats.atk:N0}   {StatName(StatType.Def)} {stats.def:N0}   "
+             + $"{StatName(StatType.Spd)} {stats.spd:N0}   치명 {stats.critRate * 100f:0.#}% / {stats.critDamage * 100f:0.#}%";
+
         /// <summary>
         /// 정산 행 하나의 재화 표기("골드 1,850 교본 2 보석 240"). 0인 재화도 자리를 지킨다.
         /// </summary>
