@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Eclipse.Presentation;
 using TMPro;
 using UnityEngine;
@@ -16,11 +17,17 @@ namespace Eclipse.View
         [SerializeField] private TMP_Text nameLabel;
         [SerializeField] private TMP_Text promiseLabel;
 
+        // 걸린 보상 심볼 자리. 배치 순서가 해소 순서라 좌→우로 꽂아 둔다. 미드보스 문이 아니면 전부 꺼진다.
+        [SerializeField] private SpriteRenderer[] rewardSymbols;
+
         // 탭 판정 영역. 프레임 크기로 에디터에서 고정한다 — 그림 크기와 무관하게 손가락 여유를 보장한다.
         [SerializeField] private BoxCollider2D tapArea;
 
         // 그림을 이 높이(월드 단위)로 맞춰 그린다. 초상과 아이콘은 원본 크기가 달라 그대로 걸 수 없다.
         [SerializeField] private float iconFitHeight = 1.2f;
+
+        // 보상 심볼을 맞출 높이(월드 단위). 그림보다 작아야 문의 주인공이 초상으로 읽힌다.
+        [SerializeField] private float rewardSymbolFitHeight = 0.45f;
 
         private Action<WorldDoorView> _onTapped;
 
@@ -46,6 +53,7 @@ namespace Eclipse.View
             if (nameLabel != null) nameLabel.text = option.DisplayName;
             if (promiseLabel != null) promiseLabel.text = option.Promise;
             FitIcon(option.Icon);
+            ShowRewardSymbols(option.RewardIcons);
             SetTappable(true);
         }
 
@@ -76,11 +84,37 @@ namespace Eclipse.View
             iconRenderer.enabled = sprite != null;
             if (sprite == null) return;
 
+            float scale = ScaleToHeight(iconRenderer.transform, sprite, iconFitHeight);
             var bounds = sprite.bounds;
-            float scale = bounds.size.y > 0f ? iconFitHeight / bounds.size.y : 1f;
-            iconRenderer.transform.localScale = new Vector3(scale, scale, 1f);
             iconRenderer.transform.localPosition =
                 _iconAnchor - new Vector3(bounds.center.x * scale, bounds.min.y * scale, 0f);
+        }
+
+        /// <summary> 걸린 보상 심볼을 좌→우로 켠다. 심볼이 없는 자리는 꺼서 일반 문과 같은 모습이 된다. </summary>
+        private void ShowRewardSymbols(IReadOnlyList<Sprite> icons)
+        {
+            if (rewardSymbols == null) return;
+
+            for (int i = 0; i < rewardSymbols.Length; i++)
+            {
+                if (rewardSymbols[i] == null) continue;
+
+                var sprite = icons != null && i < icons.Count ? icons[i] : null;
+                rewardSymbols[i].sprite = sprite;
+                rewardSymbols[i].enabled = sprite != null;
+                if (sprite != null)
+                    ScaleToHeight(rewardSymbols[i].transform, sprite, rewardSymbolFitHeight);
+            }
+        }
+
+        /// <summary> 그림을 지정한 월드 높이로 등비 축소한다. </summary>
+        /// <returns>적용한 배율. 위치를 함께 맞출 때 이 값이 필요하다.</returns>
+        private static float ScaleToHeight(Transform target, Sprite sprite, float height)
+        {
+            float source = sprite.bounds.size.y;
+            float scale = source > 0f ? height / source : 1f;
+            target.localScale = new Vector3(scale, scale, 1f);
+            return scale;
         }
     }
 }

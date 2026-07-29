@@ -16,24 +16,32 @@ namespace Eclipse.Presentation
     /// <summary> 문 지점 선택지 하나의 표시 데이터. View가 도메인을 만지지 않도록 문구·그림까지 풀어서 담는다. </summary>
     public readonly struct DoorOption
     {
-        public DoorOption(DoorChoice choice, string displayName, string promise, Sprite icon)
+        public DoorOption(IReadOnlyList<DoorChoice> rewards, string displayName, string promise, Sprite icon,
+            IReadOnlyList<Sprite> rewardIcons)
         {
-            Choice = choice;
+            Rewards = rewards;
             DisplayName = displayName;
             Promise = promise;
             Icon = icon;
+            RewardIcons = rewardIcons;
         }
 
-        /// <summary> 이 선택지가 확정될 때 그대로 보고되는 값. </summary>
-        public DoorChoice Choice { get; }
+        /// <summary> 이 문에 걸린 보상. 순서 = 화면 좌→우이자 해소 순서다. </summary>
+        public IReadOnlyList<DoorChoice> Rewards { get; }
+
+        /// <summary> 미드보스 문인지. 보상 2종을 거는 문은 미드보스 문뿐이다. </summary>
+        public bool IsMidBoss => Rewards.Count == 2;
 
         public string DisplayName { get; }
 
         /// <summary> 문에 적히는 약속. 금액은 적지 않는다. </summary>
         public string Promise { get; }
 
-        /// <summary> 문에 거는 그림. 캐릭터 문은 그 파티원의 초상, 나머지는 카탈로그 아이콘이다. </summary>
+        /// <summary> 문에 거는 그림. 캐릭터 문은 그 파티원의 초상, 미드보스 문은 미드보스 초상이다. </summary>
         public Sprite Icon { get; }
+
+        /// <summary> 걸린 보상의 심볼. 미드보스 문만 2개를 싣고 나머지는 비어 있다. </summary>
+        public IReadOnlyList<Sprite> RewardIcons { get; }
     }
 
     /// <summary> 3택1 후보 하나의 표시 데이터. View가 도메인을 만지지 않도록 문구까지 풀어서 담는다. </summary>
@@ -81,6 +89,9 @@ namespace Eclipse.Presentation
 
         /// <summary> EnteringRoom: 이번 방 전투 시드(런 시드에서 방 인덱스로 파생). </summary>
         public int BattleSeed;
+
+        /// <summary> EnteringRoom: 정예 미드보스 전투인지. 정예 표기는 방 종류가 아니라 이 값을 읽는다. </summary>
+        public bool IsEliteEncounter;
 
         /// <summary> 터미널: 문으로 번 재화. 런 내내 장부에만 쌓였다가 이번 종료에 지급된 블록이다. </summary>
         public IReadOnlyList<RewardEntry> ExploreReward;
@@ -246,16 +257,19 @@ namespace Eclipse.Presentation
         }
 
         /// <summary> 문 선택 보고. 보류분으로 기록만 하고(지연 지급) 다음 방으로 전진한다. </summary>
-        public UniTask ReportDoorPicked(DoorChoice choice, int token)
+        /// <param name="optionIndex">제시된 문 목록에서의 자리. 범위 밖이면 무시한다.</param>
+        public UniTask ReportDoorPicked(int optionIndex, int token)
         {
             if (token != StepToken || Current != RunStep.DoorPoint)
                 return UniTask.CompletedTask;
 
-            // 제시하지 않은 문은 받지 않는다. 토큰만으로는 화면이 만들어 낸 값을 거를 수 없다.
-            if (_offer.Value.Doors == null || _offer.Value.Doors.All(d => d.Choice != choice))
+            // 제시한 자리만 받는다. 보상은 화면이 보낸 값이 아니라 제시물에서 그대로 꺼낸다.
+            var doors = _offer.Value.Doors;
+            if (doors == null || optionIndex < 0 || optionIndex >= doors.Count)
                 return UniTask.CompletedTask;
 
-            _session.HoldEscrow(choice);
+            var picked = doors[optionIndex];
+            _session.HoldEscrow(picked.Rewards, picked.IsMidBoss);
             _session.AdvanceRoom();
             OfferRoom();
             return UniTask.CompletedTask;
@@ -269,9 +283,12 @@ namespace Eclipse.Presentation
         private void OfferRoom()
         {
             var room = _session.CurrentRoom;
+
+            // 배치의 Elite는 정예 후보 자리일 뿐이다. 실제 정예 여부는 문③에서 미드보스 문을 골랐는지가 정한다.
+            bool isElite = room.kind == RoomKind.Elite && _session.MidBossEngaged;
             var encounter = room.kind == RoomKind.Boss
                 ? _generator.Generate(EncounterGenerator.BossDepth, false)
-                : _generator.Generate(room.depth, room.kind == RoomKind.Elite);
+                : _generator.Generate(room.depth, isElite);
 
             Current = RunStep.InBattle;
             Emit(new RunOffer
@@ -280,11 +297,12 @@ namespace Eclipse.Presentation
                 Room = room,
                 Encounter = encounter,
                 BattleSeed = RunSeed.ForRoomBattle(_session.RunSeed, _session.RoomIndex),
+                IsEliteEncounter = isElite,
             });
         }
 
         /// <summary>
-        /// 승리 직후 직전 에스크로와 미드보스 보상 2종을 공개한다.
+        /// 승리 직후 직전 에스크로를 공개한다. 미드보스 문이면 걸린 2종이 좌→우로 해소된다.
         /// 장부 적립까지 여기서 끝내고, 공개 연출은 다음 제시물의 <see cref="RunOffer.RoomDrops"/>에 맡긴다 —
         /// 연출이 끊겨도 재화가 새지 않는 순서다. 지갑 반영은 런 종료 시 한 번이다(<see cref="CommitRunEnd"/>).
         /// </summary>
@@ -296,13 +314,9 @@ namespace Eclipse.Presentation
             if (_session.HasEscrow)
             {
                 var door = _session.ClaimEscrow();
-                RevealDoor(door.Choice, door.Depth, receipts);
+                foreach (var choice in door.Choices)
+                    RevealDoor(choice, door.Depth, receipts);
             }
-
-            // 미드보스 보상: 문 2개 비복원 즉시 처리(이미 이긴 위험이라 지연시키지 않는다).
-            if (_session.CurrentRoom.kind == RoomKind.Elite)
-                foreach (var choice in _doorDraw.DrawDistinct(2))
-                    RevealDoor(choice, Math.Max(1, _session.DoorPointsPassed), receipts);
 
             if (receipts.Count > 0)
             {
@@ -353,7 +367,11 @@ namespace Eclipse.Presentation
             if (doorAfter)
             {
                 Current = RunStep.DoorPoint;
-                Emit(new RunOffer { Step = RunStep.DoorPoint, Doors = BuildDoorOptions(_doorDraw.DrawDistinct(3)) });
+                Emit(new RunOffer
+                {
+                    Step = RunStep.DoorPoint,
+                    Doors = BuildDoorOptions(_doorDraw.DrawDoorPoint(_session.NextRoomIsEliteCandidate())),
+                });
                 return;
             }
 
@@ -403,22 +421,48 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 뽑힌 문을 표시 데이터로 바꾼다. 표시명·약속 문구는 추첨과 같은 카탈로그에서 나오고,
+        /// 뽑힌 지점을 표시 데이터로 바꾼다. 보상 2종을 건 자리만 미드보스 문이 된다.
+        /// </summary>
+        private IReadOnlyList<DoorOption> BuildDoorOptions(IReadOnlyList<IReadOnlyList<DoorChoice>> doors)
+            => doors.Select(rewards => rewards.Count == 1 ? PromiseDoor(rewards[0]) : MidBossDoor(rewards)).ToList();
+
+        /// <summary>
+        /// 일반 약속 문 하나. 표시명·약속 문구는 추첨과 같은 카탈로그에서 나오고,
         /// 캐릭터 문만 대상 파티원의 이름·초상으로 채워진다.
         /// </summary>
-        private IReadOnlyList<DoorOption> BuildDoorOptions(IReadOnlyList<DoorChoice> choices)
-            => choices.Select(choice =>
-            {
-                var definition = _doorCatalog.doors.First(d => d.kind == choice.Kind);
-                if (!choice.IsCharacterDoor)
-                    return new DoorOption(choice, definition.displayName, definition.promiseText, definition.icon);
+        private DoorOption PromiseDoor(DoorChoice choice)
+        {
+            var definition = _doorCatalog.doors.First(d => d.kind == choice.Kind);
+            var rewards = new[] { choice };
+            if (!choice.IsCharacterDoor)
+                return new DoorOption(rewards, definition.displayName, PromiseOf(choice), definition.icon,
+                    Array.Empty<Sprite>());
 
-                var character = _session.Party[choice.TargetPartySlot].Definition;
-                return new DoorOption(choice,
-                    string.Format(definition.displayName, character.displayName),
-                    string.Format(definition.promiseText, character.displayName),
-                    character.portraitAssetRef);
-            }).ToList();
+            var character = _session.Party[choice.TargetPartySlot].Definition;
+            return new DoorOption(rewards,
+                string.Format(definition.displayName, character.displayName),
+                PromiseOf(choice),
+                character.portraitAssetRef,
+                Array.Empty<Sprite>());
+        }
+
+        /// <summary>
+        /// 미드보스 문 하나. 이름과 초상은 고정이고, 걸린 보상 2종이 약속 문구와 아이콘을 해소 순서대로 채운다.
+        /// </summary>
+        private DoorOption MidBossDoor(IReadOnlyList<DoorChoice> rewards)
+            => new DoorOption(rewards, RunTexts.MidBossDoorName,
+                RunTexts.MidBossPromise(rewards.Select(PromiseOf)),
+                _session.Chapter.midBossPortrait,
+                rewards.Select(r => _doorCatalog.doors.First(d => d.kind == r.Kind).icon).ToList());
+
+        /// <summary> 문 하나가 약속하는 보상 문구. 캐릭터 문만 대상 파티원의 이름으로 채워진다. </summary>
+        private string PromiseOf(DoorChoice choice)
+        {
+            string promise = _doorCatalog.doors.First(d => d.kind == choice.Kind).promiseText;
+            return choice.IsCharacterDoor
+                ? string.Format(promise, _session.Party[choice.TargetPartySlot].Definition.displayName)
+                : promise;
+        }
 
         /// <summary>
         /// 뽑힌 카드를 표시 데이터로 바꾼다. 카드명·효과·등급 라벨은 카드에서 나오고,

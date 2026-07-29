@@ -12,6 +12,12 @@ namespace Eclipse.Presentation
         /// <summary> 저주 카드의 귀속 표시. 캐릭터가 아니라 남은 적 전체에 붙는다. </summary>
         public const string EnemyTarget = "적 전체";
 
+        /// <summary> 미드보스 문의 표시명. 카탈로그에 없는 문이라 문구를 코드가 보유한다. </summary>
+        public const string MidBossDoorName = "미드보스의 문";
+
+        /// <summary> 미드보스 문의 약속. 걸린 보상 2종을 일반 문과 같은 문구로 한 줄씩 적는다. </summary>
+        public static string MidBossPromise(IEnumerable<string> rewards) => string.Join("\n", rewards);
+
         /// <summary> 정산 행의 재화 표기 순서. </summary>
         private static readonly CurrencyType[] RewardColumns =
         {

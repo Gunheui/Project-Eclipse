@@ -10,13 +10,25 @@ namespace Eclipse.Presentation
     /// <summary> 에스크로 보류분 = 고른 문 + 그 문 지점의 깊이. 보상 payload는 공개 시점에 롤한다. </summary>
     public readonly struct EscrowedDoor
     {
-        public EscrowedDoor(DoorChoice choice, int depth)
+        /// <summary> 문 하나가 걸 수 있는 보상 수의 상한. 미드보스 문만 2종이고 나머지는 1종이다. </summary>
+        public const int MaxChoices = 2;
+
+        /// <exception cref="ArgumentOutOfRangeException">보상이 없거나 <see cref="MaxChoices"/>를 넘을 때.</exception>
+        public EscrowedDoor(IReadOnlyList<DoorChoice> choices, int depth)
         {
-            Choice = choice;
+            if (choices == null)
+                throw new ArgumentNullException(nameof(choices));
+            if (choices.Count < 1 || choices.Count > MaxChoices)
+                throw new ArgumentOutOfRangeException(nameof(choices), choices.Count,
+                    $"문 하나가 거는 보상은 1~{MaxChoices}종이다.");
+
+            Choices = choices.ToArray();
             Depth = depth;
         }
 
-        public DoorChoice Choice { get; }
+        /// <summary> 이 문에 걸린 보상. 순서 = 화면 좌→우이자 해소 순서다. </summary>
+        public IReadOnlyList<DoorChoice> Choices { get; }
+
         public int Depth { get; }
     }
 
@@ -76,6 +88,18 @@ namespace Eclipse.Presentation
         /// <summary> 보류 중인 문이 있는지. 방1 진입 직후와 공개 직후에는 없다. </summary>
         public bool HasEscrow { get; private set; }
 
+        /// <summary>
+        /// 미드보스 문을 골랐는지. 바로 다음 정예 자리의 방을 정예로 세우고, 보류분이 풀릴 때 내려간다.
+        /// </summary>
+        public bool MidBossEngaged { get; private set; }
+
+        /// <summary> 다음 방이 정예 후보 자리인지. 미드보스 문을 섞을 문 지점을 이 값으로 가른다. </summary>
+        public bool NextRoomIsEliteCandidate()
+        {
+            int next = RoomIndex + 1;
+            return next < Chapter.rooms.Length && Chapter.rooms[next].kind == RoomKind.Elite;
+        }
+
         /// <summary> 이 슬롯 캐릭터가 런에서 받은 버프 합. 빈 슬롯도 호출 가능(항상 비어 있다). </summary>
         public StatModifierSet BuffsOf(int partySlot)
             => _buffs[partySlot] ??= new StatModifierSet();
@@ -83,14 +107,18 @@ namespace Eclipse.Presentation
         /// <summary>
         /// 고른 문을 보류분으로 기록하고 문 지점 수를 1 올린다. 깊이는 그 지점 번호로 함께 확정된다.
         /// </summary>
+        /// <param name="choices">그 문에 걸린 보상. 순서가 해소 순서다.</param>
+        /// <param name="engagesMidBoss">미드보스 문이면 true. 정예 자리의 방이 정예로 선다.</param>
         /// <exception cref="InvalidOperationException">이미 보류분이 있을 때(공개 전 중복 선택).</exception>
-        public void HoldEscrow(DoorChoice choice)
+        public void HoldEscrow(IReadOnlyList<DoorChoice> choices, bool engagesMidBoss)
         {
             if (HasEscrow)
                 throw new InvalidOperationException("이미 보류 중인 문이 있다 — 공개 전에 다시 고를 수 없다.");
             DoorPointsPassed++;
-            _escrow = new EscrowedDoor(choice, DoorPointsPassed);
+            _escrow = new EscrowedDoor(choices, DoorPointsPassed);
             HasEscrow = true;
+            if (engagesMidBoss)
+                MidBossEngaged = true;
         }
 
         /// <summary> 보류분을 비우면서 꺼낸다. 지급 전에 소진해야 중복 보고가 같은 보상을 두 번 태우지 못한다. </summary>
@@ -100,11 +128,17 @@ namespace Eclipse.Presentation
             if (!HasEscrow)
                 throw new InvalidOperationException("보류 중인 문이 없다.");
             HasEscrow = false;
+            // 정예 방 전투가 끝난 뒤에 내린다. 켠 채로 두면 뒤따르는 정예 자리까지 정예로 선다.
+            MidBossEngaged = false;
             return _escrow;
         }
 
         /// <summary> 보류분을 지급 없이 몰수한다. 런 종료 커밋의 첫 단계이며 없으면 무동작이다. </summary>
-        public void ForfeitEscrow() => HasEscrow = false;
+        public void ForfeitEscrow()
+        {
+            HasEscrow = false;
+            MidBossEngaged = false;
+        }
 
         /// <summary>
         /// 카드를 배정한다. 저주 카드는 슬롯과 무관하게 런 전역 적 디버프로 쌓인다.

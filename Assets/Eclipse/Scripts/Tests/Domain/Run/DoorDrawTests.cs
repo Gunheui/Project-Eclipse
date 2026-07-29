@@ -20,6 +20,15 @@ namespace Eclipse.Tests
             public int NextInt(int maxExclusive) => _value;
         }
 
+        // 적어 둔 롤 값을 순서대로 돌려주는 난수. 추첨과 자리 굴리기의 소비 순서를 고정하기 위한 것이다.
+        private sealed class ScriptedRoll : IRunRandom
+        {
+            private readonly int[] _values;
+            private int _next;
+            public ScriptedRoll(params int[] values) { _values = values; }
+            public int NextInt(int maxExclusive) => _values[_next++];
+        }
+
         private static DoorDraw Draw(int seed)
             => new DoorDraw(RunFixtures.DoorCatalog(), new SeededRandom(RunSeed.For(seed, RunSeed.Stream.Door)));
 
@@ -106,12 +115,98 @@ namespace Eclipse.Tests
             Assert.Throws<System.ArgumentException>(() => new DoorDraw(catalog, new FixedRoll(0)));
         }
 
+        // --- 지점 구성 (미드보스 문) ---
+
+        [Test]
+        public void 미드보스_없는_지점은_한_자리에_한_종씩_선다()
+        {
+            var point = Draw(5).DrawDoorPoint(includeMidBoss: false);
+
+            Assert.AreEqual(3, point.Count);
+            CollectionAssert.AreEquivalent(new[] { 1, 1, 1 }, point.Select(p => p.Count));
+            Assert.AreEqual(3, point.SelectMany(p => p).Distinct().Count(), "비복원이라 중복이 없다");
+        }
+
+        [Test]
+        public void 미드보스_지점은_한_자리에_2종_나머지에_1종씩_선다()
+        {
+            var draw = Draw(99);
+            for (int i = 0; i < 50; i++)
+            {
+                var point = draw.DrawDoorPoint(includeMidBoss: true);
+
+                Assert.AreEqual(3, point.Count);
+                CollectionAssert.AreEquivalent(new[] { 2, 1, 1 }, point.Select(p => p.Count));
+                var all = point.SelectMany(p => p).ToList();
+                Assert.AreEqual(4, all.Count);
+                Assert.AreEqual(4, all.Distinct().Count(), "지점 안 4종은 서로 다르다");
+            }
+        }
+
+        // 미드보스 자리를 바꿔 가며, 걸린 2종이 추첨 첫째·넷째인지와 자리 굴림이 추첨 뒤인지를 함께 고정한다.
+        // 자리를 먼저 굴리면 첫 롤을 자리가 먹어 position 1·2에서 어긋난다.
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        public void 미드보스_문은_추첨_첫째와_넷째를_걸고_자리는_추첨_뒤에_정해진다(int position)
+        {
+            var draw = new DoorDraw(RunFixtures.DoorCatalog(), new ScriptedRoll(0, 0, 0, 0, position));
+
+            var point = draw.DrawDoorPoint(includeMidBoss: true);
+
+            // 롤 0은 남은 라인업의 첫 항목을 집으므로 캐릭터 문 슬롯 0~3이 순서대로 뽑힌다.
+            CollectionAssert.AreEqual(
+                new[] { new DoorChoice(DoorKind.CharacterBuff, 0), new DoorChoice(DoorKind.CharacterBuff, 3) },
+                point[position]);
+            var normals = point.Where((_, i) => i != position).Select(p => p.Single()).ToList();
+            CollectionAssert.AreEqual(
+                new[] { new DoorChoice(DoorKind.CharacterBuff, 1), new DoorChoice(DoorKind.CharacterBuff, 2) },
+                normals);
+        }
+
+        [Test]
+        public void 미드보스_문_자리는_세_자리에_고르게_흩어진다()
+        {
+            var draw = Draw(4242);
+            var counts = new int[3];
+
+            for (int i = 0; i < 3000; i++)
+                counts[MidBossSeat(draw.DrawDoorPoint(includeMidBoss: true))]++;
+
+            foreach (int count in counts)
+                Assert.That(count, Is.EqualTo(1000).Within(150), "자리 빈도가 1/3 근처로 모인다");
+        }
+
+        [Test]
+        public void 같은_시드는_같은_지점_구성을_낸다()
+        {
+            CollectionAssert.AreEqual(PointSequence(31), PointSequence(31));
+            CollectionAssert.AreNotEqual(PointSequence(31), PointSequence(32));
+        }
+
+        private static int MidBossSeat(IReadOnlyList<IReadOnlyList<DoorChoice>> point)
+        {
+            for (int i = 0; i < point.Count; i++)
+                if (point[i].Count == 2) return i;
+            throw new AssertionException("미드보스 문이 없는 지점이다.");
+        }
+
         // 문 지점 5회분 추첨을 슬롯까지 포함한 문자열로 남긴다 — 종류만 기록하면 슬롯 차이가 지워진다.
         private static List<string> Sequence(int seed)
         {
             var draw = Draw(seed);
             return Enumerable.Range(0, 5)
                 .Select(_ => string.Join(",", draw.DrawDistinct(3)))
+                .ToList();
+        }
+
+        // 자리 구분(|)까지 남긴다 — 이어 붙이면 미드보스 자리가 어디였는지가 지문에서 지워진다.
+        private static List<string> PointSequence(int seed)
+        {
+            var draw = Draw(seed);
+            return Enumerable.Range(0, 5)
+                .Select(_ => string.Join("|", draw.DrawDoorPoint(includeMidBoss: true)
+                    .Select(seat => string.Join(",", seat))))
                 .ToList();
         }
     }

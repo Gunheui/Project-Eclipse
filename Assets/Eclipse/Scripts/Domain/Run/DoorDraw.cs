@@ -6,11 +6,14 @@ using Eclipse.Data;
 namespace Eclipse.Domain
 {
     /// <summary>
-    /// 약속 문의 가중 비복원 추첨. 문 지점(3종)과 미드보스 보상(2종)이 같은 라인업을 쓰는 두 호출자다.
+    /// 약속 문의 가중 비복원 추첨. 문 지점 하나가 3종을 받고, 미드보스 문이 섞이면 4종을 받는다.
     /// 추첨은 런 RNG의 Door 스트림 뒤에서 결정적이다.
     /// </summary>
     public sealed class DoorDraw
     {
+        /// <summary> 문 지점 하나에 서는 문 개수. 씬에 세워 둔 문 액터 수와 같다. </summary>
+        public const int DoorsPerPoint = 3;
+
         private readonly IRunRandom _rng;
         private readonly DoorEntry[] _lineup;
 
@@ -37,6 +40,29 @@ namespace Eclipse.Domain
 
         /// <summary> 라인업 항목 수. 캐릭터 문이 파티 슬롯마다 한 항목으로 갈라진 뒤의 개수다. </summary>
         public int LineupSize => _lineup.Length;
+
+        /// <summary>
+        /// 문 지점 하나를 통째로 구성한다. 바깥 목록이 문 3자리, 안쪽이 그 자리에 걸린 보상이다.
+        /// </summary>
+        /// <param name="includeMidBoss">미드보스 문을 섞을지. 섞으면 한 자리가 보상 2종을 건다.</param>
+        public IReadOnlyList<IReadOnlyList<DoorChoice>> DrawDoorPoint(bool includeMidBoss)
+        {
+            if (!includeMidBoss)
+                return DrawDistinct(DoorsPerPoint)
+                    .Select(choice => (IReadOnlyList<DoorChoice>)new[] { choice })
+                    .ToList();
+
+            // 4종을 한 번에 뽑아 스네이크로 나눈다 — 첫째·넷째가 미드보스 문, 가운데 둘이 일반 문이다.
+            var picks = DrawDistinct(DoorsPerPoint + 1);
+            var doors = new List<IReadOnlyList<DoorChoice>>
+            {
+                new[] { picks[1] },
+                new[] { picks[2] },
+            };
+            // 자리 굴림은 추첨 뒤에 온다. 이 소비 순서가 같은 시드로 같은 지점을 재현하는 조건이다.
+            doors.Insert(_rng.NextInt(DoorsPerPoint), new[] { picks[0], picks[3] });
+            return doors;
+        }
 
         /// <summary>
         /// 문을 가중 비복원으로 count개 뽑는다. 호출할 때마다 난수를 소비하고, 매번 전체 라인업에서 새로 시작한다.

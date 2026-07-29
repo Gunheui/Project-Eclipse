@@ -193,12 +193,12 @@ namespace Eclipse.Tests
             Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step);
 
             // 캐릭터 문이 안 뽑힌 시드면 문 자체를 검증할 수 없으므로 뽑힌 문 중에서 고른다.
-            var character = h.Offer.Doors.FirstOrDefault(d => d.Choice.IsCharacterDoor);
-            if (character.DisplayName == null)
+            int index = IndexOf(h, d => d.Rewards[0].IsCharacterDoor);
+            if (index < 0)
                 Assert.Ignore("이 시드의 문 지점에 캐릭터 문이 없다");
-            int slot = character.Choice.TargetPartySlot;
+            int slot = h.Offer.Doors[index].Rewards[0].TargetPartySlot;
 
-            h.Flow.ReportDoorPicked(character.Choice, h.Offer.Token).Forget();
+            h.Flow.ReportDoorPicked(index, h.Offer.Token).Forget();
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
 
             Assert.AreEqual(RunStep.BuffPick, h.Offer.Step);
@@ -222,11 +222,11 @@ namespace Eclipse.Tests
             h.Flow.BeginRun().Forget();
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
 
-            var buffDoor = h.Offer.Doors.FirstOrDefault(d => !CurrencyDoor.IsCurrency(d.Choice.Kind));
-            if (buffDoor.DisplayName == null)
+            int index = IndexOf(h, d => !CurrencyDoor.IsCurrency(d.Rewards[0].Kind));
+            if (index < 0)
                 Assert.Ignore("이 시드의 문 지점에 버프 문이 없다");
 
-            h.Flow.ReportDoorPicked(buffDoor.Choice, h.Offer.Token).Forget();
+            h.Flow.ReportDoorPicked(index, h.Offer.Token).Forget();
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
             Assert.AreEqual(RunStep.BuffPick, h.Offer.Step);
 
@@ -250,12 +250,12 @@ namespace Eclipse.Tests
             h.Flow.BeginRun().Forget();
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
 
-            var character = h.Offer.Doors.FirstOrDefault(d => d.Choice.IsCharacterDoor);
-            if (character.DisplayName == null)
+            int index = IndexOf(h, d => d.Rewards[0].IsCharacterDoor);
+            if (index < 0)
                 Assert.Ignore("이 시드의 문 지점에 캐릭터 문이 없다");
-            int slot = character.Choice.TargetPartySlot;
+            int slot = h.Offer.Doors[index].Rewards[0].TargetPartySlot;
 
-            h.Flow.ReportDoorPicked(character.Choice, h.Offer.Token).Forget();
+            h.Flow.ReportDoorPicked(index, h.Offer.Token).Forget();
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
             Assert.AreEqual(RunStep.BuffPick, h.Offer.Step);
 
@@ -272,30 +272,29 @@ namespace Eclipse.Tests
                 "붙는 값은 제시한 카드의 수치다");
         }
 
-        [Test]
-        public void 제시되지_않은_문은_받지_않는다()
+        [TestCase(-1)]
+        [TestCase(3)]
+        public void 제시하지_않은_자리_보고는_받지_않는다(int optionIndex)
         {
             var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, true), RunFixtures.Boss()));
             h.Flow.BeginRun().Forget();
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
             Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step);
+            Assert.AreEqual(3, h.Offer.Doors.Count);
 
-            var offered = h.Offer.Doors.Select(d => d.Choice).ToList();
-            var absent = AllDoors().First(c => !offered.Contains(c));
-            h.Flow.ReportDoorPicked(absent, h.Offer.Token).Forget();
+            h.Flow.ReportDoorPicked(optionIndex, h.Offer.Token).Forget();
 
             Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step, "제시 밖 선택은 상태를 바꾸지 못한다");
             Assert.IsFalse(h.Session.HasEscrow);
         }
 
-        private static IEnumerable<DoorChoice> AllDoors()
+        /// <summary> 조건에 맞는 문의 자리를 찾는다. 없으면 -1이다. </summary>
+        private static int IndexOf(Harness h, Func<DoorOption, bool> match)
         {
-            for (int slot = 0; slot < PlayerSave.PartySlotCount; slot++)
-                yield return new DoorChoice(DoorKind.CharacterBuff, slot);
-            yield return new DoorChoice(DoorKind.Curse);
-            yield return new DoorChoice(DoorKind.Gold);
-            yield return new DoorChoice(DoorKind.Manual);
-            yield return new DoorChoice(DoorKind.Essence);
+            var doors = h.Offer.Doors;
+            for (int i = 0; i < doors.Count; i++)
+                if (match(doors[i])) return i;
+            return -1;
         }
 
         // --- 재화 월드 드랍 페이로드 ---
@@ -312,12 +311,12 @@ namespace Eclipse.Tests
             Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step);
             Assert.IsNull(h.Offer.RoomDrops, "에스크로 없는 방 승리에는 드랍이 없다");
 
-            var currency = h.Offer.Doors.FirstOrDefault(d => CurrencyDoor.IsCurrency(d.Choice.Kind));
-            if (currency.DisplayName == null)
+            int index = IndexOf(h, d => CurrencyDoor.IsCurrency(d.Rewards[0].Kind));
+            if (index < 0)
                 Assert.Ignore("이 시드의 문 지점에 재화 문이 없다");
-            var expectedType = CurrencyDoor.CurrencyOf(currency.Choice.Kind);
+            var expectedType = CurrencyDoor.CurrencyOf(h.Offer.Doors[index].Rewards[0].Kind);
 
-            h.Flow.ReportDoorPicked(currency.Choice, h.Offer.Token).Forget();
+            h.Flow.ReportDoorPicked(index, h.Offer.Token).Forget();
             Assert.AreEqual(RunStep.EnteringRoom, h.Offer.Step);
             Assert.IsNull(h.Offer.RoomDrops, "보류 중인 에스크로는 아직 공개되지 않는다");
 
@@ -350,13 +349,13 @@ namespace Eclipse.Tests
             h.Flow.BeginRun().Forget();
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
 
-            var currency = h.Offer.Doors.FirstOrDefault(d => CurrencyDoor.IsCurrency(d.Choice.Kind));
-            if (currency.DisplayName == null)
+            int index = IndexOf(h, d => CurrencyDoor.IsCurrency(d.Rewards[0].Kind));
+            if (index < 0)
                 Assert.Ignore("이 시드의 문 지점에 재화 문이 없다");
-            var type = CurrencyDoor.CurrencyOf(currency.Choice.Kind);
+            var type = CurrencyDoor.CurrencyOf(h.Offer.Doors[index].Rewards[0].Kind);
 
             // 문을 고르고 다음 방을 넘겨 적립시킨 뒤, 보스 방에서 전멸한다.
-            h.Flow.ReportDoorPicked(currency.Choice, h.Offer.Token).Forget();
+            h.Flow.ReportDoorPicked(index, h.Offer.Token).Forget();
             int before = Balance(h, type);
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
             int earned = h.Offer.RoomDrops.Single().amount;
@@ -381,11 +380,11 @@ namespace Eclipse.Tests
             h.Flow.BeginRun().Forget();
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
 
-            var buff = h.Offer.Doors.FirstOrDefault(d => !CurrencyDoor.IsCurrency(d.Choice.Kind));
-            if (buff.DisplayName == null)
+            int index = IndexOf(h, d => !CurrencyDoor.IsCurrency(d.Rewards[0].Kind));
+            if (index < 0)
                 Assert.Ignore("이 시드의 문 지점에 버프 문이 없다");
 
-            h.Flow.ReportDoorPicked(buff.Choice, h.Offer.Token).Forget();
+            h.Flow.ReportDoorPicked(index, h.Offer.Token).Forget();
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
 
             Assert.AreEqual(RunStep.BuffPick, h.Offer.Step);
@@ -411,14 +410,13 @@ namespace Eclipse.Tests
             Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step);
             int doorToken = h.Offer.Token;
 
-            var choice = h.Offer.Doors[0].Choice;
-            h.Flow.ReportDoorPicked(choice, doorToken).Forget();
+            h.Flow.ReportDoorPicked(0, doorToken).Forget();
             Assert.AreEqual(RunStep.EnteringRoom, h.Offer.Step);
             int gold = h.Wallet.Gold.CurrentValue;
             int grantCalls = h.Rewards.GrantCalls;
 
             // 문 지점 화면의 늦은 콜백(같은 종류의 이전 스텝)이 다시 도착해도 무시된다.
-            h.Flow.ReportDoorPicked(choice, doorToken).Forget();
+            h.Flow.ReportDoorPicked(0, doorToken).Forget();
 
             Assert.AreEqual(RunStep.EnteringRoom, h.Offer.Step);
             Assert.AreEqual(gold, h.Wallet.Gold.CurrentValue);
@@ -463,15 +461,158 @@ namespace Eclipse.Tests
             Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step);
 
             // 골드 문을 골라 보류시킨 채 다음 방에서 패배한다 — 보류분은 지급되지 않아야 한다.
-            var goldDoor = h.Offer.Doors.FirstOrDefault(d => d.Choice.Kind == DoorKind.Gold);
-            var picked = goldDoor.DisplayName != null ? goldDoor.Choice : h.Offer.Doors[0].Choice;
-            h.Flow.ReportDoorPicked(picked, h.Offer.Token).Forget();
+            int index = IndexOf(h, d => d.Rewards[0].Kind == DoorKind.Gold);
+            h.Flow.ReportDoorPicked(index < 0 ? 0 : index, h.Offer.Token).Forget();
             h.Flow.ReportBattleResult(won: false, h.Offer.Token).Forget();
 
             Assert.AreEqual(RunStep.RunFail, h.Offer.Step);
             Assert.IsFalse(h.Session.HasEscrow, "종료 커밋 첫 단계에서 몰수됐다");
             Assert.AreEqual(3, h.Rewards.GrantCalls, "종료 지급은 탐험·도달·보너스 3회 고정");
             Assert.AreEqual(100, h.Wallet.Gold.CurrentValue - 1000, "지갑 증가분 = 정산(방 1)뿐 — 몰수분은 적립되지 않았다");
+        }
+
+        // --- 미드보스 문 (문③) ---
+
+        [Test]
+        public void 미드보스_문을_고르면_2종이_한_단위로_보관되고_방4가_정예가_된다()
+        {
+            var h = Build(RunFixtures.DocChapter());
+            AdvanceToMidBossPoint(h);
+
+            int index = IndexOf(h, d => d.IsMidBoss);
+            Assert.AreEqual(2, h.Offer.Doors[index].Rewards.Count, "미드보스 문은 보상 2종을 건다");
+            Assert.AreEqual(2, h.Offer.Doors[index].RewardIcons.Count, "걸린 보상은 심볼 2개로 표시된다");
+            Assert.AreEqual(4, h.Offer.Doors.SelectMany(d => d.Rewards).Distinct().Count(),
+                "지점 안 4종은 서로 다르다");
+
+            h.Flow.ReportDoorPicked(index, h.Offer.Token).Forget();
+
+            Assert.IsTrue(h.Session.HasEscrow);
+            Assert.IsTrue(h.Session.MidBossEngaged);
+            Assert.AreEqual(3, h.Session.DoorPointsPassed, "문③이라 깊이 3으로 보관된다");
+            Assert.AreEqual(RunStep.EnteringRoom, h.Offer.Step);
+            Assert.AreEqual(RoomKind.Elite, h.Offer.Room.kind);
+            Assert.IsTrue(h.Offer.IsEliteEncounter, "미드보스 문을 골랐으니 방4가 정예로 선다");
+        }
+
+        [Test]
+        public void 미드보스_문의_약속은_걸린_2종을_한_줄씩_적는다()
+        {
+            var party = RunFixtures.Party(4);
+            var h = Build(RunFixtures.DocChapter(), party: party);
+            AdvanceToMidBossPoint(h);
+
+            var door = h.Offer.Doors[IndexOf(h, d => d.IsMidBoss)];
+            var lines = door.Promise.Split('\n');
+
+            Assert.AreEqual(2, lines.Length, "걸린 보상마다 한 줄씩 적힌다");
+            for (int i = 0; i < lines.Length; i++)
+            {
+                var reward = door.Rewards[i];
+                // 픽스처의 약속 문구는 문 종류 이름이고, 캐릭터 문만 대상 파티원의 이름으로 채워진다.
+                string expected = reward.IsCharacterDoor
+                    ? party[reward.TargetPartySlot].Definition.displayName
+                    : reward.Kind.ToString();
+                Assert.AreEqual(expected, lines[i], "줄 순서가 보상 해소 순서와 같다");
+            }
+        }
+
+        [Test]
+        public void 일반_문을_고르면_방4가_정예_자리라도_일반_전투다()
+        {
+            var h = Build(RunFixtures.DocChapter());
+            AdvanceToMidBossPoint(h);
+
+            int index = IndexOf(h, d => !d.IsMidBoss);
+            h.Flow.ReportDoorPicked(index, h.Offer.Token).Forget();
+
+            Assert.IsFalse(h.Session.MidBossEngaged);
+            Assert.AreEqual(RoomKind.Elite, h.Offer.Room.kind, "배치의 Elite는 정예 후보 자리일 뿐이다");
+            Assert.IsFalse(h.Offer.IsEliteEncounter, "미드보스는 회피됐다");
+        }
+
+        [Test]
+        public void 미드보스_방_전멸은_걸린_2종을_함께_몰수한다()
+        {
+            var h = Build(RunFixtures.DocChapter());
+            AdvanceToMidBossPoint(h);
+
+            h.Flow.ReportDoorPicked(IndexOf(h, d => d.IsMidBoss), h.Offer.Token).Forget();
+            int income = h.Session.RunIncome.Count;
+            h.Flow.ReportBattleResult(won: false, h.Offer.Token).Forget();
+
+            Assert.AreEqual(RunStep.RunFail, h.Offer.Step);
+            Assert.IsFalse(h.Session.HasEscrow, "2종이 한 단위로 몰수됐다");
+            Assert.AreEqual(income, h.Session.RunIncome.Count, "몰수분은 장부에 닿지 않는다");
+            Assert.IsNull(h.Offer.RoomDrops, "공개되지 않았으니 드랍도 없다");
+        }
+
+        // 걸린 2종의 재화/버프 조합 네 가지. 조합은 시드가 정하므로 원하는 조합이 나오는 시드를 찾아 쓴다.
+        [TestCase(true, true)]
+        [TestCase(false, false)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        public void 미드보스_문의_2종은_좌에서_우로_해소된다(bool firstIsCurrency, bool secondIsCurrency)
+        {
+            for (int seed = 1; seed <= 120; seed++)
+            {
+                var h = Build(RunFixtures.DocChapter(), seed);
+                AdvanceToMidBossPoint(h);
+
+                int index = IndexOf(h, d => d.IsMidBoss);
+                var rewards = h.Offer.Doors[index].Rewards;
+                if (CurrencyDoor.IsCurrency(rewards[0].Kind) != firstIsCurrency) continue;
+                if (CurrencyDoor.IsCurrency(rewards[1].Kind) != secondIsCurrency) continue;
+
+                h.Flow.ReportDoorPicked(index, h.Offer.Token).Forget();
+                h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+                AssertResolvedInOrder(h, rewards);
+                return;
+            }
+            Assert.Ignore("120개 시드 안에 이 조합의 미드보스 문이 없다");
+        }
+
+        /// <summary> 걸린 보상이 순서대로 해소됐는지 본다. 재화는 드랍 목록, 버프는 3택1 순번으로 관측된다. </summary>
+        private static void AssertResolvedInOrder(Harness h, IReadOnlyList<DoorChoice> rewards)
+        {
+            var expectedDrops = rewards.Where(r => CurrencyDoor.IsCurrency(r.Kind))
+                .Select(r => CurrencyDoor.CurrencyOf(r.Kind))
+                .ToList();
+            var actualDrops = h.Offer.RoomDrops?.Select(d => d.type).ToList() ?? new List<CurrencyType>();
+            CollectionAssert.AreEqual(expectedDrops, actualDrops, "재화는 걸린 순서대로 적립된다");
+
+            foreach (var buff in rewards.Where(r => !CurrencyDoor.IsCurrency(r.Kind)))
+            {
+                Assert.AreEqual(RunStep.BuffPick, h.Offer.Step, "버프는 걸린 순서대로 3택1이 뜬다");
+                string expectedTarget = buff.IsCharacterDoor
+                    ? h.Session.Party[buff.TargetPartySlot].Definition.displayName
+                    : RunTexts.EnemyTarget;
+                Assert.AreEqual(expectedTarget, h.Offer.Cards[0].Target);
+                h.Flow.ReportCardPicked(h.Offer.Cards[0].Card, h.Offer.Token).Forget();
+            }
+
+            Assert.AreNotEqual(RunStep.BuffPick, h.Offer.Step, "걸린 버프를 다 처리하면 3택1이 끝난다");
+        }
+
+        /// <summary> 미드보스 문이 서는 문 지점까지 전승으로 밀어 올린다. 앞선 문 지점은 첫 문을 고른다. </summary>
+        private static void AdvanceToMidBossPoint(Harness h)
+        {
+            h.Flow.BeginRun().Forget();
+            for (int guard = 0; guard < 50; guard++)
+            {
+                var offer = h.Offer;
+                if (offer.Step == RunStep.DoorPoint && offer.Doors.Any(d => d.IsMidBoss))
+                    return;
+
+                switch (offer.Step)
+                {
+                    case RunStep.EnteringRoom: h.Flow.ReportBattleResult(won: true, offer.Token).Forget(); break;
+                    case RunStep.BuffPick: h.Flow.ReportCardPicked(offer.Cards[0].Card, offer.Token).Forget(); break;
+                    case RunStep.DoorPoint: h.Flow.ReportDoorPicked(0, offer.Token).Forget(); break;
+                    default: Assert.Fail($"미드보스 문 전에 {offer.Step}으로 끝났다"); return;
+                }
+            }
+            Assert.Fail("미드보스 문 지점에 도달하지 못했다");
         }
     }
 }

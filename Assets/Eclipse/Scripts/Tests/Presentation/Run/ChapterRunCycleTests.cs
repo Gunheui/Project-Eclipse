@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
@@ -51,27 +52,27 @@ namespace Eclipse.Tests
                 saveService: null,
                 sceneFlow);
 
-            int battles = 0, doorPoints = 0, cardPicks = 0;
+            int battles = 0, doorPoints = 0, cardPicks = 0, drops = 0;
             var battleSeeds = new List<int>();
-
-            // 미드보스 보상은 화면을 안 거치므로 방 진입 사이의 보상 건수 증가분으로 관측한다.
-            // 재화 문은 장부에, 버프 문은 3택1 횟수에 잡히므로 둘을 합쳐 센다.
-            int rewardsAtEliteEntry = -1, midBossRewards = -1;
+            bool foughtMidBoss = false;
 
             flow.BeginRun().Forget();
             int guard = 0;
             while (flow.Current != RunStep.RunClear && guard++ < 200)
             {
                 var offer = flow.Offer.CurrentValue;
+                // 드랍은 스텝을 가리지 않고 실려 오므로 스텝 분기 밖에서 센다.
+                if (offer.RoomDrops != null)
+                    drops += offer.RoomDrops.Count;
+
                 switch (offer.Step)
                 {
                     case RunStep.EnteringRoom:
                         battles++;
                         battleSeeds.Add(offer.BattleSeed);
-                        if (offer.Room.kind == RoomKind.Elite)
-                            rewardsAtEliteEntry = session.RunIncome.Count + cardPicks;
-                        else if (rewardsAtEliteEntry >= 0 && midBossRewards < 0)
-                            midBossRewards = session.RunIncome.Count + cardPicks - rewardsAtEliteEntry;
+                        foughtMidBoss |= offer.IsEliteEncounter;
+                        Assert.AreEqual(offer.Room.kind == RoomKind.Elite, offer.IsEliteEncounter,
+                            "미드보스 문을 골랐으니 정예 자리의 방만 정예로 선다");
                         Assert.IsNotNull(offer.Encounter.Enemies, "인카운터가 생성돼 실려 온다");
                         flow.ReportBattleResult(won: true, offer.Token).Forget();
                         break;
@@ -86,11 +87,15 @@ namespace Eclipse.Tests
                     case RunStep.DoorPoint:
                         doorPoints++;
                         Assert.AreEqual(3, offer.Doors.Count, "문 지점은 3개 제시다");
-                        Assert.AreEqual(3, offer.Doors.Select(d => d.Choice).Distinct().Count(), "비복원이라 중복이 없다");
-                        // 재화 문이 있으면 그 문을 골라 지연 지급 경로를 거친다. 없으면 첫 문(버프)을 고른다.
-                        var currency = offer.Doors.Where(d => CurrencyDoor.IsCurrency(d.Choice.Kind)).ToList();
-                        var picked = currency.Count > 0 ? currency[0].Choice : offer.Doors[0].Choice;
-                        flow.ReportDoorPicked(picked, offer.Token).Forget();
+                        var offered = offer.Doors.SelectMany(d => d.Rewards).ToList();
+                        Assert.AreEqual(offered.Count, offered.Distinct().Count(), "비복원이라 중복이 없다");
+                        Assert.AreEqual(doorPoints == 3 ? 1 : 0, offer.Doors.Count(d => d.IsMidBoss),
+                            "미드보스 문은 방4 직전 지점에만 선다");
+                        // 미드보스 문이 있으면 그 문을 골라 정예 경로를 태운다. 없으면 재화 문 우선이다.
+                        int midBoss = offer.Doors.ToList().FindIndex(d => d.IsMidBoss);
+                        int currency = offer.Doors.ToList()
+                            .FindIndex(d => CurrencyDoor.IsCurrency(d.Rewards[0].Kind));
+                        flow.ReportDoorPicked(midBoss >= 0 ? midBoss : Math.Max(currency, 0), offer.Token).Forget();
                         break;
                     default:
                         Assert.Fail($"예상 밖 스텝 {offer.Step}");
@@ -108,7 +113,8 @@ namespace Eclipse.Tests
 
             // 인런 공개는 화면을 거치지 않으므로 세션 장부로만 관측된다.
             Assert.IsNotEmpty(session.RunIncome, "런 중 공개된 재화가 장부에 쌓인다");
-            Assert.GreaterOrEqual(midBossRewards, 2, "미드보스 방은 문 2종 보상을 추가로 낸다");
+            Assert.IsTrue(foughtMidBoss, "문③에서 미드보스 문을 골랐으니 방4가 정예였다");
+            Assert.AreEqual(6, drops + cardPicks, "문 5지점 = 일반 문 4종 + 미드보스 문 2종");
 
             // 정산: 표 7행(700)과 승리 보너스(400)가 각각의 행으로 갈라져 온다.
             var terminal = flow.Offer.CurrentValue;
@@ -181,9 +187,11 @@ namespace Eclipse.Tests
                         flow.ReportCardPicked(offer.Cards[0].Card, offer.Token).Forget();
                         break;
                     case RunStep.DoorPoint:
-                        // 지문에는 종류만이 아니라 슬롯까지 남긴다 — 종류만 적으면 캐릭터 4문이 한 문으로 뭉친다.
-                        trace.Add("doors:" + string.Join(",", offer.Doors.Select(d => d.Choice)));
-                        flow.ReportDoorPicked(offer.Doors[0].Choice, offer.Token).Forget();
+                        // 지문에는 종류만이 아니라 슬롯과 자리 구분까지 남긴다 — 뭉치면 캐릭터 4문과
+                        // 미드보스 자리가 지워진다.
+                        trace.Add("doors:" + string.Join("|",
+                            offer.Doors.Select(d => string.Join(",", d.Rewards))));
+                        flow.ReportDoorPicked(0, offer.Token).Forget();
                         break;
                 }
             }

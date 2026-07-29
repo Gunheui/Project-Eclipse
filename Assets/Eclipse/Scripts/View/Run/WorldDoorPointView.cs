@@ -15,12 +15,12 @@ namespace Eclipse.View
     {
         [SerializeField] private WorldDoorView[] doors;
 
-        private UniTaskCompletionSource<DoorChoice> _choice;
+        private UniTaskCompletionSource<int> _choice;
 
         /// <summary> 문을 세우고 선택을 기다린다. 선택 전에 문이 내려가면 대기는 취소로 끝난다. </summary>
-        /// <returns>사용자가 탭한 문. 탭 한 번이 곧 확정이다.</returns>
+        /// <returns>사용자가 탭한 문의 자리. 탭 한 번이 곧 확정이다.</returns>
         /// <exception cref="ArgumentException">세워 둔 문보다 선택지가 많을 때.</exception>
-        public UniTask<DoorChoice> ShowAsync(IReadOnlyList<DoorOption> options)
+        public UniTask<int> ShowAsync(IReadOnlyList<DoorOption> options)
         {
             int count = options?.Count ?? 0;
             if (count > doors.Length)
@@ -28,7 +28,7 @@ namespace Eclipse.View
                     $"문 지점 선택지가 {count}개인데 세워 둔 문은 {doors.Length}개다.", nameof(options));
 
             AbandonPending();
-            _choice = new UniTaskCompletionSource<DoorChoice>();
+            _choice = new UniTaskCompletionSource<int>();
             for (int i = 0; i < doors.Length; i++)
             {
                 if (i < count) doors[i].Bind(options[i], OnDoorTapped);
@@ -49,7 +49,8 @@ namespace Eclipse.View
         {
             foreach (var other in doors)
                 other.SetTappable(false);
-            _choice?.TrySetResult(door.Option.Choice);
+            // 세워 둔 자리 번호가 곧 제시물의 인덱스다 — Bind가 i번 문에 i번 선택지를 걸어 둔다.
+            _choice?.TrySetResult(Array.IndexOf(doors, door));
         }
 
         /// <summary>

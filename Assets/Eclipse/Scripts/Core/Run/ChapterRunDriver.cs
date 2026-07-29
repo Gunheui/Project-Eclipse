@@ -14,9 +14,9 @@ using VContainer;
 namespace Eclipse.Core
 {
     /// <summary>
-    /// BattleScene의 런 구동 글루. <see cref="ChapterRunFlow"/>의 제시물을 구독해 전투 조립·배경 스왑·
-    /// 문 지점 표시·팝업 표시를 실행하고, 사용자 선택을 토큰과 함께 Flow에 보고만 한다 —
-    /// 진행 판단은 전부 Flow 소관이다.
+    /// BattleScene과 <see cref="ChapterRunFlow"/> 사이의 중계자. Flow가 내보낸 제시물대로 전투를 생성함,
+    /// 배경 변경, 다음 문 지점 표시, 팝업 표시를 실행하고, 사용자 선택을 토큰과 함께 Flow에 돌려준다.
+    /// 다음에 뭘 할지는 여기서 판단하지 않는다.
     /// </summary>
     public class ChapterRunDriver : MonoBehaviour
     {
@@ -58,31 +58,15 @@ namespace Eclipse.Core
         }
 
         /// <summary>
-        /// 제시물 하나를 처리한다. 직전 방에서 받은 재화가 있으면 드랍 연출을 먼저 끝내고 스텝을 그린다 —
-        /// 이 await가 곧 방 전환 게이트다.
+        /// 제시물 하나를 화면에 그린다. 스텝 종류와 무관하게 모든 제시물이 이 입구를 지난다.
         /// </summary>
         private async UniTaskVoid HandleOfferAsync(RunOffer offer)
         {
             if (roomProgressLabel != null)
                 roomProgressLabel.text = $"방 {offer.RoomNumber}/{offer.RoomCount}";
 
-            // 전장 정리(ClearBattle) 전에 읽어야 적 좌표가 살아 있다.
-            if (offer.RoomDrops != null && dropSpawner != null)
-            {
-                // 연출 중에는 나가기를 잠근다. 전투가 이미 끝나 포기 보고가 무시되므로,
-                // 눌러도 아무 일이 없는 버튼을 살려 두지 않는다.
-                battleView.SetExitEnabled(false);
-                try
-                {
-                    await dropSpawner.PlayAsync(offer.RoomDrops, battleView.EnemyPositions(),
-                        this.GetCancellationTokenOnDestroy());
-                }
-                finally
-                {
-                    // 씬이 내려가는 중이면 전투 뷰가 먼저 파괴돼 있을 수 있다. 파괴 순서는 보장되지 않는다.
-                    if (battleView != null) battleView.SetExitEnabled(true);
-                }
-            }
+            // 스텝 처리(ClearBattle) 전에 재생해야 적 좌표에 재화를 표시할 수 있음.
+            await PlayRoomDropsAsync(offer);
 
             switch (offer.Step)
             {
@@ -91,6 +75,32 @@ namespace Eclipse.Core
                 case RunStep.DoorPoint: await ShowDoorAsync(offer); break;
                 case RunStep.RunClear:
                 case RunStep.RunFail: await ShowSettlementAsync(offer); break;
+                case RunStep.InBattle:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        /// <summary>
+        /// 직전 방에서 적립된 재화가 있으면 애니메이션 연출을 진행핸다.
+        /// </summary>
+        private async UniTask PlayRoomDropsAsync(RunOffer offer)
+        {
+            if (offer.RoomDrops == null || dropSpawner == null) return;
+
+            // 연출 중에는 나가기를 잠근다. 전투가 이미 끝나 포기 보고가 무시되므로,
+            // 눌러도 아무 일이 없는 버튼을 살려 두지 않는다.
+            battleView.SetExitEnabled(false);
+            try
+            {
+                await dropSpawner.PlayAsync(offer.RoomDrops, battleView.EnemyPositions(),
+                    this.GetCancellationTokenOnDestroy());
+            }
+            finally
+            {
+                // 씬이 내려가는 중이면 전투 뷰가 먼저 파괴돼 있을 수 있다. 파괴 순서는 보장되지 않는다.
+                if (battleView != null) battleView.SetExitEnabled(true);
             }
         }
 
@@ -143,16 +153,16 @@ namespace Eclipse.Core
 
         private async UniTask ShowDoorAsync(RunOffer offer)
         {
-            DoorChoice choice;
+            int picked;
             try
             {
-                choice = await doorPoint.ShowAsync(offer.Doors);
+                picked = await doorPoint.ShowAsync(offer.Doors);
             }
             catch (OperationCanceledException)
             {
                 return; // 문이 선택 전에 내려갔다(씬 파괴·다음 제시로 교체) — 보고할 선택이 없다
             }
-            await _flow.ReportDoorPicked(choice, offer.Token);
+            await _flow.ReportDoorPicked(picked, offer.Token);
         }
 
         private async UniTask ShowSettlementAsync(RunOffer offer)

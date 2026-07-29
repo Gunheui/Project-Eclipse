@@ -54,6 +54,9 @@ namespace Eclipse.Data
         /// <summary> 방 배치. 배열 순서가 방 진행 순서이며 마지막 행이 보스다. 챕터 1 = 7행. </summary>
         public RoomLayout[] rooms;
 
+        /// <summary> 미드보스 문에 거는 초상. 로드 검증 대상이 아니라 비어 있으면 그림 없이 선다. </summary>
+        public Sprite midBossPortrait;
+
         /// <summary> 이 챕터 적 스탯에 곱하는 난이도 배수. </summary>
         public float enemyStatMultiplier = 1f;
 
