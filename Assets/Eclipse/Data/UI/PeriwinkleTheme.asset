@@ -24,6 +24,14 @@ MonoBehaviour:
   onPositiveSubtle: {r: 0.1765, g: 0.4078, b: 0.3176, a: 1}
   dangerSubtle: {r: 0.9843, g: 0.9176, b: 0.9098, a: 1}
   onDangerSubtle: {r: 0.651, g: 0.2824, b: 0.251, a: 1}
+  cardGradeCommon: {r: 0.5411765, g: 0.5764706, b: 0.6784314, a: 1}
+  cardGradeRare: {r: 0.18431373, g: 0.65882355, b: 0.627451, a: 1}
+  cardGradeEpic: {r: 0.8235294, g: 0.33333334, b: 0.60784316, a: 1}
+  cardGradeUnique: {r: 0.9411765, g: 0.47843137, b: 0.21960784, a: 1}
+  onCardGradeCommon: {r: 0.3529412, g: 0.38039216, b: 0.5019608, a: 1}
+  onCardGradeRare: {r: 0.12156863, g: 0.47843137, b: 0.45490196, a: 1}
+  onCardGradeEpic: {r: 0.6392157, g: 0.18039216, b: 0.4392157, a: 1}
+  onCardGradeUnique: {r: 0.7058824, g: 0.3137255, b: 0.105882354, a: 1}
   textHigh: {r: 0.1373, g: 0.1529, b: 0.2392, a: 1}
   textMedium: {r: 0.3529, g: 0.3804, b: 0.502, a: 1}
   textDisabled: {r: 0.6549, g: 0.6745, b: 0.7686, a: 1}

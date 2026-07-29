@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Eclipse.Data;
 using Eclipse.Domain;
 using Eclipse.Presentation;
 using Eclipse.View;
@@ -136,8 +137,8 @@ namespace Eclipse.Core
 
         private async UniTask ShowCardPickAsync(RunOffer offer)
         {
-            var pick = await _popups.Show<CardPickChoice>(PopupId.CardPick);
-            await _flow.ReportCardAssigned(pick.Card, pick.Slot, offer.Token);
+            var card = await _popups.Show<BuffCard>(PopupId.CardPick);
+            await _flow.ReportCardPicked(card, offer.Token);
         }
 
         private async UniTask ShowDoorAsync(RunOffer offer)

@@ -67,9 +67,9 @@ namespace Eclipse.Domain
             {
                 // 수동 프로바이더는 여기서 플레이어 입력이 올 때까지 대기한다(오토·적은 즉시 완료).
                 var action = await ProviderFor(actor).ChooseActionAsync(actor, AlliesOf(actor), EnemiesOf(actor), ct);
-                if (action.Skill != null)
+                // 쿨 중인 스킬이 보고돼도 발동시키지 않는다 — 화면이 버튼을 막지만 판정은 여기서 선다.
+                if (action.Skill != null && action.Skill.TryUse())
                 {
-                    action.Skill.TryUse();
                     usedSkill = action.Skill.Skill;
                     targets = _executor.ApplySkill(actor, action.Skill, action.Target, AlliesOf(actor), EnemiesOf(actor));
                 }

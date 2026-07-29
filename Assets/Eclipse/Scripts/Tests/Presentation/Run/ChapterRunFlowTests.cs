@@ -151,9 +151,26 @@ namespace Eclipse.Tests
             h.Flow.ReportBattleResult(won: false, h.Offer.Token).Forget();
 
             Assert.AreEqual(RunStep.RunFail, h.Offer.Step, "패배는 곧장 정산 제시다 — 3번째 전투는 없다");
-            Assert.AreEqual(100, h.Offer.Receipts.Single(r => r.type == CurrencyType.Gold).amount,
-                "넘긴 방 1 기준 정산(승리 보너스 없음)");
+            Assert.AreEqual(100, h.Offer.DepthReward.Single(r => r.type == CurrencyType.Gold).amount,
+                "넘긴 방 1 기준 도달 보상");
+            CollectionAssert.IsEmpty(h.Offer.VictoryBonus, "실패는 승리 보너스가 없다");
             Assert.IsFalse(h.Progress.IsCleared(h.Chapter), "실패는 클리어를 기록하지 않는다");
+        }
+
+        [Test]
+        public void 방1_전멸은_지급분이_한_푼도_없다()
+        {
+            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, false), RunFixtures.Boss()));
+            h.Flow.BeginRun().Forget();
+            int before = h.Wallet.Gold.CurrentValue;
+
+            h.Flow.ReportBattleResult(won: false, h.Offer.Token).Forget();
+
+            Assert.AreEqual(RunStep.RunFail, h.Offer.Step);
+            CollectionAssert.IsEmpty(h.Offer.ExploreReward, "문을 지난 적이 없다");
+            CollectionAssert.IsEmpty(h.Offer.DepthReward, "정산 표 0행");
+            CollectionAssert.IsEmpty(h.Offer.RewardTotal);
+            Assert.AreEqual(before, h.Wallet.Gold.CurrentValue);
         }
 
         [Test]
@@ -167,7 +184,7 @@ namespace Eclipse.Tests
         // --- 캐릭터 문: 슬롯이 에스크로를 지나 배정까지 간다 ---
 
         [Test]
-        public void 캐릭터_문은_고른_슬롯에_카드가_배정된다()
+        public void 캐릭터_문은_문이_가리킨_슬롯에_카드가_배정된다()
         {
             var h = Build(RunFixtures.Chapter(
                 RunFixtures.Normal(1, true), RunFixtures.Normal(2, false), RunFixtures.Boss()));
@@ -185,16 +202,74 @@ namespace Eclipse.Tests
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
 
             Assert.AreEqual(RunStep.BuffPick, h.Offer.Step);
-            Assert.AreEqual(slot, h.Offer.BuffTargetPartySlot, "에스크로를 지나도 대상 슬롯이 남는다");
+            Assert.AreEqual(h.Session.Party[slot].Definition.displayName, h.Offer.Cards[0].Target,
+                "에스크로를 지나도 귀속 대상이 남는다");
 
-            // 화면이 엉뚱한 슬롯을 보고해도 강제 대상이 이긴다.
-            int other = (slot + 1) % PlayerSave.PartySlotCount;
             var card = h.Offer.Cards[0].Card;
             var axis = card.deltas[0].axis;
-            h.Flow.ReportCardAssigned(card, other, h.Offer.Token).Forget();
+            h.Flow.ReportCardPicked(card, h.Offer.Token).Forget();
 
-            Assert.AreNotEqual(0f, h.Session.BuffsOf(slot).SumOf(axis), "강제 대상 슬롯에 붙었다");
-            Assert.AreEqual(0f, h.Session.BuffsOf(other).SumOf(axis), "보고된 슬롯은 무시됐다");
+            int other = (slot + 1) % PlayerSave.PartySlotCount;
+            Assert.AreNotEqual(0f, h.Session.BuffsOf(slot).SumOf(axis), "문이 가리킨 슬롯에 붙었다");
+            Assert.AreEqual(0f, h.Session.BuffsOf(other).SumOf(axis), "다른 슬롯은 그대로다");
+        }
+
+        [Test]
+        public void 제시되지_않은_카드는_받지_않는다()
+        {
+            var h = Build(RunFixtures.Chapter(
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+            h.Flow.BeginRun().Forget();
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+
+            var buffDoor = h.Offer.Doors.FirstOrDefault(d => !CurrencyDoor.IsCurrency(d.Choice.Kind));
+            if (buffDoor.DisplayName == null)
+                Assert.Ignore("이 시드의 문 지점에 버프 문이 없다");
+
+            h.Flow.ReportDoorPicked(buffDoor.Choice, h.Offer.Token).Forget();
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+            Assert.AreEqual(RunStep.BuffPick, h.Offer.Step);
+
+            var absent = new BuffCard
+            {
+                id = "제시되지_않은_카드", displayName = "위조", grade = CardGrade.Epic,
+                deltas = new[] { new StatDelta { axis = StatType.Atk, value = 9f } },
+            };
+            h.Flow.ReportCardPicked(absent, h.Offer.Token).Forget();
+
+            Assert.AreEqual(RunStep.BuffPick, h.Offer.Step, "제시 밖 선택은 상태를 바꾸지 못한다");
+            Assert.IsTrue(Enumerable.Range(0, PlayerSave.PartySlotCount)
+                .All(s => h.Session.BuffsOf(s).SumOf(StatType.Atk) == 0f), "위조 카드는 어디에도 붙지 않는다");
+        }
+
+        [Test]
+        public void 같은_id로_수치만_부풀린_보고는_제시한_값으로_붙는다()
+        {
+            var h = Build(RunFixtures.Chapter(
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+            h.Flow.BeginRun().Forget();
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+
+            var character = h.Offer.Doors.FirstOrDefault(d => d.Choice.IsCharacterDoor);
+            if (character.DisplayName == null)
+                Assert.Ignore("이 시드의 문 지점에 캐릭터 문이 없다");
+            int slot = character.Choice.TargetPartySlot;
+
+            h.Flow.ReportDoorPicked(character.Choice, h.Offer.Token).Forget();
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+            Assert.AreEqual(RunStep.BuffPick, h.Offer.Step);
+
+            var offered = h.Offer.Cards[0].Card;
+            var axis = offered.deltas[0].axis;
+            float honest = offered.deltas[0].value;
+
+            // id만 베끼고 증감을 부풀린 카드. deltas가 배열이라 id 대조만으로는 걸러지지 않는다.
+            var inflated = offered;
+            inflated.deltas = new[] { new StatDelta { axis = axis, value = honest + 9f } };
+            h.Flow.ReportCardPicked(inflated, h.Offer.Token).Forget();
+
+            Assert.AreEqual(honest, h.Session.BuffsOf(slot).SumOf(axis), 1e-4f,
+                "붙는 값은 제시한 카드의 수치다");
         }
 
         [Test]
@@ -263,7 +338,7 @@ namespace Eclipse.Tests
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
             Assert.AreEqual(RunStep.RunClear, h.Offer.Step);
             Assert.IsNull(h.Offer.RoomDrops, "드랍은 1회성이라 다음 제시물에는 남지 않는다");
-            Assert.AreEqual(drop.amount, h.Offer.RunIncome.Single(e => e.type == expectedType).amount,
+            Assert.AreEqual(drop.amount, h.Offer.ExploreReward.Single(e => e.type == expectedType).amount,
                 "드랍으로 공개한 수량이 종료 시 그대로 지급된다");
         }
 
@@ -290,10 +365,12 @@ namespace Eclipse.Tests
             h.Flow.ReportBattleResult(won: false, h.Offer.Token).Forget();
 
             Assert.AreEqual(RunStep.RunFail, h.Offer.Step);
-            Assert.AreEqual(earned, h.Offer.RunIncome.Single(e => e.type == type).amount,
+            Assert.AreEqual(earned, h.Offer.ExploreReward.Single(e => e.type == type).amount,
                 "전멸도 런을 끝낸 것이라 적립분이 살아 지급된다");
-            int settlement = h.Offer.Receipts.Where(e => e.type == type).Sum(e => e.amount);
+            int settlement = h.Offer.DepthReward.Where(e => e.type == type).Sum(e => e.amount);
             Assert.AreEqual(before + earned + settlement, Balance(h, type), "지갑 = 적립분 + 정산");
+            Assert.AreEqual(earned + settlement, h.Offer.RewardTotal.Single(e => e.type == type).amount,
+                "합계는 화면에 뜬 두 행을 그대로 더한 값이다");
         }
 
         [Test]
@@ -393,7 +470,7 @@ namespace Eclipse.Tests
 
             Assert.AreEqual(RunStep.RunFail, h.Offer.Step);
             Assert.IsFalse(h.Session.HasEscrow, "종료 커밋 첫 단계에서 몰수됐다");
-            Assert.AreEqual(2, h.Rewards.GrantCalls, "종료 지급은 적립분·정산 2회 고정");
+            Assert.AreEqual(3, h.Rewards.GrantCalls, "종료 지급은 탐험·도달·보너스 3회 고정");
             Assert.AreEqual(100, h.Wallet.Gold.CurrentValue - 1000, "지갑 증가분 = 정산(방 1)뿐 — 몰수분은 적립되지 않았다");
         }
     }

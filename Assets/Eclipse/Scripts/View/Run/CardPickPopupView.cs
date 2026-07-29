@@ -1,8 +1,8 @@
-using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using Eclipse.Data;
 using Eclipse.Presentation;
 using Eclipse.View.Infra;
+using Eclipse.View.Theme;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,58 +10,33 @@ using VContainer;
 
 namespace Eclipse.View
 {
-    /// <summary> 3택1 팝업이 돌려주는 선택 = 고른 카드 + 배정 슬롯. </summary>
-    public readonly struct CardPickChoice
-    {
-        public CardPickChoice(BuffCard card, int slot)
-        {
-            Card = card;
-            Slot = slot;
-        }
-
-        public BuffCard Card { get; }
-
-        /// <summary> 배정 슬롯. 배정을 사용자가 고르지 않는 픽은 0이 들어가고 Flow가 바로잡는다. </summary>
-        public int Slot { get; }
-    }
-
     /// <summary>
-    /// 버프 카드 3택1 + 배정 팝업. 카드 선택 후 배정 슬롯을 고르면 완료된다.
-    /// 대상이 이미 정해진 픽(캐릭터 문·저주·전용 카드)은 배정 화면 없이 즉시 완료된다(배정은 Flow가 정한다).
-    /// 닫기 없는 강제 선택이다.
+    /// 버프 카드 3택1 팝업. 카드를 고르는 순간 완료되고, 배정 대상은 화면이 정하지 않는다.
+    /// 닫기·포기 없는 강제 1택이다.
     /// </summary>
-    public class CardPickPopupView : MonoBehaviour, IPopup<CardPickChoice>
+    public class CardPickPopupView : MonoBehaviour, IPopup<BuffCard>
     {
-        [Header("카드 3택1")]
+        [SerializeField] private UIThemeSO theme;
         [SerializeField] private Button[] cardButtons;
         [SerializeField] private TMP_Text[] cardNames;
         [SerializeField] private TMP_Text[] cardEffects;
-        [SerializeField] private TMP_Text[] cardOdds;
+        [SerializeField] private TMP_Text[] cardTargets;
+        [SerializeField] private Image[] gradeBadges;
+        [SerializeField] private TMP_Text[] gradeLabels;
 
-        [Header("배정")]
-        [SerializeField] private GameObject assignSection;
-        [SerializeField] private Button[] slotButtons;
-        [SerializeField] private TMP_Text[] slotNames;
+        private readonly UniTaskCompletionSource<BuffCard> _choice = new();
 
-        private IReadOnlyList<CharacterSO> _partySlots;
-        private int _forcedSlot;
-        private BuffCard _picked;
-
-        private readonly UniTaskCompletionSource<CardPickChoice> _choice = new();
-
-        /// <summary> 고른 카드와 배정 슬롯. </summary>
-        public UniTask<CardPickChoice> Result => _choice.Task;
+        /// <summary> 고른 카드. 강제 1택이라 빈 결과가 없다. </summary>
+        public UniTask<BuffCard> Result => _choice.Task;
 
         [Inject]
         public void Construct(ChapterRunFlow flow)
         {
-            var offer = flow.Offer.CurrentValue;
-            _partySlots = offer.PartySlots;
-            _forcedSlot = offer.BuffTargetPartySlot;
-            var candidates = offer.Cards;
+            var candidates = flow.Offer.CurrentValue.Cards;
 
             for (int i = 0; i < cardButtons.Length; i++)
             {
+                // 후보보다 카드 칸이 많으면 남는 칸은 끈다.
                 if (candidates == null || i >= candidates.Count)
                 {
                     cardButtons[i].gameObject.SetActive(false);
@@ -69,53 +44,42 @@ namespace Eclipse.View
                 }
 
                 var option = candidates[i];
-                if (cardNames != null && i < cardNames.Length)
-                    cardNames[i].text = option.Card.displayName;
-                if (cardEffects != null && i < cardEffects.Length)
-                    cardEffects[i].text = RunTexts.FormatCard(option.Card);
-                // 확률 공시 폐지. 프리팹 교체 전까지는 텍스트 오브젝트만 꺼 둔다.
-                if (cardOdds != null && i < cardOdds.Length)
-                    cardOdds[i].gameObject.SetActive(false);
+                SetText(cardNames, i, option.DisplayName);
+                SetText(cardEffects, i, option.Effect);
+                SetText(cardTargets, i, option.Target);
+                SetText(gradeLabels, i, option.GradeLabel);
+                if (gradeLabels != null && i < gradeLabels.Length)
+                    gradeLabels[i].color = TextColorOf(option.Grade);
+                if (gradeBadges != null && i < gradeBadges.Length)
+                    gradeBadges[i].color = FillColorOf(option.Grade);
 
-                cardButtons[i].onClick.AddListener(() => OnCardPicked(option.Card));
+                cardButtons[i].onClick.AddListener(() => _choice.TrySetResult(option.Card));
             }
-
-            if (assignSection != null)
-                assignSection.SetActive(false);
         }
 
-        /// <summary>카드 확정. 배정이 이미 정해진 픽은 즉시 완료하고, 그 외에는 배정 슬롯 선택으로 넘어간다.</summary>
-        private void OnCardPicked(BuffCard card)
+        private static void SetText(TMP_Text[] labels, int index, string value)
         {
-            _picked = card;
-
-            if (_forcedSlot >= 0 || card.targetsEnemies || !string.IsNullOrEmpty(card.requiredCharacterId))
-            {
-                _choice.TrySetResult(new CardPickChoice(card, 0));
-                return;
-            }
-            ShowAssignSection();
+            if (labels != null && index < labels.Length && labels[index] != null)
+                labels[index].text = value;
         }
 
-        private void ShowAssignSection()
+        /// <summary> 등급 배지 채움색. </summary>
+        private Color FillColorOf(CardGrade grade) => grade switch
         {
-            foreach (var button in cardButtons)
-                button.interactable = false;
-            if (assignSection != null)
-                assignSection.SetActive(true);
+            CardGrade.Rare => theme.cardGradeRare,
+            CardGrade.Epic => theme.cardGradeEpic,
+            CardGrade.Unique => theme.cardGradeUnique,
+            _ => theme.cardGradeCommon,
+        };
 
-            for (int i = 0; i < slotButtons.Length; i++)
-            {
-                int slot = i;
-                bool filled = _partySlots != null && slot < _partySlots.Count && _partySlots[slot] != null;
-                slotButtons[i].gameObject.SetActive(filled);
-                if (!filled) continue;
-
-                if (slotNames != null && i < slotNames.Length)
-                    slotNames[i].text = _partySlots[slot].displayName;
-                slotButtons[i].onClick.AddListener(() => _choice.TrySetResult(new CardPickChoice(_picked, slot)));
-            }
-        }
+        /// <summary> 등급명 텍스트색. 밝은 카드 표면 위에서 대비를 맞춘 어두운 변형이라 채움색과 다르다. </summary>
+        private Color TextColorOf(CardGrade grade) => grade switch
+        {
+            CardGrade.Rare => theme.onCardGradeRare,
+            CardGrade.Epic => theme.onCardGradeEpic,
+            CardGrade.Unique => theme.onCardGradeUnique,
+            _ => theme.onCardGradeCommon,
+        };
 
         /// <summary>팝업을 띄운다. 등장 연출이 없어 즉시 완료된다.</summary>
         public UniTask Open() => UniTask.CompletedTask;

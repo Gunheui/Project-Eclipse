@@ -136,6 +136,48 @@ namespace Eclipse.Tests
             Assert.IsTrue(basic.IsReady);
         });
 
+        /// <summary> 준비 여부와 무관하게 지정 슬롯 스킬만 내는 프로바이더. 화면이 쿨 중 스킬을 보고한 상황을 재현한다. </summary>
+        private sealed class FixedSlotProvider : IActionProvider
+        {
+            private readonly int _slot;
+
+            public FixedSlotProvider(int slot) => _slot = slot;
+
+            public UniTask<BattleAction> ChooseActionAsync(ICombatant actor,
+                IReadOnlyList<ICombatant> allies, IReadOnlyList<ICombatant> enemies, CancellationToken ct)
+                => UniTask.FromResult(new BattleAction(actor.Skills[_slot]));
+        }
+
+        [UnityTest]
+        public IEnumerator 쿨_중인_스킬을_보고해도_발동하지_않는다() => UniTask.ToCoroutine(async () =>
+        {
+            // 아군이 압도적으로 빨라 두 턴 모두 아군 차례다. 적은 벽이라 전투가 안 끝난다.
+            var ally = Ally("공격수", 0, S(100000, 100, 0, 10000),
+                Skill("b", 0, Dmg(0.0001f, TargetSelector.SingleEnemy)),
+                Skill("n", 2, Dmg(1f, TargetSelector.SingleEnemy)));
+            var enemy = Enemy("벽", 0, S(1000000, 1, 0, 1), Skill("eb", 0, Dmg(0.0001f, TargetSelector.SingleEnemy)));
+
+            var allies = new List<Combatant> { ally };
+            var enemies = new List<Combatant> { enemy };
+            var targeting = new TargetResolver();
+            var combat = new CombatPipeline(new DamagePipeline(1f, 0.95f, 1.05f, new SeededRandom(1)));
+            var engine = new BattleEngine(allies, enemies,
+                new AtbTurnScheduler(allies.Concat(enemies)),
+                new SkillExecutor(combat, targeting),
+                new FixedSlotProvider(1), // 아군은 쿨 2짜리 일반기만 계속 보고한다
+                RuleBasedActionProvider.EnemyAi(targeting, combat, new SeededRandom(2), 0.6f, 0.5f),
+                200);
+
+            await engine.AdvanceTurnAsync(CancellationToken.None); // 턴1: 준비 상태라 발동 → 쿨 잠김
+            int hpAfterUse = enemy.CurrentHp;
+            Assert.IsTrue(engine.LastTurn.UsedSkill);
+            Assert.IsFalse(ally.Skills[1].IsReady);
+
+            await engine.AdvanceTurnAsync(CancellationToken.None); // 턴2: 쿨 중인 같은 스킬을 다시 보고
+            Assert.IsFalse(engine.LastTurn.UsedSkill, "쿨 중 스킬은 발동하지 않는다");
+            Assert.AreEqual(hpAfterUse, enemy.CurrentHp, "데미지도 들어가지 않는다");
+        });
+
         // --- 결정성 (시드 고정 회귀) ---
 
         [UnityTest]

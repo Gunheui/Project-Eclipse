@@ -78,7 +78,10 @@ namespace Eclipse.Tests
                     case RunStep.BuffPick:
                         cardPicks++;
                         Assert.AreEqual(3, offer.Cards.Count, "3택1 후보는 항상 3장이다");
-                        flow.ReportCardAssigned(offer.Cards[0].Card, 0, offer.Token).Forget();
+                        foreach (var option in offer.Cards)
+                            Assert.AreEqual(option.Card.targetsEnemies, option.Target == RunTexts.EnemyTarget,
+                                "저주 카드만 적 전체 귀속이고, 나머지는 문이 가리킨 캐릭터 이름이다");
+                        flow.ReportCardPicked(offer.Cards[0].Card, offer.Token).Forget();
                         break;
                     case RunStep.DoorPoint:
                         doorPoints++;
@@ -107,11 +110,18 @@ namespace Eclipse.Tests
             Assert.IsNotEmpty(session.RunIncome, "런 중 공개된 재화가 장부에 쌓인다");
             Assert.GreaterOrEqual(midBossRewards, 2, "미드보스 방은 문 2종 보상을 추가로 낸다");
 
-            // 정산: 표 7행(700) + 승리 보너스(400). 런 중 재화 문 수입은 시드에 따라 다르므로 하한만 본다.
+            // 정산: 표 7행(700)과 승리 보너스(400)가 각각의 행으로 갈라져 온다.
             var terminal = flow.Offer.CurrentValue;
             Assert.AreEqual(RunStep.RunClear, terminal.Step);
-            Assert.AreEqual(1100, terminal.Receipts.Single(r => r.type == CurrencyType.Gold).amount,
-                "정산 = 700 + 승리 400");
+            Assert.AreEqual(700, terminal.DepthReward.Single(r => r.type == CurrencyType.Gold).amount,
+                "도달 보상 = 표 7행");
+            Assert.AreEqual(400, terminal.VictoryBonus.Single(r => r.type == CurrencyType.Gold).amount,
+                "승리 보너스는 따로 실린다");
+            Assert.AreEqual(
+                terminal.ExploreReward.Concat(terminal.DepthReward).Concat(terminal.VictoryBonus)
+                    .Where(r => r.type == CurrencyType.Gold).Sum(r => r.amount),
+                terminal.RewardTotal.Single(r => r.type == CurrencyType.Gold).amount,
+                "합계 = 탐험 + 도달 + 보너스");
 
             flow.ReportResultConfirmed(terminal.Token).Forget();
             Assert.AreEqual(1, sceneFlow.ToMainCount, "정산 확인 후 로비 복귀 1회");
@@ -168,7 +178,7 @@ namespace Eclipse.Tests
                         break;
                     case RunStep.BuffPick:
                         trace.Add("pick:" + string.Join(",", offer.Cards.Select(c => c.Card.id)));
-                        flow.ReportCardAssigned(offer.Cards[0].Card, 0, offer.Token).Forget();
+                        flow.ReportCardPicked(offer.Cards[0].Card, offer.Token).Forget();
                         break;
                     case RunStep.DoorPoint:
                         // 지문에는 종류만이 아니라 슬롯까지 남긴다 — 종류만 적으면 캐릭터 4문이 한 문으로 뭉친다.

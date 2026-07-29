@@ -16,7 +16,7 @@ namespace Eclipse.View.Infra
         /// <summary> 런 정산 팝업. 결과 타입은 bool — 확인 신호로만 쓴다. </summary>
         RunSettlement = 3,
 
-        /// <summary> 버프 카드 3택1+배정 팝업. 결과 타입은 CardPickChoice. </summary>
+        /// <summary> 버프 카드 3택1 팝업. 결과 타입은 BuffCard — 강제 1택이라 빈 결과가 없다. </summary>
         CardPick = 4
     }
 }

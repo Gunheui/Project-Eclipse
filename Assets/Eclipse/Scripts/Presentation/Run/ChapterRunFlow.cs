@@ -36,15 +36,33 @@ namespace Eclipse.Presentation
         public Sprite Icon { get; }
     }
 
-    /// <summary> 3택1 후보 하나의 표시 데이터. </summary>
+    /// <summary> 3택1 후보 하나의 표시 데이터. View가 도메인을 만지지 않도록 문구까지 풀어서 담는다. </summary>
     public readonly struct CardOption
     {
-        public CardOption(BuffCard card)
+        public CardOption(BuffCard card, string effect, string gradeLabel, string target)
         {
             Card = card;
+            Effect = effect;
+            GradeLabel = gradeLabel;
+            Target = target;
         }
 
+        /// <summary> 이 후보가 확정될 때 그대로 보고되는 값. </summary>
         public BuffCard Card { get; }
+
+        public string DisplayName => Card.displayName;
+
+        /// <summary> 등급색을 고르는 축. 배지 문구와 짝을 이룬다. </summary>
+        public CardGrade Grade => Card.grade;
+
+        /// <summary> 효과 한 줄. </summary>
+        public string Effect { get; }
+
+        /// <summary> 등급 배지에 적히는 등급명. </summary>
+        public string GradeLabel { get; }
+
+        /// <summary> 효과가 붙는 대상. 캐릭터 문은 그 파티원 이름, 저주 문은 적 전체다. </summary>
+        public string Target { get; }
     }
 
     /// <summary>
@@ -64,23 +82,23 @@ namespace Eclipse.Presentation
         /// <summary> EnteringRoom: 이번 방 전투 시드(런 시드에서 방 인덱스로 파생). </summary>
         public int BattleSeed;
 
-        /// <summary> 터미널: 이번에 지급된 보상 영수증. </summary>
-        public IReadOnlyList<RewardEntry> Receipts;
+        /// <summary> 터미널: 문으로 번 재화. 런 내내 장부에만 쌓였다가 이번 종료에 지급된 블록이다. </summary>
+        public IReadOnlyList<RewardEntry> ExploreReward;
 
-        /// <summary> 터미널: 런 중 적립 재화 누계. 이번 종료에서 정산과 함께 지급된 블록이다. </summary>
-        public IReadOnlyList<RewardEntry> RunIncome;
+        /// <summary> 터미널: 넘긴 방 수로 받은 정산. </summary>
+        public IReadOnlyList<RewardEntry> DepthReward;
+
+        /// <summary> 터미널: 클리어에만 붙는 보너스. 실패면 빈 목록. </summary>
+        public IReadOnlyList<RewardEntry> VictoryBonus;
+
+        /// <summary> 터미널: 위 세 블록의 합. 화면이 보여 주는 행만 더한 값이라 플레이어가 검산할 수 있다. </summary>
+        public IReadOnlyList<RewardEntry> RewardTotal;
 
         /// <summary> 직전 방에서 적립이 끝난 재화. 화면이 드랍 연출로 공개한다. 없으면 null. </summary>
         public IReadOnlyList<RewardEntry> RoomDrops;
 
         /// <summary> BuffPick: 후보 3장. </summary>
         public IReadOnlyList<CardOption> Cards;
-
-        /// <summary> BuffPick: 배정 화면용 파티 슬롯 정의(빈칸 null). 인덱스가 곧 배정 슬롯이다. </summary>
-        public IReadOnlyList<CharacterSO> PartySlots;
-
-        /// <summary> BuffPick: 배정 슬롯이 이미 정해진 픽이면 그 슬롯, 아니면 -1(사용자가 고른다). </summary>
-        public int BuffTargetPartySlot = DoorChoice.NoPartySlot;
 
         /// <summary> DoorPoint: 추첨된 문 3개의 표시 데이터. </summary>
         public IReadOnlyList<DoorOption> Doors;
@@ -121,9 +139,12 @@ namespace Eclipse.Presentation
         // 이번 방에서 적립했지만 아직 화면에 알리지 않은 재화. 다음 Emit이 RoomDrops로 옮기고 비운다.
         private IReadOnlyList<RewardEntry> _pendingDrops;
 
+        // 제시 중인 3택1이 붙을 슬롯. 저주 문은 대상이 없어 NoPartySlot이다.
+        private int _pickTargetSlot = DoorChoice.NoPartySlot;
+
         private bool _committed;
 
-        /// <summary> 아직 제시하지 않은 3택1 하나 = 후보 카드 + 배정 대상 슬롯(-1이면 사용자가 고른다). </summary>
+        /// <summary> 아직 제시하지 않은 3택1 하나 = 후보 카드 + 붙일 대상 슬롯(저주 문은 -1). </summary>
         private readonly struct PendingBuffPick
         {
             public PendingBuffPick(IReadOnlyList<BuffCard> cards, int targetPartySlot)
@@ -182,7 +203,7 @@ namespace Eclipse.Presentation
 
             if (!won)
             {
-                CommitTerminal(victory: false);
+                CommitRunEnd(victory: false);
                 return UniTask.CompletedTask;
             }
             RevealRewards();
@@ -202,32 +223,26 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 3택1 배정 결과 보고. 대상이 이미 정해진 픽(캐릭터 문)은 보고된 슬롯을 무시하고 그 대상에 붙인다.
+        /// 3택1 선택 보고. 배정 대상은 이 픽을 낸 문이 이미 정했으므로 화면이 고르지 않는다.
         /// 남은 픽이 있으면 다음 픽, 없으면 문 지점/전진으로 넘어간다.
         /// </summary>
-        public UniTask ReportCardAssigned(BuffCard card, int partySlot, int token)
+        public UniTask ReportCardPicked(BuffCard card, int token)
         {
             if (token != StepToken || Current != RunStep.BuffPick)
                 return UniTask.CompletedTask;
 
-            int forced = _offer.Value.BuffTargetPartySlot;
-            if (forced >= 0)
-                partySlot = forced;
-            else if (!card.targetsEnemies && !string.IsNullOrEmpty(card.requiredCharacterId))
-                partySlot = SlotOf(card.requiredCharacterId);
-            _session.AttachCard(card, partySlot);
+            // 제시하지 않은 카드는 받지 않는다. 토큰만으로는 화면이 만들어 낸 값을 거를 수 없다.
+            var matched = _offer.Value.Cards?
+                .Where(o => o.Card.id == card.id)
+                .Select(o => (BuffCard?)o.Card)
+                .FirstOrDefault();
+            if (matched == null)
+                return UniTask.CompletedTask;
+
+            // 보고된 값이 아니라 제시한 카드를 붙인다 — id가 같아도 증감 수치는 다를 수 있다.
+            _session.AttachCard(matched.Value, _pickTargetSlot);
             ProceedAfterReveal();
             return UniTask.CompletedTask;
-        }
-
-        /// <summary> 파티에서 캐릭터의 슬롯을 찾는다. </summary>
-        private int SlotOf(string characterId)
-        {
-            for (int i = 0; i < _session.Party.Count; i++)
-                if (_session.Party[i] != null && _session.Party[i].Definition.id == characterId)
-                    return i;
-            // 전용 카드는 파티 조건을 통과해 후보에 들었으므로 반드시 있다.
-            throw new InvalidOperationException($"전용 카드 대상 '{characterId}'이 파티에 없다.");
         }
 
         /// <summary> 문 선택 보고. 보류분으로 기록만 하고(지연 지급) 다음 방으로 전진한다. </summary>
@@ -271,7 +286,7 @@ namespace Eclipse.Presentation
         /// <summary>
         /// 승리 직후 직전 에스크로와 미드보스 보상 2종을 공개한다.
         /// 장부 적립까지 여기서 끝내고, 공개 연출은 다음 제시물의 <see cref="RunOffer.RoomDrops"/>에 맡긴다 —
-        /// 연출이 끊겨도 재화가 새지 않는 순서다. 지갑 반영은 런 종료 시 한 번이다(<see cref="CommitTerminal"/>).
+        /// 연출이 끊겨도 재화가 새지 않는 순서다. 지갑 반영은 런 종료 시 한 번이다(<see cref="CommitRunEnd"/>).
         /// </summary>
         private void RevealRewards()
         {
@@ -301,6 +316,8 @@ namespace Eclipse.Presentation
         /// <summary>
         /// 문 하나를 공개 처리한다. 재화 문은 여기서 금액이 굴려져 적립되고, 버프 문은 3택1 대기열에 쌓인다.
         /// </summary>
+        /// <param name="choice"> 공개할 문. 종류가 재화/버프 분기를 가른다. </param>
+        /// <param name="depth"> 이 문을 고른 방의 깊이. 재화 금액 굴림에 들어간다. </param>
         /// <param name="receipts"> 재화 문 적립분을 여기에 덧붙인다. </param>
         private void RevealDoor(DoorChoice choice, int depth, List<RewardEntry> receipts)
         {
@@ -324,14 +341,9 @@ namespace Eclipse.Presentation
             if (_pendingPicks.Count > 0)
             {
                 var pick = _pendingPicks.Dequeue();
+                _pickTargetSlot = pick.TargetPartySlot;
                 Current = RunStep.BuffPick;
-                Emit(new RunOffer
-                {
-                    Step = RunStep.BuffPick,
-                    Cards = pick.Cards.Select(c => new CardOption(c)).ToList(),
-                    PartySlots = _session.Party.Select(o => o?.Definition).ToList(),
-                    BuffTargetPartySlot = pick.TargetPartySlot,
-                });
+                Emit(new RunOffer { Step = RunStep.BuffPick, Cards = BuildCardOptions(pick) });
                 return;
             }
 
@@ -348,7 +360,7 @@ namespace Eclipse.Presentation
             _session.AdvanceRoom();
             if (_session.RoomIndex >= _session.Chapter.rooms.Length)
             {
-                CommitTerminal(victory: true);
+                CommitRunEnd(victory: true);
                 return;
             }
             OfferRoom();
@@ -358,30 +370,34 @@ namespace Eclipse.Presentation
         /// 런 종료 커밋. 런 중 적립분이 지갑에 닿는 유일한 지점이며, 종료 스텝이 두 번 불려도
         /// 지급과 저장은 정확히 1회다.
         /// </summary>
-        private void CommitTerminal(bool victory)
+        private void CommitRunEnd(bool victory)
         {
             // committed는 어떤 대기보다 먼저 세운다.
             if (_committed)
                 return;
             _committed = true;
 
-            // 순서 고정: ①몰수 ②정산 계산 ③(승리만)클리어 기록 ④적립분·정산 지급 ⑤저장 1회 ⑥정산 팝업 제시.
+            // 순서 고정: ①몰수 ②정산 계산 ③(승리만)클리어 기록 ④세 블록 지급 ⑤저장 1회 ⑥정산 팝업 제시.
             _session.ForfeitEscrow();
             _pendingPicks.Clear();
-            var entries = RunSettlement.EntriesFor(_session.Chapter, _session.RoomIndex, victory);
+            var settlement = RunSettlement.EntriesFor(_session.Chapter, _session.RoomIndex, victory);
             if (victory)
                 _progress.MarkCleared(_session.Chapter);
-            // 적립분과 정산을 따로 지급한다 — 정산 팝업이 둘을 별개 블록으로 보여 주기 때문이다.
-            var income = _rewards.Grant(_session.RunIncome);
-            var receipts = _rewards.Grant(entries);
+            // 세 번 나눠 지급한다 — 한 번에 넘기면 재화별로 뭉쳐 나와 화면의 세 행을 채울 수 없다.
+            var explore = _rewards.Grant(_session.RunIncome);
+            var depth = _rewards.Grant(settlement.Depth);
+            var bonus = _rewards.Grant(settlement.VictoryBonus);
             _saveService?.Save();
 
             Current = victory ? RunStep.RunClear : RunStep.RunFail;
             Emit(new RunOffer
             {
                 Step = Current,
-                Receipts = receipts,
-                RunIncome = income,
+                ExploreReward = explore,
+                DepthReward = depth,
+                VictoryBonus = bonus,
+                // 합계는 여기서 낸다 — 탐험 보상은 세션 장부 소관이라 도메인 정산이 모르는 값이다.
+                RewardTotal = RunRewardService.Sum(explore.Concat(depth).Concat(bonus)),
                 Victory = victory,
             });
         }
@@ -403,6 +419,21 @@ namespace Eclipse.Presentation
                     string.Format(definition.promiseText, character.displayName),
                     character.portraitAssetRef);
             }).ToList();
+
+        /// <summary>
+        /// 뽑힌 카드를 표시 데이터로 바꾼다. 카드명·효과·등급 라벨은 카드에서 나오고,
+        /// 귀속 표시만 이 픽을 낸 문이 정한다.
+        /// </summary>
+        private IReadOnlyList<CardOption> BuildCardOptions(PendingBuffPick pick)
+        {
+            // 저주 문은 대상 슬롯이 없다. 세 장이 한 문에서 나오므로 귀속 표시도 세 장이 공유한다.
+            string target = pick.TargetPartySlot >= 0
+                ? _session.Party[pick.TargetPartySlot].Definition.displayName
+                : RunTexts.EnemyTarget;
+            return pick.Cards
+                .Select(c => new CardOption(c, RunTexts.FormatCard(c), RunTexts.GradeLabel(c.grade), target))
+                .ToList();
+        }
 
         /// <summary>
         /// 토큰을 올리며 페이로드를 내보낸다. 전이의 유일한 출구라 토큰과 페이로드가 항상 함께 움직인다.

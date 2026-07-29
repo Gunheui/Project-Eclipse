@@ -26,8 +26,8 @@ namespace Eclipse.Presentation
             return granted;
         }
 
-        /// <summary> 재화별 1건으로 합산한다. </summary>
-        private static IReadOnlyList<RewardEntry> Sum(IEnumerable<RewardEntry> entries) => entries
+        /// <summary> 재화별 1건으로 합산한다. 지급 없이 합계만 필요한 화면도 이 규칙을 그대로 쓴다. </summary>
+        public static IReadOnlyList<RewardEntry> Sum(IEnumerable<RewardEntry> entries) => entries
             .Where(e => e.amount > 0)
             // 결과 팝업의 칩이 재화 종류와 1:1이라 같은 재화가 두 건이면 표시가 깨진다.
             .GroupBy(e => e.type)

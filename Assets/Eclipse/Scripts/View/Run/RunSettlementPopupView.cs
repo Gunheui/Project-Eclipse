@@ -1,7 +1,4 @@
-using System.Collections.Generic;
-using System.Linq;
 using Cysharp.Threading.Tasks;
-using Eclipse.Data;
 using Eclipse.Presentation;
 using Eclipse.View.Infra;
 using TMPro;
@@ -12,15 +9,21 @@ using VContainer;
 namespace Eclipse.View
 {
     /// <summary>
-    /// 런 정산 팝업. ①런 중 획득(이미 지급된 장부) ②도달 정산(지금 지급) 2블록을 보여 주고
-    /// [확인]으로 닫힌다. 지급·저장은 팝업이 뜨기 전에 이미 끝나 있다.
+    /// 챕터 결과 팝업. 탐험 보상·도달 보상·승리 보너스와 그 합계를 보여 주고 [확인]으로 닫힌다.
+    /// 지급·저장은 팝업이 뜨기 전에 이미 끝나 있다.
     /// </summary>
     public class RunSettlementPopupView : MonoBehaviour, IPopup<bool>
     {
         [SerializeField] private TMP_Text titleText;
-        [SerializeField] private TMP_Text runIncomeText;
-        [SerializeField] private TMP_Text settlementText;
+        [SerializeField] private TMP_Text exploreText;
+        [SerializeField] private TMP_Text depthText;
+        [SerializeField] private TMP_Text victoryBonusText;
+        [SerializeField] private TMP_Text totalText;
         [SerializeField] private Button confirmButton;
+
+        [Header("변형별 표시")]
+        [SerializeField] private GameObject victoryBonusRow;
+        [SerializeField] private GameObject failNote;
 
         private readonly UniTaskCompletionSource<bool> _choice = new();
 
@@ -32,21 +35,17 @@ namespace Eclipse.View
         {
             var offer = flow.Offer.CurrentValue;
 
-            if (titleText != null)
-                titleText.text = offer.Victory ? "챕터 클리어" : "런 실패";
-            if (runIncomeText != null)
-                runIncomeText.text = "런 중 획득\n" + FormatEntries(offer.RunIncome);
-            if (settlementText != null)
-                settlementText.text = "도달 정산\n" + FormatEntries(offer.Receipts);
+            titleText.text = offer.Victory ? "챕터 클리어" : "챕터 실패";
+            exploreText.text = RunTexts.FormatRewards(offer.ExploreReward);
+            depthText.text = RunTexts.FormatRewards(offer.DepthReward);
+            victoryBonusText.text = RunTexts.FormatRewards(offer.VictoryBonus);
+            totalText.text = RunTexts.FormatRewards(offer.RewardTotal);
+
+            // 승리 보너스 행은 클리어에만 뜬다. 합계는 보이는 행의 합이어야 하므로 0행으로 남기지 않는다.
+            victoryBonusRow.SetActive(offer.Victory);
+            failNote.SetActive(!offer.Victory);
 
             confirmButton.onClick.AddListener(() => _choice.TrySetResult(true));
-        }
-
-        private static string FormatEntries(IReadOnlyList<RewardEntry> entries)
-        {
-            if (entries == null || entries.Count == 0)
-                return "획득 없음";
-            return string.Join("\n", entries.Select(e => $"{RunTexts.CurrencyName(e.type)} +{e.amount:N0}"));
         }
 
         /// <summary>팝업을 띄운다. 등장 연출이 없어 즉시 완료된다.</summary>
