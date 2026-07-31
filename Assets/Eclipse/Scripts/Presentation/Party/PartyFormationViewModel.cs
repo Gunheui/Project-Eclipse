@@ -46,7 +46,10 @@ namespace Eclipse.Presentation
         /// <summary> 채워진 슬롯 수(0~4). 슬롯 값 변화에서 파생. </summary>
         public ReadOnlyReactiveProperty<int> PartyCount { get; }
 
-        /// <summary> 전투 진입 가능 여부(1명 이상이면 true, 4명 강제 아님). PartyCount에서 파생. </summary>
+        /// <summary>
+        /// 전투 진입 가능 여부(4슬롯이 다 차야 true). PartyCount에서 파생.
+        /// 런 시작이 캐릭터 문 4종을 파티에서 만들어 내므로 빈칸은 허용되지 않는다.
+        /// </summary>
         public ReadOnlyReactiveProperty<bool> CanEnter { get; }
 
         /// <summary> 이번 런이 향하는 챕터. </summary>
@@ -75,7 +78,7 @@ namespace Eclipse.Presentation
                 .Select(values => values.Count(v => v != null))
                 .ToReadOnlyReactiveProperty(0);
             CanEnter = PartyCount
-                .Select(count => count > 0)
+                .Select(count => count == SlotCount)
                 .ToReadOnlyReactiveProperty(false);
         }
 
@@ -123,13 +126,16 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
-        /// 현재 편성으로 챕터 런을 시작한다. 슬롯 위치를 유지한 4칸 목록(빈칸 null)을 SelectedParty에 실어
-        /// 편성 칸이 곧 전투 진영 자리가 된다(압축하지 않는다). 빈 편성은 무시하고, 중복 진입은 가드로 막는다.
+        /// 현재 편성으로 챕터 런을 시작한다. 슬롯 위치를 유지한 4칸 목록을 SelectedParty에 실어
+        /// 편성 칸이 곧 전투 진영 자리가 된다(압축하지 않는다). 미달 편성은 무시하고, 중복 진입은 가드로 막는다.
         /// </summary>
         public void StartRun()
         {
             var party = _slots.Select(s => s.Value).ToList();
-            if (party.All(c => c == null))
+
+            // 런 시작은 파티 4인에서 캐릭터 문 4종을 만든다. 빈칸이 있으면 전투 씬에 들어간 뒤 터지므로
+            // 화면을 벗어나기 전에 끊는다. 호출자(View)도 앞서 막지만 여기가 마지막 방어선이다.
+            if (party.Any(c => c == null))
                 return;
             if (_entering)
                 return;

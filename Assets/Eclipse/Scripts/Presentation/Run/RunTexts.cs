@@ -24,6 +24,12 @@ namespace Eclipse.Presentation
         /// <summary> 포기 확인 팝업 본문. 되돌릴 수 없는 조작이라 잃는 것을 적는다. </summary>
         public const string AbandonBody = "지금까지 획득한 재화는 모두 사라집니다.";
 
+        /// <summary> 편성 미달로 런을 시작하려 할 때의 안내 팝업 제목. </summary>
+        public const string PartyNotFullTitle = "편성 안내";
+
+        /// <summary> 편성 미달 안내 본문. </summary>
+        public const string PartyNotFullBody = "파티 인원(4인)이 부족합니다.";
+
         /// <summary> 정산 행의 재화 표기 순서. </summary>
         private static readonly CurrencyType[] RewardColumns =
         {

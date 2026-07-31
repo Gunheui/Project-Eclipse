@@ -11,7 +11,7 @@ namespace Eclipse.View
 {
     /// <summary>
     /// 파티 편성 화면. 4개 슬롯을 생성해 편성 VM의 슬롯 스트림에 각각 바인딩하고, 슬롯 탭 시 픽 화면을 올린다.
-    /// 하단에 인원수·[런 시작] 버튼을 바인딩한다. 시작 버튼은 1명 이상일 때만 활성.
+    /// 하단에 인원수·[런 시작] 버튼을 바인딩한다. 시작 버튼은 항상 활성이고, 4인 미달로 누르면 안내 팝업이 뜬다.
     /// </summary>
     public class PartyFormationView : MonoBehaviour, IScreen
     {
@@ -27,14 +27,16 @@ namespace Eclipse.View
 
         private PartyFormationViewModel _viewModel;
         private ScreenManager _screenManager;
+        private PopupManager _popups;
         private readonly CompositeDisposable _bindings = new CompositeDisposable();
 
         /// <summary> ScreenManager가 이 화면 프리팹을 주입 생성할 때 호출한다. OnEnter보다 먼저 실행된다. </summary>
         [Inject]
-        public void Construct(PartyFormationViewModel viewModel, ScreenManager screenManager)
+        public void Construct(PartyFormationViewModel viewModel, ScreenManager screenManager, PopupManager popups)
         {
             _viewModel = viewModel;
             _screenManager = screenManager;
+            _popups = popups;
         }
 
         /// <summary>
@@ -56,9 +58,6 @@ namespace Eclipse.View
                     .AddTo(_bindings);
 
             enterButton.onClick.AddListener(OnEnterBattle);
-            _viewModel.CanEnter
-                .Subscribe(can => enterButton.interactable = can)
-                .AddTo(_bindings);
 
             if (backButton != null)
                 backButton.onClick.AddListener(OnBack);
@@ -85,7 +84,18 @@ namespace Eclipse.View
             _screenManager.Push(ScreenId.PartyPick).Forget();
         }
 
-        private void OnEnterBattle() => _viewModel.StartRun();
+        /// <summary>
+        /// [런 시작]. 4인이 다 차야 진입하고, 미달이면 버튼을 죽이는 대신 왜 못 가는지 팝업으로 알린다.
+        /// </summary>
+        private void OnEnterBattle()
+        {
+            if (!_viewModel.CanEnter.CurrentValue)
+            {
+                _popups.ShowAlert(RunTexts.PartyNotFullTitle, RunTexts.PartyNotFullBody).Forget();
+                return;
+            }
+            _viewModel.StartRun();
+        }
         private void OnBack() => _screenManager.Pop().Forget();
     }
 }

@@ -52,6 +52,14 @@ namespace Eclipse.View.Infra
         public UniTask<bool> ShowConfirm(string title, string body)
             => Show<bool>(PopupId.Confirm, go => go.GetComponent<ConfirmPopupView>().SetContent(title, body));
 
+        /// <summary>
+        /// 확인 버튼만 있는 안내 팝업을 띄우고 닫힐 때까지 기다린다. 물어보는 게 아니라 알리는 것이라
+        /// 결과가 없다. 확인/취소 팝업의 취소를 감춰 쓰므로 전용 프리팹이 없다.
+        /// </summary>
+        public async UniTask ShowAlert(string title, string body)
+            => await Show<bool>(PopupId.Confirm,
+                go => go.GetComponent<ConfirmPopupView>().SetContent(title, body, showCancel: false));
+
         /// <param name="configure">띄우기 전에 팝업 인스턴스를 손볼 훅. 호출자에게 내부를 열지 않으려고 비공개로 둔다.</param>
         private async UniTask<TResult> Show<TResult>(PopupId id, Action<GameObject> configure)
         {

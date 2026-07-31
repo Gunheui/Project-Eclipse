@@ -22,10 +22,17 @@ namespace Eclipse.View.Infra
         public UniTask<bool> Result => _choice.Task;
 
         /// <summary> 제목과 본문을 채운다. 띄우기 전에 한 번 부른다. </summary>
-        public void SetContent(string title, string body)
+        /// <param name="showCancel">false면 확인 버튼만 남는 안내 팝업이 된다.</param>
+        public void SetContent(string title, string body, bool showCancel = true)
         {
             titleText.text = title;
             bodyText.text = body;
+            cancelButton.gameObject.SetActive(showCancel);
+
+            // 두 버튼은 레이아웃 그룹 없이 좌우로 벌려 놓은 절대 배치라, 취소를 끄면 확인이 오른쪽에
+            // 치우친 채로 남는다. 남은 버튼을 가운데로 옮긴다.
+            if (!showCancel && confirmButton.transform is RectTransform rect)
+                rect.anchoredPosition = new Vector2(0f, rect.anchoredPosition.y);
         }
 
         private void Awake()

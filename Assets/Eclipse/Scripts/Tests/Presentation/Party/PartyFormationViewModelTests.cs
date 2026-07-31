@@ -54,6 +54,13 @@ namespace Eclipse.Tests
             return (vm, nav, flow, roster);
         }
 
+        /// <summary> 로스터 앞에서부터 4슬롯을 채운다. 런 시작에는 4인이 다 차 있어야 한다. </summary>
+        private static void FillParty(PartyFormationViewModel vm, IReadOnlyList<OwnedCharacter> roster)
+        {
+            for (int i = 0; i < PartyFormationViewModel.SlotCount; i++)
+                vm.AssignToSlot(i, roster[i]);
+        }
+
         [Test]
         public void 초기화_시_4슬롯_모두_빈칸_count0_enter불가()
         {
@@ -79,7 +86,25 @@ namespace Eclipse.Tests
             Assert.IsNull(vm.Slots[1].Value, "건너뛴 슬롯은 빈칸으로 남는다");
             Assert.AreSame(roster[3], vm.Slots[2].Value);
             Assert.AreEqual(2, vm.PartyCount.CurrentValue);
-            Assert.IsTrue(vm.CanEnter.CurrentValue, "1명 이상이면 진입 가능");
+            Assert.IsFalse(vm.CanEnter.CurrentValue, "4인이 되기 전에는 진입 불가");
+
+            vm.Dispose();
+        }
+
+        [Test]
+        public void CanEnter는_4슬롯이_다_차야_true()
+        {
+            var (vm, _, _, roster) = Build(5);
+            for (int i = 0; i < 3; i++)
+                vm.AssignToSlot(i, roster[i]);
+
+            Assert.IsFalse(vm.CanEnter.CurrentValue, "3인은 진입 불가");
+
+            vm.AssignToSlot(3, roster[3]);
+            Assert.IsTrue(vm.CanEnter.CurrentValue, "4인이 차면 진입 가능");
+
+            vm.ClearSlot(1);
+            Assert.IsFalse(vm.CanEnter.CurrentValue, "한 칸을 비우면 다시 불가");
 
             vm.Dispose();
         }
@@ -148,13 +173,15 @@ namespace Eclipse.Tests
         {
             var (vm, nav, flow, roster) = Build(4);
             vm.AssignToSlot(0, roster[2]);
-            vm.AssignToSlot(2, roster[0]);
+            vm.AssignToSlot(1, roster[0]);
+            vm.AssignToSlot(2, roster[3]);
+            vm.AssignToSlot(3, roster[1]);
 
             vm.StartRun();
 
-            CollectionAssert.AreEqual(new OwnedCharacter[] { roster[2], null, roster[0], null },
+            CollectionAssert.AreEqual(new[] { roster[2], roster[0], roster[3], roster[1] },
                 nav.SelectedParty.ToList(),
-                "편성 칸이 전투 자리이므로 빈칸을 채운 채 그대로 실린다");
+                "편성 칸이 전투 자리이므로 로스터 순서가 아니라 슬롯 순서로 실린다");
             Assert.AreEqual(1, flow.ToBattleCount, "전투 씬으로 진입한다");
 
             vm.Dispose();
@@ -174,7 +201,7 @@ namespace Eclipse.Tests
             Assert.AreSame(roster[1], revisited.Slots[2].Value, "전투를 다녀와도 편성 위치가 그대로 남는다");
             Assert.IsNull(revisited.Slots[0].Value, "빈 칸도 그대로");
             Assert.AreEqual(1, revisited.PartyCount.CurrentValue);
-            Assert.IsTrue(revisited.CanEnter.CurrentValue, "복원된 편성으로 바로 진입할 수 있다");
+            Assert.IsFalse(revisited.CanEnter.CurrentValue, "복원됐어도 4인 미달이면 진입 불가");
 
             revisited.ClearSlot(2);
             Assert.IsNull(save.Party[2], "비우기도 저장에 반영된다");
@@ -196,10 +223,25 @@ namespace Eclipse.Tests
         }
 
         [Test]
+        public void StartRun_4인_미달이면_진입하지_않는다()
+        {
+            var (vm, nav, flow, roster) = Build(4);
+            for (int i = 0; i < 3; i++)
+                vm.AssignToSlot(i, roster[i]);
+
+            vm.StartRun();
+
+            Assert.IsNull(nav.SelectedParty, "빈칸이 있는 파티는 실리지 않는다");
+            Assert.AreEqual(0, flow.ToBattleCount, "전투 씬에 들어간 뒤 터지지 않도록 여기서 끊는다");
+
+            vm.Dispose();
+        }
+
+        [Test]
         public void StartRun_전환에_실패하면_다시_시도할_수_있다()
         {
             var (vm, _, flow, roster) = Build(4);
-            vm.AssignToSlot(0, roster[0]);
+            FillParty(vm, roster);
             flow.FailTransition = true;
             LogAssert.ignoreFailingMessages = true; // 실패한 전환은 예외를 다시 던져 드러낸다
 
@@ -217,12 +259,12 @@ namespace Eclipse.Tests
         [Test]
         public void StartRun_재진입은_무시된다()
         {
-            var (vm, nav, flow, roster) = Build(4);
-            vm.AssignToSlot(0, roster[0]);
+            var (vm, nav, flow, roster) = Build(5);
+            FillParty(vm, roster);
             vm.StartRun();
             var first = nav.SelectedParty;
 
-            vm.AssignToSlot(0, roster[1]);
+            vm.AssignToSlot(0, roster[4]); // 벤치 캐릭터로 교체 — 4인은 그대로 유지된다
             vm.StartRun();
 
             Assert.AreEqual(1, flow.ToBattleCount, "두 번째 진입은 무시된다");
