@@ -35,7 +35,7 @@ namespace Eclipse.Core
 
         private BattleViewModel _battle;
         private CancellationTokenSource _battleCts;
-        private int _battleToken;
+        private bool _exitPending;
 
         [Inject]
         public void Construct(ChapterRunFlow flow, BattleFactory factory, PopupManager popups)
@@ -70,6 +70,11 @@ namespace Eclipse.Core
             if (eliteBadge != null)
                 eliteBadge.SetActive(offer.Step == RunStep.EnteringRoom && offer.IsEliteEncounter);
 
+            // 터미널부터 런은 이미 끝났다. 이 뒤로 포기는 커밋 가드에 막혀 무반응이 되므로 나가기를 내린다.
+            // 남는 출구는 정산 화면의 [로비로] 하나다.
+            if (offer.Step == RunStep.RunClear || offer.Step == RunStep.RunFail)
+                battleView.SetExitEnabled(false);
+
             // 스텝 처리(ClearBattle) 전에 재생해야 적 좌표에 재화를 표시할 수 있음.
             await PlayRoomDropsAsync(offer);
 
@@ -94,25 +99,13 @@ namespace Eclipse.Core
         {
             if (offer.RoomDrops == null || dropSpawner == null) return;
 
-            // 연출 중에는 나가기를 잠근다. 전투가 이미 끝나 포기 보고가 무시되므로,
-            // 눌러도 아무 일이 없는 버튼을 살려 두지 않는다.
-            battleView.SetExitEnabled(false);
-            try
-            {
-                await dropSpawner.PlayAsync(offer.RoomDrops, battleView.EnemyPositions(),
-                    this.GetCancellationTokenOnDestroy());
-            }
-            finally
-            {
-                // 씬이 내려가는 중이면 전투 뷰가 먼저 파괴돼 있을 수 있다. 파괴 순서는 보장되지 않는다.
-                if (battleView != null) battleView.SetExitEnabled(true);
-            }
+            await dropSpawner.PlayAsync(offer.RoomDrops, battleView.EnemyPositions(),
+                this.GetCancellationTokenOnDestroy());
         }
 
         /// <summary> 방에 진입해 전투를 구동하고 승패를 보고한다. </summary>
         private async UniTask EnterRoomAsync(RunOffer offer)
         {
-            _battleToken = offer.Token;
             await fader.FadeOutAsync();
 
             // 페이드 아웃 뒤 이전 전투 파기·문 정리·배경 스왑·재조립.
@@ -134,20 +127,51 @@ namespace Eclipse.Core
             }
             catch (OperationCanceledException)
             {
-                return; // 포기·씬 파괴 — 보고는 취소한 쪽(OnExitRequested)이 이미 처리했다
+                return; // 포기·씬 파괴 — 이 전투 결과는 보고하지 않는다
             }
 
             bool won = _battle.Result.CurrentValue == BattleResult.Victory;
             await _flow.ReportBattleResult(won, offer.Token);
         }
 
+        private void OnExitRequested() => ConfirmAbandonAsync().Forget();
+
         /// <summary>
-        /// 나가기 = 런 포기. 이 방 패배로 보고해 몰수·정산·복귀가 정규 실패 경로를 그대로 거친다.
+        /// 나가기 = 런 포기. 한 번 물어 확정되면 전투를 끊고 Flow의 포기 경로로 넘긴다.
+        /// 전투 중·문 지점·3택1 어디서 눌러도 같다.
         /// </summary>
-        private void OnExitRequested()
+        private async UniTaskVoid ConfirmAbandonAsync()
         {
-            _battleCts?.Cancel();
-            _flow.ReportBattleResult(false, _battleToken).Forget();
+            // 확인 팝업은 한 번만 뜬다. 확정한 뒤에는 다시 열지 않으므로 되돌리지 않는다.
+            if (_exitPending) return;
+            _exitPending = true;
+            battleView.SetExitEnabled(false);
+
+            // 오토 전투는 팝업을 모르고 계속 돈다. 묻는 사이 방이 끝나면 정규 커밋이 먼저 서서
+            // 포기했는데 정산을 받게 된다. 전투 연출은 전부 DOTween이고 unscaled 지정이 없다.
+            float timeScale = Time.timeScale;
+            Time.timeScale = 0f;
+            try
+            {
+                bool abandon = await _popups.ShowConfirm(RunTexts.AbandonTitle, RunTexts.AbandonBody);
+
+                // 복원은 씬 전환보다 앞이다. 시간 배율은 앱 전역 값이라 한 번 어긋나면 로비까지 끌고 간다.
+                Time.timeScale = timeScale;
+                if (!abandon)
+                {
+                    battleView.SetExitEnabled(true);
+                    _exitPending = false;
+                    return;
+                }
+
+                _battleCts?.Cancel();
+                await _flow.AbandonRun();
+            }
+            finally
+            {
+                // 예외·취소로 위 복원을 못 지나갔을 때의 보루.
+                Time.timeScale = timeScale;
+            }
         }
 
         private async UniTask ShowCardPickAsync(RunOffer offer)

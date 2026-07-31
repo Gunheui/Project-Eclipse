@@ -471,6 +471,129 @@ namespace Eclipse.Tests
             Assert.AreEqual(100, h.Wallet.Gold.CurrentValue - 1000, "지갑 증가분 = 정산(방 1)뿐 — 몰수분은 적립되지 않았다");
         }
 
+        // --- 런 포기 ---
+
+        [Test]
+        public void 전투_중_챕터_포기는_지급과_정산_화면_없이_로비로_간다()
+        {
+            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, false), RunFixtures.Boss()));
+            h.Flow.BeginRun().Forget();
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+            int gold = h.Wallet.Gold.CurrentValue;
+
+            h.Flow.AbandonRun().Forget();
+
+            Assert.AreEqual(1, h.SceneFlow.ToMainCount, "확인 팝업 하나로 곧장 로비다");
+            Assert.AreEqual(RunStep.EnteringRoom, h.Offer.Step, "정산 제시물이 뜨지 않는다");
+            Assert.AreEqual(0, h.Rewards.GrantCalls, "포기는 한 푼도 지급하지 않는다");
+            Assert.AreEqual(gold, h.Wallet.Gold.CurrentValue);
+            Assert.IsFalse(h.Progress.IsCleared(h.Chapter), "클리어 기록은 손대지 않는다");
+        }
+
+        [Test]
+        public void 문_지점_챕터_포기는_에스크로와_적립분을_모두_버린다()
+        {
+            var h = Build(RunFixtures.Chapter(
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, true), RunFixtures.Boss()));
+            h.Flow.BeginRun().Forget();
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+
+            int index = IndexOf(h, d => CurrencyDoor.IsCurrency(d.Rewards[0].Kind));
+            if (index < 0)
+                Assert.Ignore("이 시드의 문 지점에 재화 문이 없다");
+            var type = CurrencyDoor.CurrencyOf(h.Offer.Doors[index].Rewards[0].Kind);
+
+            // 재화 문을 지나 적립까지 끝낸 다음 문 지점에서 포기한다.
+            h.Flow.ReportDoorPicked(index, h.Offer.Token).Forget();
+            int before = Balance(h, type);
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+            Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step);
+            Assert.Greater(h.Session.RunIncome.Count, 0, "장부에 적립분이 쌓인 상태다");
+
+            h.Flow.AbandonRun().Forget();
+
+            Assert.AreEqual(1, h.SceneFlow.ToMainCount);
+            Assert.AreEqual(0, h.Rewards.GrantCalls, "적립분이 지급 창구를 지나지 않는다");
+            Assert.AreEqual(before, Balance(h, type), "지갑은 그대로다");
+            Assert.IsFalse(h.Session.HasEscrow, "보류분도 함께 몰수된다");
+            Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step, "정산 제시물이 뜨지 않는다");
+        }
+
+        [Test]
+        public void 챕터_포기는_두_번_보고해도_로비_복귀가_한_번이다()
+        {
+            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, false), RunFixtures.Boss()));
+            h.Flow.BeginRun().Forget();
+
+            h.Flow.AbandonRun().Forget();
+            h.Flow.AbandonRun().Forget();
+
+            Assert.AreEqual(1, h.SceneFlow.ToMainCount);
+            Assert.AreEqual(0, h.Rewards.GrantCalls);
+        }
+
+        [Test]
+        public void 정산이_이미_선_뒤의_챕터_포기는_아무것도_바꾸지_않는다()
+        {
+            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, false), RunFixtures.Boss()));
+            h.Flow.BeginRun().Forget();
+            h.Flow.ReportBattleResult(won: false, h.Offer.Token).Forget();
+            Assert.AreEqual(RunStep.RunFail, h.Offer.Step);
+            int grantCalls = h.Rewards.GrantCalls;
+            int gold = h.Wallet.Gold.CurrentValue;
+
+            h.Flow.AbandonRun().Forget();
+
+            // 커밋 가드에 막혀 포기가 성립하지 않는다. 화면은 이 반환을 보고 나가기를 내려 둔다.
+            Assert.AreEqual(0, h.SceneFlow.ToMainCount, "정산 확인을 거치지 않고 로비로 빠지지 않는다");
+            Assert.AreEqual(RunStep.RunFail, h.Offer.Step);
+            Assert.AreEqual(grantCalls, h.Rewards.GrantCalls, "이미 끝난 지급을 되돌리지 않는다");
+            Assert.AreEqual(gold, h.Wallet.Gold.CurrentValue);
+        }
+
+        [Test]
+        public void 챕터_포기_뒤_늦은_전투와_문과_카드_보고는_무시된다()
+        {
+            // Emit마다 토큰이 올라 한 시나리오로는 세 종류를 동시에 유효하게 둘 수 없다. 상태를 각각 세운다.
+            var battle = Build(RunFixtures.Chapter(RunFixtures.Normal(1, false), RunFixtures.Boss()));
+            battle.Flow.BeginRun().Forget();
+            int battleToken = battle.Offer.Token;
+            battle.Flow.AbandonRun().Forget();
+            battle.Flow.ReportBattleResult(won: true, battleToken).Forget();
+            Assert.AreEqual(RunStep.EnteringRoom, battle.Offer.Step, "다음 방이 제시되지 않는다");
+            Assert.AreEqual(0, battle.Rewards.GrantCalls);
+            Assert.AreEqual(1, battle.SceneFlow.ToMainCount);
+
+            var door = Build(RunFixtures.Chapter(RunFixtures.Normal(1, true), RunFixtures.Boss()));
+            door.Flow.BeginRun().Forget();
+            door.Flow.ReportBattleResult(won: true, door.Offer.Token).Forget();
+            Assert.AreEqual(RunStep.DoorPoint, door.Offer.Step);
+            int doorToken = door.Offer.Token;
+            door.Flow.AbandonRun().Forget();
+            door.Flow.ReportDoorPicked(0, doorToken).Forget();
+            Assert.AreEqual(RunStep.DoorPoint, door.Offer.Step, "문 선택이 다음 방을 열지 못한다");
+            Assert.IsFalse(door.Session.HasEscrow, "문 보상이 다시 보류되지 않는다");
+
+            var pick = Build(RunFixtures.Chapter(
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+            pick.Flow.BeginRun().Forget();
+            pick.Flow.ReportBattleResult(won: true, pick.Offer.Token).Forget();
+            int buffIndex = IndexOf(pick, d => !CurrencyDoor.IsCurrency(d.Rewards[0].Kind));
+            if (buffIndex < 0)
+                Assert.Ignore("이 시드의 문 지점에 버프 문이 없다");
+            pick.Flow.ReportDoorPicked(buffIndex, pick.Offer.Token).Forget();
+            pick.Flow.ReportBattleResult(won: true, pick.Offer.Token).Forget();
+            Assert.AreEqual(RunStep.BuffPick, pick.Offer.Step);
+
+            int pickToken = pick.Offer.Token;
+            var candidate = pick.Offer.Cards[0].Card;
+            int acquired = pick.Session.AcquiredCards.Count;
+            pick.Flow.AbandonRun().Forget();
+            pick.Flow.ReportCardPicked(candidate, pickToken).Forget();
+            Assert.AreEqual(acquired, pick.Session.AcquiredCards.Count, "카드가 배정되지 않는다");
+            Assert.AreEqual(RunStep.BuffPick, pick.Offer.Step);
+        }
+
         // --- 미드보스 문 (문③) ---
 
         [Test]

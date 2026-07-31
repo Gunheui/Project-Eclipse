@@ -45,7 +45,15 @@ namespace Eclipse.View.Infra
         /// 팝업을 띄우고 사용자 응답이 정해질 때까지 기다린 뒤 결과를 돌려준다.
         /// </summary>
         /// <typeparam name="TResult">팝업이 돌려주는 응답 타입.</typeparam>
-        public async UniTask<TResult> Show<TResult>(PopupId id)
+        public UniTask<TResult> Show<TResult>(PopupId id) => Show<TResult>(id, null);
+
+        /// <summary> 문구를 채운 확인/취소 팝업을 띄우고 응답을 기다린다. </summary>
+        /// <returns>확인이면 true, 취소면 false.</returns>
+        public UniTask<bool> ShowConfirm(string title, string body)
+            => Show<bool>(PopupId.Confirm, go => go.GetComponent<ConfirmPopupView>().SetContent(title, body));
+
+        /// <param name="configure">띄우기 전에 팝업 인스턴스를 손볼 훅. 호출자에게 내부를 열지 않으려고 비공개로 둔다.</param>
+        private async UniTask<TResult> Show<TResult>(PopupId id, Action<GameObject> configure)
         {
             if (!_prefabs.TryGetValue(id, out var prefab))
                 throw new InvalidOperationException($"PopupManager: '{id}'에 등록된 프리팹이 없습니다. entries 매핑을 확인하세요.");
@@ -57,6 +65,7 @@ namespace Eclipse.View.Infra
                 Destroy(go);
                 throw new InvalidOperationException($"PopupManager: 프리팹 '{prefab.name}'에 IPopup<{typeof(TResult).Name}> 구현이 없습니다.");
             }
+            configure?.Invoke(go);
 
             _stack.Add(popup);
             if (_stack.Count == 1)

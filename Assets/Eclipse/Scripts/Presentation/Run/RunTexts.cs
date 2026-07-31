@@ -18,6 +18,12 @@ namespace Eclipse.Presentation
         /// <summary> 미드보스 문의 약속. 걸린 보상 2종을 일반 문과 같은 문구로 한 줄씩 적는다. </summary>
         public static string MidBossPromise(IEnumerable<string> rewards) => string.Join("\n", rewards);
 
+        /// <summary> 포기 확인 팝업 제목. </summary>
+        public const string AbandonTitle = "게임을 포기하시겠습니까?";
+
+        /// <summary> 포기 확인 팝업 본문. 되돌릴 수 없는 조작이라 잃는 것을 적는다. </summary>
+        public const string AbandonBody = "지금까지 획득한 재화는 모두 사라집니다.";
+
         /// <summary> 정산 행의 재화 표기 순서. </summary>
         private static readonly CurrencyType[] RewardColumns =
         {

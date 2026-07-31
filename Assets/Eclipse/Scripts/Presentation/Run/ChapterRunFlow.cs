@@ -275,6 +275,24 @@ namespace Eclipse.Presentation
             return UniTask.CompletedTask;
         }
 
+        /// <summary>
+        /// 런 포기. 적립분도 정산도 지급하지 않고 정산 화면 없이 로비로 돌아간다. 종료 커밋과 달리
+        /// 저장도 클리어 기록도 건드리지 않는다. 어느 스텝에서 불러도 성립한다.
+        /// </summary>
+        public async UniTask AbandonRun()
+        {
+            // 커밋 가드는 어떤 대기보다 먼저 세운다. 정산이 이미 섰으면 포기가 끼어들지 않는다.
+            if (_committed)
+                return;
+            _committed = true;
+
+            // 화면에 나가 있는 보고를 무효화한다. 커밋 가드를 보지 않는 3택1 보고까지 여기서 걸린다.
+            StepToken++;
+            _session.ForfeitEscrow();
+            _pendingPicks.Clear();
+            await _sceneFlow.ToMainAsync();
+        }
+
         public void Dispose() => _offer.Dispose();
 
         /// <summary>
