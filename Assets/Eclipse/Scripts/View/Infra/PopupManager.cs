@@ -9,7 +9,8 @@ namespace Eclipse.View.Infra
 {
     /// <summary>
     /// 모달 팝업의 생명주기를 소유한다. 팝업을 온디맨드로 생성·주입하고, 열림→결과 대기→닫힘을
-    /// 처리한 뒤 결과를 호출자에게 돌려준다. 팝업이 하나라도 떠 있는 동안 배경 dim을 켠다.
+    /// 처리한 뒤 결과를 호출자에게 돌려준다. 팝업이 떠 있는 동안 dim을 최상단 팝업 바로 아래에 두어
+    /// 아래 팝업과 배경 UI가 입력을 받지 않게 한다.
     /// </summary>
     public class PopupManager : MonoBehaviour
     {
@@ -25,7 +26,7 @@ namespace Eclipse.View.Infra
         [SerializeField] private PopupEntry[] entries;
 
         private readonly Dictionary<PopupId, GameObject> _prefabs = new Dictionary<PopupId, GameObject>();
-        private readonly List<IPopup> _stack = new List<IPopup>();
+        private readonly List<Transform> _stack = new List<Transform>();
 
         private IObjectResolver _resolver;
 
@@ -39,6 +40,9 @@ namespace Eclipse.View.Infra
         {
             foreach (var entry in entries)
                 _prefabs[entry.Id] = entry.Prefab;
+
+            // dim이 팝업과 같은 부모에 있어야 형제 순서로 팝업 사이에 끼워 넣을 수 있다.
+            dim.transform.SetParent(popupRoot, false);
         }
 
         /// <summary>
@@ -75,9 +79,9 @@ namespace Eclipse.View.Infra
             }
             configure?.Invoke(go);
 
-            _stack.Add(popup);
-            if (_stack.Count == 1)
-                dim.SetActive(true);
+            _stack.Add(go.transform);
+            dim.SetActive(true);
+            PlaceDimUnderTop();
 
             try
             {
@@ -88,11 +92,22 @@ namespace Eclipse.View.Infra
             }
             finally
             {
-                _stack.Remove(popup);
+                _stack.Remove(go.transform);
                 Destroy(go);
                 if (_stack.Count == 0)
                     dim.SetActive(false);
+                else
+                    PlaceDimUnderTop();
             }
+        }
+
+        /// <summary> dim을 최상단 팝업 바로 아래 형제로 옮겨 그 아래 전부의 입력을 막는다. </summary>
+        private void PlaceDimUnderTop()
+        {
+            // SetSiblingIndex는 제거 후 삽입이라 올릴 때와 내릴 때 인덱스 보정이 달라진다.
+            // 맨 뒤로 두 번 보내면 방향과 무관하게 dim → 최상단 팝업 순서가 된다.
+            dim.transform.SetAsLastSibling();
+            _stack[^1].SetAsLastSibling();
         }
     }
 }
