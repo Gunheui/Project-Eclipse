@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Eclipse.Data.Enums;
@@ -10,7 +11,7 @@ namespace Eclipse.Presentation
 {
     /// <summary>
     /// 캐릭터 목록의 항목 하나에 대응하는 ViewModel.
-    /// 정의(CharacterSO)의 표시값과 계정별 레벨을 View에 노출한다.
+    /// 정의(CharacterSO)의 표시값과 계정별 레벨·돌파를 View에 노출하고, 성장 신호를 받아 스스로 갱신한다.
     /// </summary>
     public class CharacterItemViewModel : ViewModelBase
     {
@@ -34,21 +35,39 @@ namespace Eclipse.Presentation
             => _spriteProvider.LoadPortraitAsync(_ownedCharacter.Definition, ct);
 
         private ReactiveProperty<int> _level;
+        private ReactiveProperty<int> _ascensionTier;
+        private IDisposable _growthSubscription;
 
         /// <summary> 현재 레벨. View가 구독하는 읽기전용 스트림. </summary>
         public ReadOnlyReactiveProperty<int> Level => _level;
 
-        public CharacterItemViewModel(OwnedCharacter owned, ISpriteProvider spriteProvider)
+        /// <summary> 돌파 단계(0 = 미돌파). 별 위젯이 구독한다. </summary>
+        public ReadOnlyReactiveProperty<int> AscensionTier => _ascensionTier;
+
+        public CharacterItemViewModel(OwnedCharacter owned, ISpriteProvider spriteProvider,
+            CharacterGrowthSignals growthSignals)
         {
             _ownedCharacter = owned;
             _spriteProvider = spriteProvider;
             _level = new ReactiveProperty<int>(_ownedCharacter.Level);
+            _ascensionTier = new ReactiveProperty<int>(_ownedCharacter.AscensionTier);
+
+            // 신호는 로스터 전체가 함께 받으므로 자기 캐릭터인지 참조로 가려낸다.
+            _growthSubscription = growthSignals.Changed
+                .Where(changed => ReferenceEquals(changed, _ownedCharacter))
+                .Subscribe(changed =>
+                {
+                    _level.Value = changed.Level;
+                    _ascensionTier.Value = changed.AscensionTier;
+                });
         }
 
         protected override void OnDispose()
         {
             base.OnDispose();
+            _growthSubscription.Dispose();
             _level.Dispose();
+            _ascensionTier.Dispose();
         }
     }
 }

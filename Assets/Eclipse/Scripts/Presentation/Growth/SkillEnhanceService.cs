@@ -22,12 +22,15 @@ namespace Eclipse.Presentation
         private readonly ICurrencyService _currency;
         private readonly SaveService _save;
         private readonly GrowthConfigSO _config;
+        private readonly CharacterGrowthSignals _signals;
 
-        public SkillEnhanceService(ICurrencyService currency, SaveService save, GrowthConfigSO config)
+        public SkillEnhanceService(ICurrencyService currency, SaveService save, GrowthConfigSO config,
+            CharacterGrowthSignals signals)
         {
             _currency = currency;
             _save = save;
             _config = config;
+            _signals = signals;
         }
 
         /// <summary>
@@ -63,6 +66,8 @@ namespace Eclipse.Presentation
             // 캐릭터 레벨 적용 및 저장
             owned.IncreaseSkillLevel(skillSlot);
             _save.Save();
+            // 값이 다 반영된 뒤에 알린다. 구독자가 갱신된 스킬 레벨을 읽는 것이 보장된다.
+            _signals.Notify(owned);
             return SkillEnhanceResult.Success;
         }
     }

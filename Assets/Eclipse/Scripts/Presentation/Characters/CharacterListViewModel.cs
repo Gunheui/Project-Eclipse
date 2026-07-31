@@ -30,13 +30,14 @@ namespace Eclipse.Presentation
         /// </summary>
         public ReactiveProperty<Role?> RoleFilter { get; } = new(null);
 
-        public CharacterListViewModel(PlayerSave save, NavigationContext navigationContext, ISpriteProvider spriteProvider)
+        public CharacterListViewModel(PlayerSave save, NavigationContext navigationContext, ISpriteProvider spriteProvider,
+            CharacterGrowthSignals growthSignals)
         {
             _navigationContext = navigationContext;
 
             foreach (var character in save.OwnedCharacters)
             {
-                _items.Add(new CharacterItemViewModel(character, spriteProvider));
+                _items.Add(new CharacterItemViewModel(character, spriteProvider, growthSignals));
             }
 
             ApplySort(_sortKey.Value);

@@ -10,7 +10,7 @@ namespace Eclipse.Domain
     /// </summary>
     public static class CharacterStats
     {
-        /// <summary> 돌파 1단계당 HP·ATK 증가율(+8%). </summary>
+        /// <summary> 돌파 1단계당 HP·ATK·DEF 증가율(+8%). </summary>
         private const float AscensionBonusPerTier = 0.08f;
 
         /// <summary> 아군 최종 스탯을 계산한다. 레벨·돌파·런 버프가 모두 반영된 완성값이다. </summary>
@@ -33,12 +33,12 @@ namespace Eclipse.Domain
                     $"돌파 단계는 0 이상 {OwnedCharacter.MaxAscensionTier} 이하여야 한다.");
 
             var baseStats = definition.baseStats;
-            float ascension = 1f + AscensionBonusPerTier * ascensionTier; // 돌파 배수는 HP·ATK에만 곱한다
+            float ascension = 1f + AscensionBonusPerTier * ascensionTier; // 돌파 배수는 HP·ATK·DEF에 곱한다
             return new Stats
             {
                 hp = ApplyBuffAndRound(curve.StatAtLevel(baseStats.hp, level) * ascension, buffs, StatType.Hp),
                 atk = ApplyBuffAndRound(curve.StatAtLevel(baseStats.atk, level) * ascension, buffs, StatType.Atk),
-                def = ApplyBuffAndRound(curve.StatAtLevel(baseStats.def, level), buffs, StatType.Def),
+                def = ApplyBuffAndRound(curve.StatAtLevel(baseStats.def, level) * ascension, buffs, StatType.Def),
                 spd = ApplyBuffAndRound(baseStats.spd, buffs, StatType.Spd), // SPD는 레벨 스케일이 없다
                 // 치명 계열은 %p 가산이며 치명확률은 [0, 1]로 고정한다.
                 critRate = Math.Clamp(baseStats.critRate + SumOf(buffs, StatType.CritRate), 0f, 1f),

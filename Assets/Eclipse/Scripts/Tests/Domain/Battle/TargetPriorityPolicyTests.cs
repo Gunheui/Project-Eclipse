@@ -35,15 +35,15 @@ namespace Eclipse.Tests
             => new Combatant { Team = Team.Ally, EffectiveStats = new Stats { atk = atk } };
 
         // 단일-적 데미지 스킬(정책이 다루는 유일한 형태).
-        private static SkillRuntime SingleEnemyDamage(float power = 1f)
-            => Skill(EffectType.Damage, TargetSelector.SingleEnemy, power);
+        private static SkillRuntime SingleEnemyDamage(float power = 1f, float multiplier = 1f)
+            => Skill(EffectType.Damage, TargetSelector.SingleEnemy, power, multiplier);
 
-        private static SkillRuntime Skill(EffectType type, TargetSelector target, float power)
+        private static SkillRuntime Skill(EffectType type, TargetSelector target, float power, float multiplier = 1f)
         {
             var s = ScriptableObject.CreateInstance<SkillSO>();
             s.id = "s"; s.displayName = "s"; s.cooldownTurns = 0;
             s.effects = new List<SkillEffect> { new SkillEffect { type = type, target = target, value = power } };
-            return new SkillRuntime(s);
+            return new SkillRuntime(s, 0, multiplier);
         }
 
         // 방어경감 없이(def 0) 예측이 단순해지도록 defenseK는 무관. varMin 0.95로 하한이 정해진다.
@@ -122,6 +122,28 @@ namespace Eclipse.Tests
                 .ChoosePrimaryTarget(actor, SingleEnemyDamage(power: 1f), NoAllies, enemies);
 
             Assert.AreSame(weaker, baseTarget);
+        }
+
+        [Test]
+        public void 아군_막타층은_스킬_강화_배수를_반영해_처치가능을_판정한다()
+        {
+            // atk 100·power 1 → 하한 ≈ 95라 HP 100은 못 죽인다. 강화 배수 1.21이면 하한 ≈ 115로 확정 처치가 된다.
+            // 미리보기가 배수를 빼먹으면 확실한 막타를 놓치고 기저 층이 healthy를 고를 수 있다.
+            var actor = Actor(atk: 100);
+            var killableWhenEnhanced = Enemy(1, 100, 100); // 비율 1.0
+            var healthy = Enemy(0, 400, 1000);             // 비율 0.4(더 낮음) · 어느 쪽이든 처치 불가
+            var enemies = new List<ICombatant> { killableWhenEnhanced, healthy };
+
+            var enhanced = Policy(TargetPolicyProfile.AllyAuto)
+                .ChoosePrimaryTarget(actor, SingleEnemyDamage(power: 1f, multiplier: 1.21f), NoAllies, enemies);
+
+            Assert.AreSame(killableWhenEnhanced, enhanced, "강화 배수를 반영하면 막타 층이 잡는다");
+
+            // 대조군: 같은 픽스처에서 배수만 빼면 막타가 없어 기저(최저 HP비율)가 healthy를 고른다.
+            var plain = Policy(TargetPolicyProfile.AllyAuto)
+                .ChoosePrimaryTarget(actor, SingleEnemyDamage(power: 1f), NoAllies, enemies);
+
+            Assert.AreSame(healthy, plain);
         }
 
         [Test]

@@ -54,7 +54,8 @@ namespace Eclipse.Domain
             // 막타 층: 어떤 난수값에도 처치되는 후보가 있으면 LethalChance로 그 중 하나(아군=항상, 적=부분 확률).
             if (_profile.LethalChance > 0f)
             {
-                var lethal = LethalTarget(actor, primary.Value.value, candidates);
+                // 강화 배수를 곱해야 실제 적용될 피해와 같은 세기로 미리 본다(SkillExecutor와 같은 값).
+                var lethal = LethalTarget(actor, primary.Value.value * skill.PowerMultiplier, candidates);
                 if (lethal != null && ShouldTakeLethal()) return lethal;
             }
 

@@ -18,10 +18,12 @@ namespace Eclipse.Presentation
     public sealed class AscensionService
     {
         private readonly SaveService _save;
+        private readonly CharacterGrowthSignals _signals;
 
-        public AscensionService(SaveService save)
+        public AscensionService(SaveService save, CharacterGrowthSignals signals)
         {
             _save = save;
+            _signals = signals;
         }
 
         /// <summary> 대상 캐릭터의 돌파 단계를 1 올린다. 상한(<see cref="OwnedCharacter.MaxAscensionTier"/>)이면 무변경 거부. </summary>
@@ -32,6 +34,8 @@ namespace Eclipse.Presentation
 
             owned.AscensionTier++;
             _save.Save();
+            // 값이 다 반영된 뒤에 알린다. 디버그로 부여해도 화면의 돌파 별이 함께 갱신된다.
+            _signals.Notify(owned);
             return AscensionResult.Success;
         }
     }

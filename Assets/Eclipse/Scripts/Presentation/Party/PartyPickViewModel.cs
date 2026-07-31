@@ -28,11 +28,12 @@ namespace Eclipse.Presentation
         /// <summary> 현재 정렬 기준. View가 구독해 라벨을 갱신하고 항목을 다시 만든다. </summary>
         public ReadOnlyReactiveProperty<CharacterSortKey> CurrentSortKey => _sortKey;
 
-        public PartyPickViewModel(PlayerSave save, ISpriteProvider spriteProvider, PartyFormationViewModel formation)
+        public PartyPickViewModel(PlayerSave save, ISpriteProvider spriteProvider, PartyFormationViewModel formation,
+            CharacterGrowthSignals growthSignals)
         {
             _formation = formation;
             _items = save.OwnedCharacters
-                .Select(owned => new PartyPickItemViewModel(new CharacterItemViewModel(owned, spriteProvider)))
+                .Select(owned => new PartyPickItemViewModel(new CharacterItemViewModel(owned, spriteProvider, growthSignals)))
                 .ToList();
 
             ApplySort(_sortKey.Value);

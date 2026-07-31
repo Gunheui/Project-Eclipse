@@ -141,7 +141,7 @@ namespace Eclipse.Domain
         public static Combatant FromCharacter(OwnedCharacter owned, int slotIndex, Stats stats)
         {
             var def = owned.Definition;
-            var skills = BuildSkills(false, def.basicSkill, def.normalSkill, def.ultimateSkill);
+            var skills = BuildSkills(false, owned.SkillLevels, def.basicSkill, def.normalSkill, def.ultimateSkill);
             return new Combatant(def.displayName, Team.Ally, slotIndex, stats, skills);
         }
 
@@ -153,7 +153,7 @@ namespace Eclipse.Domain
         /// <param name="displayName">표시명 재정의(변이 접두 등). null이면 정의 표시명.</param>
         public static Combatant FromEnemy(EnemySO enemy, int slotIndex, Stats stats, string displayName = null)
         {
-            var skills = BuildSkills(true, enemy.basicSkill, enemy.normalSkill, enemy.ultimateSkill);
+            var skills = BuildSkills(true, null, enemy.basicSkill, enemy.normalSkill, enemy.ultimateSkill);
             return new Combatant(displayName ?? enemy.displayName, Team.Enemy, slotIndex, stats, skills);
         }
 
@@ -190,11 +190,20 @@ namespace Eclipse.Domain
 
         /// <summary> null이 아닌 슬롯만 런타임으로 감싼다(적은 슬롯이 비어 있을 수 있다). </summary>
         /// <param name="startOnCooldown">각 액티브를 자기 쿨만큼 잠근 채 시작한다(기본공격은 쿨 0이라 그대로 열림).</param>
-        private static List<SkillRuntime> BuildSkills(bool startOnCooldown, params SkillSO[] slots)
+        /// <param name="skillLevels">슬롯별 스킬 레벨. null이면 강화가 없는 것으로 보고 배수를 1로 둔다(적).</param>
+        private static List<SkillRuntime> BuildSkills(bool startOnCooldown, IReadOnlyList<int> skillLevels, params SkillSO[] slots)
         {
             var list = new List<SkillRuntime>();
-            foreach (var s in slots)
-                if (s != null) list.Add(new SkillRuntime(s, startOnCooldown ? s.cooldownTurns : 0));
+            for (int i = 0; i < slots.Length; i++)
+            {
+                var s = slots[i];
+                if (s == null) continue;
+                // 슬롯 인덱스가 곧 스킬 레벨 배열의 인덱스다(기본·일반·궁극 순서).
+                float multiplier = skillLevels != null && i < skillLevels.Count
+                    ? SkillRuntime.PowerMultiplierFor(skillLevels[i])
+                    : 1f;
+                list.Add(new SkillRuntime(s, startOnCooldown ? s.cooldownTurns : 0, multiplier));
+            }
             return list;
         }
     }

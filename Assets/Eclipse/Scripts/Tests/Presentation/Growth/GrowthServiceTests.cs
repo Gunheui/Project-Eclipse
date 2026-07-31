@@ -58,7 +58,7 @@ namespace Eclipse.Tests
             var config = ScriptableObject.CreateInstance<GrowthConfigSO>();
             config.levelUpCostCoefficient = costCoefficient;
             _assets.Add(config);
-            return new GrowthService(new CurrencyService(wallet), save, config);
+            return new GrowthService(new CurrencyService(wallet), save, config, new CharacterGrowthSignals());
         }
 
         [Test]

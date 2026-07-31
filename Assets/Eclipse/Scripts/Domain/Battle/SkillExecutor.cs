@@ -30,6 +30,10 @@ namespace Eclipse.Domain
         {
             var affected = new List<ICombatant>();
 
+            // 강화 배수는 세기가 공격력 배율인 효과(Damage/Heal/Dot/Regen)에만 곱한다.
+            // Buff/Debuff/Shield의 value는 증감률이라 배수를 곱하면 기획한 비율이 어긋난다.
+            float power = skill.PowerMultiplier;
+
             foreach (var effect in skill.Skill.effects)
             {
                 var targets = _targeting.Resolve(effect.target, actor, allies, enemies, chosenTarget);
@@ -42,7 +46,7 @@ namespace Eclipse.Domain
                     case EffectType.Damage:
                         foreach (var target in targets)
                         {
-                            var result = _calc.ComputeDamage(actor.EffectiveStats, target.EffectiveStats, effect.value);
+                            var result = _calc.ComputeDamage(actor.EffectiveStats, target.EffectiveStats, effect.value * power);
                             ((IDamageable)target).ApplyDamage(result.Amount);
                         }
                         break;
@@ -50,7 +54,7 @@ namespace Eclipse.Domain
                     case EffectType.Heal:
                         foreach (var target in targets)
                         {
-                            var amount = _calc.ComputeHeal(actor.EffectiveStats, effect.value);
+                            var amount = _calc.ComputeHeal(actor.EffectiveStats, effect.value * power);
                             ((IDamageable)target).Heal(amount);
                         }
                         break;
@@ -66,7 +70,7 @@ namespace Eclipse.Domain
                     case EffectType.Regen:
                         foreach (var target in targets)
                         {
-                            var tick = _calc.ComputeTickAmount(actor.EffectiveStats, effect.value);
+                            var tick = _calc.ComputeTickAmount(actor.EffectiveStats, effect.value * power);
                             ((IDamageable)target).ApplyEffect(StatusEffect.Periodic(effect.type, tick, effect.duration));
                         }
                         break;

@@ -22,7 +22,7 @@ namespace Eclipse.Domain
     }
 
     /// <summary>
-    /// 도달 깊이 정산액 계산. 순수 표 조회라 난수가 없고 항상 결정적이다.
+    /// 도달 깊이 정산액 계산. 순수 표 조회라ㅊ 난수가 없고 항상 결정적이다.
     /// 지급은 하지 않는다 — 지갑 접촉은 IRewardService 한 곳이다.
     /// </summary>
     public static class RunSettlement

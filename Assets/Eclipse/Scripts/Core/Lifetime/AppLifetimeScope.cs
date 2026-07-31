@@ -56,6 +56,7 @@ namespace Eclipse.Core
             builder.Register(r => new SaveService(
                 r.Resolve<PlayerSave>(), r.Resolve<CurrencyWallet>(), r.Resolve<ChapterProgress>()), Lifetime.Singleton);
             builder.RegisterInstance(growthConfig);
+            builder.Register<CharacterGrowthSignals>(Lifetime.Singleton);
             builder.Register<GrowthService>(Lifetime.Singleton);
             builder.Register<SkillEnhanceService>(Lifetime.Singleton);
             builder.Register<AscensionService>(Lifetime.Singleton);

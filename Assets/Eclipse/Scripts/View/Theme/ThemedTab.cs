@@ -5,7 +5,7 @@ using UnityEngine.UI;
 namespace Eclipse.View.Theme
 {
     /// <summary>
-    /// 하단 내비게이션 탭 버튼. Button의 상호작용 상태(Normal/Highlighted/Pressed/Disabled)와
+    /// 탭 버튼. 하단 내비게이션과 화면 안 탭 모두 쓴다. Button의 상호작용 상태(Normal/Highlighted/Pressed/Disabled)와
     /// <see cref="isSelected"/>를 조합해 배지·아이콘·라벨 세 그래픽에 <see cref="UIThemeSO"/>
     /// 토큰 색을 적용한다. Button 상속이라 onClick·interactable은 표준 Button과 동일하게 동작한다.
     /// </summary>
@@ -13,7 +13,7 @@ namespace Eclipse.View.Theme
     {
         [Header("Themed graphics")]
         [SerializeField] private Image iconBg;   // 배지 배경 (토큰 색으로 채움)
-        [SerializeField] private Image icon;     // 아이콘 (틴트로 색 적용)
+        [SerializeField] private Image icon;     // 아이콘 (틴트로 색 적용). 아이콘 없는 탭이면 비워 둔다
         [SerializeField] private TMP_Text label; // 라벨 텍스트
 
         [Header("State")]
@@ -22,10 +22,21 @@ namespace Eclipse.View.Theme
 
         [SerializeField] private UIThemeSO theme;
 
+        /// <summary> 선택 상태. 값을 넣으면 즉시 색을 다시 칠하므로 런타임 탭 전환에 그대로 쓴다. </summary>
+        public bool IsSelected
+        {
+            get => isSelected;
+            set
+            {
+                isSelected = value;
+                DoStateTransition(currentSelectionState, true);
+            }
+        }
+
         protected override void DoStateTransition(SelectionState state, bool instant)
         {
             base.DoStateTransition(state, instant);
-            if (theme == null || iconBg == null || icon == null || label == null)
+            if (theme == null || iconBg == null || label == null)
                 return;
 
             Color badge;
@@ -62,7 +73,8 @@ namespace Eclipse.View.Theme
             }
 
             iconBg.color = badge;
-            icon.color = iconColor;
+            if (icon != null)
+                icon.color = iconColor;
             label.color = labelColor;
             label.fontStyle = bold ? FontStyles.Bold : FontStyles.Normal;
         }

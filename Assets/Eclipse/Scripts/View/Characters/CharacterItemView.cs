@@ -19,10 +19,11 @@ namespace Eclipse.View
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private TMP_Text rarityText;
         [SerializeField] private TMP_Text levelText;
+        [SerializeField] private AscensionStarsView ascensionStars;
         [SerializeField] private Button selectButton;
 
         /// <summary>
-        /// 항목을 지정 ViewModel에 바인딩한다. 고정 값(초상·이름·등급)은 즉시 대입하고 레벨만 구독한다.
+        /// 항목을 지정 ViewModel에 바인딩한다. 고정 값(초상·이름·등급)은 즉시 대입하고 레벨·돌파는 구독한다.
         /// 구독은 GameObject 수명에 묶여 Destroy 시 자동 해지된다.
         /// 항목당 한 번만 호출한다(재바인딩 시 구독이 중첩된다).
         /// </summary>
@@ -31,11 +32,13 @@ namespace Eclipse.View
         {
             ApplyPortraitAsync(viewModel, this.GetCancellationTokenOnDestroy()).Forget();
             nameText.text = viewModel.DisplayName;
-            rarityText.text = $"★{viewModel.Rarity}";
+            // 등급은 R/SR/SSR 글자만 쓴다. 별 기호를 붙이면 옆의 돌파 별과 뜻이 겹친다.
+            rarityText.text = viewModel.Rarity.ToString();
 
             viewModel.Level
                 .Subscribe(level => levelText.text = $"Lv. {level}")
                 .AddTo(this);
+            ascensionStars.Bind(viewModel.AscensionTier);
 
             selectButton.onClick.AddListener(() => onSelected());
         }

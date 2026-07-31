@@ -29,6 +29,7 @@ namespace Eclipse.Core
             builder.Register<LobbyViewModel>(Lifetime.Singleton);
             builder.Register<CharacterListViewModel>(Lifetime.Singleton);
             builder.Register<CharacterDetailViewModel>(Lifetime.Transient);
+            builder.Register<GrowthViewModel>(Lifetime.Transient);
 
             // 편성 draft(PartyFormation)가 그 위로 push되는 픽 화면(PartyPick) 동안 살아남아야 하므로 둘 다 Singleton.
             // ChapterSO[]를 자동 주입하면 VContainer가 컬렉션 resolve로 가로채므로 이 인자만 손수 지정한다.

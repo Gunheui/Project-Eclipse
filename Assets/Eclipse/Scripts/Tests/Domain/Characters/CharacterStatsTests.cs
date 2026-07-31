@@ -68,7 +68,7 @@ namespace Eclipse.Tests
         }
 
         [Test]
-        public void 돌파는_단계당_HP_ATK를_8퍼센트씩_올리고_DEF는_불변이다()
+        public void 돌파는_단계당_HP_ATK_DEF를_8퍼센트씩_올린다()
         {
             var def = Definition(1000, 175, 60, 120, 0.3f, 2.0f);
 
@@ -76,7 +76,7 @@ namespace Eclipse.Tests
 
             Assert.AreEqual(1240, stats.hp, "1000 × 1.24 = 1240");
             Assert.AreEqual(217, stats.atk, "175 × 1.24 = 217 → 217");
-            Assert.AreEqual(60, stats.def, "돌파는 DEF에 적용되지 않는다");
+            Assert.AreEqual(74, stats.def, "60 × 1.24 = 74.4 → 74");
         }
 
         [Test]

@@ -44,7 +44,7 @@ namespace Eclipse.Tests
             var wallet = new CurrencyWallet();
             _wallets.Add(wallet);
             var save = new SaveService(new PlayerSave(new List<OwnedCharacter> { owned }), wallet, new ChapterProgress(), _path);
-            return (owned, new AscensionService(save));
+            return (owned, new AscensionService(save, new CharacterGrowthSignals()));
         }
 
         [Test]
