@@ -89,9 +89,11 @@ namespace Eclipse.Presentation
             _maxLevel = _owned.Definition.growthCurve.maxLevel;
             SkillManualCost = config.skillEnhanceManualCost;
 
+            // 화면이 사는 동안 값이 바뀌는 것은 레벨·돌파 둘뿐이다. 아래 표시 값은 전부 이 둘에서 파생된다.
             _level = new ReactiveProperty<int>(_owned.Level);
             _ascensionTier = new ReactiveProperty<int>(_owned.AscensionTier);
 
+            // 레벨업 탭 표시 값 — 비용·버튼 상태·스탯 프리뷰. 비용 공식은 서비스와 같은 식을 쓴다.
             LevelUpCost = _level
                 .Select(level => level >= _maxLevel ? (int?)null : config.levelUpCostCoefficient * level)
                 .ToReadOnlyReactiveProperty()
@@ -116,6 +118,7 @@ namespace Eclipse.Presentation
                 .ToReadOnlyReactiveProperty()
                 .AddTo(_disposables);
 
+            // 스킬 강화 탭 — 슬롯 한 줄이 자기 레벨에서 비용·위력 프리뷰·버튼 상태를 파생시킨다. 빈 슬롯은 null로 남긴다.
             _skillSlots = new GrowthSkillSlot[OwnedCharacter.SkillSlotCount];
             for (int i = 0; i < _skillSlots.Length; i++)
             {

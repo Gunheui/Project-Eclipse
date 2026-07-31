@@ -114,7 +114,7 @@ namespace Eclipse.Tests
         [Test]
         public void 만렙_스킬은_결제하지_않고_거부한다()
         {
-            var owned = Owned(new[] { 3, 1, 1 });
+            var owned = Owned(new[] { OwnedCharacter.MaxSkillLevel, 1, 1 });
             var service = Service(owned, gold: 100000, manual: 100);
 
             var result = service.TryEnhance(owned, 0);

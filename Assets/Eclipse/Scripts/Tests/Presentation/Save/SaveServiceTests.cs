@@ -174,7 +174,8 @@ namespace Eclipse.Tests
             var b = restored.OwnedCharacters[1];
             CollectionAssert.AreEqual(new[] { 1, 1, 1 }, a.SkillLevels, "null 배열 → 기본값 1로 채움");
             Assert.AreEqual(OwnedCharacter.MaxAscensionTier, a.AscensionTier, "상한 초과 → 상한 고정");
-            CollectionAssert.AreEqual(new[] { 3, 1, 1 }, b.SkillLevels, "범위 밖 값 클램프 + 길이 부족 채움");
+            CollectionAssert.AreEqual(new[] { OwnedCharacter.MaxSkillLevel, 1, 1 }, b.SkillLevels,
+                "범위 밖 값 클램프 + 길이 부족 채움");
             Assert.AreEqual(0, b.AscensionTier, "음수 → 0 고정");
         }
 

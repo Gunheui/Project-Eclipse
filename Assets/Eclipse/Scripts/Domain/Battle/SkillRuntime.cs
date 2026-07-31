@@ -1,4 +1,3 @@
-using System;
 using Eclipse.Data;
 
 namespace Eclipse.Domain
@@ -25,8 +24,8 @@ namespace Eclipse.Domain
         /// <summary> 스킬 레벨에 대응하는 위력 배수를 낸다. 레벨 1이 기준값 1.0이다. </summary>
         /// <param name="skillLevel">스킬 레벨. 상한은 SkillEnhanceService가 강제하므로 여기서 자르지 않는다.</param>
         public static float PowerMultiplierFor(int skillLevel)
-            // 레벨당 10% 복리. 레벨 3이면 1.21배.
-            => MathF.Pow(1.10f, skillLevel - 1);
+            // 레벨당 10%p 등차. 레벨 3이면 1.20배, 상한 레벨 5면 1.40배.
+            => 1f + 0.10f * (skillLevel - 1);
 
         /// <param name="initialCooldown">전투 시작 시 걸어둘 잔여 쿨(턴). 0이면 시작부터 사용 가능.</param>
         /// <param name="powerMultiplier">위력형 효과에 곱할 강화 배수. 강화가 없으면 1.</param>

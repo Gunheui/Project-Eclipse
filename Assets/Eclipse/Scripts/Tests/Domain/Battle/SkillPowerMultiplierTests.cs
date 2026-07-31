@@ -52,11 +52,12 @@ namespace Eclipse.Tests
         }
 
         [Test]
-        public void 배수는_강화_1레벨당_10퍼센트_복리다()
+        public void 배수는_강화_1레벨당_10퍼센트포인트_등차다()
         {
             Assert.AreEqual(1.00f, SkillRuntime.PowerMultiplierFor(1), 1e-5f);
             Assert.AreEqual(1.10f, SkillRuntime.PowerMultiplierFor(2), 1e-5f);
-            Assert.AreEqual(1.21f, SkillRuntime.PowerMultiplierFor(3), 1e-4f, "1.10^2 = 1.21");
+            Assert.AreEqual(1.20f, SkillRuntime.PowerMultiplierFor(3), 1e-5f);
+            Assert.AreEqual(1.40f, SkillRuntime.PowerMultiplierFor(OwnedCharacter.MaxSkillLevel), 1e-5f, "상한 5 = ×1.40");
         }
 
         [Test]
@@ -66,7 +67,7 @@ namespace Eclipse.Tests
             var ally = Ally(0, S(1000, 100, 50, 100), new[] { 3, 1, 1 }, basic);
             var enemy = Enemy(0, S(1000, 100, 50, 100));
 
-            Assert.AreEqual(1.21f, ally.Skills[0].PowerMultiplier, 1e-4f, "스킬레벨 3 → ×1.21");
+            Assert.AreEqual(1.20f, ally.Skills[0].PowerMultiplier, 1e-5f, "스킬레벨 3 → ×1.20");
             Assert.AreEqual(1f, enemy.Skills[0].PowerMultiplier, 1e-5f, "적은 스킬레벨이 없다");
         }
 

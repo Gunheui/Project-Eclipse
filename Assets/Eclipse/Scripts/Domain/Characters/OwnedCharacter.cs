@@ -14,7 +14,7 @@ namespace Eclipse.Domain
         public const int SkillSlotCount = 3;
 
         /// <summary> 스킬 레벨 상한. 스킬 레벨은 1부터 시작한다. </summary>
-        public const int MaxSkillLevel = 3;
+        public const int MaxSkillLevel = 5;
 
         /// <summary> 돌파 단계 상한(0 = 미돌파). </summary>
         public const int MaxAscensionTier = 3;
