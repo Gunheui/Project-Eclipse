@@ -87,7 +87,11 @@ namespace Eclipse.Core
                 .Where(e => e.character != null)
                 .Select(e => new OwnedCharacter(e.character, e.level))
                 .ToList();
-            return ApplyDebugMaxGrowth(new PlayerSave(owned));
+            // 4칸이 다 차야 챕터에 들어갈 수 있다. 시드 계정은 보유 앞 4명을 편성에 채워 첫 실행부터 진입을 연다.
+            var seeded = new PlayerSave(owned);
+            for (int i = 0; i < PlayerSave.PartySlotCount && i < owned.Count; i++)
+                seeded.Party[i] = owned[i];
+            return ApplyDebugMaxGrowth(seeded);
         }
 
         /// <summary>

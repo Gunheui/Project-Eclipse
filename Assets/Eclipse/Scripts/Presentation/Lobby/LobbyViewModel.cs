@@ -9,9 +9,6 @@ namespace Eclipse.Presentation
         /// <summary>캐릭터 목록 진입 가능 여부.</summary>
         public bool CanOpenCharacterList => true;
 
-        /// <summary>스토리 진입 가능 여부.</summary>
-        public bool CanOpenStory => false;
-
         /// <summary>모집(가챠) 진입 가능 여부.</summary>
         public bool CanOpenGacha => false;
 

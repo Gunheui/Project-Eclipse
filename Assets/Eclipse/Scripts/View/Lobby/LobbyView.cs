@@ -16,7 +16,6 @@ namespace Eclipse.View
     public class LobbyView : MonoBehaviour, IScreen
     {
         [SerializeField] private Button characterButton;
-        [SerializeField] private Button storyButton;
         [SerializeField] private Button gachaButton;
         [SerializeField] private Button battleButton;
         [SerializeField] private Button shopButton;
@@ -49,7 +48,6 @@ namespace Eclipse.View
         public UniTask OnEnter()
         {
             characterButton.interactable = _viewModel.CanOpenCharacterList;
-            storyButton.interactable = _viewModel.CanOpenStory;
             gachaButton.interactable = _viewModel.CanOpenGacha;
             battleButton.interactable = _viewModel.CanOpenBattle;
             shopButton.interactable = _viewModel.CanOpenShop;
