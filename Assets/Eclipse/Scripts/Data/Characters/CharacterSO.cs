@@ -40,8 +40,11 @@ namespace Eclipse.Data
         /// <summary> 획득 경로(스타터/스토리지급/가챠픽업). </summary>
         public AcquisitionType acquisitionType;
 
-        /// <summary> 초상화/배틀러 스프라이트 참조. </summary>
+        /// <summary> UI에 쓰는 전신 일러. 캐릭터 목록·상세·편성·로비·캐릭터 문이 이걸 쓴다. </summary>
         public Sprite portraitAssetRef;
+
+        /// <summary> 전투 씬에 세우는 그림. 월드 스프라이트라 임포트 PPU가 곧 전투 크기가 된다. </summary>
+        public Sprite battlerAssetRef;
 
         /// <summary> 턴 순서 타임라인용 얼굴 아이콘(정사각 크롭). 비면 portraitAssetRef로 폴백. </summary>
         public Sprite faceIconAssetRef;

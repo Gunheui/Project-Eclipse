@@ -98,7 +98,12 @@ namespace Eclipse.View
             _home = visualRoot.localPosition;
             _facingRight = unit.IsAlly;
             _prevHp = unit.CurrentHp.CurrentValue;
-            if (spriteRenderer != null) spriteRenderer.sprite = unit.BattlerSprite;
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.sprite = unit.BattlerSprite;
+                // 배틀러 원화는 전부 왼쪽을 향한다. 아군만 뒤집어 서로 마주 보게 한다.
+                spriteRenderer.flipX = _facingRight;
+            }
             _baseColor = unit.Tint;
             SetTargetState(TargetState.None); // 평상시 밝기로 초기화(재바인딩 시 이전 dim 잔상 제거)
             ResizeTapArea();

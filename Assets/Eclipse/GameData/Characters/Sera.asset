@@ -28,5 +28,6 @@ MonoBehaviour:
   normalSkill: {fileID: 11400000, guid: 07c5c1a14a7c94cb9a5a31f353bcc20d, type: 2}
   ultimateSkill: {fileID: 11400000, guid: 72eea23c249894d3f84a32c6dcf4dea7, type: 2}
   acquisitionType: 1
-  portraitAssetRef: {fileID: 21300000, guid: 47ca18ac8825f4e69919de49f91ac343, type: 3}
+  portraitAssetRef: {fileID: 21300000, guid: eaf235da8442345079f3bbc714385a1a, type: 3}
+  battlerAssetRef: {fileID: 21300000, guid: 31eed0e98cacc42c5b62b71a91ee7f12, type: 3}
   faceIconAssetRef: {fileID: 21300000, guid: ad54d0a8f7ca54e609c8b10b7d602257, type: 3}

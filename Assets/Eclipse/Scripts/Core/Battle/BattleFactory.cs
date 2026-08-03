@@ -61,7 +61,7 @@ namespace Eclipse.Core
                 .Select(x => new BattleUnitEntry(
                     Combatant.FromCharacter(x.owned, x.slot, CharacterStats.BuildAllyStats(
                         x.owned.Definition, x.owned.Level, x.owned.AscensionTier, session.BuffsOf(x.slot))),
-                    x.owned.Definition.portraitAssetRef,
+                    x.owned.Definition.battlerAssetRef,
                     x.owned.Definition.faceIconAssetRef,
                     null,
                     RunEffectsFor(x.slot)))
