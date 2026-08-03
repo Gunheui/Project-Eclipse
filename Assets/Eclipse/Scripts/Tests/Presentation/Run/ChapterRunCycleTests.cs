@@ -71,7 +71,7 @@ namespace Eclipse.Tests
                         battles++;
                         battleSeeds.Add(offer.BattleSeed);
                         foughtMidBoss |= offer.IsEliteEncounter;
-                        Assert.AreEqual(offer.Room.kind == RoomKind.Elite, offer.IsEliteEncounter,
+                        Assert.AreEqual(session.CurrentRoom.kind == RoomKind.Elite, offer.IsEliteEncounter,
                             "미드보스 문을 골랐으니 정예 자리의 방만 정예로 선다");
                         Assert.IsNotNull(offer.Encounter.Enemies, "인카운터가 생성돼 실려 온다");
                         flow.ReportBattleResult(won: true, offer.Token).Forget();

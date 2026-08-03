@@ -18,9 +18,6 @@ namespace Eclipse.Data
 
         /// <summary> 이 방 클리어 후 문 지점이 열리는지 정한다. </summary>
         public bool doorAfter;
-
-        /// <summary> 방 배경 스프라이트. 씬은 그대로 두고 이 스프라이트만 교체한다. </summary>
-        public Sprite background;
     }
 
     /// <summary> 정산 표의 한 행. 재화 3종 고정 슬롯. </summary>
@@ -56,6 +53,13 @@ namespace Eclipse.Data
 
         /// <summary> 미드보스 문에 거는 초상. 로드 검증 대상이 아니라 비어 있으면 그림 없이 선다. </summary>
         public Sprite midBossPortrait;
+
+        public Sprite normalBackground;
+
+        /// <summary> 정예 전투 배경. 방4에 고정으로 서지 않고 미드보스 문을 고른 전투에만 쓴다. </summary>
+        public Sprite eliteBackground;
+
+        public Sprite bossBackground;
 
         /// <summary> 이 챕터 적 스탯에 곱하는 난이도 배수. </summary>
         public float enemyStatMultiplier = 1f;

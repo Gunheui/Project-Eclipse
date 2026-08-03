@@ -112,8 +112,8 @@ namespace Eclipse.Core
             battleView.ClearBattle();
             doorPoint.Clear();
             _battle?.Dispose();
-            if (backgroundRenderer != null && offer.Room.background != null)
-                backgroundRenderer.sprite = offer.Room.background;
+            if (backgroundRenderer != null && offer.Background != null)
+                backgroundRenderer.sprite = offer.Background;
 
             _battle = _factory.Create(offer.Encounter, offer.BattleSeed, startAuto);
             battleView.Bind(_battle);

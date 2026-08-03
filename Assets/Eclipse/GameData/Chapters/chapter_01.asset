@@ -22,32 +22,28 @@ MonoBehaviour:
   - kind: 0
     depth: 1
     doorAfter: 1
-    background: {fileID: 0}
   - kind: 0
     depth: 2
     doorAfter: 1
-    background: {fileID: 0}
   - kind: 0
     depth: 3
     doorAfter: 1
-    background: {fileID: 0}
   - kind: 1
     depth: 4
     doorAfter: 1
-    background: {fileID: 0}
   - kind: 0
     depth: 5
     doorAfter: 1
-    background: {fileID: 0}
   - kind: 0
     depth: 5
     doorAfter: 0
-    background: {fileID: 0}
   - kind: 2
     depth: 0
     doorAfter: 0
-    background: {fileID: 0}
   midBossPortrait: {fileID: 8816983129585240543, guid: 731162c7ed73c450fbb45798d81641d4, type: 3}
+  normalBackground: {fileID: 21300000, guid: 95b2f0c28b18b4defb6e039752f009d4, type: 3}
+  eliteBackground: {fileID: 21300000, guid: e4aa215243d554da29f3181ae0aa466f, type: 3}
+  bossBackground: {fileID: 21300000, guid: 6ece9b28889f84cf895de2c728790cf0, type: 3}
   enemyStatMultiplier: 1
   currencyMultiplier: 1
   settlement:

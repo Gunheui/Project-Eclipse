@@ -614,8 +614,9 @@ namespace Eclipse.Tests
             Assert.IsTrue(h.Session.MidBossEngaged);
             Assert.AreEqual(3, h.Session.DoorPointsPassed, "문③이라 깊이 3으로 보관된다");
             Assert.AreEqual(RunStep.EnteringRoom, h.Offer.Step);
-            Assert.AreEqual(RoomKind.Elite, h.Offer.Room.kind);
+            Assert.AreEqual(RoomKind.Elite, h.Session.CurrentRoom.kind);
             Assert.IsTrue(h.Offer.IsEliteEncounter, "미드보스 문을 골랐으니 방4가 정예로 선다");
+            Assert.AreSame(h.Session.Chapter.eliteBackground, h.Offer.Background, "정예 전투는 엘리트 배경으로 선다");
         }
 
         [Test]
@@ -650,8 +651,10 @@ namespace Eclipse.Tests
             h.Flow.ReportDoorPicked(index, h.Offer.Token).Forget();
 
             Assert.IsFalse(h.Session.MidBossEngaged);
-            Assert.AreEqual(RoomKind.Elite, h.Offer.Room.kind, "배치의 Elite는 정예 후보 자리일 뿐이다");
+            Assert.AreEqual(RoomKind.Elite, h.Session.CurrentRoom.kind, "배치의 Elite는 정예 후보 자리일 뿐이다");
             Assert.IsFalse(h.Offer.IsEliteEncounter, "미드보스는 회피됐다");
+            Assert.AreSame(h.Session.Chapter.normalBackground, h.Offer.Background,
+                "미드보스를 피한 방4는 배경도 일반이다");
         }
 
         [Test]

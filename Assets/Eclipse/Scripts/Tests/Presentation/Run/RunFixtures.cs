@@ -91,8 +91,15 @@ namespace Eclipse.Tests
                 .Select(i => new SettlementRow { gold = i * 100, manual = 0, essence = 0 })
                 .ToArray();
             chapter.victoryBonus = new SettlementRow { gold = 400, manual = 0, essence = 0 };
+            chapter.normalBackground = Background();
+            chapter.eliteBackground = Background();
+            chapter.bossBackground = Background();
             return chapter;
         }
+
+        /// <summary> 어느 배경이 실려 왔는지만 구분하면 되므로 1픽셀짜리 서로 다른 인스턴스로 만든다. </summary>
+        private static Sprite Background()
+            => Sprite.Create(Texture2D.whiteTexture, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f));
 
         public static RoomLayout Normal(int depth, bool doorAfter)
             => new RoomLayout { kind = RoomKind.Normal, depth = depth, doorAfter = doorAfter };

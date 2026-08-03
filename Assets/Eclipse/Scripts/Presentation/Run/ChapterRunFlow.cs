@@ -81,8 +81,8 @@ namespace Eclipse.Presentation
         public RunStep Step;
         public int Token;
 
-        /// <summary> EnteringRoom: 이번 방 배치 행. </summary>
-        public RoomLayout Room;
+        /// <summary> EnteringRoom: 이번 방 배경. </summary>
+        public Sprite Background;
 
         /// <summary> EnteringRoom: 이번 방 인카운터. </summary>
         public EncounterSpec Encounter;
@@ -312,11 +312,18 @@ namespace Eclipse.Presentation
             Emit(new RunOffer
             {
                 Step = RunStep.EnteringRoom,
-                Room = room,
+                Background = BackgroundFor(room.kind, isElite),
                 Encounter = encounter,
                 BattleSeed = RunSeed.ForRoomBattle(_session.RunSeed, _session.RoomIndex),
                 IsEliteEncounter = isElite,
             });
+        }
+
+        private Sprite BackgroundFor(RoomKind kind, bool isElite)
+        {
+            if (kind == RoomKind.Boss)
+                return _session.Chapter.bossBackground;
+            return isElite ? _session.Chapter.eliteBackground : _session.Chapter.normalBackground;
         }
 
         /// <summary>
