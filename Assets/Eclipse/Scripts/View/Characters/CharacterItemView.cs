@@ -10,7 +10,7 @@ using UnityEngine.UI;
 namespace Eclipse.View
 {
     /// <summary>
-    /// 캐릭터 목록의 항목 하나를 그리는 View. CharacterItemViewModel의 값을 UI에 바인딩한다.
+    /// 캐릭터 목록의 항목 하나를 그리는 View. CharacterViewModel의 값을 UI에 바인딩한다.
     /// 항목은 CharacterListView가 생성하고 Bind를 호출해 연결한다.
     /// </summary>
     public class CharacterItemView : MonoBehaviour
@@ -28,7 +28,7 @@ namespace Eclipse.View
         /// 항목당 한 번만 호출한다(재바인딩 시 구독이 중첩된다).
         /// </summary>
         /// <param name="onSelected">항목을 탭했을 때 호출된다(선택 처리는 목록 View가 담당).</param>
-        public void Bind(CharacterItemViewModel viewModel, Action onSelected)
+        public void Bind(CharacterViewModel viewModel, Action onSelected)
         {
             ApplyPortraitAsync(viewModel, this.GetCancellationTokenOnDestroy()).Forget();
             nameText.text = viewModel.DisplayName;
@@ -44,7 +44,7 @@ namespace Eclipse.View
         }
 
         /// <summary>초상 스프라이트를 로드해 대입한다. 로드가 비동기라도 나머지 바인딩을 막지 않는다.</summary>
-        private async UniTaskVoid ApplyPortraitAsync(CharacterItemViewModel viewModel, CancellationToken ct)
+        private async UniTaskVoid ApplyPortraitAsync(CharacterViewModel viewModel, CancellationToken ct)
         {
             portrait.sprite = await viewModel.LoadPortraitAsync(ct);
         }

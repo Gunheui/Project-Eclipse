@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Eclipse.Data;
 using Eclipse.Domain;
@@ -29,6 +30,12 @@ namespace Eclipse.Tests
             return new[] { chapter };
         }
 
+        private sealed class FakeSpriteProvider : ISpriteProvider
+        {
+            public UniTask<Sprite> LoadPortraitAsync(CharacterSO definition, CancellationToken ct = default)
+                => UniTask.FromResult<Sprite>(null);
+        }
+
         private sealed class FakeSceneFlow : ISceneFlow
         {
             public int ToBattleCount;
@@ -45,12 +52,16 @@ namespace Eclipse.Tests
             public UniTask ToMainAsync() => UniTask.CompletedTask;
         }
 
+        private static PartyFormationViewModel Formation(PlayerSave save, NavigationContext nav, ISceneFlow flow)
+            => new PartyFormationViewModel(Chapters(), save, nav, flow, saveService: null,
+                new FakeSpriteProvider(), new CharacterGrowthSignals());
+
         private static (PartyFormationViewModel vm, NavigationContext nav, FakeSceneFlow flow, List<OwnedCharacter> roster) Build(int rosterCount)
         {
             var roster = Enumerable.Range(0, rosterCount).Select(i => Owned("C" + i)).ToList();
             var nav = new NavigationContext();
             var flow = new FakeSceneFlow();
-            var vm = new PartyFormationViewModel(Chapters(), new PlayerSave(roster), nav, flow, saveService: null);
+            var vm = Formation(new PlayerSave(roster), nav, flow);
             return (vm, nav, flow, roster);
         }
 
@@ -87,6 +98,25 @@ namespace Eclipse.Tests
             Assert.AreSame(roster[3], vm.Slots[2].Value);
             Assert.AreEqual(2, vm.PartyCount.CurrentValue);
             Assert.IsFalse(vm.CanEnter.CurrentValue, "4인이 되기 전에는 진입 불가");
+
+            vm.Dispose();
+        }
+
+        [Test]
+        public void SlotOccupants는_배치된_캐릭터의_항목_VM을_내보낸다()
+        {
+            var (vm, _, _, roster) = Build(4);
+
+            vm.AssignToSlot(1, roster[2]);
+
+            var item = vm.SlotOccupants[1].CurrentValue;
+            Assert.IsNotNull(item);
+            Assert.AreSame(roster[2], item.Owned, "슬롯이 그 캐릭터의 항목 VM을 낸다");
+            Assert.AreSame(vm.Roster.First(r => r.Owned == roster[2]), item, "로스터와 같은 인스턴스를 공유한다");
+            Assert.IsNull(vm.SlotOccupants[0].CurrentValue, "빈칸은 null");
+
+            vm.ClearSlot(1);
+            Assert.IsNull(vm.SlotOccupants[1].CurrentValue, "비우면 다시 null");
 
             vm.Dispose();
         }
@@ -192,11 +222,11 @@ namespace Eclipse.Tests
         {
             var roster = Enumerable.Range(0, 4).Select(i => Owned("C" + i)).ToList();
             var save = new PlayerSave(roster);
-            var vm = new PartyFormationViewModel(Chapters(), save, new NavigationContext(), new FakeSceneFlow(), saveService: null);
+            var vm = Formation(save, new NavigationContext(), new FakeSceneFlow());
             vm.AssignToSlot(2, roster[1]);
             vm.Dispose(); // 전투 진입으로 씬 스코프가 내려간 상황
 
-            var revisited = new PartyFormationViewModel(Chapters(), save, new NavigationContext(), new FakeSceneFlow(), saveService: null);
+            var revisited = Formation(save, new NavigationContext(), new FakeSceneFlow());
 
             Assert.AreSame(roster[1], revisited.Slots[2].Value, "전투를 다녀와도 편성 위치가 그대로 남는다");
             Assert.IsNull(revisited.Slots[0].Value, "빈 칸도 그대로");

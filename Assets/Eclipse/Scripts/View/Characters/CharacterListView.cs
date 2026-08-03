@@ -112,14 +112,14 @@ namespace Eclipse.View
                 _items[i].gameObject.SetActive(Matches(itemViewModels[i], role));
         }
 
-        private static bool Matches(CharacterItemViewModel itemViewModel, Role? role)
+        private static bool Matches(CharacterViewModel itemViewModel, Role? role)
             => role == null || itemViewModel.Role == role.Value;
 
         /// <summary>
         /// 항목 프리팹을 하나 생성해 contentRoot 끝에 붙이고 ViewModel에 바인딩한다.
         /// 정렬 시 항목 뷰가 전량 재생성되므로, 생성 시점에 현재 역할 필터를 적용해 필터 상태를 유지한다.
         /// </summary>
-        private void AddItem(CharacterItemViewModel itemViewModel)
+        private void AddItem(CharacterViewModel itemViewModel)
         {
             var item = Instantiate(itemPrefab, contentRoot);
             item.Bind(itemViewModel, () => OnItemSelected(item));

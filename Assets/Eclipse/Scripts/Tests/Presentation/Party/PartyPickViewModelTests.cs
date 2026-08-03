@@ -39,8 +39,9 @@ namespace Eclipse.Tests
             var save = new PlayerSave(roster);
             var chapter = ScriptableObject.CreateInstance<ChapterSO>();
             chapter.id = "chapter_t";
-            var formation = new PartyFormationViewModel(new[] { chapter }, save, new NavigationContext(), new FakeSceneFlow(), saveService: null);
-            var pick = new PartyPickViewModel(save, new FakeSpriteProvider(), formation, new CharacterGrowthSignals());
+            var formation = new PartyFormationViewModel(new[] { chapter }, save, new NavigationContext(),
+                new FakeSceneFlow(), saveService: null, new FakeSpriteProvider(), new CharacterGrowthSignals());
+            var pick = new PartyPickViewModel(formation);
             return (pick, formation, roster);
         }
 

@@ -40,6 +40,19 @@ namespace Eclipse.View.Theme
         public Color onCardGradeEpic = new Color(0.6392f, 0.1804f, 0.4392f);      // #A32E70
         public Color onCardGradeUnique = new Color(0.7059f, 0.3137f, 0.1059f);    // #B4501B
 
+        // 캐릭터 등급색. 카드 프레임처럼 등급을 색으로만 알리는 자리에 쓴다.
+        [Header("Rarity")]
+        public Color rarityR = new Color(0.4314f, 0.6078f, 0.8392f);    // #6E9BD6
+        public Color raritySR = new Color(0.6902f, 0.4157f, 0.8510f);   // #B06AD9
+        public Color raritySSR = new Color(0.9098f, 0.7216f, 0.2941f);  // #E8B84B
+
+        // 역할 아이콘. 화면마다 스프라이트를 따로 물리지 않도록 매핑을 여기 한 벌만 둔다.
+        [Header("Role Icon")]
+        public Sprite roleTanker;
+        public Sprite roleDealer;
+        public Sprite roleHealer;
+        public Sprite roleSupporter;
+
         [Header("Text")]
         public Color textHigh = new Color(0.1373f, 0.1529f, 0.2392f);        // #23273D
         public Color textMedium = new Color(0.3529f, 0.3804f, 0.5020f);      // #5A6180

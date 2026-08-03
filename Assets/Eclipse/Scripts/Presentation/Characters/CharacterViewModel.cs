@@ -10,10 +10,10 @@ using UnityEngine;
 namespace Eclipse.Presentation
 {
     /// <summary>
-    /// 캐릭터 목록의 항목 하나에 대응하는 ViewModel.
+    /// 보유 캐릭터 하나를 화면에 표시하기 위한 ViewModel. 목록·픽·편성 슬롯이 공유한다.
     /// 정의(CharacterSO)의 표시값과 계정별 레벨·돌파를 View에 노출하고, 성장 신호를 받아 스스로 갱신한다.
     /// </summary>
-    public class CharacterItemViewModel : ViewModelBase
+    public class CharacterViewModel : ViewModelBase
     {
         private OwnedCharacter _ownedCharacter;
         private readonly ISpriteProvider _spriteProvider;
@@ -44,7 +44,7 @@ namespace Eclipse.Presentation
         /// <summary> 돌파 단계(0 = 미돌파). 별 위젯이 구독한다. </summary>
         public ReadOnlyReactiveProperty<int> AscensionTier => _ascensionTier;
 
-        public CharacterItemViewModel(OwnedCharacter owned, ISpriteProvider spriteProvider,
+        public CharacterViewModel(OwnedCharacter owned, ISpriteProvider spriteProvider,
             CharacterGrowthSignals growthSignals)
         {
             _ownedCharacter = owned;

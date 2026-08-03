@@ -49,7 +49,7 @@ namespace Eclipse.View
             for (int i = 0; i < slotCount; i++)
             {
                 int slot = i;
-                slotViews[slot].Bind(_viewModel.SlotOccupants[slot], () => OnSlotTapped(slot));
+                slotViews[slot].Bind(_viewModel.SlotOccupants[slot], slot + 1, () => OnSlotTapped(slot));
             }
 
             if (countLabel != null)

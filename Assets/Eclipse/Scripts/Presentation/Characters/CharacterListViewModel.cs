@@ -15,11 +15,11 @@ namespace Eclipse.Presentation
     {
         private NavigationContext _navigationContext;
 
-        private readonly List<CharacterItemViewModel> _items = new List<CharacterItemViewModel>();
+        private readonly List<CharacterViewModel> _items = new List<CharacterViewModel>();
         private ReactiveProperty<CharacterSortKey> _sortKey = new ReactiveProperty<CharacterSortKey>(CharacterSortKey.Rarity);
 
         /// <summary> 항목 목록(현재 정렬 순서). View가 한 번 순회해 항목 뷰를 생성한다. </summary>
-        public IReadOnlyList<CharacterItemViewModel> Items => _items;
+        public IReadOnlyList<CharacterViewModel> Items => _items;
 
         /// <summary> 현재 정렬 기준. View가 구독해 라벨을 갱신하고 항목 뷰를 다시 만든다. </summary>
         public ReadOnlyReactiveProperty<CharacterSortKey> CurrentSortKey => _sortKey;
@@ -37,7 +37,7 @@ namespace Eclipse.Presentation
 
             foreach (var character in save.OwnedCharacters)
             {
-                _items.Add(new CharacterItemViewModel(character, spriteProvider, growthSignals));
+                _items.Add(new CharacterViewModel(character, spriteProvider, growthSignals));
             }
 
             ApplySort(_sortKey.Value);

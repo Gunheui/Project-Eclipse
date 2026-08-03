@@ -27,7 +27,9 @@ namespace Eclipse.Presentation
         private readonly SaveService _saveService;
 
         private readonly ReactiveProperty<OwnedCharacter>[] _slots;
-        private readonly ReadOnlyReactiveProperty<CharacterSO>[] _slotOccupants;
+        private readonly ReadOnlyReactiveProperty<CharacterViewModel>[] _slotOccupants;
+        private readonly List<CharacterViewModel> _roster;
+        private readonly Dictionary<OwnedCharacter, CharacterViewModel> _rosterByOwned;
         private bool _entering;
         private int _pickSlot;
 
@@ -35,10 +37,16 @@ namespace Eclipse.Presentation
         public IReadOnlyList<ReactiveProperty<OwnedCharacter>> Slots => _slots;
 
         /// <summary>
-        /// 슬롯별 점유자의 CharacterSO(빈칸은 null). View가 도메인(OwnedCharacter)을 보지 않도록
-        /// Slots를 정의로만 얇게 투영한 것.
+        /// 보유 캐릭터별 표시용 항목 VM. 편성·픽 두 화면이 같은 인스턴스를 본다.
+        /// 생성과 폐기는 이 VM이 맡으므로 빌려 쓰는 쪽은 Dispose하지 않는다.
         /// </summary>
-        public IReadOnlyList<ReadOnlyReactiveProperty<CharacterSO>> SlotOccupants => _slotOccupants;
+        public IReadOnlyList<CharacterViewModel> Roster => _roster;
+
+        /// <summary>
+        /// 슬롯별 점유자의 항목 VM(빈칸은 null). View가 도메인(OwnedCharacter)을 보지 않도록
+        /// Slots를 항목 VM으로 투영한 것.
+        /// </summary>
+        public IReadOnlyList<ReadOnlyReactiveProperty<CharacterViewModel>> SlotOccupants => _slotOccupants;
 
         /// <summary> 픽 세션을 연 슬롯 번호(0~3). 픽 화면이 교체 대상 슬롯으로 읽는다. </summary>
         public int PickSlot => _pickSlot;
@@ -56,7 +64,8 @@ namespace Eclipse.Presentation
         public ChapterSO SelectedChapter { get; }
 
         public PartyFormationViewModel(ChapterSO[] chapters, PlayerSave save, NavigationContext nav,
-            ISceneFlow sceneFlow, SaveService saveService)
+            ISceneFlow sceneFlow, SaveService saveService, ISpriteProvider spriteProvider,
+            CharacterGrowthSignals growthSignals)
         {
             _save = save;
             _nav = nav;
@@ -64,13 +73,18 @@ namespace Eclipse.Presentation
             _saveService = saveService;
             SelectedChapter = chapters[0];
 
+            _roster = save.OwnedCharacters
+                .Select(owned => new CharacterViewModel(owned, spriteProvider, growthSignals))
+                .ToList();
+            _rosterByOwned = _roster.ToDictionary(item => item.Owned);
+
             _slots = new ReactiveProperty<OwnedCharacter>[SlotCount];
-            _slotOccupants = new ReadOnlyReactiveProperty<CharacterSO>[SlotCount];
+            _slotOccupants = new ReadOnlyReactiveProperty<CharacterViewModel>[SlotCount];
             for (int i = 0; i < SlotCount; i++)
             {
                 _slots[i] = new ReactiveProperty<OwnedCharacter>(save.Party[i]);
                 _slotOccupants[i] = _slots[i]
-                    .Select(owned => owned != null ? owned.Definition : null)
+                    .Select(FindItem)
                     .ToReadOnlyReactiveProperty(null);
             }
 
@@ -80,6 +94,13 @@ namespace Eclipse.Presentation
             CanEnter = PartyCount
                 .Select(count => count == SlotCount)
                 .ToReadOnlyReactiveProperty(false);
+        }
+
+        private CharacterViewModel FindItem(OwnedCharacter owned)
+        {
+            if (owned == null)
+                return null;
+            return _rosterByOwned.TryGetValue(owned, out var item) ? item : null;
         }
 
         /// <summary> 슬롯 탭으로 픽 세션을 연다. 이후 픽 화면이 고른 캐릭터는 이 슬롯에 배치된다. </summary>
@@ -173,7 +194,7 @@ namespace Eclipse.Presentation
             _saveService?.Save();
         }
 
-        /// <summary>보유한 슬롯 스트림과 파생 프로퍼티(PartyCount·CanEnter)를 모두 해제한다.</summary>
+        /// <summary>보유한 슬롯 스트림과 파생 프로퍼티(PartyCount·CanEnter), 로스터 항목 VM을 모두 해제한다.</summary>
         protected override void OnDispose()
         {
             CanEnter.Dispose();
@@ -182,6 +203,8 @@ namespace Eclipse.Presentation
                 occupant.Dispose();
             foreach (var slot in _slots)
                 slot.Dispose();
+            foreach (var item in _roster)
+                item.Dispose();
         }
     }
 }

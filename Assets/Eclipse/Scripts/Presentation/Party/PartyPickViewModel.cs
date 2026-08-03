@@ -1,16 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using Eclipse.Data.Enums;
-using Eclipse.Domain;
-using Eclipse.Service;
 using R3;
 
 namespace Eclipse.Presentation
 {
     /// <summary>
     /// 파티 픽 화면의 ViewModel. 보유 로스터를 항목으로 노출하고, 탭 한 번으로 앵커 슬롯에 즉시 배치한다.
-    /// 편성 상태는 소유하지 않고 <see cref="PartyFormationViewModel"/>에 위임한다 — 이 화면의 책임은
-    /// 로스터 표시·역할 필터·앵커 슬롯 배치까지다.
+    /// 편성 상태도 표시용 항목 VM도 소유하지 않고 <see cref="PartyFormationViewModel"/>에서 빌려 온다 —
+    /// 이 화면의 책임은 로스터 표시·역할 필터·앵커 슬롯 배치까지다.
     /// </summary>
     public sealed class PartyPickViewModel : ViewModelBase
     {
@@ -28,12 +26,11 @@ namespace Eclipse.Presentation
         /// <summary> 현재 정렬 기준. View가 구독해 라벨을 갱신하고 항목을 다시 만든다. </summary>
         public ReadOnlyReactiveProperty<CharacterSortKey> CurrentSortKey => _sortKey;
 
-        public PartyPickViewModel(PlayerSave save, ISpriteProvider spriteProvider, PartyFormationViewModel formation,
-            CharacterGrowthSignals growthSignals)
+        public PartyPickViewModel(PartyFormationViewModel formation)
         {
             _formation = formation;
-            _items = save.OwnedCharacters
-                .Select(owned => new PartyPickItemViewModel(new CharacterItemViewModel(owned, spriteProvider, growthSignals)))
+            _items = formation.Roster
+                .Select(character => new PartyPickItemViewModel(character))
                 .ToList();
 
             ApplySort(_sortKey.Value);

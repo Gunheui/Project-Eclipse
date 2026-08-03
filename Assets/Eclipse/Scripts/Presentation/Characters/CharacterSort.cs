@@ -32,7 +32,7 @@ namespace Eclipse.Presentation
         /// 정렬 기준에 맞춰 새 리스트를 만들어 반환한다(원본 불변).
         /// </summary>
         /// <param name="character">항목에서 캐릭터 항목 VM을 꺼내는 접근자. 항목이 VM을 직접 담든 감싸든 대응한다.</param>
-        public static List<T> Apply<T>(IEnumerable<T> source, Func<T, CharacterItemViewModel> character, CharacterSortKey key)
+        public static List<T> Apply<T>(IEnumerable<T> source, Func<T, CharacterViewModel> character, CharacterSortKey key)
             => key switch
             {
                 CharacterSortKey.Rarity => source

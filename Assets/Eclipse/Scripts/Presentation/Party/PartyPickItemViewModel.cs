@@ -12,8 +12,11 @@ namespace Eclipse.Presentation
     {
         private readonly ReactiveProperty<int> _slotNumber = new(0);
 
-        /// <summary> 표시 데이터(초상·이름·등급·레벨 로드)를 담당하는 공유 항목 VM. </summary>
-        public CharacterItemViewModel Character { get; }
+        /// <summary>
+        /// 표시 데이터(초상·이름·등급·레벨 로드)를 담당하는 공유 항목 VM.
+        /// 편성 VM이 보유한 것을 빌려 쓰므로 여기서 Dispose하지 않는다.
+        /// </summary>
+        public CharacterViewModel Character { get; }
 
         /// <summary> 이 항목이 표시하는 보유 캐릭터. 탭 시 편성 슬롯으로 배치된다. </summary>
         public OwnedCharacter Owned => Character.Owned;
@@ -24,7 +27,7 @@ namespace Eclipse.Presentation
         /// <summary> 이 캐릭터가 점유한 편성 슬롯 번호(0 = 미편성, 1~4 = 슬롯 위치). View가 구독해 배지·강조를 갱신한다. </summary>
         public ReadOnlyReactiveProperty<int> SlotNumber => _slotNumber;
 
-        public PartyPickItemViewModel(CharacterItemViewModel character)
+        public PartyPickItemViewModel(CharacterViewModel character)
         {
             Character = character;
         }
@@ -35,7 +38,6 @@ namespace Eclipse.Presentation
         protected override void OnDispose()
         {
             _slotNumber.Dispose();
-            Character.Dispose();
         }
     }
 }
