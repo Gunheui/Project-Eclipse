@@ -26,9 +26,11 @@ namespace Eclipse.Domain
         /// </summary>
         /// <param name="door">고른 버프 문. 재화 문을 넘기면 예외.</param>
         /// <param name="party">현재 파티(빈칸 null 포함). 캐릭터 문의 대상 판정에 쓴다.</param>
-        public IReadOnlyList<BuffCard> Pick3(DoorChoice door, IReadOnlyList<OwnedCharacter> party)
+        /// <param name="ownedCardIds">런에서 이미 받은 카드 id. 이 중 유니크가 후보에서 빠진다.</param>
+        public IReadOnlyList<BuffCard> Pick3(DoorChoice door, IReadOnlyList<OwnedCharacter> party,
+            IReadOnlyCollection<string> ownedCardIds)
         {
-            var pool = EligiblePool(door, party);
+            var pool = EligiblePool(door, party, ownedCardIds);
             if (pool.Count < 3)
                 throw new InvalidOperationException($"{door} 문의 후보가 3장 미만이다(현재 {pool.Count}장).");
 
@@ -53,7 +55,8 @@ namespace Eclipse.Domain
         }
 
         /// <summary> 문별 후보 풀을 만든다. 배제 규칙이 전부 여기 모인다. </summary>
-        private List<BuffCard> EligiblePool(DoorChoice door, IReadOnlyList<OwnedCharacter> party)
+        private List<BuffCard> EligiblePool(DoorChoice door, IReadOnlyList<OwnedCharacter> party,
+            IReadOnlyCollection<string> ownedCardIds)
         {
             switch (door.Kind)
             {
@@ -61,7 +64,9 @@ namespace Eclipse.Domain
                     string targetId = TargetIdOf(door, party);
                     return _catalog.cards
                         .Where(c => !c.targetsEnemies
-                            && (string.IsNullOrEmpty(c.requiredCharacterId) || c.requiredCharacterId == targetId))
+                            && (string.IsNullOrEmpty(c.requiredCharacterId) || c.requiredCharacterId == targetId)
+                            // 유니크만 캐릭터당 1장이다. 범용은 같은 카드를 다시 받아도 된다.
+                            && !(c.grade == CardGrade.Unique && ownedCardIds.Contains(c.id)))
                         .ToList();
                 case DoorKind.Curse:
                     return _catalog.cards.Where(c => c.targetsEnemies).ToList();
@@ -87,7 +92,8 @@ namespace Eclipse.Domain
             if (catalog.cards == null || catalog.cards.Length == 0)
                 throw new ArgumentException("카드 카탈로그가 비어 있다.", nameof(catalog));
             foreach (var card in catalog.cards)
-                if (card.deltas == null || card.deltas.Length == 0 || card.deltas.Any(d => d.axis == Data.Enums.StatType.None))
+                if (card.grade == CardGrade.Unique) ValidateUnique(card, nameof(catalog));
+                else if (card.deltas == null || card.deltas.Length == 0 || card.deltas.Any(d => d.axis == Data.Enums.StatType.None))
                     throw new ArgumentException($"카드 '{card.id}'의 효과가 비었거나 None 축을 포함한다.", nameof(catalog));
             foreach (CardGrade grade in Enum.GetValues(typeof(CardGrade)))
                 if (catalog.WeightOf(grade) <= 0)
@@ -98,6 +104,19 @@ namespace Eclipse.Domain
                 throw new ArgumentException("범용 카드가 3장 미만이다.", nameof(catalog));
             if (catalog.cards.Count(c => c.targetsEnemies) < 3)
                 throw new ArgumentException("저주 카드가 3장 미만이다.", nameof(catalog));
+        }
+
+        /// <summary>
+        /// 유니크 행의 스키마 검사. 스탯이 없는 대신 붙일 자리와 화면 문구를 갖춰야 카드 구실을 한다.
+        /// </summary>
+        private static void ValidateUnique(BuffCard card, string paramName)
+        {
+            if (string.IsNullOrEmpty(card.requiredCharacterId))
+                throw new ArgumentException($"유니크 카드 '{card.id}'에 대상 캐릭터 id가 없다.", paramName);
+            if (string.IsNullOrEmpty(card.description))
+                throw new ArgumentException($"유니크 카드 '{card.id}'에 설명문이 없다.", paramName);
+            if (card.addedEffect.value <= 0f)
+                throw new ArgumentException($"유니크 카드 '{card.id}'가 덧붙일 효과의 세기가 0 이하다.", paramName);
         }
     }
 }

@@ -29,6 +29,9 @@ namespace Eclipse.Domain
                 case TargetSelector.SingleAlly:
                     // 아군 단일의 기본값 = 최저 HP 아군.
                     return SingleOrEmpty(LowestHp(allies));
+                case TargetSelector.LowestHpAlly:
+                    // 단일-아군과 같은 규칙이지만 지정 존중 분기를 타지 않아 여기까지 내려온다.
+                    return SingleOrEmpty(LowestHp(allies));
                 case TargetSelector.SingleEnemy:
                     // 정책이 Target을 안 준 경우의 방어적 폴백. 실전 경로는 항상 chosenTarget이 이 기본값을 덮는다.
                     return SingleOrEmpty(FirstAliveBySlot(TauntFiltered(enemies)));

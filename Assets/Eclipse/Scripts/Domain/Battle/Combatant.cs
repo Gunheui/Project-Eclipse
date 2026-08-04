@@ -138,10 +138,13 @@ namespace Eclipse.Domain
         /// </summary>
         /// <param name="slotIndex">편성 슬롯 번호(0부터).</param>
         /// <param name="stats">레벨·돌파·런 버프가 접힌 최종 스탯.</param>
-        public static Combatant FromCharacter(OwnedCharacter owned, int slotIndex, Stats stats)
+        /// <param name="riders">유니크 카드가 스킬 자리마다 덧붙일 효과. 없으면 null.</param>
+        public static Combatant FromCharacter(OwnedCharacter owned, int slotIndex, Stats stats,
+            IReadOnlyList<(SkillSlot slot, SkillEffect effect)> riders = null)
         {
             var def = owned.Definition;
-            var skills = BuildSkills(false, owned.SkillLevels, def.basicSkill, def.normalSkill, def.ultimateSkill);
+            var skills = BuildSkills(false, owned.SkillLevels, riders,
+                def.basicSkill, def.normalSkill, def.ultimateSkill);
             return new Combatant(def.displayName, Team.Ally, slotIndex, stats, skills);
         }
 
@@ -153,7 +156,7 @@ namespace Eclipse.Domain
         /// <param name="displayName">표시명 재정의(변이 접두 등). null이면 정의 표시명.</param>
         public static Combatant FromEnemy(EnemySO enemy, int slotIndex, Stats stats, string displayName = null)
         {
-            var skills = BuildSkills(true, null, enemy.basicSkill, enemy.normalSkill, enemy.ultimateSkill);
+            var skills = BuildSkills(true, null, null, enemy.basicSkill, enemy.normalSkill, enemy.ultimateSkill);
             return new Combatant(displayName ?? enemy.displayName, Team.Enemy, slotIndex, stats, skills);
         }
 
@@ -191,7 +194,9 @@ namespace Eclipse.Domain
         /// <summary> null이 아닌 슬롯만 런타임으로 감싼다(적은 슬롯이 비어 있을 수 있다). </summary>
         /// <param name="startOnCooldown">각 액티브를 자기 쿨만큼 잠근 채 시작한다(기본공격은 쿨 0이라 그대로 열림).</param>
         /// <param name="skillLevels">슬롯별 스킬 레벨. null이면 강화가 없는 것으로 보고 배수를 1로 둔다(적).</param>
-        private static List<SkillRuntime> BuildSkills(bool startOnCooldown, IReadOnlyList<int> skillLevels, params SkillSO[] slots)
+        /// <param name="riders">스킬 자리마다 덧붙일 효과. null이면 원본 효과 목록을 그대로 쓴다.</param>
+        private static List<SkillRuntime> BuildSkills(bool startOnCooldown, IReadOnlyList<int> skillLevels,
+            IReadOnlyList<(SkillSlot slot, SkillEffect effect)> riders, params SkillSO[] slots)
         {
             var list = new List<SkillRuntime>();
             for (int i = 0; i < slots.Length; i++)
@@ -202,7 +207,8 @@ namespace Eclipse.Domain
                 float multiplier = skillLevels != null && i < skillLevels.Count
                     ? SkillRuntime.PowerMultiplierFor(skillLevels[i])
                     : 1f;
-                list.Add(new SkillRuntime(s, startOnCooldown ? s.cooldownTurns : 0, multiplier));
+                var added = riders?.Where(r => (int)r.slot == i).Select(r => r.effect).ToList();
+                list.Add(new SkillRuntime(s, startOnCooldown ? s.cooldownTurns : 0, multiplier, added));
             }
             return list;
         }

@@ -44,7 +44,7 @@ namespace Eclipse.Presentation
         internal void Add(CurrencyType type, int amount)
         {
             var rp = Select(type);
-            // ponytail: int 오버플로 미가드 — 현실 잔액 범위(수만~수백만) 밖. 상한이 필요해지면 Add에 clamp 추가.
+            // int 오버플로는 가드하지 않는다 — 현실 잔액 범위(수만~수백만) 밖. 상한이 필요해지면 clamp 추가.
             rp.Value = Math.Max(0, rp.Value + amount);
         }
 

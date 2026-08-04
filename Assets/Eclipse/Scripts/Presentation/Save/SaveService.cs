@@ -43,7 +43,7 @@ namespace Eclipse.Presentation
         /// </summary>
         public void Save()
         {
-            // ponytail: 원자적 쓰기 없음(쓰다 죽으면 파일 손상 가능) — LoadOrNew가 손상 파일을 신규 계정으로
+            // 원자적 쓰기 없음(쓰다 죽으면 파일 손상 가능) — LoadOrNew가 손상 파일을 신규 계정으로
             // 흡수하는 것이 방어선이다. 무결성이 중요해지면 temp 파일 + File.Replace로 업그레이드.
             try
             {

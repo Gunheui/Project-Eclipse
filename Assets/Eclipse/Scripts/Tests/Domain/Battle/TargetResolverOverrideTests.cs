@@ -222,6 +222,27 @@ namespace Eclipse.Tests
         }
 
         [Test]
+        public void 최저HP아군_셀렉터는_지정을_무시하고_최저HP를_친다()
+        {
+            var resolver = new TargetResolver();
+            var low = A(0, 10);
+            var chosen = A(1, 80);
+            var allies = new List<ICombatant> { low, chosen };
+
+            var result = resolver.Resolve(TargetSelector.LowestHpAlly, actor: chosen, allies, NoEnemies, chosen);
+
+            Assert.AreEqual(1, result.Count);
+            Assert.AreSame(low, result[0]);
+        }
+
+        [Test]
+        public void 최저HP아군_셀렉터는_조준_UI가_다루는_스코프가_아니다()
+        {
+            Assert.IsFalse(TargetResolver.IsSingleAlly(TargetSelector.LowestHpAlly));
+            Assert.IsFalse(TargetResolver.IsSingleEnemy(TargetSelector.LowestHpAlly));
+        }
+
+        [Test]
         public void 광역_셀렉터는_지정을_무시한다()
         {
             var resolver = new TargetResolver();

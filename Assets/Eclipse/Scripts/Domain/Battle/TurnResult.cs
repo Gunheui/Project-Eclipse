@@ -16,7 +16,7 @@ namespace Eclipse.Domain
         /// <summary> 이 턴에 사용된 스킬. 안 썼으면 null. </summary>
         public SkillSO Skill { get; }
 
-        /// <summary> 이 스킬로 영향받은 대상들. 없으면 빈 목록. </summary>
+        /// <summary> 이 스킬로 영향받은 대상들. 없으면 빈 목록. 여러 번 맞은 대상은 맞은 횟수만큼 들어온다. </summary>
         public IReadOnlyList<ICombatant> Targets { get; }
 
         public TurnResult(ICombatant actor, SkillSO skill, IReadOnlyList<ICombatant> targets)

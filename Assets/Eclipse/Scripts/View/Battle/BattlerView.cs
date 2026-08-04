@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Eclipse.Data;
@@ -77,6 +78,10 @@ namespace Eclipse.View
         // Preserve로 감싸 여러 번 await 가능하게 둔다(매 턴 모든 배틀러의 이 값을 다시 기다리므로).
         private UniTask _animation = UniTask.CompletedTask;
 
+        // 아직 재생하지 못한 타격 이펙트. 같은 턴에 여러 번 맞으면 겹치지 않고 하나씩 나간다.
+        private readonly Queue<EffectSpec> _hitQueue = new();
+        private bool _drainingHits;
+
         /// <summary>
         /// 이 배틀러를 한 유닛 VM에 연결한다. 이전 구독을 정리하고,
         /// HP 변화(피격·힐)·행동(시전)·생존을 구독해 스스로 연출하게 한다.
@@ -98,6 +103,8 @@ namespace Eclipse.View
             _home = visualRoot.localPosition;
             _facingRight = unit.IsAlly;
             _prevHp = unit.CurrentHp.CurrentValue;
+            _hitQueue.Clear();
+            _drainingHits = false;
             if (spriteRenderer != null)
             {
                 spriteRenderer.sprite = unit.BattlerSprite;
@@ -119,7 +126,7 @@ namespace Eclipse.View
 
             // 스킬 대상이 되면 피격 이펙트만 재생한다(흔들림·숫자는 HP 변화가 따로 처리).
             unit.Hit
-                .Subscribe(skill => AddAnimation(SpawnEffect(skill != null ? skill.impactEffect : null)))
+                .Subscribe(skill => AddAnimation(QueueHitEffect(skill != null ? skill.impactEffect : null)))
                 .AddTo(_bindings);
 
             unit.IsAlive
@@ -246,6 +253,34 @@ namespace Eclipse.View
             _animation = _animation.Status.IsCompleted()
                 ? next.Preserve()
                 : UniTask.WhenAll(_animation, next).Preserve();
+        }
+
+        /// <summary>
+        /// 타격 이펙트를 대기열에 넣는다. 한 스킬이 같은 대상을 여러 번 때리면 이펙트가 연달아 터져야
+        /// 타수가 화면에 보인다. 한 턴의 타격 신호는 동기로 연달아 들어온다.
+        /// </summary>
+        /// <returns>
+        /// 대기열을 비우는 재생. 같은 턴의 두 번째 타격부터는 앞선 재생이 끝까지 비우므로 완료된 값이다.
+        /// </returns>
+        private UniTask QueueHitEffect(EffectSpec spec)
+        {
+            _hitQueue.Enqueue(spec);
+            return _drainingHits ? UniTask.CompletedTask : DrainHitQueueAsync();
+        }
+
+        /// <summary>대기열이 빌 때까지 타격 이펙트를 하나씩 재생한다.</summary>
+        private async UniTask DrainHitQueueAsync()
+        {
+            _drainingHits = true;
+            try
+            {
+                while (_hitQueue.Count > 0)
+                    await SpawnEffect(_hitQueue.Dequeue());
+            }
+            finally
+            {
+                _drainingHits = false;
+            }
         }
 
         /// <summary>피격: 데미지 숫자를 띄우고 짧게 흔들린다.</summary>

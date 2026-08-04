@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Eclipse.Data;
 using Eclipse.Domain;
@@ -23,8 +24,8 @@ namespace Eclipse.Presentation
             IsReady = stateChanged
                 .Select(_ => runtime.IsReady)
                 .ToReadOnlyReactiveProperty(runtime.IsReady);
-            NeedsManualTarget = HasSingleEnemyEffect(runtime.Skill) || HasSingleAllyEffect(runtime.Skill);
-            ManualTargetsAllies = HasSingleAllyEffect(runtime.Skill) && !HasSingleEnemyEffect(runtime.Skill);
+            NeedsManualTarget = HasSingleEnemyEffect(runtime.Effects) || HasSingleAllyEffect(runtime.Effects);
+            ManualTargetsAllies = HasSingleAllyEffect(runtime.Effects) && !HasSingleEnemyEffect(runtime.Effects);
         }
 
         /// <summary> 스킬 정의(아이콘·표시 이름). 전투 내내 불변. </summary>
@@ -51,12 +52,12 @@ namespace Eclipse.Presentation
         /// <summary>
         /// 효과 중 단일-적 스코프가 하나라도 있는지. 판정은 도메인 규칙(TargetResolver)을 그대로 호출한다.
         /// </summary>
-        private static bool HasSingleEnemyEffect(SkillSO skill)
-            => skill.effects.Any(e => TargetResolver.IsSingleEnemy(e.target));
+        private static bool HasSingleEnemyEffect(IReadOnlyList<SkillEffect> effects)
+            => effects.Any(e => TargetResolver.IsSingleEnemy(e.target));
 
         /// <summary> 효과 중 단일-아군 스코프가 하나라도 있는지. </summary>
-        private static bool HasSingleAllyEffect(SkillSO skill)
-            => skill.effects.Any(e => TargetResolver.IsSingleAlly(e.target));
+        private static bool HasSingleAllyEffect(IReadOnlyList<SkillEffect> effects)
+            => effects.Any(e => TargetResolver.IsSingleAlly(e.target));
 
         /// <summary> 파생 프로퍼티의 구독을 해지한다. 소유자(CombatantViewModel)가 호출한다. </summary>
         public void Dispose()

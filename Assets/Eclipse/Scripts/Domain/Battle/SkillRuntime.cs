@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Eclipse.Data;
 
 namespace Eclipse.Domain
@@ -27,13 +29,25 @@ namespace Eclipse.Domain
             // 레벨당 10%p 등차. 레벨 3이면 1.20배, 상한 레벨 5면 1.40배.
             => 1f + 0.10f * (skillLevel - 1);
 
+        /// <summary>
+        /// 이 유닛이 실제로 쓰는 효과 목록. 유니크 카드가 붙인 효과까지 포함하며, 스킬 에셋은 공유물이라
+        /// 수정본을 여기에만 둔다. 실행기와 조준 판정이 원본 대신 이 목록을 읽는다.
+        /// </summary>
+        public IReadOnlyList<SkillEffect> Effects { get; }
+
         /// <param name="initialCooldown">전투 시작 시 걸어둘 잔여 쿨(턴). 0이면 시작부터 사용 가능.</param>
         /// <param name="powerMultiplier">위력형 효과에 곱할 강화 배수. 강화가 없으면 1.</param>
-        public SkillRuntime(SkillSO skill, int initialCooldown = 0, float powerMultiplier = 1f)
+        /// <param name="addedEffects">유니크 카드가 덧붙일 효과. 없으면 원본 목록을 그대로 가리킨다.</param>
+        public SkillRuntime(SkillSO skill, int initialCooldown = 0, float powerMultiplier = 1f,
+            IReadOnlyList<SkillEffect> addedEffects = null)
         {
             Skill = skill;
             CurrentCooldown = initialCooldown;
             PowerMultiplier = powerMultiplier;
+            // 붙일 게 없으면 원본을 그대로 가리켜 방마다 사본이 쌓이지 않게 한다.
+            Effects = addedEffects == null || addedEffects.Count == 0
+                ? skill.effects
+                : skill.effects.Concat(addedEffects).ToList();
         }
 
         /// <summary> 사용 가능하면 쿨을 최대치로 잠그고 true, 쿨이 남아 못 쓰면 false를 반환한다. </summary>

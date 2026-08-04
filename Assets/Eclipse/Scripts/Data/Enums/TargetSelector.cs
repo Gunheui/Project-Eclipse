@@ -22,6 +22,11 @@ namespace Eclipse.Data.Enums
         // 4 = 폐기(구 LowestHpEnemy). 재사용 금지 — 구 에셋 데이터 오독 방지를 위해 비워 둔다.
 
         /// <summary> 적 전체(광역). </summary>
-        AllEnemies = 5
+        AllEnemies = 5,
+
+        /// <summary>
+        /// 체력이 가장 낮은 아군(단일). 단일-아군과 대상은 같지만 수동 지정을 받지 않아 항상 이 규칙으로 간다.
+        /// </summary>
+        LowestHpAlly = 6
     }
 }

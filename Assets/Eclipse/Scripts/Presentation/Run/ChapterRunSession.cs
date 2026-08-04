@@ -161,6 +161,15 @@ namespace Eclipse.Presentation
         public IReadOnlyList<AcquiredCard> AcquiredCards => _cards;
 
         /// <summary>
+        /// 이 자리 캐릭터가 받은 유니크 카드의 스킬 수정 목록. 전투 조립이 유닛 스킬에 얹는다.
+        /// </summary>
+        public IReadOnlyList<(SkillSlot slot, SkillEffect effect)> SkillRidersOf(int partySlot)
+            => _cards
+                .Where(c => c.PartySlot == partySlot && c.Card.grade == CardGrade.Unique)
+                .Select(c => (c.Card.targetSkill, c.Card.addedEffect))
+                .ToList();
+
+        /// <summary>
         /// 카드를 배정한다. 저주 카드는 슬롯과 무관하게 런 전역 적 디버프로 쌓인다.
         /// </summary>
         /// <param name="partySlot">배정 슬롯. 저주 카드면 무시된다.</param>
@@ -172,12 +181,14 @@ namespace Eclipse.Presentation
             bool toEnemies = card.targetsEnemies;
             if (!toEnemies && (partySlot < 0 || partySlot >= Party.Count || Party[partySlot] == null))
                 throw new ArgumentOutOfRangeException(nameof(partySlot), partySlot, "빈 슬롯에는 배정할 수 없다.");
+            // 유니크는 스탯을 건드리지 않아 증감이 아예 없다. 그 경우를 빈 목록과 같게 받는다.
+            var deltas = card.deltas ?? Array.Empty<StatDelta>();
             // 축이 비면 합산이 예외로 끊긴다. 증감 하나라도 그러면 아무것도 반영하지 않고 여기서 끝낸다.
-            if (card.deltas.Any(d => d.axis == StatType.None))
+            if (deltas.Any(d => d.axis == StatType.None))
                 throw new ArgumentException($"카드 '{card.id}'에 축이 비어 있는 증감이 있다.", nameof(card));
 
             var target = toEnemies ? EnemyDebuffs : BuffsOf(partySlot);
-            foreach (var delta in card.deltas)
+            foreach (var delta in deltas)
                 target.Add(delta);
             _cards.Add(new AcquiredCard(card, toEnemies ? DoorChoice.NoPartySlot : partySlot));
         }

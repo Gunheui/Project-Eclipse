@@ -23,7 +23,10 @@ namespace Eclipse.Domain
         /// 쿨 소모(TryUse)는 호출부에서 이미 처리했다고 전제한다.
         /// </summary>
         /// <param name="chosenTarget">수동 지정 대상. null이면 효과별 TargetSelector가 정한다.</param>
-        /// <returns>이 스킬로 영향받은 대상들(중복 제거). 연출이 피격 이펙트를 붙일 대상으로 쓴다.</returns>
+        /// <returns>
+        /// 이 스킬로 영향받은 대상들. 연출이 피격 이펙트를 붙일 대상으로 쓴다.
+        /// 피해는 때린 횟수만큼, 나머지 효과는 대상마다 한 번만 들어간다.
+        /// </returns>
         public IReadOnlyList<ICombatant> ApplySkill(
             ICombatant actor, SkillRuntime skill, ICombatant chosenTarget,
             IReadOnlyList<ICombatant> allies, IReadOnlyList<ICombatant> enemies)
@@ -34,12 +37,13 @@ namespace Eclipse.Domain
             // Buff/Debuff/Shield의 value는 증감률이라 배수를 곱하면 기획한 비율이 어긋난다.
             float power = skill.PowerMultiplier;
 
-            foreach (var effect in skill.Skill.effects)
+            foreach (var effect in skill.Effects)
             {
                 var targets = _targeting.Resolve(effect.target, actor, allies, enemies, chosenTarget);
 
+                // 피해 효과는 중복 제거에서 뺀다 — 멀티히트가 타격 신호 한 번으로 합쳐지면 2타가 화면에 안 보인다.
                 foreach (var target in targets)
-                    if (!affected.Contains(target)) affected.Add(target);
+                    if (effect.type == EffectType.Damage || !affected.Contains(target)) affected.Add(target);
 
                 switch (effect.type)
                 {

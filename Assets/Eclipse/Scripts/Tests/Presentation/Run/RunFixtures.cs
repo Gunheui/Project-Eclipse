@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Eclipse.Data;
@@ -167,7 +168,13 @@ namespace Eclipse.Tests
                 {
                     id = $"unique_{id}", displayName = $"unique_{id}", grade = CardGrade.Unique,
                     description = $"{id} 전용 효과", requiredCharacterId = id,
-                    deltas = new[] { new StatDelta { axis = StatType.Atk, value = 0.25f } },
+                    deltas = Array.Empty<StatDelta>(),
+                    targetSkill = SkillSlot.Basic,
+                    addedEffect = new SkillEffect
+                    {
+                        type = EffectType.Dot, target = TargetSelector.SingleEnemy,
+                        value = 0.12f, duration = 2,
+                    },
                 });
 
             var catalog = ScriptableObject.CreateInstance<BuffCardCatalogSO>();

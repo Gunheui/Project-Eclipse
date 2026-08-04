@@ -32,6 +32,22 @@ namespace Eclipse.Tests
             (StatType.Spd, "굼뜬 촉수", new[] { -0.06f, -0.08f, -0.10f }),
         };
 
+        // 유니크 5장이 붙는 자리와 세기. 대상 스킬 슬롯을 잘못 적으면 라이더가 조용히 다른 스킬에 붙는다.
+        private static readonly (string id, string name, string characterId, SkillSlot slot,
+            EffectType type, TargetSelector target, float value, int duration)[] ExpectedUniques =
+        {
+            ("unique_kael", "무너지지 않는 벽", "kael", SkillSlot.Normal,
+                EffectType.Shield, TargetSelector.Self, 0.10f, 2),
+            ("unique_ria", "연격 본능", "ria", SkillSlot.Basic,
+                EffectType.Damage, TargetSelector.SingleEnemy, 0.70f, 0),
+            ("unique_eliana", "폭주의 불씨", "eliana", SkillSlot.Basic,
+                EffectType.Dot, TargetSelector.SingleEnemy, 0.12f, 2),
+            ("unique_arin", "끊이지 않는 견제", "arin", SkillSlot.Basic,
+                EffectType.Debuff, TargetSelector.SingleEnemy, 0.12f, 2),
+            ("unique_selene", "생명의 샘", "selene", SkillSlot.Basic,
+                EffectType.Regen, TargetSelector.LowestHpAlly, 0.12f, 2),
+        };
+
         private static readonly CardGrade[] RampGrades = { CardGrade.Common, CardGrade.Rare, CardGrade.Epic };
 
         private static BuffCardCatalogSO Load()
@@ -41,22 +57,49 @@ namespace Eclipse.Tests
                 .Single();
 
         [Test]
-        public void 카탈로그가_범용_십팔행과_저주_십이행이다()
+        public void 카탈로그가_범용_십팔행과_저주_십이행과_유니크_오행이다()
         {
             var cards = Load().cards;
 
-            Assert.AreEqual(30, cards.Length);
-            Assert.AreEqual(18, cards.Count(c => !c.targetsEnemies), "범용 6효과 × 3등급");
+            Assert.AreEqual(35, cards.Length);
+            Assert.AreEqual(18, cards.Count(c => !c.targetsEnemies && c.grade != CardGrade.Unique),
+                "범용 6효과 × 3등급");
             Assert.AreEqual(12, cards.Count(c => c.targetsEnemies), "저주 4효과 × 3등급");
             foreach (var grade in RampGrades)
                 Assert.AreEqual(10, cards.Count(c => c.grade == grade), $"{grade} 등급은 범용 6 + 저주 4장이다");
-            Assert.IsFalse(cards.Any(c => c.grade == CardGrade.Unique), "유니크 행은 R2-8에서 들어온다");
+            Assert.AreEqual(5, cards.Count(c => c.grade == CardGrade.Unique), "유니크는 캐릭터당 1장");
+        }
+
+        [Test]
+        public void 유니크가_기획표의_스킬에_기획표의_효과를_붙인다()
+        {
+            var actual = Load().cards.Where(c => c.grade == CardGrade.Unique).ToDictionary(c => c.id);
+
+            var failures = ExpectedUniques
+                .Where(row => !actual.TryGetValue(row.id, out var card)
+                    || card.displayName != row.name
+                    || card.requiredCharacterId != row.characterId
+                    || card.targetSkill != row.slot
+                    || card.addedEffect.type != row.type
+                    || card.addedEffect.target != row.target
+                    || card.addedEffect.duration != row.duration
+                    || !Mathf.Approximately(card.addedEffect.value, row.value))
+                .Select(row => $"{row.name}: {row.characterId} {row.slot} {row.type} {row.value} {row.duration}턴")
+                .ToList();
+
+            Assert.That(failures, Is.Empty, "유니크 드리프트 감지:\n" + string.Join("\n", failures));
+            Assert.IsTrue(actual.Values.All(c => c.deltas == null || c.deltas.Length == 0),
+                "유니크는 스탯을 건드리지 않는다");
+            Assert.IsTrue(actual.Values.All(c => !string.IsNullOrEmpty(c.description)),
+                "유니크는 화면 문구를 증감값이 아니라 설명문에서 낸다");
         }
 
         [Test]
         public void 카드_수치가_기획표와_일치한다()
         {
-            var actual = Load().cards.ToDictionary(c => (c.targetsEnemies, c.deltas.Single().axis, c.grade));
+            var actual = Load().cards
+                .Where(c => c.grade != CardGrade.Unique)
+                .ToDictionary(c => (c.targetsEnemies, c.deltas.Single().axis, c.grade));
 
             var failures = ExpectedBuffs.Select(row => (targetsEnemies: false, row))
                 .Concat(ExpectedCurses.Select(row => (targetsEnemies: true, row)))

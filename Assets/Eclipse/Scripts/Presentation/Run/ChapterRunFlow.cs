@@ -368,7 +368,7 @@ namespace Eclipse.Presentation
             else
             {
                 _pendingPicks.Enqueue(new PendingBuffPick(
-                    _cardPool.Pick3(choice, _session.Party), choice.TargetPartySlot));
+                    _cardPool.Pick3(choice, _session.Party, OwnedCardIds()), choice.TargetPartySlot));
             }
         }
 
@@ -488,6 +488,10 @@ namespace Eclipse.Presentation
                 ? string.Format(promise, _session.Party[choice.TargetPartySlot].Definition.displayName)
                 : promise;
         }
+
+        /// <summary> 추첨에 넘길 보유 카드 id. 유니크 1장 상한 배제의 입력이다. </summary>
+        private IReadOnlyList<string> OwnedCardIds()
+            => _session.AcquiredCards.Select(c => c.Card.id).ToList();
 
         /// <summary>
         /// 뽑힌 카드를 표시 데이터로 바꾼다. 카드명·효과·등급 라벨은 카드에서 나오고,

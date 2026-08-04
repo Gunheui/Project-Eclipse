@@ -46,6 +46,33 @@ namespace Eclipse.Tests
         }
 
         [Test]
+        public void 증감_없는_유니크도_배정되고_스킬_수정으로_남는다()
+        {
+            var session = Session();
+            var unique = new BuffCard
+            {
+                id = "unique_x", displayName = "unique_x", grade = CardGrade.Unique,
+                description = "전용 효과", requiredCharacterId = "x",
+                // 유니크 행은 스탯을 안 건드린다. 카탈로그는 빈 배열이지만 코드로 만들면 null이 그대로 들어온다.
+                deltas = null,
+                targetSkill = SkillSlot.Basic,
+                addedEffect = new SkillEffect
+                {
+                    type = EffectType.Dot, target = TargetSelector.SingleEnemy, value = 0.12f, duration = 2,
+                },
+            };
+
+            session.AttachCard(unique, 2);
+
+            Assert.AreEqual(1, session.AcquiredCards.Count);
+            Assert.AreEqual(0f, session.BuffsOf(2).SumOf(StatType.Atk), "유니크는 스탯 합계를 건드리지 않는다");
+            var riders = session.SkillRidersOf(2);
+            Assert.AreEqual(1, riders.Count);
+            Assert.AreEqual(SkillSlot.Basic, riders[0].slot);
+            Assert.AreEqual(EffectType.Dot, riders[0].effect.type);
+        }
+
+        [Test]
         public void 축이_빈_증감이_섞이면_합계도_기록도_남기지_않는다()
         {
             var session = Session();

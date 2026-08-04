@@ -60,7 +60,8 @@ namespace Eclipse.Core
             var allyEntries = ownedParty
                 .Select(x => new BattleUnitEntry(
                     Combatant.FromCharacter(x.owned, x.slot, CharacterStats.BuildAllyStats(
-                        x.owned.Definition, x.owned.Level, x.owned.AscensionTier, session.BuffsOf(x.slot))),
+                            x.owned.Definition, x.owned.Level, x.owned.AscensionTier, session.BuffsOf(x.slot)),
+                        session.SkillRidersOf(x.slot)),
                     x.owned.Definition.battlerAssetRef,
                     x.owned.Definition.faceIconAssetRef,
                     null,
