@@ -33,7 +33,7 @@ namespace Eclipse.Presentation
     public class SaveData
     {
         /// <summary> 현재 스키마 버전. </summary>
-        public const int CurrentVersion = 2;
+        public const int CurrentVersion = 3;
 
         /// <summary> 스키마 버전. 값이 다르면 부분 역직렬화된 반쪽 상태를 쓰지 않고 신규 계정으로 취급한다. </summary>
         public int version = CurrentVersion;

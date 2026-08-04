@@ -29,7 +29,7 @@ namespace Eclipse.Tests
         private static readonly float[] NoCritAvg = { 0.99f, 0.5f };
 
         [Test]
-        public void 카이_기본공격_비크리_기대값_130()
+        public void 리아_기본공격_비크리_기대값_130()
         {
             // 175 × 175/(175+60) = 175 × 0.7447 = 130.3 → 반올림 130
             var result = Pipeline(new FixedRandom(NoCritAvg))
@@ -40,7 +40,7 @@ namespace Eclipse.Tests
         }
 
         [Test]
-        public void 카이_기본공격_치명시_261()
+        public void 리아_기본공격_치명시_261()
         {
             // 치명 난수 0.0 < 0.30 → 크리. 130.3 × 2.0 = 260.6 → 261
             var result = Pipeline(new FixedRandom(0.0f, 0.5f))
@@ -51,7 +51,7 @@ namespace Eclipse.Tests
         }
 
         [Test]
-        public void 리엔_기본공격_비크리_기대값_46()
+        public void 카엘_기본공격_비크리_기대값_46()
         {
             // 80 × 80/(80+60) = 80 × 0.5714 = 45.7 → 46
             var result = Pipeline(new FixedRandom(NoCritAvg))

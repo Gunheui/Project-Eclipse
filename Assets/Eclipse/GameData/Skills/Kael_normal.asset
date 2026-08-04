@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5640282a8b8e413eaa0459e7c3d1c11c, type: 3}
+  m_Name: Kael_normal
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.SkillSO
+  id: kael_normal
+  displayName: "\uACB0\uC758\uC758 \uBC29\uD328"
+  description: "2\uD134 \uB3D9\uC548 \uC801\uC758 \uACF5\uACA9\uC744 \uC790\uC2E0\uC5D0\uAC8C
+    \uC720\uB3C4\uD558\uACE0, \uADF8\uB3D9\uC548 \uC790\uC2E0\uC758 \uBC29\uC5B4\uB825\uC744
+    40% \uB192\uC778\uB2E4. (\uC7AC\uC0AC\uC6A9 3\uD134)"
+  icon: {fileID: 21300000, guid: 59f233e69a9c243948c81be34806231e, type: 3}
+  cooldownTurns: 3
+  effects:
+  - type: 4
+    target: 0
+    value: 0
+    affectedStat: 0
+    duration: 2
+  - type: 2
+    target: 0
+    value: 0.4
+    affectedStat: 3
+    duration: 2
+  castEffect: {fileID: 11400000, guid: e7bd53f5aa05492680cc3378e472da2e, type: 2}
+  impactEffect: {fileID: 11400000, guid: d66a5ff2dcbe40a1926e0e1d1bd5f026, type: 2}

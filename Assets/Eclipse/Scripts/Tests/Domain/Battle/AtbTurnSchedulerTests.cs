@@ -34,11 +34,11 @@ namespace Eclipse.Tests
         // 로스터 5인의 실제 SPD 값으로 구성.
         private static List<ICombatant> Roster() => new List<ICombatant>
         {
-            new FakeCombatant("노엘", Team.Ally, 0, 135),
-            new FakeCombatant("카이", Team.Ally, 1, 125),
-            new FakeCombatant("미라", Team.Ally, 2, 105),
-            new FakeCombatant("세라", Team.Ally, 3, 100),
-            new FakeCombatant("리엔", Team.Ally, 4, 80),
+            new FakeCombatant("아린", Team.Ally, 0, 135),
+            new FakeCombatant("리아", Team.Ally, 1, 125),
+            new FakeCombatant("셀린", Team.Ally, 2, 105),
+            new FakeCombatant("엘리아나", Team.Ally, 3, 100),
+            new FakeCombatant("카엘", Team.Ally, 4, 80),
         };
 
         // 스케줄러를 count번 돌려 행동한 유닛 이름 시퀀스를 뽑는다.
@@ -58,16 +58,16 @@ namespace Eclipse.Tests
         public void 첫_다섯_행동은_SPD_내림차순()
         {
             var seq = Sequence(new AtbTurnScheduler(Roster()), 5);
-            Assert.AreEqual(new[] { "노엘", "카이", "미라", "세라", "리엔" }, seq.ToArray());
+            Assert.AreEqual(new[] { "아린", "리아", "셀린", "엘리아나", "카엘" }, seq.ToArray());
         }
 
         [Test]
         public void SPD_높은_유닛이_더_자주_행동()
         {
             var seq = Sequence(new AtbTurnScheduler(Roster()), 100);
-            int noel = seq.Count(n => n == "노엘"); // SPD 135
-            int rien = seq.Count(n => n == "리엔"); // SPD 80
-            Assert.Greater(noel, rien);
+            int arin = seq.Count(n => n == "아린"); // SPD 135
+            int kael = seq.Count(n => n == "카엘"); // SPD 80
+            Assert.Greater(arin, kael);
         }
 
         [Test]

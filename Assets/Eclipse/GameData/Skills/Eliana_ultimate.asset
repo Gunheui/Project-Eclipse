@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5640282a8b8e413eaa0459e7c3d1c11c, type: 3}
+  m_Name: Eliana_ultimate
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.SkillSO
+  id: eliana_ultimate
+  displayName: "\uCC9C\uACF5\uC758 \uB099\uB8B0"
+  description: "\uB099\uB8B0\uB97C \uB5A8\uC5B4\uB728\uB824 \uBAA8\uB4E0 \uC801\uC5D0\uAC8C
+    \uACF5\uACA9\uB825\uC758 130%\uB85C \uD070 \uD53C\uD574\uB97C \uC785\uD78C\uB2E4.
+    (\uC7AC\uC0AC\uC6A9 5\uD134)"
+  icon: {fileID: 21300000, guid: d69228edb27d84be49148bafaf210e65, type: 3}
+  cooldownTurns: 5
+  effects:
+  - type: 0
+    target: 5
+    value: 1.3
+    affectedStat: 0
+    duration: 0
+  castEffect: {fileID: 11400000, guid: 72156508ee724954b7e680fd4c026dd1, type: 2}
+  impactEffect: {fileID: 11400000, guid: 82e766e521c64399b406f5b447c670fe, type: 2}

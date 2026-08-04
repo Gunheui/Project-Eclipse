@@ -25,7 +25,7 @@ namespace Eclipse.Tests
         private const string ConstantsPath = "Assets/Eclipse/GameData/Battle/BattleConstants.asset";
 
         // AppLifetimeScope.prefab의 더미 로스터 순서·레벨과 같은 편성(전투는 앞 4명만 참전).
-        private static readonly string[] PartyNames = { "Mira", "Rien", "Kai", "Sera" };
+        private static readonly string[] PartyNames = { "Selene", "Kael", "Ria", "Eliana" };
         private const int PartyLevel = 1;
 
         private static readonly int[] Seeds = { 1, 2, 3, 4, 5 };

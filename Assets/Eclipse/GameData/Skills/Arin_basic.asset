@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5640282a8b8e413eaa0459e7c3d1c11c, type: 3}
+  m_Name: Arin_basic
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.SkillSO
+  id: arin_basic
+  displayName: "\uACAC\uC81C \uC0AC\uACA9"
+  description: "\uC801 \uD558\uB098\uB97C \uACAC\uC81C \uC0AC\uACA9\uD574 \uACF5\uACA9\uB825\uC758
+    80%\uB85C \uD53C\uD574\uB97C \uC785\uD78C\uB2E4."
+  icon: {fileID: 21300000, guid: 3feb0e8456a3c48928b1f6c9ca24ae64, type: 3}
+  cooldownTurns: 0
+  effects:
+  - type: 0
+    target: 3
+    value: 0.8
+    affectedStat: 0
+    duration: 0
+  castEffect: {fileID: 11400000, guid: d48c9c9d49c341f0a9e7f0e6f74caa30, type: 2}
+  impactEffect: {fileID: 11400000, guid: 1414e80751b747b3982815502c7b425d, type: 2}

@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b1679283f154967b56acc0a2a626bff, type: 3}
+  m_Name: Arin
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.CharacterSO
+  id: arin
+  displayName: "\uC544\uB9B0"
+  rarity: 1
+  role: 2
+  baseStats:
+    hp: 850
+    atk: 105
+    def: 70
+    spd: 135
+    critRate: 0.08
+    critDamage: 1.5
+  growthCurve: {fileID: 11400000, guid: 614de3d95c41d4cc197863e3a88014fe, type: 2}
+  basicSkill: {fileID: 11400000, guid: bc59f78cc1b564cdbae0662c17788660, type: 2}
+  normalSkill: {fileID: 11400000, guid: 18ccf1491e9c3449789c5eeb322fdac7, type: 2}
+  ultimateSkill: {fileID: 11400000, guid: 26a1c60cf466d4272a1e15152cf13191, type: 2}
+  acquisitionType: 2
+  portraitAssetRef: {fileID: 21300000, guid: 3928b4fbbb536405da96c8486dbb7dec, type: 3}
+  battlerAssetRef: {fileID: 21300000, guid: 5148b4ef7200f437b9dd74a0b5b28a09, type: 3}
+  faceIconAssetRef: {fileID: 21300000, guid: 6aaaa9497c4f5466a86c1a7d05c543fb, type: 3}

@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67c3d463d14e54e8cb6880db2bc8f262, type: 3}
+  m_Name: Ria_ultimate_impact
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.EffectSpec
+  layers:
+  - sprite: {fileID: 768216927382997730, guid: 3f5255a64db3e48e991f03d0646d6a81, type: 3}
+    offset: {x: 0, y: 0.85}
+    startDelay: 0.056
+    duration: 0.84
+    startScale: {x: 0.25, y: 0.25}
+    endScale: {x: 0.9, y: 0.9}
+    spinDegPerSec: 0
+    moveBy: {x: 0, y: 0}
+    tint: {r: 0.12, g: 0.34, b: 0.46, a: 0.825}
+    endAlpha: 0
+    ease: 1
+    sortingOrder: 23
+    additive: 1
+  - sprite: {fileID: -4576867001980931724, guid: 8442d5a32107b45b9a9a56316f6ca83d, type: 3}
+    offset: {x: 0, y: 1}
+    startDelay: 0.112
+    duration: 0.756
+    startScale: {x: 0.55, y: 0.68}
+    endScale: {x: 1.15, y: 1.25}
+    spinDegPerSec: 0
+    moveBy: {x: 0.12, y: 0.02}
+    tint: {r: 0.35, g: 0.8, b: 1, a: 1}
+    endAlpha: 0
+    ease: 3
+    sortingOrder: 25
+    additive: 0
+  - sprite: {fileID: -5558509863401697148, guid: 344ebff042b3c402bbee2e42d6802013, type: 3}
+    offset: {x: 0.02, y: 0.97}
+    startDelay: 0.224
+    duration: 0.7
+    startScale: {x: 0.35, y: 0.48}
+    endScale: {x: 0.86, y: 1.02}
+    spinDegPerSec: 0
+    moveBy: {x: -0.04, y: 0.05}
+    tint: {r: 0.72, g: 0.94, b: 1, a: 1}
+    endAlpha: 0
+    ease: 2
+    sortingOrder: 26
+    additive: 0
+  - sprite: {fileID: 4532344555379403189, guid: 18316551103dd45d9aeddbc73deffd03, type: 3}
+    offset: {x: 0.02, y: 1.02}
+    startDelay: 0.336
+    duration: 0.616
+    startScale: {x: 0.28, y: 0.28}
+    endScale: {x: 0.72, y: 0.72}
+    spinDegPerSec: 35
+    moveBy: {x: 0.02, y: 0.1}
+    tint: {r: 1, g: 0.78, b: 0.25, a: 1}
+    endAlpha: 0
+    ease: 4
+    sortingOrder: 28
+    additive: 1

@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5640282a8b8e413eaa0459e7c3d1c11c, type: 3}
+  m_Name: Ria_basic
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.SkillSO
+  id: ria_basic
+  displayName: "\uBC14\uB78C \uAC80\uACA9"
+  description: "\uC801 \uD558\uB098\uB97C \uBE60\uB974\uAC8C \uBCA0\uC5B4 \uACF5\uACA9\uB825\uC758
+    100%\uB85C \uD53C\uD574\uB97C \uC785\uD78C\uB2E4."
+  icon: {fileID: 21300000, guid: 6231ed7e17b834c1980506f6a57f73c5, type: 3}
+  cooldownTurns: 0
+  effects:
+  - type: 0
+    target: 3
+    value: 1
+    affectedStat: 0
+    duration: 0
+  castEffect: {fileID: 11400000, guid: 338e1b834a59546cfbdb0b4ee9d95535, type: 2}
+  impactEffect: {fileID: 11400000, guid: e274ab2d83dbe4ba8a3c6ad260828640, type: 2}

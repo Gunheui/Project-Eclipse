@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67c3d463d14e54e8cb6880db2bc8f262, type: 3}
+  m_Name: Arin_normal_impact
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.EffectSpec
+  layers:
+  - sprite: {fileID: -3643760154290002694, guid: ddb7b565deb7a4a37b0d4cdcad7c1e92, type: 3}
+    offset: {x: 0, y: 1.02}
+    startDelay: 0.044
+    duration: 0.66
+    startScale: {x: 0.22, y: 0.22}
+    endScale: {x: 0.62, y: 0.62}
+    spinDegPerSec: 75
+    moveBy: {x: 0, y: 0}
+    tint: {r: 0.22, g: 0.72, b: 0.62, a: 1}
+    endAlpha: 0
+    ease: 2
+    sortingOrder: 24
+    additive: 1
+  - sprite: {fileID: 580394248282859218, guid: 5435b97bf5cb643aaa890028d3f69438, type: 3}
+    offset: {x: 0, y: 1.04}
+    startDelay: 0.154
+    duration: 0.704
+    startScale: {x: 0.18, y: 0.18}
+    endScale: {x: 0.42, y: 0.42}
+    spinDegPerSec: -30
+    moveBy: {x: 0, y: 0.02}
+    tint: {r: 0.58, g: 0.9, b: 0.74, a: 1}
+    endAlpha: 0
+    ease: 5
+    sortingOrder: 26
+    additive: 0
+  - sprite: {fileID: 6681827519773557259, guid: ec0a46f89814b45ffa36bacd69a1cd0e, type: 3}
+    offset: {x: 0, y: 1.02}
+    startDelay: 0.22
+    duration: 0.352
+    startScale: {x: 0.14, y: 0.14}
+    endScale: {x: 0.34, y: 0.34}
+    spinDegPerSec: 0
+    moveBy: {x: 0.04, y: 0.04}
+    tint: {r: 0.76, g: 1, b: 0.86, a: 1}
+    endAlpha: 0
+    ease: 3
+    sortingOrder: 27
+    additive: 1
