@@ -135,14 +135,19 @@ namespace Eclipse.Tests
             Assert.AreEqual(1500, ally.MaxHp, "표시용 변환이 최종 스탯을 한 번 더 올리지 않는다");
 
             // 도메인 효과로 들어갔다면 남은 턴이 붙은 항목이 함께 서고 스탯도 한 번 더 올랐을 것이다.
-            var allyIcons = ally.ActiveEffects.CurrentValue;
+            var allyIcons = ally.AllEffects.CurrentValue;
             Assert.AreEqual(1, allyIcons.Count);
             Assert.AreEqual(EffectType.Buff, allyIcons[0].Type);
             Assert.AreEqual(-1, allyIcons[0].RemainingTurns, "상시라 턴 라벨이 없다");
 
-            var enemyIcons = vm.Combatants.First(u => !u.IsAlly).ActiveEffects.CurrentValue;
+            var enemy = vm.Combatants.First(u => !u.IsAlly);
+            var enemyIcons = enemy.AllEffects.CurrentValue;
             Assert.AreEqual(1, enemyIcons.Count);
             Assert.AreEqual(EffectType.Debuff, enemyIcons[0].Type, "저주는 적 쪽에 디버프로 선다");
+
+            // 카드 항목은 아이콘 행에만 실린다. 상세 패널이 여기서 카드를 다시 적으면 카드 구획과 겹친다.
+            CollectionAssert.IsEmpty(ally.SkillEffects.CurrentValue);
+            CollectionAssert.IsEmpty(enemy.SkillEffects.CurrentValue);
         }
 
         [Test]

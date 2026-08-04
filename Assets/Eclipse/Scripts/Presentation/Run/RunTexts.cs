@@ -88,6 +88,23 @@ namespace Eclipse.Presentation
             return string.Join(" ‧ ", card.deltas.Select(FormatDelta));
         }
 
+        /// <summary> 지속 효과 한 줄("공격력 +30%  2턴"). 상시 효과(-1)는 턴 접미를 달지 않는다. </summary>
+        public static string EffectLine(ActiveEffect effect)
+        {
+            string label = effect.Type switch
+            {
+                EffectType.Buff => FormatDelta(new StatDelta { axis = effect.Stat, value = effect.Magnitude }),
+                // 디버프는 세기를 양수로 저장하고 부호를 타입이 대신한다(Combatant.ComputeEffectiveStats와 같은 규약).
+                EffectType.Debuff => FormatDelta(new StatDelta { axis = effect.Stat, value = -effect.Magnitude }),
+                EffectType.Dot => $"지속 피해 {effect.Magnitude:N0}",
+                EffectType.Regen => $"재생 {effect.Magnitude:N0}",
+                EffectType.Shield => $"보호막 {effect.Magnitude:N0}",
+                EffectType.Taunt => "도발",
+                _ => effect.Type.ToString(),
+            };
+            return effect.RemainingTurns > 0 ? $"{label}  {effect.RemainingTurns}턴" : label;
+        }
+
         /// <summary> 변이가 거는 배수 한 줄("생명력 1.5배"). 변이 이름은 유닛 표시명에 이미 접두로 붙는다. </summary>
         public static string MutationEffect(MutationSO mutation)
             => $"{StatName(mutation.statAxis)} {mutation.multiplier:0.##}배";

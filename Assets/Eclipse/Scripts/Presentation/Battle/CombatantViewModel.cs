@@ -10,8 +10,8 @@ using UnityEngine;
 namespace Eclipse.Presentation
 {
     /// <summary>
-    /// 플레이트 아이콘 행에 표시할 지속 효과 하나. View가 Domain의 StatusEffect를 직접 못 보므로
-    /// 표시에 필요한 값만 담아 넘긴다.
+    /// 플레이트 아이콘 행과 상세 패널이 표시할 지속 효과 하나. View가 Domain의 StatusEffect를 직접
+    /// 못 보므로 표시에 필요한 값만 담아 넘긴다.
     /// </summary>
     public readonly struct ActiveEffect
     {
@@ -23,11 +23,18 @@ namespace Eclipse.Presentation
         /// <summary> 남은 지속턴. -1이면 상시(턴 라벨을 표시하지 않는다). </summary>
         public int RemainingTurns { get; }
 
-        public ActiveEffect(EffectType type, StatType stat, int remainingTurns)
+        /// <summary>
+        /// 효과의 세기. 타입마다 단위가 다르다 — 버프·디버프는 변화율(0.3 = 30%), 도트·리젠은 틱당 HP,
+        /// 실드는 남은 흡수량이고 그 외 타입은 0이다.
+        /// </summary>
+        public float Magnitude { get; }
+
+        public ActiveEffect(EffectType type, StatType stat, int remainingTurns, float magnitude = 0f)
         {
             Type = type;
             Stat = stat;
             RemainingTurns = remainingTurns;
+            Magnitude = magnitude;
         }
     }
 
@@ -46,7 +53,7 @@ namespace Eclipse.Presentation
         // 스킬 대상이 됐음을 알리는 신호(원인 스킬 포함). 배틀러가 구독해 피격 연출을 재생한다.
         private readonly Subject<SkillSO> _hit = new();
 
-        /// <param name="runEffects">표시 전용 상시 효과(런 버프·저주). 도메인 효과가 아니라 아이콘 행에만 선다.</param>
+        /// <param name="runEffects">표시 전용 상시 효과(런 버프·저주). 도메인 효과가 아니라 <see cref="AllEffects"/>에만 실린다.</param>
         public CombatantViewModel(Combatant model, Observable<Unit> stateChanged, Sprite battler,
             Sprite timelineIcon, MutationSO mutation, IReadOnlyList<ActiveEffect> runEffects)
         {
@@ -63,7 +70,10 @@ namespace Eclipse.Presentation
             ShieldAbsorb = stateChanged
                 .Select(_ => model.ShieldAbsorb)
                 .ToReadOnlyReactiveProperty(model.ShieldAbsorb);
-            ActiveEffects = stateChanged
+            SkillEffects = stateChanged
+                .Select(_ => BuildActiveEffects(model.Effects))
+                .ToReadOnlyReactiveProperty(BuildActiveEffects(model.Effects));
+            AllEffects = stateChanged
                 .Select(_ => BuildActiveEffects(model.Effects, runEffects))
                 .ToReadOnlyReactiveProperty(BuildActiveEffects(model.Effects, runEffects));
             Skills = model.Skills
@@ -107,8 +117,14 @@ namespace Eclipse.Presentation
         /// <summary> 남은 실드 흡수량 합. HP 바의 실드 구간 바인딩용. 턴마다 갱신. </summary>
         public ReadOnlyReactiveProperty<int> ShieldAbsorb { get; }
 
-        /// <summary> 표시 순서로 정렬된 지속 효과 목록. 플레이트 아이콘 행 바인딩용. 턴마다 갱신. </summary>
-        public ReadOnlyReactiveProperty<IReadOnlyList<ActiveEffect>> ActiveEffects { get; }
+        /// <summary> 스킬로 걸린 지속 효과만 표시 순서로 정렬한 목록. 상세 패널 바인딩용. 턴마다 갱신. </summary>
+        public ReadOnlyReactiveProperty<IReadOnlyList<ActiveEffect>> SkillEffects { get; }
+
+        /// <summary>
+        /// 스킬 지속 효과에 런 카드 항목까지 합쳐 같은 순서로 정렬한 목록. 플레이트 아이콘 행 바인딩용. 턴마다 갱신.
+        /// 카드 항목은 아이콘 자리만 차지하는 표시 전용이라 이름·등급·수치가 없다.
+        /// </summary>
+        public ReadOnlyReactiveProperty<IReadOnlyList<ActiveEffect>> AllEffects { get; }
 
         /// <summary> 이 유닛이 행동할 때 사용 스킬과 함께 발화. 배틀러 시전 연출 트리거. </summary>
         public Observable<SkillSO> Acted => _acted;
@@ -134,13 +150,22 @@ namespace Eclipse.Presentation
             IReadOnlyList<ActiveEffect> persistent = null)
             // _effects의 삽입 순서에 기대지 않으므로 같은 효과를 다시 걸어도 아이콘 위치가 튀지 않는다.
             => effects
-                .Select(e => new ActiveEffect(e.Type, e.Stat, e.RemainingTurns))
+                .Select(e => new ActiveEffect(e.Type, e.Stat, e.RemainingTurns, MagnitudeOf(e)))
                 .Concat(persistent ?? Array.Empty<ActiveEffect>())
                 .OrderBy(e => DisplayRank(e.Type))
                 .ThenBy(e => e.RemainingTurns < 0 ? int.MaxValue : e.RemainingTurns)
                 .ToList();
 
-        /// <summary> 아이콘 행 정렬 순위. 값이 작을수록 앞에 놓인다. </summary>
+        /// <summary> 타입마다 세기를 싣는 필드가 달라 <see cref="ActiveEffect.Magnitude"/> 하나로 모은다. </summary>
+        private static float MagnitudeOf(StatusEffect effect) => effect.Type switch
+        {
+            EffectType.Buff or EffectType.Debuff => effect.Value,
+            EffectType.Dot or EffectType.Regen => effect.TickAmount,
+            EffectType.Shield => effect.RemainingAbsorb,
+            _ => 0f,
+        };
+
+        /// <summary> 표시 정렬 순위. 값이 작을수록 앞에 놓인다. </summary>
         private static int DisplayRank(EffectType type) => type switch
         {
             EffectType.Debuff => 0,
@@ -158,7 +183,8 @@ namespace Eclipse.Presentation
             CurrentHp.Dispose();
             IsAlive.Dispose();
             ShieldAbsorb.Dispose();
-            ActiveEffects.Dispose();
+            SkillEffects.Dispose();
+            AllEffects.Dispose();
             _acted.Dispose();
             _hit.Dispose();
             foreach (var slot in Skills) slot.Dispose();

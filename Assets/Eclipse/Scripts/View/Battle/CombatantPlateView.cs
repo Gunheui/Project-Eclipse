@@ -99,7 +99,7 @@ namespace Eclipse.View
             unit.IsAlive
                 .Subscribe(SetAlive)
                 .AddTo(_bindings);
-            unit.ActiveEffects
+            unit.AllEffects
                 .Subscribe(OnEffectsChanged)
                 .AddTo(_bindings);
         }

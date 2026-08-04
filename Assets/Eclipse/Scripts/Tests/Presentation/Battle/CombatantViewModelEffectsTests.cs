@@ -65,6 +65,27 @@ namespace Eclipse.Tests
         }
 
         [Test]
+        public void 세기는_타입마다_다른_필드에서_온다()
+        {
+            var shield = StatusEffect.Shield(340, 2);
+            shield.AbsorbDamage(40);
+            var effects = new List<StatusEffect>
+            {
+                StatusEffect.StatModifier(EffectType.Buff, StatType.Atk, 0.3f, 2),
+                StatusEffect.Periodic(EffectType.Dot, 120, 3),
+                shield,
+                StatusEffect.Taunt(1),
+            };
+
+            var byType = CombatantViewModel.BuildActiveEffects(effects).ToDictionary(e => e.Type);
+
+            Assert.AreEqual(0.3f, byType[EffectType.Buff].Magnitude, 1e-4f, "버프는 변화율");
+            Assert.AreEqual(120f, byType[EffectType.Dot].Magnitude, 1e-4f, "도트는 틱당 HP");
+            Assert.AreEqual(300f, byType[EffectType.Shield].Magnitude, 1e-4f, "실드는 흡수하고 남은 양");
+            Assert.AreEqual(0f, byType[EffectType.Taunt].Magnitude, 1e-4f, "도발은 세기가 없다");
+        }
+
+        [Test]
         public void 삽입_순서가_달라도_표시_순서는_같다()
         {
             var forward = new List<StatusEffect>

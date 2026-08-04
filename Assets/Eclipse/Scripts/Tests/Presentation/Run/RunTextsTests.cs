@@ -19,6 +19,44 @@ namespace Eclipse.Tests
         }
 
         [Test]
+        public void 버프는_증감_표기에_남은_턴이_붙는다()
+        {
+            var effect = new ActiveEffect(EffectType.Buff, StatType.Atk, 2, 0.3f);
+
+            Assert.AreEqual("공격력 +30%  2턴", RunTexts.EffectLine(effect));
+        }
+
+        [Test]
+        public void 디버프는_세기를_음수로_뒤집어_적는다()
+        {
+            // 도메인은 하락율도 양수로 저장하고 부호를 타입이 대신한다.
+            var effect = new ActiveEffect(EffectType.Debuff, StatType.Def, 3, 0.25f);
+
+            Assert.AreEqual("방어력 -25%  3턴", RunTexts.EffectLine(effect));
+        }
+
+        [Test]
+        public void 수치형_효과는_고유_이름과_값으로_적힌다()
+        {
+            Assert.AreEqual("지속 피해 120  2턴",
+                RunTexts.EffectLine(new ActiveEffect(EffectType.Dot, StatType.None, 2, 120f)));
+            Assert.AreEqual("재생 80  1턴",
+                RunTexts.EffectLine(new ActiveEffect(EffectType.Regen, StatType.None, 1, 80f)));
+            Assert.AreEqual("보호막 340  2턴",
+                RunTexts.EffectLine(new ActiveEffect(EffectType.Shield, StatType.None, 2, 340f)));
+            Assert.AreEqual("도발  1턴",
+                RunTexts.EffectLine(new ActiveEffect(EffectType.Taunt, StatType.None, 1)));
+        }
+
+        [Test]
+        public void 상시_효과는_턴_접미를_달지_않는다()
+        {
+            var effect = new ActiveEffect(EffectType.Buff, StatType.Atk, -1, 0.15f);
+
+            Assert.AreEqual("공격력 +15%", RunTexts.EffectLine(effect));
+        }
+
+        [Test]
         public void 스탯_한줄은_생명력을_빼고_치명을_확률과_배율로_묶는다()
         {
             var stats = new Stats { hp = 3569, atk = 1240, def = 310, spd = 118, critRate = 0.15f, critDamage = 1.5f };
