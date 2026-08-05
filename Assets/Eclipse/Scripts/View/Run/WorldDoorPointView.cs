@@ -8,17 +8,19 @@ using UnityEngine;
 namespace Eclipse.View
 {
     /// <summary>
-    /// 문 지점 화면. 씬에 미리 세워 둔 문 3개를 이번 추첨 결과에 연결하고, 하나가 탭될 때까지 기다린다.
-    /// 문 개수가 3으로 고정이라 런타임 생성 없이 앵커를 재사용한다.
+    /// 문 지점 화면. 씬에 미리 세워 둔 문 3개를 이번 제시물에 연결하고, 하나가 탭될 때까지 기다린다.
+    /// 문 자리가 3으로 고정이라 런타임 생성 없이 앵커를 재사용한다. 자리 순서를 가운데부터 꽂아 두므로
+    /// 문 하나짜리 보스 지점도 계산 없이 가운데에 서고, 탭한 자리 번호가 곧 선택지 번호다.
     /// </summary>
     public class WorldDoorPointView : MonoBehaviour
     {
+        [Tooltip("첫 칸이 가운데 자리다. 문 하나짜리 지점(보스 문)이 여기 걸리므로 왼쪽부터 순서대로 꽂지 않는다.")]
         [SerializeField] private WorldDoorView[] doors;
 
         private UniTaskCompletionSource<int> _choice;
 
         /// <summary> 문을 세우고 선택을 기다린다. 선택 전에 문이 내려가면 대기는 취소로 끝난다. </summary>
-        /// <returns>사용자가 탭한 문의 자리. 탭 한 번이 곧 확정이다.</returns>
+        /// <returns>사용자가 탭한 문에 걸린 선택지 번호. 탭 한 번이 곧 확정이다.</returns>
         /// <exception cref="ArgumentException">세워 둔 문보다 선택지가 많을 때.</exception>
         public UniTask<int> ShowAsync(IReadOnlyList<DoorOption> options)
         {
@@ -29,11 +31,10 @@ namespace Eclipse.View
 
             AbandonPending();
             _choice = new UniTaskCompletionSource<int>();
-            for (int i = 0; i < doors.Length; i++)
-            {
-                if (i < count) doors[i].Bind(options[i], OnDoorTapped);
-                else doors[i].Clear();
-            }
+            foreach (var door in doors)
+                door.Clear();
+            for (int i = 0; i < count; i++)
+                doors[i].Bind(options[i], OnDoorTapped);
             return _choice.Task;
         }
 
@@ -49,7 +50,6 @@ namespace Eclipse.View
         {
             foreach (var other in doors)
                 other.SetTappable(false);
-            // 세워 둔 자리 번호가 곧 제시물의 인덱스다 — Bind가 i번 문에 i번 선택지를 걸어 둔다.
             _choice?.TrySetResult(Array.IndexOf(doors, door));
         }
 

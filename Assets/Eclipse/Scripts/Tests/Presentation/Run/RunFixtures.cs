@@ -111,10 +111,10 @@ namespace Eclipse.Tests
         public static RoomLayout Boss()
             => new RoomLayout { kind = RoomKind.Boss, depth = 0, doorAfter = false };
 
-        /// <summary> 기획 §3-1의 챕터 1 배치와 같은 7방 챕터. </summary>
+        /// <summary> 기획 §3-1의 챕터 1 배치와 같은 7방 챕터. 여섯 번째 방 뒤가 보스 문 지점이다. </summary>
         public static ChapterSO DocChapter()
             => Chapter(Normal(1, true), Normal(2, true), Normal(3, true), Elite(4, true),
-                Normal(5, true), Normal(5, false), Boss());
+                Normal(5, true), Normal(5, true), Boss());
 
         /// <summary> 문 5종 카탈로그(가중 27/26/30/16/20 — 라인업 합 200). 재화 계수는 기획 §4-4 값. </summary>
         public static DoorCatalogSO DoorCatalog()
@@ -132,13 +132,7 @@ namespace Eclipse.Tests
         }
 
         private static DoorDefinition Door(DoorKind kind, int weight)
-            => new DoorDefinition
-            {
-                kind = kind,
-                displayName = kind == DoorKind.CharacterBuff ? "{0}" : kind.ToString(),
-                weight = weight,
-                promiseText = kind == DoorKind.CharacterBuff ? "{0}" : kind.ToString(),
-            };
+            => new DoorDefinition { kind = kind, weight = weight };
 
         /// <summary>
         /// 정본 카탈로그와 같은 모양의 축소판 — 범용 3축 × 3등급 + 저주 4축 × 3등급 + 지정한 캐릭터의 유니크.

@@ -125,6 +125,13 @@ namespace Eclipse.Presentation
             return next < Chapter.rooms.Length && Chapter.rooms[next].kind == RoomKind.Elite;
         }
 
+        /// <summary> 다음 방이 보스 방인지. 문 지점을 추첨 대신 보스 문 하나로 세울지 이 값으로 가른다. </summary>
+        public bool NextRoomIsBoss()
+        {
+            int next = RoomIndex + 1;
+            return next < Chapter.rooms.Length && Chapter.rooms[next].kind == RoomKind.Boss;
+        }
+
         /// <summary> 이 슬롯 캐릭터가 런에서 받은 버프 합. 빈 슬롯도 호출 가능(항상 비어 있다). </summary>
         public StatModifierSet BuffsOf(int partySlot)
             => _buffs[partySlot] ??= new StatModifierSet();
@@ -225,6 +232,11 @@ namespace Eclipse.Presentation
                 throw new ArgumentException($"챕터 '{chapter.id}'의 방 배치가 비어 있다.", nameof(chapter));
             if (rooms.Count(r => r.kind == RoomKind.Boss) != 1 || rooms[^1].kind != RoomKind.Boss)
                 throw new ArgumentException($"챕터 '{chapter.id}'의 보스 방은 정확히 1개, 마지막 행이어야 한다.", nameof(chapter));
+            if (rooms.Length >= 2 && !rooms[^2].doorAfter)
+                throw new ArgumentException(
+                    $"챕터 '{chapter.id}'의 보스 직전 방은 문 지점을 열어야 한다 — 보스 문이 설 자리가 없다.", nameof(chapter));
+            if (rooms[^1].doorAfter)
+                throw new ArgumentException($"챕터 '{chapter.id}'의 보스 방 뒤에는 문 지점이 없다.", nameof(chapter));
             for (int i = 0; i < rooms.Length; i++)
             {
                 var room = rooms[i];

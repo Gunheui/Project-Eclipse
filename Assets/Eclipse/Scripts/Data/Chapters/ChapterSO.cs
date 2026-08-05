@@ -54,6 +54,9 @@ namespace Eclipse.Data
         /// <summary> 미드보스 문에 거는 초상. 로드 검증 대상이 아니라 비어 있으면 그림 없이 선다. </summary>
         public Sprite midBossPortrait;
 
+        /// <summary> 최종보스 문 거울에 거는 보스 얼굴. 비어 있으면 빈 거울로 선다. </summary>
+        public Sprite bossFace;
+
         public Sprite normalBackground;
 
         /// <summary> 정예 전투 배경. 방4에 고정으로 서지 않고 미드보스 문을 고른 전투에만 쓴다. </summary>

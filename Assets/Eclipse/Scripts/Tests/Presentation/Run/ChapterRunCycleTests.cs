@@ -86,7 +86,14 @@ namespace Eclipse.Tests
                         break;
                     case RunStep.DoorPoint:
                         doorPoints++;
-                        Assert.AreEqual(3, offer.Doors.Count, "문 지점은 3개 제시다");
+                        if (offer.Doors.Count == 1)
+                        {
+                            Assert.AreEqual(DoorTier.FinalBoss, offer.Doors[0].Tier, "문 하나짜리 지점은 보스 문뿐이다");
+                            CollectionAssert.IsEmpty(offer.Doors[0].Rewards, "보스 문에는 보상이 걸리지 않는다");
+                            flow.ReportDoorPicked(0, offer.Token).Forget();
+                            break;
+                        }
+                        Assert.AreEqual(3, offer.Doors.Count, "추첨 문 지점은 3개 제시다");
                         var offered = offer.Doors.SelectMany(d => d.Rewards).ToList();
                         Assert.AreEqual(offered.Count, offered.Distinct().Count(), "비복원이라 중복이 없다");
                         Assert.AreEqual(doorPoints == 3 ? 1 : 0, offer.Doors.Count(d => d.IsMidBoss),
@@ -105,9 +112,9 @@ namespace Eclipse.Tests
 
             Assert.Less(guard, 200, "루프가 수렴한다");
             Assert.AreEqual(7, battles, "방 7전투");
-            Assert.AreEqual(5, doorPoints, "문 지점 5곳");
+            Assert.AreEqual(6, doorPoints, "추첨 문 지점 5곳 + 보스 문 지점");
             Assert.AreEqual(7, battleSeeds.Distinct().Count(), "방별 전투 시드가 전부 다르다");
-            Assert.AreEqual(5, session.DoorPointsPassed);
+            Assert.AreEqual(5, session.DoorPointsPassed, "보스 문 지점은 재화 공식의 깊이를 올리지 않는다");
             Assert.AreEqual(7, session.RoomIndex, "넘긴 방 7 = 정산 입력");
             Assert.IsTrue(progress.IsCleared(chapter), "챕터 클리어 기록");
 

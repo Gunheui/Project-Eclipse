@@ -22,6 +22,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_hp_rare
     displayName: "\uC2EC\uBD80\uC758 \uD65C\uB825"
     grade: 1
@@ -31,6 +38,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_hp_epic
     displayName: "\uC2EC\uBD80\uC758 \uD65C\uB825"
     grade: 2
@@ -40,6 +54,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_atk_common
     displayName: "\uBCBC\uB824\uC9C4 \uCE7C\uB0A0"
     grade: 0
@@ -49,6 +70,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_atk_rare
     displayName: "\uBCBC\uB824\uC9C4 \uCE7C\uB0A0"
     grade: 1
@@ -58,6 +86,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_atk_epic
     displayName: "\uBCBC\uB824\uC9C4 \uCE7C\uB0A0"
     grade: 2
@@ -67,6 +102,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_def_common
     displayName: "\uAD73\uC740 \uB300\uC5F4"
     grade: 0
@@ -76,6 +118,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_def_rare
     displayName: "\uAD73\uC740 \uB300\uC5F4"
     grade: 1
@@ -85,6 +134,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_def_epic
     displayName: "\uAD73\uC740 \uB300\uC5F4"
     grade: 2
@@ -94,6 +150,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_spd_common
     displayName: "\uBE68\uB77C\uC9C4 \uB9E5\uBC15"
     grade: 0
@@ -103,6 +166,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_spd_rare
     displayName: "\uBE68\uB77C\uC9C4 \uB9E5\uBC15"
     grade: 1
@@ -112,6 +182,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_spd_epic
     displayName: "\uBE68\uB77C\uC9C4 \uB9E5\uBC15"
     grade: 2
@@ -121,6 +198,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_crit_common
     displayName: "\uAE09\uC18C \uAC04\uD30C"
     grade: 0
@@ -130,6 +214,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_crit_rare
     displayName: "\uAE09\uC18C \uAC04\uD30C"
     grade: 1
@@ -139,6 +230,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_crit_epic
     displayName: "\uAE09\uC18C \uAC04\uD30C"
     grade: 2
@@ -148,6 +246,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_critdmg_common
     displayName: "\uD30C\uC5F4\uC758 \uC77C\uACA9"
     grade: 0
@@ -157,6 +262,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_critdmg_rare
     displayName: "\uD30C\uC5F4\uC758 \uC77C\uACA9"
     grade: 1
@@ -166,6 +278,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: buff_critdmg_epic
     displayName: "\uD30C\uC5F4\uC758 \uC77C\uACA9"
     grade: 2
@@ -175,6 +294,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 0
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: curse_hp_common
     displayName: "\uC1E0\uC57D\uD55C \uC721\uC2E0"
     grade: 0
@@ -184,6 +310,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 1
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: curse_hp_rare
     displayName: "\uC1E0\uC57D\uD55C \uC721\uC2E0"
     grade: 1
@@ -193,6 +326,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 1
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: curse_hp_epic
     displayName: "\uC1E0\uC57D\uD55C \uC721\uC2E0"
     grade: 2
@@ -202,6 +342,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 1
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: curse_atk_common
     displayName: "\uBB34\uB518 \uBC1C\uD1B1"
     grade: 0
@@ -211,6 +358,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 1
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: curse_atk_rare
     displayName: "\uBB34\uB518 \uBC1C\uD1B1"
     grade: 1
@@ -220,6 +374,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 1
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: curse_atk_epic
     displayName: "\uBB34\uB518 \uBC1C\uD1B1"
     grade: 2
@@ -229,6 +390,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 1
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: curse_def_common
     displayName: "\uAC08\uB77C\uC9C4 \uAC01\uC9C8"
     grade: 0
@@ -238,6 +406,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 1
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: curse_def_rare
     displayName: "\uAC08\uB77C\uC9C4 \uAC01\uC9C8"
     grade: 1
@@ -247,6 +422,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 1
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: curse_def_epic
     displayName: "\uAC08\uB77C\uC9C4 \uAC01\uC9C8"
     grade: 2
@@ -256,6 +438,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 1
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: curse_spd_common
     displayName: "\uAD7C\uB72C \uCD09\uC218"
     grade: 0
@@ -265,6 +454,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 1
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: curse_spd_rare
     displayName: "\uAD7C\uB72C \uCD09\uC218"
     grade: 1
@@ -274,6 +470,13 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 1
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: curse_spd_epic
     displayName: "\uAD7C\uB72C \uCD09\uC218"
     grade: 2
@@ -283,11 +486,19 @@ MonoBehaviour:
     description: 
     requiredCharacterId: 
     targetsEnemies: 1
+    targetSkill: 0
+    addedEffect:
+      type: 0
+      target: 0
+      value: 0
+      affectedStat: 0
+      duration: 0
   - id: unique_kael
     displayName: "\uBB34\uB108\uC9C0\uC9C0 \uC54A\uB294 \uBCBD"
     grade: 3
     deltas: []
-    description: "\uACB0\uC758\uC758 \uBC29\uD328\uC5D0 \uBCF4\uD638\uB9C9\uC774 \uBD99\uB294\uB2E4. \uCD5C\uB300 \uCCB4\uB825 10%, 2\uD134"
+    description: "\uACB0\uC758\uC758 \uBC29\uD328\uC5D0 \uBCF4\uD638\uB9C9. \uCD5C\uB300
+      \uCCB4\uB825 10%, 2\uD134"
     requiredCharacterId: kael
     targetsEnemies: 0
     targetSkill: 1
@@ -301,7 +512,8 @@ MonoBehaviour:
     displayName: "\uC5F0\uACA9 \uBCF8\uB2A5"
     grade: 3
     deltas: []
-    description: "\uBC14\uB78C \uAC80\uACA9\uC774 \uD55C \uBC88 \uB354 \uBCA4\uB2E4. \uACF5\uACA9\uB825 70%\uB85C \uCD94\uAC00 \uD53C\uD574"
+    description: "\uBC14\uB78C \uAC80\uACA9\uC5D0 \uCD94\uAC00\uD0C0 \uBD80\uC5EC.
+      \uACF5\uACA9\uB825 70%"
     requiredCharacterId: ria
     targetsEnemies: 0
     targetSkill: 0
@@ -315,7 +527,8 @@ MonoBehaviour:
     displayName: "\uD3ED\uC8FC\uC758 \uBD88\uC528"
     grade: 3
     deltas: []
-    description: "\uB9C8\uB825\uD0C4\uC774 \uD654\uC0C1\uC744 \uB0A8\uAE34\uB2E4. \uB9E4 \uD134 \uACF5\uACA9\uB825 12%, 2\uD134"
+    description: "\uB9C8\uB825\uD0C4\uC5D0 \uD654\uC0C1 \uB3C4\uD2B8 \uB370\uBBF8\uC9C0.
+      \uACF5\uACA9\uB825 12%, 2\uD134"
     requiredCharacterId: eliana
     targetsEnemies: 0
     targetSkill: 0
@@ -329,7 +542,8 @@ MonoBehaviour:
     displayName: "\uB04A\uC774\uC9C0 \uC54A\uB294 \uACAC\uC81C"
     grade: 3
     deltas: []
-    description: "\uACAC\uC81C \uC0AC\uACA9\uC774 \uC801 \uACF5\uACA9\uB825\uC744 12% \uB5A8\uC5B4\uB728\uB9B0\uB2E4. 2\uD134"
+    description: "\uACAC\uC81C \uC0AC\uACA9\uC5D0 \uACF5\uACA9\uB825 \uAC10\uC18C.
+      12%, 2\uD134"
     requiredCharacterId: arin
     targetsEnemies: 0
     targetSkill: 0
@@ -343,7 +557,8 @@ MonoBehaviour:
     displayName: "\uC0DD\uBA85\uC758 \uC0D8"
     grade: 3
     deltas: []
-    description: "\uC815\uD654\uC758 \uBE5B\uC774 \uCCB4\uB825\uC774 \uAC00\uC7A5 \uB0AE\uC740 \uC544\uAD70\uC744 \uCE58\uC720\uD55C\uB2E4. \uB9E4 \uD134 \uACF5\uACA9\uB825 12%, 2\uD134"
+    description: "\uC815\uD654\uC758 \uBE5B\uC5D0 \uB79C\uB364 \uCE90\uB9AD\uD130
+      \uD68C\uBCF5. \uACF5\uACA9\uB825 12%, 2\uD134"
     requiredCharacterId: selene
     targetsEnemies: 0
     targetSkill: 0

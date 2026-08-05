@@ -16,6 +16,10 @@ Shader "Eclipse/SpriteOutlineURP2D"
         // (PPU 315 아트에서 3px 수준이면 약 9~10텍셀).
         _OutlineThickness ("Outline Thickness (texels)", Range(0,32)) = 1
 
+        // 이 알파 미만은 실루엣으로 치지 않는다. 구운 그림자 같은 반투명부에 아웃라인이 번지는 것을 막는다.
+        // 0이면 모든 알파를 실루엣으로 보는 기존 동작 그대로다.
+        _OutlineAlphaCutoff ("Outline Alpha Cutoff", Range(0,1)) = 0
+
         // 기본 스프라이트 머티리얼 호환용 레거시 프로퍼티(숨김).
         [HideInInspector] _RendererColor ("RendererColor", Color) = (1,1,1,1)
         [HideInInspector] _Flip ("Flip", Vector) = (1,1,1,1)
@@ -63,7 +67,14 @@ Shader "Eclipse/SpriteOutlineURP2D"
                 half4  _OutlineColor;
                 float  _OutlineThickness;
                 float  _OutlineEnabled;
+                float  _OutlineAlphaCutoff;
             CBUFFER_END
+
+            // 실루엣 판정용 알파. 컷오프 미만(그림자 등 반투명)은 0으로 쳐서 팽창에서 제외한다.
+            half CoreAlpha(half a)
+            {
+                return a < _OutlineAlphaCutoff ? 0.0h : a;
+            }
 
             struct Attributes
             {
@@ -113,21 +124,26 @@ Shader "Eclipse/SpriteOutlineURP2D"
                 // 이웃 샘플 오프셋 = 텍셀 크기 * 두께(텍셀).
                 float2 off = _MainTex_TexelSize.xy * _OutlineThickness;
 
-                // 실루엣을 바깥으로 팽창시킬 양 = 이웃 중 최대 알파.
+                // 실루엣을 바깥으로 팽창시킬 양 = 이웃 중 최대 실루엣 알파.
                 // 16방향 × 2반경(전체·절반)으로 훑는다. 한 반경만 보면 얇은 부위에서 링이 끊긴다.
                 half maxA = 0;
                 [unroll]
                 for (int k = 0; k < 16; k++)
                 {
                     float2 dir = kDirs[k] * off;
-                    maxA = max(maxA, SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + dir).a);
-                    maxA = max(maxA, SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + dir * 0.5).a);
+                    maxA = max(maxA, CoreAlpha(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + dir).a));
+                    maxA = max(maxA, CoreAlpha(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + dir * 0.5).a));
                 }
 
-                // 불투명부(c.a=1)는 원본색, 투명부(c.a=0)는 아웃라인색.
-                half3 rgb = lerp(_OutlineColor.rgb, c.rgb, c.a);
-                // 알파 확장: 원본 알파와 (이웃최대알파 * 아웃라인알파) 중 큰 값.
-                half  a   = max(c.a, maxA * _OutlineColor.a);
+                // 링 = 실루엣 밖으로 팽창된 알파.
+                half ring = maxA * _OutlineColor.a;
+                // 컷오프 0(배틀러 조준 경로)은 종전 합성 그대로 둔다 — 공유 셰이더라 기존 연출을 바꾸지 않는다.
+                // 컷오프가 걸린 경로만 링 유무 기반 합성을 쓴다: 실루엣 미달 픽셀(그림자)은 링이 겹칠 때만
+                // 아웃라인색으로 덮이고, 그림자 단독부는 물들지 않는다.
+                half3 rgb = _OutlineAlphaCutoff > 0
+                    ? lerp(c.rgb, _OutlineColor.rgb, saturate(ring - CoreAlpha(c.a)))
+                    : lerp(_OutlineColor.rgb, c.rgb, c.a);
+                half  a   = max(c.a, ring);
 
                 return half4(rgb, a);
             }

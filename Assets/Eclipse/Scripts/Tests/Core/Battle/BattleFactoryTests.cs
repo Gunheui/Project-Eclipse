@@ -20,7 +20,7 @@ namespace Eclipse.Tests
 
         private static ChapterRunSession Session(IReadOnlyList<OwnedCharacter> party, float enemyMultiplier = 1f)
         {
-            var chapter = RunFixtures.Chapter(RunFixtures.Normal(1, false), RunFixtures.Boss());
+            var chapter = RunFixtures.Chapter(RunFixtures.Normal(1, true), RunFixtures.Boss());
             chapter.enemyStatMultiplier = enemyMultiplier;
             return new ChapterRunSession(chapter, RunFixtures.Tuning(), party, runSeed: 1);
         }

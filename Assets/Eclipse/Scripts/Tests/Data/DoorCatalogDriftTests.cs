@@ -55,27 +55,5 @@ namespace Eclipse.Tests
             Assert.AreEqual(ExpectedLineupTotal, total);
         }
 
-        [Test]
-        public void 캐릭터_문_문구는_이름_자리를_비워_둔다()
-        {
-            var character = Load().doors.Single(d => d.kind == DoorKind.CharacterBuff);
-
-            Assert.IsTrue(character.displayName.Contains("{0}"), "표시명에 파티원 이름 자리가 있어야 한다");
-            Assert.IsTrue(character.promiseText.Contains("{0}"), "약속 문구에 파티원 이름 자리가 있어야 한다");
-        }
-
-        [Test]
-        public void 문_문구에_확률과_금액이_적혀_있지_않다()
-        {
-            var offenders = Load().doors
-                // 이름 자리 "{0}"의 0은 표기 숫자가 아니므로 검사 전에 걷어 낸다.
-                .Where(d => Strip(d.promiseText).Contains("%") || Strip(d.promiseText).Any(char.IsDigit))
-                .Select(d => $"{d.kind}: {d.promiseText}")
-                .ToList();
-
-            Assert.That(offenders, Is.Empty, "문에는 종류와 약속만 적는다:\n" + string.Join("\n", offenders));
-        }
-
-        private static string Strip(string promise) => promise.Replace("{0}", string.Empty);
     }
 }

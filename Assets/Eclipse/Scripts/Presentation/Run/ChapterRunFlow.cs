@@ -13,32 +13,45 @@ namespace Eclipse.Presentation
     /// <summary> 런 진행 스텝. 화면은 이 값이 아니라 Offer를 보고 그린다. </summary>
     public enum RunStep { EnteringRoom, InBattle, BuffPick, DoorPoint, RunClear, RunFail }
 
-    /// <summary> 문 지점 선택지 하나의 표시 데이터. View가 도메인을 만지지 않도록 문구·그림까지 풀어서 담는다. </summary>
+    /// <summary> 문의 격. 프레임 선택과 흐름 분기(에스크로·문 지점 깊이)가 같은 값을 본다. </summary>
+    public enum DoorTier { Promise, MidBoss, FinalBoss }
+
+    /// <summary> 문 지점 선택지 하나의 표시 데이터. View가 도메인을 만지지 않도록 그림까지 풀어서 담는다. </summary>
     public readonly struct DoorOption
     {
-        public DoorOption(IReadOnlyList<DoorChoice> rewards, string displayName, string promise, Sprite icon,
+        /// <exception cref="ArgumentException">티어가 정한 보상 수(일반 1·미드보스 2·보스 0)와 어긋날 때.</exception>
+        public DoorOption(DoorTier tier, IReadOnlyList<DoorChoice> rewards, Sprite icon, bool flipIcon,
             IReadOnlyList<Sprite> rewardIcons)
         {
+            int expected = tier switch
+            {
+                DoorTier.MidBoss => 2,
+                DoorTier.FinalBoss => 0,
+                _ => 1,
+            };
+            if (rewards.Count != expected)
+                throw new ArgumentException(
+                    $"{tier} 문에는 보상 {expected}종이 걸려야 하는데 {rewards.Count}종이 걸렸다.", nameof(rewards));
+
+            Tier = tier;
             Rewards = rewards;
-            DisplayName = displayName;
-            Promise = promise;
             Icon = icon;
+            FlipIcon = flipIcon;
             RewardIcons = rewardIcons;
         }
+
+        public DoorTier Tier { get; }
 
         /// <summary> 이 문에 걸린 보상. 순서 = 화면 좌→우이자 해소 순서다. </summary>
         public IReadOnlyList<DoorChoice> Rewards { get; }
 
-        /// <summary> 미드보스 문인지. 보상 2종을 거는 문은 미드보스 문뿐이다. </summary>
-        public bool IsMidBoss => Rewards.Count == 2;
+        public bool IsMidBoss => Tier == DoorTier.MidBoss;
 
-        public string DisplayName { get; }
-
-        /// <summary> 문에 적히는 약속. 금액은 적지 않는다. </summary>
-        public string Promise { get; }
-
-        /// <summary> 문에 거는 그림. 캐릭터 문은 그 파티원의 초상, 미드보스 문은 미드보스 초상이다. </summary>
+        /// <summary> 거울에 거는 그림. 캐릭터 문은 얼굴 초상, 미드보스 문은 없음(null). </summary>
         public Sprite Icon { get; }
+
+        /// <summary> 그림을 좌우 반전할지. 얼굴은 문 안쪽을 보도록 반전해 건다. </summary>
+        public bool FlipIcon { get; }
 
         /// <summary> 걸린 보상의 심볼. 미드보스 문만 2개를 싣고 나머지는 비어 있다. </summary>
         public IReadOnlyList<Sprite> RewardIcons { get; }
@@ -111,7 +124,7 @@ namespace Eclipse.Presentation
         /// <summary> BuffPick: 후보 3장. </summary>
         public IReadOnlyList<CardOption> Cards;
 
-        /// <summary> DoorPoint: 추첨된 문 3개의 표시 데이터. </summary>
+        /// <summary> DoorPoint: 제시된 문의 표시 데이터. 추첨 지점은 3개, 보스 직전 지점은 보스 문 1개다. </summary>
         public IReadOnlyList<DoorOption> Doors;
 
         /// <summary> 진행도 표시용 방 번호(1부터). </summary>
@@ -269,7 +282,9 @@ namespace Eclipse.Presentation
                 return UniTask.CompletedTask;
 
             var picked = doors[optionIndex];
-            _session.HoldEscrow(picked.Rewards, picked.IsMidBoss);
+            // 보스 문은 보상이 없어 보류할 것이 없다 — 에스크로도 문 지점 깊이도 건드리지 않고 전진만 한다.
+            if (picked.Tier != DoorTier.FinalBoss)
+                _session.HoldEscrow(picked.Rewards, picked.IsMidBoss);
             _session.AdvanceRoom();
             OfferRoom();
             return UniTask.CompletedTask;
@@ -395,7 +410,9 @@ namespace Eclipse.Presentation
                 Emit(new RunOffer
                 {
                     Step = RunStep.DoorPoint,
-                    Doors = BuildDoorOptions(_doorDraw.DrawDoorPoint(_session.NextRoomIsEliteCandidate())),
+                    Doors = _session.NextRoomIsBoss()
+                        ? new[] { FinalBossDoor() }
+                        : BuildDoorOptions(_doorDraw.DrawDoorPoint(_session.NextRoomIsEliteCandidate())),
                 });
                 return;
             }
@@ -452,42 +469,34 @@ namespace Eclipse.Presentation
             => doors.Select(rewards => rewards.Count == 1 ? PromiseDoor(rewards[0]) : MidBossDoor(rewards)).ToList();
 
         /// <summary>
-        /// 일반 약속 문 하나. 표시명·약속 문구는 추첨과 같은 카탈로그에서 나오고,
-        /// 캐릭터 문만 대상 파티원의 이름·초상으로 채워진다.
+        /// 일반 약속 문 하나. 재화·저주 문은 카탈로그 아이콘, 캐릭터 문은 대상 파티원의 얼굴 초상이 거울에 걸린다.
         /// </summary>
         private DoorOption PromiseDoor(DoorChoice choice)
         {
-            var definition = _doorCatalog.doors.First(d => d.kind == choice.Kind);
             var rewards = new[] { choice };
             if (!choice.IsCharacterDoor)
-                return new DoorOption(rewards, definition.displayName, PromiseOf(choice), definition.icon,
+                return new DoorOption(DoorTier.Promise, rewards,
+                    _doorCatalog.doors.First(d => d.kind == choice.Kind).icon, flipIcon: false,
                     Array.Empty<Sprite>());
 
-            var character = _session.Party[choice.TargetPartySlot].Definition;
-            return new DoorOption(rewards,
-                string.Format(definition.displayName, character.displayName),
-                PromiseOf(choice),
-                character.portraitAssetRef,
+            return new DoorOption(DoorTier.Promise, rewards,
+                _session.Party[choice.TargetPartySlot].Definition.faceIconAssetRef, flipIcon: true,
                 Array.Empty<Sprite>());
         }
 
         /// <summary>
-        /// 미드보스 문 하나. 이름과 초상은 고정이고, 걸린 보상 2종이 약속 문구와 아이콘을 해소 순서대로 채운다.
+        /// 미드보스 문 하나. 거울에 그림 없이 걸린 보상 2종의 심볼만 해소 순서대로 싣는다.
         /// </summary>
         private DoorOption MidBossDoor(IReadOnlyList<DoorChoice> rewards)
-            => new DoorOption(rewards, RunTexts.MidBossDoorName,
-                RunTexts.MidBossPromise(rewards.Select(PromiseOf)),
-                _session.Chapter.midBossPortrait,
+            => new DoorOption(DoorTier.MidBoss, rewards, icon: null, flipIcon: false,
                 rewards.Select(r => _doorCatalog.doors.First(d => d.kind == r.Kind).icon).ToList());
 
-        /// <summary> 문 하나가 약속하는 보상 문구. 캐릭터 문만 대상 파티원의 이름으로 채워진다. </summary>
-        private string PromiseOf(DoorChoice choice)
-        {
-            string promise = _doorCatalog.doors.First(d => d.kind == choice.Kind).promiseText;
-            return choice.IsCharacterDoor
-                ? string.Format(promise, _session.Party[choice.TargetPartySlot].Definition.displayName)
-                : promise;
-        }
+        /// <summary>
+        /// 최종보스 문 하나. 보상 없이 보스 얼굴만 걸린다. 추첨 밖에서 만들어 카탈로그를 거치지 않는다.
+        /// </summary>
+        private DoorOption FinalBossDoor()
+            => new DoorOption(DoorTier.FinalBoss, Array.Empty<DoorChoice>(),
+                _session.Chapter.bossFace, flipIcon: true, Array.Empty<Sprite>());
 
         /// <summary> 추첨에 넘길 보유 카드 id. 유니크 1장 상한 배제의 입력이다. </summary>
         private IReadOnlyList<string> OwnedCardIds()

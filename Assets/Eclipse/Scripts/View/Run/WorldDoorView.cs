@@ -1,59 +1,92 @@
 using System;
 using System.Collections.Generic;
 using Eclipse.Presentation;
-using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace Eclipse.View
 {
     /// <summary>
-    /// 전장에 세우는 문 하나. 문 프레임과 그림(아이콘 또는 파티원 초상)을 월드 스프라이트로 그리고,
-    /// 이름·약속을 머리 위 월드 캔버스에 띄운다. 프레임 탭이 선택 입력이다(Bind의 onTapped).
+    /// 전장에 세우는 문 하나. 티어별 프레임을 걸고, 그림과 보상 심볼을 프레임 상단의 원형 거울 안에
+    /// 마스크로 잘라 그린다. 프레임 탭이 선택 입력이다(Bind의 onTapped).
     /// </summary>
     public class WorldDoorView : MonoBehaviour, IPointerClickHandler
     {
-        [SerializeField] private SpriteRenderer iconRenderer;
-        [SerializeField] private TMP_Text nameLabel;
-        [SerializeField] private TMP_Text promiseLabel;
+        /// <summary> 티어 하나의 소품 — 프레임 그림과 그 프레임의 거울 중심(아트 픽셀, 좌상단 원점). </summary>
+        [Serializable]
+        private struct TierLook
+        {
+            public Sprite frame;
+            public Vector2 mirrorCenterPx;
+        }
 
-        // 걸린 보상 심볼 자리. 배치 순서가 해소 순서라 좌→우로 꽂아 둔다. 미드보스 문이 아니면 전부 꺼진다.
+        [SerializeField] private SpriteRenderer frameRenderer;
+        [SerializeField] private SpriteRenderer iconRenderer;
+
+        // 걸린 보상 심볼 자리. 배치 순서가 해소 순서라 0번이 좌하단, 1번이 우상단이다. 미드보스 문이 아니면 전부 꺼진다.
         [SerializeField] private SpriteRenderer[] rewardSymbols;
+
+        // 거울 자리의 원형 마스크. 거울 안 렌더러들은 프리팹에서 VisibleInsideMask로 잠가 둔다.
+        [SerializeField] private SpriteMask mirrorMask;
 
         // 탭 판정 영역. 프레임 크기로 에디터에서 고정한다 — 그림 크기와 무관하게 손가락 여유를 보장한다.
         [SerializeField] private BoxCollider2D tapArea;
 
-        // 그림을 이 높이(월드 단위)로 맞춰 그린다. 초상과 아이콘은 원본 크기가 달라 그대로 걸 수 없다.
-        [SerializeField] private float iconFitHeight = 1.2f;
+        // 인덱스 = DoorTier. 프레임은 스케일 1로 원척으로 그린다 — 거울 좌표 변환이 원척을 전제한다.
+        [SerializeField] private TierLook[] tierLooks;
 
-        // 보상 심볼을 맞출 높이(월드 단위). 그림보다 작아야 문의 주인공이 초상으로 읽힌다.
-        [SerializeField] private float rewardSymbolFitHeight = 0.45f;
+        // 거울 지름(아트 픽셀). 세 프레임이 같은 지름을 쓴다.
+        [SerializeField] private float mirrorDiameterPx = 124f;
+
+        // 심볼 지름을 거울 지름에 대한 비율로 정한다. 둘을 대각선으로 어긋 놓아 나란히보다 크게 잡은 값이다.
+        private const float RewardSymbolScale = 0.58f;
+
+        // 선택 대기 중 프레임에 켜는 아웃라인 색. 일반 문은 전투의 아군 강조와 같은 녹색 계열,
+        // 미드보스·보스 문은 보라색으로 격을 가른다.
+        private static readonly Color PromiseOutline = new(0.306f, 0.608f, 0.478f, 1f);
+        private static readonly Color BossOutline = new(0.651f, 0.420f, 0.878f, 1f);
+
+        // 두께는 월드 단위로 정의하고 셰이더에 넘길 때 PPU로 환산한다(배틀러 아웃라인과 같은 규약).
+        private const float OutlineWorldThickness = 0.03f;
+
+        // 실루엣 판정 컷오프. 프레임 아트에 구워진 그림자를 아웃라인에서 빼려는 값인데,
+        // 현재 아트는 그림자 알파가 0.9 수준이라 걸러지지 않는다 — 그림자 분리 재납품 후 유효해진다.
+        private const float OutlineAlphaCutoff = 0.6f;
+
+        // Eclipse/SpriteOutlineURP2D의 아웃라인 프로퍼티. MaterialPropertyBlock으로 문마다 따로 덮어쓴다.
+        private static readonly int OutlineEnabledId = Shader.PropertyToID("_OutlineEnabled");
+        private static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
+        private static readonly int OutlineThicknessId = Shader.PropertyToID("_OutlineThickness");
+        private static readonly int OutlineAlphaCutoffId = Shader.PropertyToID("_OutlineAlphaCutoff");
+
+        // 아웃라인 오버라이드 전달용. 첫 사용 때 만들어 재사용한다(머티리얼 인스턴스 복제를 피한다).
+        private MaterialPropertyBlock _mpb;
 
         private Action<WorldDoorView> _onTapped;
 
-        // 프리팹에 잡아 둔 그림 자리, 곧 프레임 안에서 그림의 바닥 중앙이 놓일 지점.
-        // 초상은 하단 피벗이고 아이콘은 중앙 피벗이라, 위치를 피벗에 맡기면 종류마다 다른 높이에 걸린다.
-        private Vector3 _iconAnchor;
-
-        private void Awake()
-        {
-            if (iconRenderer != null) _iconAnchor = iconRenderer.transform.localPosition;
-        }
-
-        /// <summary> 이 문이 표시 중인 선택지. 탭이 확정되면 이 값의 Choice가 그대로 보고된다. </summary>
+        /// <summary> 이 문이 표시 중인 선택지. 탭이 확정되면 이 값의 보상이 그대로 보류된다. </summary>
         public DoorOption Option { get; private set; }
 
-        /// <summary> 문을 한 선택지에 연결해 세운다. </summary>
+        /// <summary> 문을 한 선택지에 연결해 세운다. 프레임·거울 위치·거울 안 그림이 티어에 맞게 다시 걸린다. </summary>
         /// <param name="onTapped">프레임을 탭했을 때 이 문으로 호출된다.</param>
         public void Bind(DoorOption option, Action<WorldDoorView> onTapped)
         {
             Option = option;
             _onTapped = onTapped;
             gameObject.SetActive(true);
-            if (nameLabel != null) nameLabel.text = option.DisplayName;
-            if (promiseLabel != null) promiseLabel.text = option.Promise;
-            FitIcon(option.Icon);
-            ShowRewardSymbols(option.RewardIcons);
+
+            var look = tierLooks[(int)option.Tier];
+            frameRenderer.sprite = look.frame;
+            Vector3 mirror = MirrorLocal(look);
+            float diameter = mirrorDiameterPx / look.frame.pixelsPerUnit;
+
+            if (mirrorMask != null)
+            {
+                mirrorMask.transform.localPosition = mirror;
+                ScaleToHeight(mirrorMask.transform, mirrorMask.sprite, diameter);
+            }
+            FitIcon(option.Icon, option.FlipIcon, mirror, diameter);
+            ShowRewardSymbols(option.RewardIcons, mirror, diameter);
             SetTappable(true);
         }
 
@@ -64,10 +97,32 @@ namespace Eclipse.View
             gameObject.SetActive(false);
         }
 
-        /// <summary> 탭을 받을지 정한다. 하나가 확정되면 세 문 모두 꺼서 중복 선택을 막는다. </summary>
+        /// <summary>
+        /// 탭을 받을지 정한다. 하나가 확정되면 세워 둔 문 모두 꺼서 중복 선택을 막는다.
+        /// 아웃라인이 이 상태를 따라가므로, 선택 대기 중에만 문이 강조된다.
+        /// </summary>
         public void SetTappable(bool on)
         {
             if (tapArea != null) tapArea.enabled = on;
+            ApplyOutline(on);
+        }
+
+        /// <summary> 프레임 아웃라인을 켜고 끈다. 색은 티어가 정한다 — 일반은 녹색, 미드보스·보스는 보라색. </summary>
+        private void ApplyOutline(bool on)
+        {
+            if (frameRenderer == null) return;
+
+            _mpb ??= new MaterialPropertyBlock();
+            frameRenderer.GetPropertyBlock(_mpb);
+            _mpb.SetFloat(OutlineEnabledId, on ? 1f : 0f);
+            if (on)
+            {
+                _mpb.SetColor(OutlineColorId, Option.Tier == DoorTier.Promise ? PromiseOutline : BossOutline);
+                float ppu = frameRenderer.sprite != null ? frameRenderer.sprite.pixelsPerUnit : 100f;
+                _mpb.SetFloat(OutlineThicknessId, OutlineWorldThickness * ppu);
+                _mpb.SetFloat(OutlineAlphaCutoffId, OutlineAlphaCutoff);
+            }
+            frameRenderer.SetPropertyBlock(_mpb);
         }
 
         /// <summary>
@@ -75,8 +130,20 @@ namespace Eclipse.View
         /// </summary>
         public void OnPointerClick(PointerEventData eventData) => _onTapped?.Invoke(this);
 
-        /// <summary> 그림을 프레임 높이에 맞춰 등비로 줄이고 바닥 중앙을 그림 자리에 맞춘다. 비면 렌더러를 끈다. </summary>
-        private void FitIcon(Sprite sprite)
+        /// <summary> 거울 중심을 아트 픽셀 좌표에서 프레임 로컬 좌표로 바꾼다. </summary>
+        private static Vector3 MirrorLocal(TierLook look)
+        {
+            var sprite = look.frame;
+            float ppu = sprite.pixelsPerUnit;
+            // 아트 좌표는 좌상단 원점이라 Y를 뒤집는다. 피벗(하단 중앙)만큼은 두 축 모두 빼 준다.
+            return new Vector3(
+                (look.mirrorCenterPx.x - sprite.pivot.x) / ppu,
+                (sprite.rect.height - look.mirrorCenterPx.y - sprite.pivot.y) / ppu,
+                0f);
+        }
+
+        /// <summary> 그림을 거울 지름에 맞춰 거울 중심에 앉힌다. 비면 렌더러를 끈다. </summary>
+        private void FitIcon(Sprite sprite, bool flip, Vector3 mirror, float diameter)
         {
             if (iconRenderer == null) return;
 
@@ -84,17 +151,21 @@ namespace Eclipse.View
             iconRenderer.enabled = sprite != null;
             if (sprite == null) return;
 
-            float scale = ScaleToHeight(iconRenderer.transform, sprite, iconFitHeight);
-            var bounds = sprite.bounds;
-            iconRenderer.transform.localPosition =
-                _iconAnchor - new Vector3(bounds.center.x * scale, bounds.min.y * scale, 0f);
+            iconRenderer.flipX = flip;
+            float scale = ScaleToHeight(iconRenderer.transform, sprite, diameter);
+            var center = sprite.bounds.center;
+            // flipX는 피벗 기준 반전이라 중심 보정의 x 부호도 함께 뒤집는다.
+            iconRenderer.transform.localPosition = mirror
+                + new Vector3((flip ? center.x : -center.x) * scale, -center.y * scale, 0f);
         }
 
-        /// <summary> 걸린 보상 심볼을 좌→우로 켠다. 심볼이 없는 자리는 꺼서 일반 문과 같은 모습이 된다. </summary>
-        private void ShowRewardSymbols(IReadOnlyList<Sprite> icons)
+        /// <summary> 걸린 보상 심볼을 거울 안 좌하단·우상단 대각선에 놓는다. 심볼이 없는 자리는 끈다. </summary>
+        private void ShowRewardSymbols(IReadOnlyList<Sprite> icons, Vector3 mirror, float diameter)
         {
             if (rewardSymbols == null) return;
 
+            // 심볼이 거울에 안쪽으로 딱 붙는 대각 오프셋. 중심 거리 = 거울 반지름 - 심볼 반지름, 그 값을 축별로 나눈다.
+            float offset = (1f - RewardSymbolScale) * 0.5f * diameter / 1.41421356f;
             for (int i = 0; i < rewardSymbols.Length; i++)
             {
                 if (rewardSymbols[i] == null) continue;
@@ -102,12 +173,15 @@ namespace Eclipse.View
                 var sprite = icons != null && i < icons.Count ? icons[i] : null;
                 rewardSymbols[i].sprite = sprite;
                 rewardSymbols[i].enabled = sprite != null;
-                if (sprite != null)
-                    ScaleToHeight(rewardSymbols[i].transform, sprite, rewardSymbolFitHeight);
+                if (sprite == null) continue;
+
+                ScaleToHeight(rewardSymbols[i].transform, sprite, diameter * RewardSymbolScale);
+                int sign = i == 0 ? -1 : 1;
+                rewardSymbols[i].transform.localPosition = mirror + new Vector3(sign * offset, sign * offset, 0f);
             }
         }
 
-        /// <summary> 그림을 지정한 월드 높이로 등비 축소한다. </summary>
+        /// <summary> 그림을 지정한 로컬 높이로 등비 축소한다. </summary>
         /// <returns>적용한 배율. 위치를 함께 맞출 때 이 값이 필요하다.</returns>
         private static float ScaleToHeight(Transform target, Sprite sprite, float height)
         {

@@ -96,9 +96,9 @@ namespace Eclipse.Tests
         [UnityTest]
         public IEnumerator 스모크_방을_넘으면_엔진과_전투원이_새로_서고_버프가_다음_전투에_반영된다() => UniTask.ToCoroutine(async () =>
         {
-            // 문 없는 3방(일반·일반·보스) — 방→방 전이만 본다.
+            // 방1은 문 없이 넘어간다 — 방→방 전이만 본다(방2 뒤 보스 문 지점까지는 가지 않는다).
             var h = Build(RunFixtures.Chapter(
-                RunFixtures.Normal(1, false), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+                RunFixtures.Normal(1, false), RunFixtures.Normal(2, true), RunFixtures.Boss()));
             var factory = new BattleFactory(h.Constants, h.Session, h.Tuning);
             h.Flow.BeginRun().Forget();
 
@@ -142,7 +142,7 @@ namespace Eclipse.Tests
         public void 스모크_패배하면_다음_전투가_제시되지_않고_정산으로_간다()
         {
             var h = Build(RunFixtures.Chapter(
-                RunFixtures.Normal(1, false), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+                RunFixtures.Normal(1, false), RunFixtures.Normal(2, true), RunFixtures.Boss()));
             h.Flow.BeginRun().Forget();
 
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
@@ -160,7 +160,7 @@ namespace Eclipse.Tests
         [Test]
         public void 방1_전멸은_지급분이_한_푼도_없다()
         {
-            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, false), RunFixtures.Boss()));
+            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, true), RunFixtures.Boss()));
             h.Flow.BeginRun().Forget();
             int before = h.Wallet.Gold.CurrentValue;
 
@@ -187,7 +187,7 @@ namespace Eclipse.Tests
         public void 캐릭터_문은_문이_가리킨_슬롯에_카드가_배정된다()
         {
             var h = Build(RunFixtures.Chapter(
-                RunFixtures.Normal(1, true), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, true), RunFixtures.Boss()));
             h.Flow.BeginRun().Forget();
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
             Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step);
@@ -218,7 +218,7 @@ namespace Eclipse.Tests
         public void 제시되지_않은_카드는_받지_않는다()
         {
             var h = Build(RunFixtures.Chapter(
-                RunFixtures.Normal(1, true), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, true), RunFixtures.Boss()));
             h.Flow.BeginRun().Forget();
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
 
@@ -246,7 +246,7 @@ namespace Eclipse.Tests
         public void 같은_id로_수치만_부풀린_보고는_제시한_값으로_붙는다()
         {
             var h = Build(RunFixtures.Chapter(
-                RunFixtures.Normal(1, true), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, true), RunFixtures.Boss()));
             h.Flow.BeginRun().Forget();
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
 
@@ -276,7 +276,8 @@ namespace Eclipse.Tests
         [TestCase(3)]
         public void 제시하지_않은_자리_보고는_받지_않는다(int optionIndex)
         {
-            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, true), RunFixtures.Boss()));
+            var h = Build(RunFixtures.Chapter(
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, true), RunFixtures.Boss()));
             h.Flow.BeginRun().Forget();
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
             Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step);
@@ -303,7 +304,7 @@ namespace Eclipse.Tests
         public void 재화_문_보상은_다음_제시물에_드랍으로_한_번만_실린다()
         {
             var h = Build(RunFixtures.Chapter(
-                RunFixtures.Normal(1, true), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, true), RunFixtures.Boss()));
             h.Flow.BeginRun().Forget();
             Assert.IsNull(h.Offer.RoomDrops, "첫 방 진입은 공개할 보상이 없다");
 
@@ -333,10 +334,11 @@ namespace Eclipse.Tests
             Assert.AreEqual(drop.amount, h.Offer.RoomDrops.Single().amount);
             Assert.AreEqual(before, Balance(h, expectedType), "적립도 한 번뿐이다");
 
-            // 보스 방 승리에는 공개할 문 보상이 없어 드랍이 비고, 여기서 적립분이 정산과 함께 지급된다.
+            // 보스 문을 지나 보스 방을 깬다. 공개할 문 보상이 없어 드랍이 비고, 적립분이 정산과 함께 지급된다.
+            h.Flow.ReportDoorPicked(0, h.Offer.Token).Forget();
+            Assert.IsNull(h.Offer.RoomDrops, "드랍은 1회성이라 다음 제시물에는 남지 않는다");
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
             Assert.AreEqual(RunStep.RunClear, h.Offer.Step);
-            Assert.IsNull(h.Offer.RoomDrops, "드랍은 1회성이라 다음 제시물에는 남지 않는다");
             Assert.AreEqual(drop.amount, h.Offer.ExploreReward.Single(e => e.type == expectedType).amount,
                 "드랍으로 공개한 수량이 종료 시 그대로 지급된다");
         }
@@ -345,7 +347,7 @@ namespace Eclipse.Tests
         public void 런_중_적립분은_전멸해도_정산과_함께_지급된다()
         {
             var h = Build(RunFixtures.Chapter(
-                RunFixtures.Normal(1, true), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, true), RunFixtures.Boss()));
             h.Flow.BeginRun().Forget();
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
 
@@ -354,13 +356,14 @@ namespace Eclipse.Tests
                 Assert.Ignore("이 시드의 문 지점에 재화 문이 없다");
             var type = CurrencyDoor.CurrencyOf(h.Offer.Doors[index].Rewards[0].Kind);
 
-            // 문을 고르고 다음 방을 넘겨 적립시킨 뒤, 보스 방에서 전멸한다.
+            // 문을 고르고 다음 방을 넘겨 적립시킨 뒤, 보스 문을 지나 보스 방에서 전멸한다.
             h.Flow.ReportDoorPicked(index, h.Offer.Token).Forget();
             int before = Balance(h, type);
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
             int earned = h.Offer.RoomDrops.Single().amount;
             Assert.AreEqual(before, Balance(h, type), "적립 단계에서는 지갑이 그대로다");
 
+            h.Flow.ReportDoorPicked(0, h.Offer.Token).Forget();
             h.Flow.ReportBattleResult(won: false, h.Offer.Token).Forget();
 
             Assert.AreEqual(RunStep.RunFail, h.Offer.Step);
@@ -376,7 +379,7 @@ namespace Eclipse.Tests
         public void 버프_문_에스크로는_드랍_없이_3택1로_직행한다()
         {
             var h = Build(RunFixtures.Chapter(
-                RunFixtures.Normal(1, true), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, true), RunFixtures.Boss()));
             h.Flow.BeginRun().Forget();
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
 
@@ -403,7 +406,8 @@ namespace Eclipse.Tests
         [Test]
         public void 낡은_토큰_보고는_지갑과_스텝을_바꾸지_못한다()
         {
-            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, true), RunFixtures.Boss()));
+            var h = Build(RunFixtures.Chapter(
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, true), RunFixtures.Boss()));
             h.Flow.BeginRun().Forget();
 
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
@@ -426,10 +430,11 @@ namespace Eclipse.Tests
         [Test]
         public void 종료_커밋은_두_번_불려도_지급과_클리어_기록이_한_번이다()
         {
-            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, false), RunFixtures.Boss()));
+            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, true), RunFixtures.Boss()));
             h.Flow.BeginRun().Forget();
 
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+            h.Flow.ReportDoorPicked(0, h.Offer.Token).Forget();
 
             // 보스 방 승리는 보상 공개를 거쳐 종료 커밋까지 한 번에 간다.
             int bossToken = h.Offer.Token;
@@ -454,7 +459,7 @@ namespace Eclipse.Tests
         [Test]
         public void 미공개_에스크로는_실패_시_몰수되고_정산만_지급된다()
         {
-            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, true), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, true), RunFixtures.Normal(2, true), RunFixtures.Boss()));
             h.Flow.BeginRun().Forget();
 
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
@@ -476,7 +481,8 @@ namespace Eclipse.Tests
         [Test]
         public void 전투_중_챕터_포기는_지급과_정산_화면_없이_로비로_간다()
         {
-            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, false), RunFixtures.Boss()));
+            var h = Build(RunFixtures.Chapter(
+                RunFixtures.Normal(1, false), RunFixtures.Normal(2, true), RunFixtures.Boss()));
             h.Flow.BeginRun().Forget();
             h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
             int gold = h.Wallet.Gold.CurrentValue;
@@ -522,7 +528,7 @@ namespace Eclipse.Tests
         [Test]
         public void 챕터_포기는_두_번_보고해도_로비_복귀가_한_번이다()
         {
-            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, false), RunFixtures.Boss()));
+            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, true), RunFixtures.Boss()));
             h.Flow.BeginRun().Forget();
 
             h.Flow.AbandonRun().Forget();
@@ -535,7 +541,7 @@ namespace Eclipse.Tests
         [Test]
         public void 정산이_이미_선_뒤의_챕터_포기는_아무것도_바꾸지_않는다()
         {
-            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, false), RunFixtures.Boss()));
+            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, true), RunFixtures.Boss()));
             h.Flow.BeginRun().Forget();
             h.Flow.ReportBattleResult(won: false, h.Offer.Token).Forget();
             Assert.AreEqual(RunStep.RunFail, h.Offer.Step);
@@ -555,7 +561,7 @@ namespace Eclipse.Tests
         public void 챕터_포기_뒤_늦은_전투와_문과_카드_보고는_무시된다()
         {
             // Emit마다 토큰이 올라 한 시나리오로는 세 종류를 동시에 유효하게 둘 수 없다. 상태를 각각 세운다.
-            var battle = Build(RunFixtures.Chapter(RunFixtures.Normal(1, false), RunFixtures.Boss()));
+            var battle = Build(RunFixtures.Chapter(RunFixtures.Normal(1, true), RunFixtures.Boss()));
             battle.Flow.BeginRun().Forget();
             int battleToken = battle.Offer.Token;
             battle.Flow.AbandonRun().Forget();
@@ -564,7 +570,8 @@ namespace Eclipse.Tests
             Assert.AreEqual(0, battle.Rewards.GrantCalls);
             Assert.AreEqual(1, battle.SceneFlow.ToMainCount);
 
-            var door = Build(RunFixtures.Chapter(RunFixtures.Normal(1, true), RunFixtures.Boss()));
+            var door = Build(RunFixtures.Chapter(
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, true), RunFixtures.Boss()));
             door.Flow.BeginRun().Forget();
             door.Flow.ReportBattleResult(won: true, door.Offer.Token).Forget();
             Assert.AreEqual(RunStep.DoorPoint, door.Offer.Step);
@@ -575,7 +582,7 @@ namespace Eclipse.Tests
             Assert.IsFalse(door.Session.HasEscrow, "문 보상이 다시 보류되지 않는다");
 
             var pick = Build(RunFixtures.Chapter(
-                RunFixtures.Normal(1, true), RunFixtures.Normal(2, false), RunFixtures.Boss()));
+                RunFixtures.Normal(1, true), RunFixtures.Normal(2, true), RunFixtures.Boss()));
             pick.Flow.BeginRun().Forget();
             pick.Flow.ReportBattleResult(won: true, pick.Offer.Token).Forget();
             int buffIndex = IndexOf(pick, d => !CurrencyDoor.IsCurrency(d.Rewards[0].Kind));
@@ -617,28 +624,6 @@ namespace Eclipse.Tests
             Assert.AreEqual(RoomKind.Elite, h.Session.CurrentRoom.kind);
             Assert.IsTrue(h.Offer.IsEliteEncounter, "미드보스 문을 골랐으니 방4가 정예로 선다");
             Assert.AreSame(h.Session.Chapter.eliteBackground, h.Offer.Background, "정예 전투는 엘리트 배경으로 선다");
-        }
-
-        [Test]
-        public void 미드보스_문의_약속은_걸린_2종을_한_줄씩_적는다()
-        {
-            var party = RunFixtures.Party(4);
-            var h = Build(RunFixtures.DocChapter(), party: party);
-            AdvanceToMidBossPoint(h);
-
-            var door = h.Offer.Doors[IndexOf(h, d => d.IsMidBoss)];
-            var lines = door.Promise.Split('\n');
-
-            Assert.AreEqual(2, lines.Length, "걸린 보상마다 한 줄씩 적힌다");
-            for (int i = 0; i < lines.Length; i++)
-            {
-                var reward = door.Rewards[i];
-                // 픽스처의 약속 문구는 문 종류 이름이고, 캐릭터 문만 대상 파티원의 이름으로 채워진다.
-                string expected = reward.IsCharacterDoor
-                    ? party[reward.TargetPartySlot].Definition.displayName
-                    : reward.Kind.ToString();
-                Assert.AreEqual(expected, lines[i], "줄 순서가 보상 해소 순서와 같다");
-            }
         }
 
         [Test]
@@ -718,6 +703,46 @@ namespace Eclipse.Tests
             }
 
             Assert.AreNotEqual(RunStep.BuffPick, h.Offer.Step, "걸린 버프를 다 처리하면 3택1이 끝난다");
+        }
+
+        // --- 최종보스 문 ---
+
+        [Test]
+        public void 보스_직전_문_지점은_추첨_없이_보스_문_하나만_제시한다()
+        {
+            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, true), RunFixtures.Boss()));
+            h.Flow.BeginRun().Forget();
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+
+            Assert.AreEqual(RunStep.DoorPoint, h.Offer.Step);
+            Assert.AreEqual(1, h.Offer.Doors.Count, "보스 문 지점은 문 하나다");
+            Assert.AreEqual(DoorTier.FinalBoss, h.Offer.Doors[0].Tier);
+            CollectionAssert.IsEmpty(h.Offer.Doors[0].Rewards, "보스 문에는 보상이 걸리지 않는다");
+        }
+
+        [Test]
+        public void 보스_문_선택은_에스크로도_문_지점_깊이도_건드리지_않는다()
+        {
+            var h = Build(RunFixtures.Chapter(RunFixtures.Normal(1, true), RunFixtures.Boss()));
+            h.Flow.BeginRun().Forget();
+            h.Flow.ReportBattleResult(won: true, h.Offer.Token).Forget();
+            int depth = h.Session.DoorPointsPassed;
+
+            h.Flow.ReportDoorPicked(0, h.Offer.Token).Forget();
+
+            Assert.IsFalse(h.Session.HasEscrow, "보상 없는 문은 보류분을 만들지 않는다");
+            Assert.AreEqual(depth, h.Session.DoorPointsPassed, "재화 공식의 깊이가 오르지 않는다");
+            Assert.AreEqual(RunStep.EnteringRoom, h.Offer.Step);
+            Assert.AreEqual(RoomKind.Boss, h.Session.CurrentRoom.kind, "보스 문 뒤는 곧장 보스 방이다");
+        }
+
+        [Test]
+        public void 보스_직전_방이_문을_열지_않는_배치는_런_시작에서_끊긴다()
+        {
+            var noBossDoor = RunFixtures.Chapter(RunFixtures.Normal(1, false), RunFixtures.Boss());
+
+            Assert.Throws<ArgumentException>(() => new ChapterRunSession(
+                noBossDoor, RunFixtures.Tuning(), RunFixtures.Party(4), runSeed: 1));
         }
 
         /// <summary> 미드보스 문이 서는 문 지점까지 전승으로 밀어 올린다. 앞선 문 지점은 첫 문을 고른다. </summary>

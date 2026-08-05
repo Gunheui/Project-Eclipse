@@ -103,6 +103,31 @@ Assets/ModularGameUIKit.meta
 # 폴더째 제외(고아 meta 방지). 게임 리소스는 규약상 Assets/Eclipse/Resources/ 에 둔다(폴더구조.md).
 Assets/Resources/
 Assets/Resources.meta
+# VFX·이펙트 에셋(Asset Store 무료/유료) → 재배포 금지 + 리포 용량(합계 380MB+).
+# 프리팹 참조는 GUID로 유지되므로 클론 후 같은 에셋을 재임포트하면 복원된다.
+Assets/Eric VFX Studio/
+Assets/Eric VFX Studio.meta
+Assets/Free Slash VFX/
+Assets/Free Slash VFX.meta
+Assets/Hovl Studio/
+Assets/Hovl Studio.meta
+Assets/JMO Assets/
+Assets/JMO Assets.meta
+Assets/Matthew Guz/
+Assets/Matthew Guz.meta
+Assets/slash5-HungNguyen/
+Assets/slash5-HungNguyen.meta
+Assets/Travis Game Assets/
+Assets/Travis Game Assets.meta
+Assets/Zyncope/
+Assets/Zyncope.meta
+# TMP 에센셜 중 실사용 안 하는 부속(문서·이모지 스프라이트). 폰트/머티리얼 본체는 참조 유지 위해 커밋.
+Assets/TextMesh Pro/Documentation/
+Assets/TextMesh Pro/Documentation.meta
+Assets/TextMesh Pro/Sprites/
+Assets/TextMesh Pro/Sprites.meta
+Assets/TextMesh Pro/Resources/Sprite Assets/
+Assets/TextMesh Pro/Resources/Sprite Assets.meta
 
 # ---- 콘텐츠(아트·오디오) 비커밋 — "코드만 올린다" 원칙 ----
 # 무료/외부 라이선스 에셋(Aekashics 배틀러·폰트·SFX 등)은 재배포하지 않는다(리포 경량 + 라이선스 안전).

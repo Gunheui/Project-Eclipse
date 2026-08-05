@@ -16,14 +16,8 @@ namespace Eclipse.Data
         /// <summary> 문 종류. </summary>
         public DoorKind kind;
 
-        /// <summary> 표시명(예: "골드의 문"). </summary>
-        public string displayName;
-
         /// <summary> 추첨 가중치. 합이 0이면 로드 검증에서 걸린다. </summary>
         public int weight;
-
-        /// <summary> 문에 적히는 약속 문구. </summary>
-        public string promiseText;
 
         /// <summary> 문 아이콘. </summary>
         public Sprite icon;
