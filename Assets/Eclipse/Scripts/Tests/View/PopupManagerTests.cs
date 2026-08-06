@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Cysharp.Threading.Tasks;
 using Eclipse.View.Infra;
@@ -73,6 +74,10 @@ namespace Eclipse.Tests.View
             return go;
         }
 
+        /// <summary> popupRoot에 남은 팝업 클론 수. dim은 Awake에서 popupRoot 자식이 되므로 제외한다. </summary>
+        private int RemainingPopupCount()
+            => _popupRoot.Cast<Transform>().Count(child => child != _dim.transform);
+
         [UnityTest]
         public IEnumerator Show_예외라도_dim을_끄고_팝업을_파괴한다()
         {
@@ -83,7 +88,7 @@ namespace Eclipse.Tests.View
 
             Assert.IsFalse(_dim.activeSelf, "예외 경로에서도 dim이 꺼져야 soft-lock이 안 생긴다");
             yield return null; // Destroy 처리 대기
-            Assert.AreEqual(0, _popupRoot.childCount, "실패한 팝업 클론은 파괴돼야 한다");
+            Assert.AreEqual(0, RemainingPopupCount(), "실패한 팝업 클론은 파괴돼야 한다");
         }
 
         [UnityTest]
@@ -97,7 +102,7 @@ namespace Eclipse.Tests.View
             Assert.IsTrue(result, "FakePopup은 true를 돌려준다");
             Assert.IsFalse(_dim.activeSelf);
             yield return null;
-            Assert.AreEqual(0, _popupRoot.childCount);
+            Assert.AreEqual(0, RemainingPopupCount());
         }
 
         private static async UniTask Swallow(UniTask<bool> task)
