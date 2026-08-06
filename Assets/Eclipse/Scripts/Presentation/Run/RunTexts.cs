@@ -78,8 +78,7 @@ namespace Eclipse.Presentation
         {
             if (card.grade == CardGrade.Unique)
                 return card.description;
-            // 가운뎃점은 U+2027이다 — Pretendard 아틀라스에 U+00B7이 없어 그 문자를 쓰면 두부가 뜬다.
-            return string.Join(" ‧ ", card.deltas.Select(FormatDelta));
+            return string.Join(" · ", card.deltas.Select(FormatDelta));
         }
 
         /// <summary> 지속 효과 한 줄("공격력 +30%  2턴"). 상시 효과(-1)는 턴 접미를 달지 않는다. </summary>

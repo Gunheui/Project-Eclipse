@@ -323,7 +323,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uBB34\uD328\uB110\uD2F0 \u2027 \uC7AC\uB3C4\uC804 \uAC00\uB2A5"
+  m_text: "\uBB34\uD328\uB110\uD2F0 \xB7 \uC7AC\uB3C4\uC804 \uAC00\uB2A5"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4fe2c9dd95c41428d80db4968ded1939, type: 2}
   m_sharedMaterial: {fileID: -6385577229219775470, guid: 4fe2c9dd95c41428d80db4968ded1939, type: 2}
@@ -2344,8 +2344,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uCC55\uD130 \uD074\uB9AC\uC5B4"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 4fe2c9dd95c41428d80db4968ded1939, type: 2}
-  m_sharedMaterial: {fileID: -6385577229219775470, guid: 4fe2c9dd95c41428d80db4968ded1939, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 013c6524de2f040b69e375abbfcfb424, type: 2}
+  m_sharedMaterial: {fileID: -1464922462889529984, guid: 013c6524de2f040b69e375abbfcfb424, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
