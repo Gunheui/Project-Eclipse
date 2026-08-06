@@ -13,5 +13,8 @@ namespace Eclipse.Service
     {
         /// <summary> 정의에 연결된 초상 스프라이트를 로드한다. null 정의면 null을 돌려준다. </summary>
         UniTask<Sprite> LoadPortraitAsync(CharacterSO definition, CancellationToken ct = default);
+
+        /// <summary> 초상 뒤에 겹치는 이펙트 스프라이트를 로드한다. 정의가 null이거나 이펙트가 없으면 null. </summary>
+        UniTask<Sprite> LoadPortraitFxAsync(CharacterSO definition, CancellationToken ct = default);
     }
 }

@@ -74,6 +74,10 @@ namespace Eclipse.Presentation
         public UniTask<Sprite> LoadPortraitAsync(CancellationToken ct = default)
             => _spriteProvider.LoadPortraitAsync(_owned.Definition, ct);
 
+        /// <summary> 초상 뒤 이펙트 스프라이트를 로드한다. 이펙트가 없는 캐릭터면 null. </summary>
+        public UniTask<Sprite> LoadPortraitFxAsync(CancellationToken ct = default)
+            => _spriteProvider.LoadPortraitFxAsync(_owned.Definition, ct);
+
         /// <summary>
         /// 내비게이션 보관함에서 선택된 캐릭터를 읽어 상세 표시 값을 구성한다.
         /// 전제: 생성 전에 NavigationContext.Selected가 설정돼 있어야 한다.

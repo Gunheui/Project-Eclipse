@@ -44,6 +44,12 @@ namespace Eclipse.Data
         public Sprite portraitAssetRef;
 
         /// <summary>
+        /// 초상 뒤에 겹치는 캐릭터 이펙트 레이어. portraitAssetRef와 같은 2048 프레임·같은 피벗이라
+        /// 같은 RectTransform에 올리면 정렬이 맞는다. 비면 이펙트 없이 초상만 그린다.
+        /// </summary>
+        public Sprite portraitFxAssetRef;
+
+        /// <summary>
         /// 캐릭터 목록 카드의 초상 세로 보정(px). 원본마다 발끝 아래 여백이 달라 카드 바닥선이 어긋난다.
         /// 양수면 위로 올린다.
         /// </summary>

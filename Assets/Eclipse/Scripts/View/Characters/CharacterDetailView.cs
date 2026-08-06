@@ -31,6 +31,8 @@ namespace Eclipse.View
 
         [Header("헤더")]
         [SerializeField] private Image portrait;
+        [Tooltip("초상 뒤에 겹치는 이펙트 레이어. 초상과 같은 RectTransform 값을 쓴다.")]
+        [SerializeField] private Image portraitFx;
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private TMP_Text rarityText;
         [SerializeField] private TMP_Text roleText;
@@ -138,10 +140,16 @@ namespace Eclipse.View
             growthPanel.SetActive(tab == DetailTab.Growth);
         }
 
-        /// <summary>초상 스프라이트를 로드해 대입한다. 로드가 비동기라도 나머지 표시를 막지 않는다.</summary>
+        /// <summary>초상·이펙트 스프라이트를 로드해 대입한다. 로드가 비동기라도 나머지 표시를 막지 않는다.</summary>
         private async UniTaskVoid ApplyPortraitAsync(CancellationToken ct)
         {
             portrait.sprite = await _viewModel.LoadPortraitAsync(ct);
+            var fx = await _viewModel.LoadPortraitFxAsync(ct);
+            if (portraitFx != null)
+            {
+                portraitFx.sprite = fx;
+                portraitFx.enabled = fx != null;
+            }
         }
 
         /// <summary>한 스킬 슬롯을 채운다. skill이 null이면(빈 슬롯) 숨긴다.</summary>

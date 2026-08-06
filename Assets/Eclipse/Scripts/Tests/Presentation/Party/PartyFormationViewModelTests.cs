@@ -34,6 +34,9 @@ namespace Eclipse.Tests
         {
             public UniTask<Sprite> LoadPortraitAsync(CharacterSO definition, CancellationToken ct = default)
                 => UniTask.FromResult<Sprite>(null);
+
+            public UniTask<Sprite> LoadPortraitFxAsync(CharacterSO definition, CancellationToken ct = default)
+                => UniTask.FromResult<Sprite>(null);
         }
 
         private sealed class FakeSceneFlow : ISceneFlow

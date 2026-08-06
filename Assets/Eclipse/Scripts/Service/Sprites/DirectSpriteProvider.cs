@@ -15,5 +15,10 @@ namespace Eclipse.Service
         {
             return UniTask.FromResult(definition != null ? definition.portraitAssetRef : null);
         }
+
+        public UniTask<Sprite> LoadPortraitFxAsync(CharacterSO definition, CancellationToken ct = default)
+        {
+            return UniTask.FromResult(definition != null ? definition.portraitFxAssetRef : null);
+        }
     }
 }

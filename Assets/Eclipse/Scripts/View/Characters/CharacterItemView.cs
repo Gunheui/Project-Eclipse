@@ -16,6 +16,8 @@ namespace Eclipse.View
     public class CharacterItemView : MonoBehaviour
     {
         [SerializeField] private Image portrait;
+        [Tooltip("초상 뒤에 겹치는 이펙트 레이어. 초상과 같은 RectTransform 값을 쓴다.")]
+        [SerializeField] private Image portraitFx;
         [SerializeField] private TMP_Text nameText;
         [SerializeField] private TMP_Text rarityText;
         [SerializeField] private TMP_Text levelText;
@@ -51,10 +53,16 @@ namespace Eclipse.View
             selectButton.onClick.AddListener(() => onSelected());
         }
 
-        /// <summary>초상 스프라이트를 로드해 대입한다. 로드가 비동기라도 나머지 바인딩을 막지 않는다.</summary>
+        /// <summary>초상·이펙트 스프라이트를 로드해 대입한다. 로드가 비동기라도 나머지 바인딩을 막지 않는다.</summary>
         private async UniTaskVoid ApplyPortraitAsync(CharacterViewModel viewModel, CancellationToken ct)
         {
             portrait.sprite = await viewModel.LoadPortraitAsync(ct);
+            var fx = await viewModel.LoadPortraitFxAsync(ct);
+            if (portraitFx != null)
+            {
+                portraitFx.sprite = fx;
+                portraitFx.enabled = fx != null;
+            }
         }
 
         /// <summary>카드 안 초상 높이를 캐릭터별 보정만큼 옮긴다. 프리팹 위치를 기준으로 삼는다.</summary>
@@ -63,6 +71,9 @@ namespace Eclipse.View
             var position = portrait.rectTransform.anchoredPosition;
             position.y = _portraitBaseY + offsetY;
             portrait.rectTransform.anchoredPosition = position;
+            // 이펙트는 초상과 같은 프레임에 그려진 그림이라 같은 위치로 따라가야 정렬이 맞는다.
+            if (portraitFx != null)
+                portraitFx.rectTransform.anchoredPosition = position;
         }
     }
 }

@@ -29,6 +29,7 @@ MonoBehaviour:
   ultimateSkill: {fileID: 11400000, guid: 8fa54b8c2e0d241129887a3d4e9e0548, type: 2}
   acquisitionType: 0
   portraitAssetRef: {fileID: 21300000, guid: ef668296221a748acb6cff247a5b554a, type: 3}
+  portraitFxAssetRef: {fileID: 21300000, guid: 0c84387a7af04a5792936e9e8f428832, type: 3}
   portraitListOffsetY: -17
   portraitCardOffsetY: 44
   battlerAssetRef: {fileID: 21300000, guid: e1c2ee2f3ffe640dd9097dd63b302584, type: 3}
