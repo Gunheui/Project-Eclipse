@@ -39,6 +39,32 @@ namespace Eclipse.Presentation
     }
 
     /// <summary>
+    /// 배틀러가 띄울 효과 결과 하나. View가 Domain의 StatusEffect를 직접 못 보듯 EffectResult도 못 보므로,
+    /// 표시에 쓰는 값만 옮겨 담는다. 결과를 받은 유닛은 이미 VM 단계에서 갈렸으므로 싣지 않는다.
+    /// </summary>
+    public readonly struct EffectDisplay
+    {
+        public EffectType Type { get; }
+
+        /// <summary> 화면에 띄울 크기. 수치가 없는 효과는 0이라 숫자가 뜨지 않는다. </summary>
+        public int Amount { get; }
+
+        /// <summary> 실드가 이 피해를 조금이라도 막았는지. 숫자 색을 실드색으로 바꾼다. </summary>
+        public bool Shielded { get; }
+
+        /// <summary> 치명타였는지. 피해가 아닌 효과는 항상 false. </summary>
+        public bool IsCrit { get; }
+
+        public EffectDisplay(EffectResult result)
+        {
+            Type = result.Type;
+            Amount = result.Amount;
+            Shielded = result.Shielded;
+            IsCrit = result.IsCrit;
+        }
+    }
+
+    /// <summary>
     /// 전투 유닛 하나에 대응하는 ViewModel. 이름·소속·슬롯·최대 HP는 고정이고,
     /// 현재 HP·생존 여부는 턴 신호에서 파생한 리액티브 프로퍼티로 노출한다.
     /// </summary>
@@ -51,10 +77,10 @@ namespace Eclipse.Presentation
         private readonly Subject<SkillSO> _acted = new();
 
         // 스킬 대상이 됐음을 알리는 신호(원인 스킬과 결과 포함). 배틀러가 구독해 피격 연출과 숫자를 재생한다.
-        private readonly Subject<(SkillSO Skill, EffectResult Result)> _hit = new();
+        private readonly Subject<(SkillSO Skill, EffectDisplay Result)> _hit = new();
 
         // 자기 턴 시작에 도트·리젠이 터졌음을 알리는 신호. 배틀러가 구독해 틱마다 숫자를 띄운다.
-        private readonly Subject<EffectResult> _ticked = new();
+        private readonly Subject<EffectDisplay> _ticked = new();
 
         /// <param name="runEffects">표시 전용 상시 효과(런 버프·저주). 도메인 효과가 아니라 <see cref="AllEffects"/>에만 실린다.</param>
         public CombatantViewModel(Combatant model, Observable<Unit> stateChanged, Sprite battler,
@@ -133,10 +159,10 @@ namespace Eclipse.Presentation
         public Observable<SkillSO> Acted => _acted;
 
         /// <summary> 이 유닛이 스킬 대상이 될 때 원인 스킬·결과와 함께 발화. 배틀러 피격 연출 트리거. </summary>
-        public Observable<(SkillSO Skill, EffectResult Result)> Hit => _hit;
+        public Observable<(SkillSO Skill, EffectDisplay Result)> Hit => _hit;
 
         /// <summary> 이 유닛의 턴 시작에 도트·리젠이 터질 때 틱마다 발화. 배틀러 틱 숫자 트리거. </summary>
-        public Observable<EffectResult> Ticked => _ticked;
+        public Observable<EffectDisplay> Ticked => _ticked;
 
         /// <summary> 이 유닛의 스킬 슬롯들(기본+액티브). 행동자일 때 스킬 버튼으로 쓴다. </summary>
         public IReadOnlyList<SkillSlotViewModel> Skills { get; }
@@ -145,10 +171,11 @@ namespace Eclipse.Presentation
         internal void RaiseActed(SkillSO skill) => _acted.OnNext(skill);
 
         /// <summary> Hit 신호를 발화한다. 이번 턴 효과 결과마다 BattleViewModel이 호출한다. </summary>
-        internal void RaiseHit(SkillSO skill, EffectResult result) => _hit.OnNext((skill, result));
+        internal void RaiseHit(SkillSO skill, EffectResult result)
+            => _hit.OnNext((skill, new EffectDisplay(result)));
 
         /// <summary> Ticked 신호를 발화한다. 이번 턴 행동자의 틱마다 BattleViewModel이 호출한다. </summary>
-        internal void RaiseTicked(EffectResult tick) => _ticked.OnNext(tick);
+        internal void RaiseTicked(EffectResult tick) => _ticked.OnNext(new EffectDisplay(tick));
 
         /// <summary>
         /// 도메인 효과 목록을 표시 순서로 확정해 변환한다. 해로움(디버프→도트→도발) 먼저,

@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Eclipse.Data;
 using Eclipse.Data.Enums;
-using Eclipse.Domain;
 using Eclipse.Presentation;
 using Eclipse.View.Theme;
 using R3;
@@ -97,11 +97,23 @@ namespace Eclipse.View
         private UniTask _animation = UniTask.CompletedTask;
 
         // 아직 재생하지 못한 표시. 같은 턴에 여러 번 맞거나 틱이 겹쳐도 겹치지 않고 하나씩 나간다.
-        private readonly Queue<(EffectResult Result, EffectSpec Impact, VfxSpec ImpactVfx, bool Shake)> _displayQueue = new();
+        private readonly Queue<(EffectDisplay Result, EffectSpec Impact, VfxSpec ImpactVfx, bool Shake)> _displayQueue = new();
         private bool _draining;
+
+        // 이번 바인딩이 소유한 재생 수명. 다시 바인딩하거나 비울 때 끊어, 옛 재생이 새 바인딩의
+        // 대기열과 플래그를 함께 건드리지 못하게 한다.
+        private CancellationTokenSource _playbackCts;
 
         // 턴을 세며 남아 있는 파티클 재생기. AdvanceHeldVfx가 턴을 깎고 만료된 것을 뺀다.
         private readonly List<VfxPlayer> _heldVfx = new();
+
+        private void Awake()
+        {
+            if (visualRoot == null) visualRoot = transform;
+            // 제자리는 씬에 저작된 값 하나뿐이다. 바인딩마다 다시 읽으면 연출 도중 재바인딩됐을 때
+            // 어긋난 위치가 제자리로 굳어 이후 돌진이 그 자리로 돌아간다.
+            _home = visualRoot.localPosition;
+        }
 
         /// <summary>
         /// 이 배틀러를 한 유닛 VM에 연결한다. 이전 구독을 정리하고,
@@ -116,20 +128,18 @@ namespace Eclipse.View
         public void Bind(CombatantViewModel unit, Func<int> speed, Func<bool, Bounds> formationBounds,
             Action<CombatantViewModel> onTapped = null, Action<CombatantViewModel, bool> onHovered = null)
         {
+            ResetPlayback();
             _bindings.Clear();
             HideDetail();
-            ClearHeldVfx();
+            // 파괴 토큰과 묶어 씬이 사라질 때도 함께 끊긴다.
+            _playbackCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
             gameObject.SetActive(true);
             _unit = unit;
             _onTapped = onTapped;
             _onHovered = onHovered;
             _speed = speed ?? (() => 1);
             _formationBounds = formationBounds;
-            if (visualRoot == null) visualRoot = transform;
-            _home = visualRoot.localPosition;
             _facingRight = unit.IsAlly;
-            _displayQueue.Clear();
-            _draining = false;
             if (spriteRenderer != null)
             {
                 spriteRenderer.sprite = unit.BattlerSprite;
@@ -148,7 +158,7 @@ namespace Eclipse.View
             }
 
             unit.Acted
-                .Subscribe(skill => AddAnimation(PlayCastAsync(skill)))
+                .Subscribe(skill => AddAnimation(PlayCastAsync(skill, _playbackCts.Token)))
                 .AddTo(_bindings);
 
             // 흔들림은 맞은 반응이라 피해에만 붙인다. 버프·실드를 받을 때는 흔들리지 않는다.
@@ -186,13 +196,32 @@ namespace Eclipse.View
         /// <summary>대응 유닛이 없는 빈 배틀러를 숨기고 탭 통지를 끊는다.</summary>
         public void Clear()
         {
+            ResetPlayback();
             _bindings.Clear();
             HideDetail();
-            ClearHeldVfx();
             _unit = null;
             _onTapped = null;
             _onHovered = null;
             gameObject.SetActive(false);
+        }
+
+        /// <summary>진행 중인 재생을 끊고 배틀러를 평상 상태로 되돌린다. 호출 안전(멱등).</summary>
+        private void ResetPlayback()
+        {
+            // 취소는 콜백을 그 자리에서 실행해 대기 중이던 재생을 깨운다. 소유자를 먼저 비워야
+            // 깨어난 옛 재생이 자기 차례가 아님을 보고 물러난다.
+            var previous = _playbackCts;
+            _playbackCts = null;
+            previous?.Cancel();
+            previous?.Dispose();
+
+            // 취소된 트윈은 중간 위치에서 멈춘다. 다음 바인딩이 그 자리를 쓰지 않게 제자리로 되돌린다.
+            if (visualRoot != null) visualRoot.localPosition = _home;
+            _displayQueue.Clear();
+            _draining = false;
+            // 남겨 두면 다음 방의 첫 턴이 옛 대기를 그대로 물려받는다.
+            _animation = UniTask.CompletedTask;
+            ClearHeldVfx();
         }
 
         /// <summary>
@@ -357,27 +386,34 @@ namespace Eclipse.View
         /// <returns>
         /// 대기열을 비우는 재생. 같은 턴의 두 번째부터는 앞선 재생이 끝까지 비우므로 완료된 값이다.
         /// </returns>
-        private UniTask QueueDisplay(EffectResult result, EffectSpec impact, VfxSpec impactVfx, bool shake)
+        private UniTask QueueDisplay(EffectDisplay result, EffectSpec impact, VfxSpec impactVfx, bool shake)
         {
             _displayQueue.Enqueue((result, impact, impactVfx, shake));
-            return _draining ? UniTask.CompletedTask : DrainQueueAsync();
+            return _draining ? UniTask.CompletedTask : DrainQueueAsync(_playbackCts);
         }
 
-        /// <summary>대기열이 빌 때까지 하나씩 재생한다.</summary>
-        private async UniTask DrainQueueAsync()
+        /// <summary>대기열이 빌 때까지 하나씩 재생한다. 재바인딩으로 차례를 잃으면 중간에 멈춘다.</summary>
+        /// <param name="owner">이 재생을 시작한 바인딩의 취소 소스. 현재 것과 다르면 물러난다.</param>
+        private async UniTask DrainQueueAsync(CancellationTokenSource owner)
         {
+            var ct = owner.Token; // 폐기된 뒤에는 못 읽으므로 시작할 때 받아 둔다
             _draining = true;
             try
             {
-                while (_displayQueue.Count > 0)
+                while (owner == _playbackCts && _displayQueue.Count > 0)
                 {
                     var (result, impact, impactVfx, shake) = _displayQueue.Dequeue();
-                    await PlayResultAsync(result, impact, impactVfx, shake);
+                    await PlayResultAsync(result, impact, impactVfx, shake, ct);
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                // 재바인딩으로 끊긴 재생. 대기만 풀리면 되므로 알릴 것이 없다.
             }
             finally
             {
-                _draining = false;
+                // 새 바인딩이 이미 자기 재생을 돌리고 있으면 그쪽 플래그를 대신 내리면 안 된다.
+                if (owner == _playbackCts) _draining = false;
             }
         }
 
@@ -386,33 +422,33 @@ namespace Eclipse.View
         /// 숫자 없이 이펙트만 나간다.
         /// </summary>
         /// <returns>숫자·흔들림·타격 이펙트가 모두 끝나면 완료된다.</returns>
-        private async UniTask PlayResultAsync(EffectResult result, EffectSpec impact, VfxSpec impactVfx, bool shake)
+        private async UniTask PlayResultAsync(EffectDisplay result, EffectSpec impact, VfxSpec impactVfx, bool shake,
+            CancellationToken ct)
         {
             // 이펙트와 흔들림은 숫자와 나란히 돈다.
             var reaction = UniTask.WhenAll(
                 SpawnEffect(impact),
                 SpawnVfx(impactVfx),
-                shake ? PlayShakeAsync() : UniTask.CompletedTask);
+                shake ? PlayShakeAsync(ct) : UniTask.CompletedTask);
 
-            if (result.Amount > 0) await SpawnAmountAsync(result);
+            if (result.Amount > 0) await SpawnAmountAsync(result, ct);
 
             await reaction;
         }
 
         /// <summary>숫자 하나를 띄우고 다음 숫자를 위한 간격을 둔다.</summary>
         /// <returns>다음 숫자를 띄워도 될 때 완료된다.</returns>
-        private UniTask SpawnAmountAsync(EffectResult result)
+        private UniTask SpawnAmountAsync(EffectDisplay result, CancellationToken ct)
         {
             bool heal = result.Type is EffectType.Heal or EffectType.Regen;
             var ft = SpawnFloatingTextOrNull();
             if (ft != null)
                 ft.Show((heal ? "+" : "-") + result.Amount, NumberColor(result), _speed(), result.IsCrit);
-            return UniTask.Delay(TimeSpan.FromSeconds(NumberInterval / _speed()),
-                cancellationToken: this.GetCancellationTokenOnDestroy());
+            return UniTask.Delay(TimeSpan.FromSeconds(NumberInterval / _speed()), cancellationToken: ct);
         }
 
         /// <summary>숫자 색. 실드가 막아 낸 피해는 종류와 무관하게 실드색으로 알린다.</summary>
-        private Color NumberColor(EffectResult result)
+        private Color NumberColor(EffectDisplay result)
         {
             if (result.Shielded) return theme.battleShield;
             return result.Type switch
@@ -425,20 +461,20 @@ namespace Eclipse.View
         }
 
         /// <summary>피격 반응으로 짧게 흔들린다.</summary>
-        /// <returns>흔들림이 끝나면 완료된다.</returns>
-        private UniTask PlayShakeAsync()
+        /// <returns>흔들림이 끝나면 완료된다. 취소되면 트윈만 죽고 대기는 예외 없이 완료된다.</returns>
+        private UniTask PlayShakeAsync(CancellationToken ct)
         {
             float dur = 0.3f / _speed();
             return visualRoot
                 .DOShakePosition(dur, strength: 0.25f, vibrato: 18, randomness: 90, snapping: false, fadeOut: true)
-                .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
+                .ToUniTask(cancellationToken: ct);
         }
 
         /// <summary>시전: 대면 방향 돌진과 (있으면) 시전 이펙트를 함께 재생한다.</summary>
         /// <returns>둘 다 끝나면 완료된다.</returns>
-        private UniTask PlayCastAsync(SkillSO skill)
+        private UniTask PlayCastAsync(SkillSO skill, CancellationToken ct)
         {
-            var lunge = PlayLungeAsync();
+            var lunge = PlayLungeAsync(ct);
             var effect = SpawnEffect(skill != null ? skill.castEffect : null);
             var vfx = SpawnVfx(skill != null ? skill.castVfx : null);
             return UniTask.WhenAll(lunge, effect, vfx);
@@ -446,14 +482,14 @@ namespace Eclipse.View
 
         /// <summary>대면 방향으로 살짝 돌진했다 제자리로 돌아간다.</summary>
         /// <returns>복귀가 끝나면 완료된다.</returns>
-        private UniTask PlayLungeAsync()
+        private UniTask PlayLungeAsync(CancellationToken ct)
         {
             float dur = 0.25f / _speed();
             float lunge = _facingRight ? 0.5f : -0.5f;
             return DOTween.Sequence()
                 .Append(visualRoot.DOLocalMoveX(_home.x + lunge, dur * 0.4f).SetEase(Ease.OutQuad))
                 .Append(visualRoot.DOLocalMoveX(_home.x, dur * 0.6f).SetEase(Ease.InQuad))
-                .ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
+                .ToUniTask(cancellationToken: ct);
         }
 
         /// <summary>
@@ -475,6 +511,8 @@ namespace Eclipse.View
             var parent = SpawnParentOrNull();
             if (parent == null) return UniTask.CompletedTask;
             var player = Instantiate(effectPlayerPrefab, visualRoot.position, Quaternion.identity, parent);
+            // 재생기는 대기가 끝나야 스스로 파괴된다. 재바인딩으로 끊으면 그 경로를 못 타고 화면에 남으므로
+            // 배틀러 재생과 달리 파괴 토큰을 그대로 쓴다.
             return player.Play(spec, _speed(), this.GetCancellationTokenOnDestroy());
         }
 
@@ -526,7 +564,7 @@ namespace Eclipse.View
 
         private void OnDestroy()
         {
-            ClearHeldVfx();
+            ResetPlayback();
             _bindings.Dispose();
         }
     }
