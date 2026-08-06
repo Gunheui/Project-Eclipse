@@ -1,0 +1,7 @@
+{
+    "name": "Eclipse.Editor",
+    "rootNamespace": "Eclipse.EditorTools",
+    "includePlatforms": [
+        "Editor"
+    ]
+}

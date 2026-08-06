@@ -34,6 +34,12 @@ namespace Eclipse.Presentation
         public UniTask<Sprite> LoadPortraitAsync(CancellationToken ct = default)
             => _spriteProvider.LoadPortraitAsync(_ownedCharacter.Definition, ct);
 
+        /// <summary> 목록 카드의 초상 세로 보정(px). 원본별 발끝 높이 차를 카드에서 흡수한다. </summary>
+        public float PortraitListOffsetY => _ownedCharacter.Definition.portraitListOffsetY;
+
+        /// <summary> 편성 카드의 초상 세로 보정(px). 원본별 얼굴 높이 차를 카드에서 흡수한다. </summary>
+        public float PortraitCardOffsetY => _ownedCharacter.Definition.portraitCardOffsetY;
+
         private ReactiveProperty<int> _level;
         private ReactiveProperty<int> _ascensionTier;
         private IDisposable _growthSubscription;

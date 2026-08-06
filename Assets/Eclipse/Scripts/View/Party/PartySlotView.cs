@@ -41,6 +41,13 @@ namespace Eclipse.View
 
         private readonly SerialDisposable _levelBinding = new SerialDisposable();
         private CharacterViewModel _occupant;
+        private float _portraitBaseY;
+
+        private void Awake()
+        {
+            if (portrait != null)
+                _portraitBaseY = portrait.rectTransform.anchoredPosition.y;
+        }
 
         /// <summary>
         /// 슬롯을 점유자 스트림에 바인딩한다. 구독은 GameObject 수명에 묶여 Destroy 시 자동 해지된다.
@@ -85,6 +92,17 @@ namespace Eclipse.View
                     .Subscribe(level => levelText.text = $"Lv. {level}");
 
             ApplyPortraitAsync(occupant, this.GetCancellationTokenOnDestroy()).Forget();
+            ApplyPortraitOffset(occupant.PortraitCardOffsetY);
+        }
+
+        /// <summary>카드 안 초상 높이를 캐릭터별 보정만큼 옮긴다. 프리팹 위치를 기준으로 삼는다.</summary>
+        private void ApplyPortraitOffset(float offsetY)
+        {
+            if (portrait == null)
+                return;
+            var position = portrait.rectTransform.anchoredPosition;
+            position.y = _portraitBaseY + offsetY;
+            portrait.rectTransform.anchoredPosition = position;
         }
 
         /// <summary>초상 스프라이트를 로드해 대입한다. 로드가 비동기라도 나머지 바인딩을 막지 않는다.</summary>

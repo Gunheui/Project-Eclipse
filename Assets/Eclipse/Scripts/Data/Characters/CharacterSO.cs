@@ -43,6 +43,18 @@ namespace Eclipse.Data
         /// <summary> UI에 쓰는 전신 일러. 캐릭터 목록·상세·편성·로비·캐릭터 문이 이걸 쓴다. </summary>
         public Sprite portraitAssetRef;
 
+        /// <summary>
+        /// 캐릭터 목록 카드의 초상 세로 보정(px). 원본마다 발끝 아래 여백이 달라 카드 바닥선이 어긋난다.
+        /// 양수면 위로 올린다.
+        /// </summary>
+        public float portraitListOffsetY;
+
+        /// <summary>
+        /// 편성 카드의 초상 세로 보정(px). 원본마다 얼굴 높이가 달라 같은 프레이밍에서도 잘리는 위치가 다르다.
+        /// 양수면 위로 올린다.
+        /// </summary>
+        public float portraitCardOffsetY;
+
         /// <summary> 전투 씬에 세우는 그림. 월드 스프라이트라 임포트 PPU가 곧 전투 크기가 된다. </summary>
         public Sprite battlerAssetRef;
 

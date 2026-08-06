@@ -22,6 +22,13 @@ namespace Eclipse.View
         [SerializeField] private AscensionStarsView ascensionStars;
         [SerializeField] private Button selectButton;
 
+        private float _portraitBaseY;
+
+        private void Awake()
+        {
+            _portraitBaseY = portrait.rectTransform.anchoredPosition.y;
+        }
+
         /// <summary>
         /// 항목을 지정 ViewModel에 바인딩한다. 고정 값(초상·이름·등급)은 즉시 대입하고 레벨·돌파는 구독한다.
         /// 구독은 GameObject 수명에 묶여 Destroy 시 자동 해지된다.
@@ -31,6 +38,7 @@ namespace Eclipse.View
         public void Bind(CharacterViewModel viewModel, Action onSelected)
         {
             ApplyPortraitAsync(viewModel, this.GetCancellationTokenOnDestroy()).Forget();
+            ApplyPortraitOffset(viewModel.PortraitListOffsetY);
             nameText.text = viewModel.DisplayName;
             // 등급은 R/SR/SSR 글자만 쓴다. 별 기호를 붙이면 옆의 돌파 별과 뜻이 겹친다.
             rarityText.text = viewModel.Rarity.ToString();
@@ -47,6 +55,14 @@ namespace Eclipse.View
         private async UniTaskVoid ApplyPortraitAsync(CharacterViewModel viewModel, CancellationToken ct)
         {
             portrait.sprite = await viewModel.LoadPortraitAsync(ct);
+        }
+
+        /// <summary>카드 안 초상 높이를 캐릭터별 보정만큼 옮긴다. 프리팹 위치를 기준으로 삼는다.</summary>
+        private void ApplyPortraitOffset(float offsetY)
+        {
+            var position = portrait.rectTransform.anchoredPosition;
+            position.y = _portraitBaseY + offsetY;
+            portrait.rectTransform.anchoredPosition = position;
         }
     }
 }
