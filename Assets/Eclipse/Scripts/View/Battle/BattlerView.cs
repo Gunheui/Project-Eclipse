@@ -44,6 +44,11 @@ namespace Eclipse.View
         // 선택 불가(Ineligible) 대상 스프라이트에 곱하는 색. 채도는 유지하고 밝기만 낮춰 어둡게 보이게 한다.
         private static readonly Color DimColor = new(0.35f, 0.35f, 0.35f, 1f);
 
+        // HP바 앵커 배치값(로컬 단위). 여백은 머리와 바 사이 간격이고,
+        // 상한은 장신 적이 바를 화면 위로 밀어올리지 못하게 막는다.
+        private const float HeadAnchorMargin = 0.3f;
+        private const float HeadAnchorMaxY = 4f;
+
         // 유효 타겟 아웃라인. 적 공격 조준=적군 계열 #D06A61, 아군 힐/버프 조준=아군 HP바와 같은 녹색 #4E9B7A
         // (힐 대상이 공격 대상처럼 보이지 않게). 두께는 월드 단위로 정의한다 — 스프라이트 PPU가
         // 달라도(아군 315·적 100) 화면상 굵기가 같도록 셰이더에 넘길 때 PPU로 환산한다.
@@ -73,6 +78,10 @@ namespace Eclipse.View
         private Vector3 _home;
         private int _prevHp;
         private bool _facingRight;
+
+        // HP바가 매달린 HeadAnchor와 씬에 저작된 기본 높이. 슬롯마다 있는 자식이라 첫 사용 때 이름으로 찾는다.
+        private Transform _headAnchor;
+        private float _anchorBaseY;
 
         // 이번 턴에 진행 중인 연출. 루프가 WaitForAnimation으로 이걸 기다린 뒤 다음 턴으로 넘어간다.
         // Preserve로 감싸 여러 번 await 가능하게 둔다(매 턴 모든 배틀러의 이 값을 다시 기다리므로).
@@ -114,6 +123,7 @@ namespace Eclipse.View
             _baseColor = unit.Tint;
             SetTargetState(TargetState.None); // 평상시 밝기로 초기화(재바인딩 시 이전 dim 잔상 제거)
             ResizeTapArea();
+            PositionHeadAnchor();
 
             // HP가 줄면 피격(흔들림+숫자), 늘면 힐(숫자). 구독 즉시 오는 첫 값은 변화 0이라 무시된다.
             unit.CurrentHp
@@ -215,6 +225,27 @@ namespace Eclipse.View
 
             tapArea.size = size;
             tapArea.offset = transform.InverseTransformPoint(bounds.center);
+        }
+
+        /// <summary>
+        /// HP바 앵커를 스프라이트 키에 맞춰 머리 위로 올린다. 씬에 저작된 높이가 하한이라
+        /// 그보다 작은 유닛의 바 위치는 바뀌지 않는다.
+        /// </summary>
+        private void PositionHeadAnchor()
+        {
+            if (spriteRenderer == null || spriteRenderer.sprite == null) return;
+            if (_headAnchor == null)
+            {
+                _headAnchor = transform.Find("HeadAnchor");
+                if (_headAnchor == null) return;
+                _anchorBaseY = _headAnchor.localPosition.y;
+            }
+
+            // 스프라이트 꼭대기를 로컬로 환산해 여백을 더하고, 씬 저작 높이와 상한 사이로 자른다.
+            float topLocalY = transform.InverseTransformPoint(spriteRenderer.bounds.max).y;
+            var pos = _headAnchor.localPosition;
+            pos.y = Mathf.Clamp(topLocalY + HeadAnchorMargin, _anchorBaseY, HeadAnchorMaxY);
+            _headAnchor.localPosition = pos;
         }
 
         /// <summary>
