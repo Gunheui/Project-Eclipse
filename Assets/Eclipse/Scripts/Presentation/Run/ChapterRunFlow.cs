@@ -472,24 +472,24 @@ namespace Eclipse.Presentation
         /// 일반 약속 문 하나. 재화·저주 문은 카탈로그 아이콘, 캐릭터 문은 대상 파티원의 얼굴 초상이 거울에 걸린다.
         /// </summary>
         private DoorOption PromiseDoor(DoorChoice choice)
-        {
-            var rewards = new[] { choice };
-            if (!choice.IsCharacterDoor)
-                return new DoorOption(DoorTier.Promise, rewards,
-                    _doorCatalog.doors.First(d => d.kind == choice.Kind).icon, flipIcon: false,
-                    Array.Empty<Sprite>());
-
-            return new DoorOption(DoorTier.Promise, rewards,
-                _session.Party[choice.TargetPartySlot].Definition.faceIconAssetRef, flipIcon: true,
-                Array.Empty<Sprite>());
-        }
+            => new DoorOption(DoorTier.Promise, new[] { choice }, IconOf(choice),
+                flipIcon: choice.IsCharacterDoor, Array.Empty<Sprite>());
 
         /// <summary>
         /// 미드보스 문 하나. 거울에 그림 없이 걸린 보상 2종의 심볼만 해소 순서대로 싣는다.
         /// </summary>
         private DoorOption MidBossDoor(IReadOnlyList<DoorChoice> rewards)
             => new DoorOption(DoorTier.MidBoss, rewards, icon: null, flipIcon: false,
-                rewards.Select(r => _doorCatalog.doors.First(d => d.kind == r.Kind).icon).ToList());
+                rewards.Select(IconOf).ToList());
+
+        /// <summary>
+        /// 보상 하나의 그림. 캐릭터 보상은 대상 파티원의 얼굴 초상, 나머지는 카탈로그 아이콘이다.
+        /// 일반 문의 거울 그림과 미드보스 문의 심볼이 같은 규칙을 쓴다.
+        /// </summary>
+        private Sprite IconOf(DoorChoice choice)
+            => choice.IsCharacterDoor
+                ? _session.Party[choice.TargetPartySlot].Definition.faceIconAssetRef
+                : _doorCatalog.doors.First(d => d.kind == choice.Kind).icon;
 
         /// <summary>
         /// 최종보스 문 하나. 보상 없이 보스 얼굴만 걸린다. 추첨 밖에서 만들어 카탈로그를 거치지 않는다.
