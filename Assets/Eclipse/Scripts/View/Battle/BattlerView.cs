@@ -122,8 +122,12 @@ namespace Eclipse.View
             }
             _baseColor = unit.Tint;
             SetTargetState(TargetState.None); // 평상시 밝기로 초기화(재바인딩 시 이전 dim 잔상 제거)
-            ResizeTapArea();
-            PositionHeadAnchor();
+            if (spriteRenderer != null && spriteRenderer.sprite != null)
+            {
+                var body = SilhouetteLocalBounds();
+                ResizeTapArea(body);
+                PositionHeadAnchor(body);
+            }
 
             // HP가 줄면 피격(흔들림+숫자), 늘면 힐(숫자). 구독 즉시 오는 첫 값은 변화 0이라 무시된다.
             unit.CurrentHp
@@ -208,32 +212,55 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// 탭 영역을 바인딩된 스프라이트 크기에 맞춘다. 유닛마다 크기·PPU가 달라 에디터에서 미리 맞출 수 없다.
+        /// 그림이 실제로 차지하는 범위를 이 트랜스폼 기준 사각형으로 반환한다.
         /// </summary>
-        private void ResizeTapArea()
+        private Bounds SilhouetteLocalBounds()
         {
-            if (tapArea == null || spriteRenderer == null || spriteRenderer.sprite == null) return;
+            // SpriteRenderer.bounds는 투명 여백까지 포함한 원본 칸 전체를 돌려준다. 적 배틀러는 칸을
+            // 꽉 채운 규격이라 그 값을 쓰면 탭 판정과 HP바가 그림보다 한참 크게 잡힌다.
+            // 타이트 메시의 정점이 여백을 뺀 실제 외곽이다.
+            var verts = spriteRenderer.sprite.vertices;
+            var min = new Vector2(float.MaxValue, float.MaxValue);
+            var max = new Vector2(float.MinValue, float.MinValue);
+            foreach (var v in verts)
+            {
+                min = Vector2.Min(min, v);
+                max = Vector2.Max(max, v);
+            }
 
-            var bounds = spriteRenderer.bounds; // 실제 그려지는 월드 AABB(Visual의 오프셋·스케일이 반영됨)
-            var scale = transform.lossyScale;
-            var size = new Vector2(
-                bounds.size.x / Mathf.Max(Mathf.Abs(scale.x), 1e-4f),
-                bounds.size.y / Mathf.Max(Mathf.Abs(scale.y), 1e-4f));
+            // flip은 트랜스폼이 아니라 메시를 피벗 기준으로 뒤집으므로 정점 좌표에 직접 반영한다.
+            if (spriteRenderer.flipX) (min.x, max.x) = (-max.x, -min.x);
+            if (spriteRenderer.flipY) (min.y, max.y) = (-max.y, -min.y);
 
-            size += new Vector2(TapAreaPadding * 2f, TapAreaPadding * 2f);
-            if (tapAreaMaxWidth > 0f) size.x = Mathf.Min(size.x, tapAreaMaxWidth);
-
-            tapArea.size = size;
-            tapArea.offset = transform.InverseTransformPoint(bounds.center);
+            var visual = spriteRenderer.transform;
+            var a = transform.InverseTransformPoint(visual.TransformPoint(min));
+            var b = transform.InverseTransformPoint(visual.TransformPoint(max));
+            var bounds = new Bounds();
+            bounds.SetMinMax(Vector3.Min(a, b), Vector3.Max(a, b));
+            return bounds;
         }
 
         /// <summary>
-        /// HP바 앵커를 스프라이트 키에 맞춰 머리 위로 올린다. 씬에 저작된 높이가 하한이라
-        /// 그보다 작은 유닛의 바 위치는 바뀌지 않는다.
+        /// 탭 영역을 그림이 차지하는 범위에 맞춘다. 유닛마다 크기가 달라 에디터에서 미리 맞출 수 없다.
         /// </summary>
-        private void PositionHeadAnchor()
+        /// <param name="body">이 트랜스폼 기준 실루엣 범위.</param>
+        private void ResizeTapArea(Bounds body)
         {
-            if (spriteRenderer == null || spriteRenderer.sprite == null) return;
+            if (tapArea == null) return;
+
+            var size = (Vector2)body.size + new Vector2(TapAreaPadding * 2f, TapAreaPadding * 2f);
+            if (tapAreaMaxWidth > 0f) size.x = Mathf.Min(size.x, tapAreaMaxWidth);
+
+            tapArea.size = size;
+            tapArea.offset = body.center;
+        }
+
+        /// <summary>
+        /// HP바 앵커를 머리 위로 올린다. 씬에 저작된 높이가 하한이라 그보다 작은 유닛의 바는 그 높이에 머문다.
+        /// </summary>
+        /// <param name="body">이 트랜스폼 기준 실루엣 범위.</param>
+        private void PositionHeadAnchor(Bounds body)
+        {
             if (_headAnchor == null)
             {
                 _headAnchor = transform.Find("HeadAnchor");
@@ -241,10 +268,8 @@ namespace Eclipse.View
                 _anchorBaseY = _headAnchor.localPosition.y;
             }
 
-            // 스프라이트 꼭대기를 로컬로 환산해 여백을 더하고, 씬 저작 높이와 상한 사이로 자른다.
-            float topLocalY = transform.InverseTransformPoint(spriteRenderer.bounds.max).y;
             var pos = _headAnchor.localPosition;
-            pos.y = Mathf.Clamp(topLocalY + HeadAnchorMargin, _anchorBaseY, HeadAnchorMaxY);
+            pos.y = Mathf.Clamp(body.max.y + HeadAnchorMargin, _anchorBaseY, HeadAnchorMaxY);
             _headAnchor.localPosition = pos;
         }
 

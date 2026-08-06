@@ -18,16 +18,16 @@ MonoBehaviour:
     icon: {fileID: 21300000, guid: 359f2ccf3f6a44e7d8646ac7151b08a8, type: 3}
   - kind: 4
     weight: 26
-    icon: {fileID: 21300000, guid: 25626db342cfa497ea1e588b779471d7, type: 3}
+    icon: {fileID: 21300000, guid: e1613adbf10ee4c979008ecaad20de29, type: 3}
   - kind: 5
     weight: 30
-    icon: {fileID: 21300000, guid: f3274a9dcaf0e4f498090804f289ba59, type: 3}
+    icon: {fileID: 21300000, guid: 78cc7625ff9ea4c138b9d12d3274ab07, type: 3}
   - kind: 6
     weight: 16
-    icon: {fileID: 21300000, guid: b98823d88a23b43f79edbbb350ab1f2b, type: 3}
+    icon: {fileID: 21300000, guid: 62f8d879cd89c4098a1e425edd8af0c8, type: 3}
   - kind: 7
     weight: 20
-    icon: {fileID: 21300000, guid: 38190622f7804480fbac3cc97f2018a9, type: 3}
+    icon: {fileID: 21300000, guid: 1e13e74e96edc4175a954600ed71adb6, type: 3}
   goldPerDepth: 300
   essencePerDepth: 60
   currencyJitter: 0.3
