@@ -12,15 +12,17 @@ namespace Eclipse.View
     /// </summary>
     public class WorldDoorView : MonoBehaviour, IPointerClickHandler
     {
-        /// <summary> 티어 하나의 소품 — 프레임 그림과 그 프레임의 거울 중심(아트 픽셀, 좌상단 원점). </summary>
+        /// <summary> 티어 하나의 소품 — 프레임 그림·그림자 그림과 프레임의 거울 중심(아트 픽셀, 좌상단 원점). </summary>
         [Serializable]
         private struct TierLook
         {
             public Sprite frame;
+            public Sprite shadow;
             public Vector2 mirrorCenterPx;
         }
 
         [SerializeField] private SpriteRenderer frameRenderer;
+        [SerializeField] private SpriteRenderer shadowRenderer;
         [SerializeField] private SpriteRenderer iconRenderer;
 
         // 걸린 보상 심볼 자리. 배치 순서가 해소 순서라 0번이 좌하단, 1번이 우상단이다. 미드보스 문이 아니면 전부 꺼진다.
@@ -49,8 +51,8 @@ namespace Eclipse.View
         // 두께는 월드 단위로 정의하고 셰이더에 넘길 때 PPU로 환산한다(배틀러 아웃라인과 같은 규약).
         private const float OutlineWorldThickness = 0.03f;
 
-        // 실루엣 판정 컷오프. 프레임 아트에 구워진 그림자를 아웃라인에서 빼려는 값인데,
-        // 현재 아트는 그림자 알파가 0.9 수준이라 걸러지지 않는다 — 그림자 분리 재납품 후 유효해진다.
+        // 실루엣 판정 컷오프. 그림자는 이제 별도 렌더러(shadowRenderer)로 프레임 밖에서 그리므로
+        // 프레임 아트 자체에는 반투명부가 없다 — 이 값은 안전망으로만 남긴다.
         private const float OutlineAlphaCutoff = 0.6f;
 
         // Eclipse/SpriteOutlineURP2D의 아웃라인 프로퍼티. MaterialPropertyBlock으로 문마다 따로 덮어쓴다.
@@ -77,6 +79,7 @@ namespace Eclipse.View
 
             var look = tierLooks[(int)option.Tier];
             frameRenderer.sprite = look.frame;
+            if (shadowRenderer != null) shadowRenderer.sprite = look.shadow;
             Vector3 mirror = MirrorLocal(look);
             float diameter = mirrorDiameterPx / look.frame.pixelsPerUnit;
 
