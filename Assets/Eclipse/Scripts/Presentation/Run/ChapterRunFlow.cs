@@ -320,7 +320,7 @@ namespace Eclipse.Presentation
             // 배치의 Elite는 정예 후보 자리일 뿐이다. 실제 정예 여부는 문③에서 미드보스 문을 골랐는지가 정한다.
             bool isElite = room.kind == RoomKind.Elite && _session.MidBossEngaged;
             var encounter = room.kind == RoomKind.Boss
-                ? _generator.Generate(EncounterGenerator.BossDepth, false)
+                ? _generator.Generate(EncounterGenerator.BossDepth, isEliteEncounter: false)
                 : _generator.Generate(room.depth, isElite);
 
             Current = RunStep.InBattle;

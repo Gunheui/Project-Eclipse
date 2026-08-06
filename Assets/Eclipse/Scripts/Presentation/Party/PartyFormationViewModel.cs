@@ -5,6 +5,7 @@ using Eclipse.Data;
 using Eclipse.Domain;
 using Eclipse.Service;
 using R3;
+using UnityEngine;
 
 namespace Eclipse.Presentation
 {
@@ -62,6 +63,15 @@ namespace Eclipse.Presentation
 
         /// <summary> 이번 런이 향하는 챕터. </summary>
         public ChapterSO SelectedChapter { get; }
+
+        /// <summary> 향하는 지역의 이름. 선택 챕터가 고정이라 화면이 사는 동안 바뀌지 않는다. </summary>
+        public string ChapterName => SelectedChapter.displayName;
+
+        /// <summary> 지역 소개 문구. 줄바꿈이 들어 있다. </summary>
+        public string ChapterDescription => SelectedChapter.description;
+
+        /// <summary> 지역을 보여 줄 그림. 그 챕터의 일반 전투 배경을 그대로 쓴다. </summary>
+        public Sprite ChapterBackground => SelectedChapter.normalBackground;
 
         public PartyFormationViewModel(ChapterSO[] chapters, PlayerSave save, NavigationContext nav,
             ISceneFlow sceneFlow, SaveService saveService, ISpriteProvider spriteProvider,

@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7465757b0460e47d782f2fbdd57ce020, type: 3}
-  m_Name: Guard
+  m_Name: Swordsman
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.EnemySO
-  id: enemy_guard
-  displayName: "\uC911\uAC11\uBCD1"
+  id: enemy_swordsman
+  displayName: "\uB9DD\uAC01\uC758 \uAC80\uC0AC"
   baseStats:
-    hp: 1600
-    atk: 180
-    def: 120
-    spd: 70
-    critRate: 0.05
+    hp: 1300
+    atk: 250
+    def: 45
+    spd: 105
+    critRate: 0.1
     critDamage: 1.5
   basicSkill: {fileID: 11400000, guid: a2e1aef5073874263b71b9a4e6cd83f2, type: 2}
   normalSkill: {fileID: 0}
   ultimateSkill: {fileID: 0}
-  battlerAssetRef: {fileID: 8816983129585240543, guid: 731162c7ed73c450fbb45798d81641d4, type: 3}
+  battlerAssetRef: {fileID: 21300000, guid: de3db7ad1329d4079ada68f39835faf0, type: 3}

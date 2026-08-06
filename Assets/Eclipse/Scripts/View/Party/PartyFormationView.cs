@@ -11,12 +11,18 @@ namespace Eclipse.View
 {
     /// <summary>
     /// 파티 편성 화면. 4개 슬롯을 생성해 편성 VM의 슬롯 스트림에 각각 바인딩하고, 슬롯 탭 시 픽 화면을 올린다.
-    /// 하단에 인원수·[런 시작] 버튼을 바인딩한다. 시작 버튼은 항상 활성이고, 4인 미달로 누르면 안내 팝업이 뜬다.
+    /// 하단에 인원수·[런 시작] 버튼을 바인딩하고, 오른쪽에 향하는 지역을 보여 준다.
+    /// 시작 버튼은 항상 활성이고, 4인 미달로 누르면 안내 팝업이 뜬다.
     /// </summary>
     public class PartyFormationView : MonoBehaviour, IScreen
     {
         [Tooltip("SlotGrid에 고정 배치된 4개 슬롯(순서 = 슬롯 0~3). 편성 슬롯 수와 개수가 맞아야 한다.")]
         [SerializeField] private PartySlotView[] slotViews;
+
+        [Header("지역")]
+        [SerializeField] private Image chapterBackground;
+        [SerializeField] private TMP_Text chapterNameLabel;
+        [SerializeField] private TMP_Text chapterDescriptionLabel;
 
         [Header("하단")]
         [SerializeField] private TMP_Text countLabel;
@@ -52,6 +58,8 @@ namespace Eclipse.View
                 slotViews[slot].Bind(_viewModel.SlotOccupants[slot], slot + 1, () => OnSlotTapped(slot));
             }
 
+            ShowChapter();
+
             if (countLabel != null)
                 _viewModel.PartyCount
                     .Subscribe(count => countLabel.text = $"{count} / {PartyFormationViewModel.SlotCount}")
@@ -75,6 +83,19 @@ namespace Eclipse.View
             if (backButton != null)
                 backButton.onClick.RemoveListener(OnBack);
             return UniTask.CompletedTask;
+        }
+
+        /// <summary>
+        /// 이번 런이 향하는 지역을 오른쪽 패널에 그린다. 챕터가 화면 수명 동안 고정이라 구독 없이 한 번만 채운다.
+        /// </summary>
+        private void ShowChapter()
+        {
+            if (chapterNameLabel != null)
+                chapterNameLabel.text = _viewModel.ChapterName;
+            if (chapterDescriptionLabel != null)
+                chapterDescriptionLabel.text = _viewModel.ChapterDescription;
+            if (chapterBackground != null)
+                chapterBackground.sprite = _viewModel.ChapterBackground;
         }
 
         /// <summary>슬롯을 탭하면 그 슬롯으로 픽 세션을 열고 픽 화면을 전면에 올린다.</summary>

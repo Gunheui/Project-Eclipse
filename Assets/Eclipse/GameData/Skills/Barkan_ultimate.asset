@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5640282a8b8e413eaa0459e7c3d1c11c, type: 3}
+  m_Name: Barkan_ultimate
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.SkillSO
+  id: barkan_ultimate
+  displayName: "\uC2EC\uC5F0\uD604\uD604"
+  description: "\uC804\uC7A5\uC744 \uC5B4\uB460\uC73C\uB85C \uB4A4\uB36E\uC5B4 \uC801
+    \uC804\uCCB4\uC5D0 \uAC01\uAC01 \uACF5\uACA9\uB825\uC758 140%\uB85C \uD53C\uD574\uB97C
+    \uC785\uD78C\uB2E4. (\uC7AC\uC0AC\uC6A9 5\uD134)"
+  icon: {fileID: 0}
+  cooldownTurns: 5
+  effects:
+  - type: 0
+    target: 5
+    value: 1.4
+    affectedStat: 0
+    duration: 0
+  castEffect: {fileID: 0}
+  impactEffect: {fileID: 0}

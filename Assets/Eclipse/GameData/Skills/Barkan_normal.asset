@@ -10,11 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5640282a8b8e413eaa0459e7c3d1c11c, type: 3}
-  m_Name: Ilnoct_normal
+  m_Name: Barkan_normal
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.SkillSO
-  id: ilnoct_normal
-  displayName: 광폭 후려치기
-  description: 적 전체를 후려쳐 각각 공격력의 80%로 피해를 입힌다. (재사용 3턴)
+  id: barkan_normal
+  displayName: "\uAC80\uC740 \uC190\uC544\uADC0"
+  description: "\uB545\uC18D\uC5D0\uC11C \uC19F\uC740 \uC5B4\uB460\uC758 \uC190\uC774
+    \uC801 \uC804\uCCB4\uB97C \uBD99\uC7A1\uC544 \uAC01\uAC01 \uACF5\uACA9\uB825\uC758
+    80%\uB85C \uD53C\uD574\uB97C \uC785\uD78C\uB2E4. (\uC7AC\uC0AC\uC6A9 3\uD134)"
   icon: {fileID: 0}
   cooldownTurns: 3
   effects:

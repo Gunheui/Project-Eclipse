@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Slime
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.EnemySO
   id: enemy_slime
-  displayName: 침식 점액체
+  displayName: "\uB9DD\uAC01\uC758 \uD3EC\uC2DD\uC790"
   baseStats:
     hp: 300
     atk: 110
@@ -24,4 +24,4 @@ MonoBehaviour:
   basicSkill: {fileID: 11400000, guid: a2e1aef5073874263b71b9a4e6cd83f2, type: 2}
   normalSkill: {fileID: 0}
   ultimateSkill: {fileID: 0}
-  battlerAssetRef: {fileID: 6474042226187092978, guid: e374e73466a6e4321905d70e719a03bc, type: 3}
+  battlerAssetRef: {fileID: 21300000, guid: 07d033b2511b74882b5b6ca5ac326f50, type: 3}

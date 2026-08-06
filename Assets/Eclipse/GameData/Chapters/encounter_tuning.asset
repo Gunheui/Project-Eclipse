@@ -49,6 +49,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 2af35d4408874bf8aa546ba5a5ca30c9, type: 2}
     - {fileID: 11400000, guid: eecc1fa5afb2a466b92719ab4f7fb51b, type: 2}
     - {fileID: 11400000, guid: e5ff1161681544ec6b8eaeb5cfdc8f62, type: 2}
+    - {fileID: 11400000, guid: dbb267beb5eb3478fb744cb311dbe583, type: 2}
     minCount: 3
     maxCount: 4
     mutationChance: 0.55
@@ -60,3 +61,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 34d4b08a7994b44af9f560132c43ecb7, type: 2}
   - {fileID: 11400000, guid: a946960e6da474ac0a0d5653498ef634, type: 2}
   eliteStatMultiplier: 1.15
+  eliteUnit: {fileID: 11400000, guid: b06468c6fa4be417a8159cd4a9878860, type: 2}
+  eliteAddCount: 2

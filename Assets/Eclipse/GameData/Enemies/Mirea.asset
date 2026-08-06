@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7465757b0460e47d782f2fbdd57ce020, type: 3}
+  m_Name: Mirea
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.EnemySO
+  id: enemy_elite_mirea
+  displayName: "\uD0C0\uB77D\uD55C \uB2AA\uC758 \uC815\uB839 \uBBF8\uB808\uC544"
+  baseStats:
+    hp: 3200
+    atk: 190
+    def: 85
+    spd: 115
+    critRate: 0.1
+    critDamage: 1.6
+  basicSkill: {fileID: 11400000, guid: 96fdd220200b448e9b55d22e9ac4c1b9, type: 2}
+  normalSkill: {fileID: 11400000, guid: 54354bdf2b2fa4684a46bfc8e98e1c14, type: 2}
+  ultimateSkill: {fileID: 11400000, guid: b7e6712b47c0b48f99557e20936a6ff5, type: 2}
+  battlerAssetRef: {fileID: 21300000, guid: 0007c7f5702e24185baa827d39e3cdde, type: 3}

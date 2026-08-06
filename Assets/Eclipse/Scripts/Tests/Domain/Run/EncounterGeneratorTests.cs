@@ -214,12 +214,40 @@ namespace Eclipse.Tests
             var tuning = FocusedTuning(1, 3, 0f, Enemy("a"));
             var encounterRng = new FixedRunRandom(0);
             var enemies = new EncounterGenerator(tuning, encounterRng, new FixedRunRandom(9999, 0))
-                .Generate(1, elite: true).Enemies;
+                .Generate(1, isEliteEncounter: true).Enemies;
 
             Assert.AreEqual(3, enemies.Count);
             Assert.IsTrue(enemies.All(e => e.IsElite));
             Assert.IsTrue(enemies.All(e => e.Mutation != null), "정예는 변이 확률 100%다");
             Assert.AreEqual(3, encounterRng.Calls, "마리수가 고정이면 마리수 롤을 소비하지 않는다");
+        }
+
+        [Test]
+        public void 정예_전용_유닛은_선봉에_서고_수하만_추첨한다()
+        {
+            var tuning = FocusedTuning(1, 3, 0f, Enemy("a"));
+            tuning.eliteUnit = Enemy("mirea");
+            tuning.eliteAddCount = 2;
+            var encounterRng = new FixedRunRandom(0);
+
+            var enemies = new EncounterGenerator(tuning, encounterRng, new FixedRunRandom(9999, 0))
+                .Generate(1, isEliteEncounter: true).Enemies;
+
+            Assert.AreEqual(3, enemies.Count);
+            Assert.AreEqual("mirea", enemies[0].Enemy.id);
+            Assert.IsNull(enemies[0].Mutation, "정예 전용 유닛에는 변이가 붙지 않는다");
+            Assert.IsFalse(enemies[0].IsElite, "정예 배수는 수하에만 걸린다");
+            Assert.IsTrue(enemies.Skip(1).All(e => e.IsElite && e.Mutation != null));
+            Assert.AreEqual(2, encounterRng.Calls, "수하 2기의 몹 추첨만 소비한다");
+        }
+
+        [Test]
+        public void 정예_전용_유닛이_겹치거나_수하_수가_범위를_벗어나면_예외()
+        {
+            AssertInvalid(t => t.eliteUnit = t.depths[0].allowedPool[0]);
+            AssertInvalid(t => t.eliteUnit = t.boss);
+            AssertInvalid(t => { t.eliteUnit = Enemy("mirea"); t.eliteAddCount = -1; });
+            AssertInvalid(t => { t.eliteUnit = Enemy("mirea"); t.eliteAddCount = 4; });   // 선봉 포함 5기가 된다
         }
 
         [Test]
@@ -230,7 +258,7 @@ namespace Eclipse.Tests
             var mutationRng = new FixedRunRandom(0);
 
             var enemies = new EncounterGenerator(tuning, encounterRng, mutationRng)
-                .Generate(EncounterGenerator.BossDepth, elite: true).Enemies;
+                .Generate(EncounterGenerator.BossDepth, isEliteEncounter: true).Enemies;
 
             CollectionAssert.AreEqual(new[] { "boss", "add" }, enemies.Select(e => e.Enemy.id).ToList());
             Assert.IsTrue(enemies.All(e => e.Mutation == null && !e.IsElite));

@@ -44,5 +44,14 @@ namespace Eclipse.Data
 
         /// <summary> 정예 인카운터가 받는 전 스탯 배수. </summary>
         public float eliteStatMultiplier = 1.15f;
+
+        /// <summary>
+        /// 정예 방 선봉에 고정으로 서는 적. 비면 정예 방이 깊이 풀 추첨만으로 채워진다.
+        /// 일반 풀·보스와 겹칠 수 없다.
+        /// </summary>
+        public EnemySO eliteUnit;
+
+        /// <summary> 정예 유닛과 함께 나오는 수하 마리수. 선봉까지 세어 전장 슬롯 4칸을 넘길 수 없다. </summary>
+        public int eliteAddCount = 2;
     }
 }

@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7465757b0460e47d782f2fbdd57ce020, type: 3}
-  m_Name: Hound
+  m_Name: Spider
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.EnemySO
-  id: enemy_hound
-  displayName: "\uAC80\uC740 \uBC1C\uD1B1\uC758 \uC0AC\uB0E5\uAC1C"
+  id: enemy_spider
+  displayName: "\uAC80\uC740 \uC2E4\uC758 \uC9C0\uBC30\uC790"
   baseStats:
-    hp: 1400
-    atk: 145
-    def: 70
-    spd: 110
-    critRate: 0.1
+    hp: 900
+    atk: 190
+    def: 40
+    spd: 130
+    critRate: 0.15
     critDamage: 1.6
   basicSkill: {fileID: 11400000, guid: a2e1aef5073874263b71b9a4e6cd83f2, type: 2}
-  normalSkill: {fileID: 11400000, guid: 61dbf658398749b7bd1b6448a79fb913, type: 2}
+  normalSkill: {fileID: 0}
   ultimateSkill: {fileID: 0}
-  battlerAssetRef: {fileID: 21300000, guid: 1e69380f719d34704a03afcc8c2b5ac5, type: 3}
+  battlerAssetRef: {fileID: 21300000, guid: 35dcbeeb7a73d4231b4f323fa705f8cb, type: 3}

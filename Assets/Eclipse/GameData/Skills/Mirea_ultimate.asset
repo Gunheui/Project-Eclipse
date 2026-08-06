@@ -10,18 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5640282a8b8e413eaa0459e7c3d1c11c, type: 3}
-  m_Name: Ilnoct_basic
+  m_Name: Mirea_ultimate
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.SkillSO
-  id: ilnoct_basic
-  displayName: 강타
-  description: 적 하나에게 공격력의 100%로 피해를 입힌다.
+  id: mirea_ultimate
+  displayName: "\uAC80\uC740 \uC2EC\uD310"
+  description: "\uC5B4\uB460\uC758 \uC2EC\uD310\uC744 \uB0B4\uB824 \uC801 \uD558\uB098\uC5D0\uAC8C
+    \uACF5\uACA9\uB825\uC758 220%\uB85C \uD53C\uD574\uB97C \uC785\uD78C\uB2E4. (\uC7AC\uC0AC\uC6A9
+    5\uD134)"
   icon: {fileID: 0}
-  cooldownTurns: 0
+  cooldownTurns: 5
   effects:
   - type: 0
     target: 3
-    value: 1
+    value: 2.2
     affectedStat: 0
     duration: 0
-  castEffect: {fileID: 0}
-  impactEffect: {fileID: 0}
+  castEffect: {fileID: 11400000, guid: ef54e92d476c496a9f37f54007365f16, type: 2}
+  impactEffect: {fileID: 11400000, guid: 5f7771e893d8418fac234125a81731cc, type: 2}

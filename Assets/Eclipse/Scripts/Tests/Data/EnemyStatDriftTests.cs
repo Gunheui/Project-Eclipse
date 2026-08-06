@@ -15,10 +15,12 @@ namespace Eclipse.Tests
         private static readonly Dictionary<string, int> ExpectedHp = new Dictionary<string, int>
         {
             ["enemy_slime"] = 300,
-            ["enemy_beast"] = 1300,
             ["enemy_hound"] = 1400,
-            ["enemy_guard"] = 1600,
-            ["enemy_boss_ilnoct"] = 4800,
+            ["enemy_swordsman"] = 1300,
+            ["enemy_blossom"] = 1650,
+            ["enemy_spider"] = 900,
+            ["enemy_elite_mirea"] = 3200,
+            ["enemy_boss_barkan"] = 4800,
         };
 
         [Test]
