@@ -45,6 +45,12 @@ namespace Eclipse.Domain
         public TurnResult LastTurn { get; private set; } = TurnResult.None;
 
         /// <summary>
+        /// 행동자의 턴 시작 정산이 끝났을 때 발화한다. 인자는 행동자와 그 턴에 터진 도트·리젠 틱 목록이다.
+        /// 도트 숫자가 수동 아군의 입력 대기보다 먼저 화면에 떠야 해서 턴 결과가 아니라 여기로 흘린다.
+        /// </summary>
+        public event Action<ICombatant, IReadOnlyList<EffectResult>> TurnStarted;
+
+        /// <summary>
         /// 다음 행동자 한 명의 턴을 처리하고 처리 후의 전투 상태를 반환한다.
         /// 행동자 스킬 쿨 감소·스킬 실행·턴 끝 지속턴 정산·게이지 정산·행동 카운터 증가가 이 안에서 일어난다.
         /// </summary>
@@ -53,14 +59,20 @@ namespace Eclipse.Domain
         {
             // null은 생존 유닛이 없는 퇴화 상태이므로 현재 생존 상황으로 판정한다.
             var actor = _scheduler.GetNextActor();
-            if (actor == null) return Evaluate();
+            if (actor == null)
+            {
+                // 호출부는 반환 직후 LastTurn을 읽어 연출을 쏜다. 비우지 않으면 지난 턴이 한 번 더 재생된다.
+                LastTurn = TurnResult.None;
+                return Evaluate();
+            }
 
             // 턴 시작 정산. 행동자는 항상 Combatant다(스케줄러는 읽기용 ICombatant만 반환).
-            ((Combatant)actor).OnTurnStart();
+            var ticks = ((Combatant)actor).OnTurnStart();
+            TurnStarted?.Invoke(actor, ticks);
 
-            // 이번 턴에 실제로 쓴 스킬·영향 대상. 스킬을 안 쓰면 null/빈 목록으로 남는다.
+            // 이번 턴에 실제로 쓴 스킬·효과 결과. 스킬을 안 쓰면 null/빈 목록으로 남는다.
             SkillSO usedSkill = null;
-            IReadOnlyList<ICombatant> targets = Array.Empty<ICombatant>();
+            IReadOnlyList<EffectResult> hits = Array.Empty<EffectResult>();
 
             // 도트로 쓰러졌으면 행동하지 않고 턴만 정산한다.
             if (actor.IsAlive)
@@ -71,11 +83,11 @@ namespace Eclipse.Domain
                 if (action.Skill != null && action.Skill.TryUse())
                 {
                     usedSkill = action.Skill.Skill;
-                    targets = _executor.ApplySkill(actor, action.Skill, action.Target, AlliesOf(actor), EnemiesOf(actor));
+                    hits = _executor.ApplySkill(actor, action.Skill, action.Target, AlliesOf(actor), EnemiesOf(actor));
                 }
             }
 
-            LastTurn = new TurnResult(actor, usedSkill, targets);
+            LastTurn = new TurnResult(actor, usedSkill, hits);
 
             // 턴 끝 정산. 이번 턴에 새로 붙은 효과는 시전턴 면제로 깎이지 않는다.
             ((Combatant)actor).OnTurnEnd();

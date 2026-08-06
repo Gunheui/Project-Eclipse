@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Eclipse.Data.Enums;
 
 namespace Eclipse.Domain
@@ -24,14 +25,14 @@ namespace Eclipse.Domain
         /// </summary>
         /// <param name="chosenTarget">수동 지정 대상. null이면 효과별 TargetSelector가 정한다.</param>
         /// <returns>
-        /// 이 스킬로 영향받은 대상들. 연출이 피격 이펙트를 붙일 대상으로 쓴다.
+        /// 이 스킬이 남긴 결과들. 연출이 숫자와 피격 이펙트를 붙이는 데 쓴다.
         /// 피해는 때린 횟수만큼, 나머지 효과는 대상마다 한 번만 들어간다.
         /// </returns>
-        public IReadOnlyList<ICombatant> ApplySkill(
+        public IReadOnlyList<EffectResult> ApplySkill(
             ICombatant actor, SkillRuntime skill, ICombatant chosenTarget,
             IReadOnlyList<ICombatant> allies, IReadOnlyList<ICombatant> enemies)
         {
-            var affected = new List<ICombatant>();
+            var results = new List<EffectResult>();
 
             // 강화 배수는 세기가 공격력 배율인 효과(Damage/Heal/Dot/Regen)에만 곱한다.
             // Buff/Debuff/Shield의 value는 증감률이라 배수를 곱하면 기획한 비율이 어긋난다.
@@ -41,17 +42,17 @@ namespace Eclipse.Domain
             {
                 var targets = _targeting.Resolve(effect.target, actor, allies, enemies, chosenTarget);
 
-                // 피해 효과는 중복 제거에서 뺀다 — 멀티히트가 타격 신호 한 번으로 합쳐지면 2타가 화면에 안 보인다.
-                foreach (var target in targets)
-                    if (effect.type == EffectType.Damage || !affected.Contains(target)) affected.Add(target);
-
                 switch (effect.type)
                 {
                     case EffectType.Damage:
                         foreach (var target in targets)
                         {
-                            var result = _calc.ComputeDamage(actor.EffectiveStats, target.EffectiveStats, effect.value * power);
-                            ((IDamageable)target).ApplyDamage(result.Amount);
+                            var damage = _calc.ComputeDamage(actor.EffectiveStats, target.EffectiveStats, effect.value * power);
+                            int shieldBefore = target.ShieldAbsorb;
+                            ((IDamageable)target).ApplyDamage(damage.Amount);
+                            // 남은 HP로 깎지 않는다 — 그러면 마무리 일격이 남은 HP만큼만 뜬다.
+                            AddHit(results, new EffectResult(EffectType.Damage, target, damage.Amount,
+                                shielded: target.ShieldAbsorb < shieldBefore, isCrit: damage.IsCrit));
                         }
                         break;
 
@@ -59,15 +60,21 @@ namespace Eclipse.Domain
                         foreach (var target in targets)
                         {
                             var amount = _calc.ComputeHeal(actor.EffectiveStats, effect.value * power);
+                            int hpBefore = target.CurrentHp;
                             ((IDamageable)target).Heal(amount);
+                            // 넘친 회복은 실제로 아무 일도 안 하고 대신 보여줄 짝도 없어서, 채운 만큼만 싣는다.
+                            AddOnce(results, new EffectResult(EffectType.Heal, target, target.CurrentHp - hpBefore));
                         }
                         break;
 
                     case EffectType.Buff:
                     case EffectType.Debuff:
                         foreach (var target in targets)
+                        {
                             ((IDamageable)target).ApplyEffect(
                                 StatusEffect.StatModifier(effect.type, effect.affectedStat, effect.value, effect.duration));
+                            AddOnce(results, new EffectResult(effect.type, target));
+                        }
                         break;
 
                     case EffectType.Dot:
@@ -76,6 +83,7 @@ namespace Eclipse.Domain
                         {
                             var tick = _calc.ComputeTickAmount(actor.EffectiveStats, effect.value * power);
                             ((IDamageable)target).ApplyEffect(StatusEffect.Periodic(effect.type, tick, effect.duration));
+                            AddOnce(results, new EffectResult(effect.type, target));
                         }
                         break;
 
@@ -84,17 +92,39 @@ namespace Eclipse.Domain
                         {
                             var absorb = _calc.ComputeShield(target.MaxHp, effect.value);
                             ((IDamageable)target).ApplyEffect(StatusEffect.Shield(absorb, effect.duration));
+                            AddOnce(results, new EffectResult(EffectType.Shield, target));
                         }
                         break;
 
                     case EffectType.Taunt:
                         foreach (var target in targets)
+                        {
                             ((IDamageable)target).ApplyEffect(StatusEffect.Taunt(effect.duration));
+                            AddOnce(results, new EffectResult(EffectType.Taunt, target));
+                        }
                         break;
                 }
             }
 
-            return affected;
+            return results;
+        }
+
+        /// <summary> 그 대상의 기록이 아직 없을 때만 담는다. 한 스킬이 같은 대상에 여러 효과를 걸어도 피격은 한 번이다. </summary>
+        private static void AddOnce(List<EffectResult> results, EffectResult result)
+        {
+            if (results.All(r => r.Target != result.Target)) results.Add(result);
+        }
+
+        /// <summary>
+        /// 피해 기록을 담는다. 같은 대상에 수치 없는 기록이 이미 있으면 그 자리를 차지하고, 없으면 새로 쌓는다.
+        /// </summary>
+        private static void AddHit(List<EffectResult> results, EffectResult hit)
+        {
+            // 디버프를 걸고 때리는 스킬은 대상 기록이 둘이 돼 타격 이펙트가 두 번 터진다. 수치를 든 피해가
+            // 자리를 물려받아 한 건으로 남는다. 피해끼리는 겹쳐 쌓여 멀티히트 타수가 화면에 보인다.
+            int slot = results.FindIndex(r => r.Target == hit.Target && r.Amount == 0);
+            if (slot >= 0) results[slot] = hit;
+            else results.Add(hit);
         }
     }
 }

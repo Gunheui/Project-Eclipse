@@ -14,30 +14,27 @@ namespace Eclipse.View
         [SerializeField] private TMP_Text label;
         [SerializeField] private float riseHeight = 1.2f;
         [SerializeField] private float duration = 0.7f;
-        [SerializeField] private Color damageColor = new Color(1f, 0.35f, 0.3f);
-        [SerializeField] private Color healColor = new Color(0.4f, 1f, 0.5f);
 
-        /// <summary>
-        /// 숫자를 세팅하고 상승·페이드 연출을 시작한다. 연출이 끝나면 이 오브젝트를 파괴한다.
-        /// </summary>
-        /// <param name="amount">표시할 크기(양수).</param>
-        /// <param name="isHeal">힐이면 초록 "+", 데미지면 빨강 "-".</param>
-        /// <param name="speed">연출 배속(1 또는 2). 상승·페이드 시간을 나눈다.</param>
-        public void Show(int amount, bool isHeal, int speed)
-            => Show((isHeal ? "+" : "-") + amount, isHeal ? healColor : damageColor, speed);
+        // 치명타 숫자를 이만큼 키운다. 색은 이미 피해·회복·도트·리젠·실드가 나눠 쓰고 있어 크기·굵기로 알린다.
+        [SerializeField] private float critScale = 1.4f;
 
         /// <summary>
         /// 문구와 색을 직접 정해 띄운다. 연출이 끝나면 이 오브젝트를 파괴한다.
         /// </summary>
         /// <param name="speed">연출 배속(1 또는 2). 상승·페이드 시간을 나눈다.</param>
+        /// <param name="isCrit">치명타 강조(크게·굵게·느낌표)를 붙일지.</param>
         /// <returns>연출이 끝나기까지 걸리는 시간(초). 다른 연출을 여기에 맞출 때 쓴다.</returns>
-        public float Show(string text, Color color, int speed)
+        public float Show(string text, Color color, int speed, bool isCrit = false)
         {
             if (label != null)
             {
-                label.text = text;
+                label.text = isCrit ? text + "!" : text;
                 label.color = color;
+                label.fontStyle = isCrit ? FontStyles.Bold : FontStyles.Normal;
             }
+
+            // 프리팹에 저작된 크기를 기준으로 곱한다. 갓 만든 오브젝트라 이전 배율이 남아 있지 않다.
+            if (isCrit) transform.localScale *= critScale;
 
             float dur = duration / Mathf.Max(1, speed);
 

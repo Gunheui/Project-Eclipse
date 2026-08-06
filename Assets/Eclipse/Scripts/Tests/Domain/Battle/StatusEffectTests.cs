@@ -135,6 +135,94 @@ namespace Eclipse.Tests
             unit.OnTurnStart(); Assert.AreEqual(100, unit.CurrentHp, "최대치에서 클램프");
         }
 
+        // --- 틱 내역: 화면에 띄울 실제 변화량 ---
+
+        [Test]
+        public void 실드가_일부만_막아도_틱량_전부를_한_건으로_보고한다()
+        {
+            var unit = Unit(S(100, 100, 0, 100));
+            ((IDamageable)unit).ApplyEffect(StatusEffect.Shield(4, 5));
+            ((IDamageable)unit).ApplyEffect(StatusEffect.Periodic(EffectType.Dot, 10, 3));
+
+            var tick = unit.OnTurnStart().Single();
+
+            Assert.AreEqual(EffectType.Dot, tick.Type);
+            Assert.AreEqual(10, tick.Amount, "실드가 4를 먹었어도 들어간 틱량은 10");
+            Assert.IsTrue(tick.Shielded, "실드가 막았으므로 실드색으로 뜬다");
+            Assert.AreEqual(94, unit.CurrentHp, "HP는 실드를 넘긴 6만 줄어든다");
+        }
+
+        [Test]
+        public void 실드가_도트를_전액_막아도_틱량_그대로_보고한다()
+        {
+            var unit = Unit(S(100, 100, 0, 100));
+            ((IDamageable)unit).ApplyEffect(StatusEffect.Shield(30, 5));
+            ((IDamageable)unit).ApplyEffect(StatusEffect.Periodic(EffectType.Dot, 10, 3));
+
+            var tick = unit.OnTurnStart().Single();
+
+            Assert.AreEqual(10, tick.Amount);
+            Assert.IsTrue(tick.Shielded);
+            Assert.AreEqual(100, unit.CurrentHp);
+        }
+
+        [Test]
+        public void 실드가_없으면_실드_표시가_꺼진다()
+        {
+            var unit = Unit(S(100, 100, 0, 100));
+            ((IDamageable)unit).ApplyEffect(StatusEffect.Periodic(EffectType.Dot, 10, 3));
+
+            Assert.IsFalse(unit.OnTurnStart().Single().Shielded);
+        }
+
+        [Test]
+        public void 도트가_남은_HP보다_크면_들어간_틱량_전부를_보고한다()
+        {
+            var unit = Unit(S(100, 100, 0, 100));
+            ((IDamageable)unit).ApplyDamage(95); // HP 5
+            ((IDamageable)unit).ApplyEffect(StatusEffect.Periodic(EffectType.Dot, 40, 3));
+
+            var tick = unit.OnTurnStart().Single();
+
+            Assert.AreEqual(40, tick.Amount, "HP가 0에서 멈춰도 들어간 피해는 40 그대로");
+            Assert.AreEqual(0, unit.CurrentHp);
+        }
+
+        [Test]
+        public void 도트가_둘이면_틱도_둘로_보고된다()
+        {
+            var unit = Unit(S(100, 100, 0, 100));
+            ((IDamageable)unit).ApplyEffect(StatusEffect.Periodic(EffectType.Dot, 10, 3));
+            ((IDamageable)unit).ApplyEffect(StatusEffect.Periodic(EffectType.Dot, 5, 3));
+
+            var ticks = unit.OnTurnStart();
+
+            Assert.AreEqual(2, ticks.Count);
+            CollectionAssert.AreEqual(new[] { 10, 5 }, ticks.Select(t => t.Amount).ToList());
+        }
+
+        [Test]
+        public void 리젠_틱은_최대_HP에_막힌_실제_회복량만_보고한다()
+        {
+            var unit = Unit(S(100, 100, 0, 100));
+            ((IDamageable)unit).ApplyDamage(10);
+            ((IDamageable)unit).ApplyEffect(StatusEffect.Periodic(EffectType.Regen, 30, 2));
+
+            var tick = unit.OnTurnStart().Single();
+
+            Assert.AreEqual(EffectType.Regen, tick.Type);
+            Assert.AreEqual(10, tick.Amount, "최대치에 막혀 실제 회복은 10");
+        }
+
+        [Test]
+        public void 도트도_리젠도_없으면_틱_내역이_비어_있다()
+        {
+            var unit = Unit(S(100, 100, 0, 100));
+            ((IDamageable)unit).ApplyEffect(StatusEffect.StatModifier(EffectType.Buff, StatType.Atk, 0.4f, 2));
+
+            Assert.IsEmpty(unit.OnTurnStart());
+        }
+
         // --- 실드: 전액 흡수 후 초과분만 HP ---
 
         [Test]

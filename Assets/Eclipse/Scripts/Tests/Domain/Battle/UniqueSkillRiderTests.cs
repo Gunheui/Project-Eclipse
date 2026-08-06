@@ -113,7 +113,7 @@ namespace Eclipse.Tests
                 new List<ICombatant> { actor }, new List<ICombatant> { target });
 
             Assert.AreEqual(2, affected.Count, "2타가 타격 신호 2회로 나간다");
-            Assert.IsTrue(affected.All(u => u == target));
+            Assert.IsTrue(affected.All(r => r.Target == target));
         }
 
         [Test]
@@ -131,6 +131,41 @@ namespace Eclipse.Tests
                 new List<ICombatant> { actor }, new List<ICombatant> { target });
 
             Assert.AreEqual(1, affected.Count, "라이더는 타수를 늘리지 않는다");
+        }
+
+        [Test]
+        public void 남은_HP보다_큰_피해도_계산된_데미지_전부를_보고한다()
+        {
+            var basic = Skill("basic", Damage(1f));
+            var actor = Ally(Character(S(1000, 100, 0, 100), basic, null), null);
+            var target = Enemy(S(1000, 100, 0, 100));
+            target.ApplyDamage(995); // HP 5
+
+            var affected = Executor().ApplySkill(actor, actor.Skills[0], target,
+                new List<ICombatant> { actor }, new List<ICombatant> { target });
+
+            Assert.AreEqual(0, target.CurrentHp);
+            Assert.AreEqual(100, affected.Single().Amount, "마무리 일격도 남은 HP가 아니라 들어간 피해로 보고한다");
+        }
+
+        [Test]
+        public void 디버프를_걸고_때리는_스킬은_대상_기록이_하나다()
+        {
+            var debuff = new SkillEffect
+            {
+                type = EffectType.Debuff, target = TargetSelector.SingleEnemy,
+                value = 0.3f, affectedStat = StatType.Def, duration = 2,
+            };
+            var normal = Skill("normal", debuff, Damage(0.5f));
+            var actor = Ally(Character(S(1000, 100, 0, 100), Skill("basic", Damage(1f)), normal), null);
+            var target = Enemy(S(10000, 100, 0, 100));
+
+            var affected = Executor().ApplySkill(actor, actor.Skills[1], target,
+                new List<ICombatant> { actor }, new List<ICombatant> { target });
+
+            Assert.AreEqual(1, affected.Count, "디버프 기록 자리를 피해가 물려받아 타격 이펙트가 한 번만 나간다");
+            Assert.AreEqual(EffectType.Damage, affected[0].Type);
+            Assert.Greater(affected[0].Amount, 0, "숫자를 든 피해 기록이 남는다");
         }
 
         [Test]

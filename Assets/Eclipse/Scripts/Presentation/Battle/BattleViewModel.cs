@@ -83,6 +83,7 @@ namespace Eclipse.Presentation
 
             // 수동 아군 턴이 열려 입력 대기에 들어가면 그 유닛을 ActingCombatant으로 세운다(스킬 버튼 활성화용).
             _manualProvider.InputRequested += OnInputRequested;
+            _engine.TurnStarted += OnTurnStarted;
         }
 
         /// <summary> 전투 참가 유닛 VM 목록(아군+적). 순서는 스케줄러 입력 순. </summary>
@@ -150,24 +151,31 @@ namespace Eclipse.Presentation
 
         /// <summary> 입력 대기가 시작된 행동자를 <see cref="ActingCombatant"/>에 세운다. </summary>
         private void OnInputRequested(ICombatant actor)
+            => _actingCombatant.Value = Combatants.FirstOrDefault(u => u.Model == actor);
+
+        /// <summary> 턴 시작에 터진 도트·리젠을 행동자에 발화하고 화면 상태를 갱신한다. </summary>
+        private void OnTurnStarted(ICombatant actor, IReadOnlyList<EffectResult> ticks)
         {
-            _actingCombatant.Value = Combatants.FirstOrDefault(u => u.Model == actor);
-            // 이번 턴 상태(쿨은 턴 시작에 감소)를 반영하도록 재읽기 신호도 함께 흘린다.
+            var vm = Combatants.FirstOrDefault(u => u.Model == actor);
+            foreach (var tick in ticks)
+                vm?.RaiseTicked(tick);
+
+            // 숫자를 먼저 띄우고 HP 바를 내린다. 순서가 뒤집히면 바가 먼저 줄어 원인이 안 보인다.
             _stateChanged.OnNext(Unit.Default);
         }
 
-        /// <summary> 행동자에 Acted(시전), 대상마다 Hit(피격)을 발화한다. </summary>
+        /// <summary> 행동자에 Acted(시전)를, 효과 결과마다 대상에 Hit(피격)을 발화한다. </summary>
         private void NotifyActor()
         {
             var turn = _engine.LastTurn;
+
             // 스킬을 안 쓴 턴(도트 사망 등)은 연출이 없다.
             if (!turn.UsedSkill) return;
 
-            var actor = Combatants.FirstOrDefault(u => u.Model == turn.Actor);
-            actor?.RaiseActed(turn.Skill);
+            Combatants.FirstOrDefault(u => u.Model == turn.Actor)?.RaiseActed(turn.Skill);
 
-            foreach (var target in turn.Targets)
-                Combatants.FirstOrDefault(u => u.Model == target)?.RaiseHit(turn.Skill);
+            foreach (var hit in turn.Hits)
+                Combatants.FirstOrDefault(u => u.Model == hit.Target)?.RaiseHit(turn.Skill, hit);
         }
 
         /// <summary>
@@ -191,6 +199,7 @@ namespace Eclipse.Presentation
             _cts.Dispose();
 
             _manualProvider.InputRequested -= OnInputRequested;
+            _engine.TurnStarted -= OnTurnStarted;
             _subscriptions.Dispose();
 
             foreach (var unit in Combatants) unit.Dispose();

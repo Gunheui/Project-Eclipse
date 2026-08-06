@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Eclipse.Data.Enums;
 using Eclipse.Presentation;
+using Eclipse.View.Theme;
 using R3;
 using TMPro;
 using UnityEngine;
@@ -17,11 +18,11 @@ namespace Eclipse.View
     /// </summary>
     public class CombatantPlateView : MonoBehaviour, IPointerClickHandler
     {
-        // HP 채움을 왼쪽부터 드러내는 마스크 영역(RectMask2D). 폭을 체력 비율만큼 줄여 채움을 표시한다.
-        // 안쪽 HpFill 이미지는 Sliced라 어떤 폭에서도 모서리가 왜곡되지 않는다.
+        // HP 채움 이미지. 폭을 체력 비율만큼 줄여 채움을 표시한다. 이름과 달리 마스크가 아니다.
+        // 게이지 자리보다 좌우로 넓게 그려 두고 넘치는 쪽은 위에 덮인 프레임이 가린다. 그래서 꽉 찼을 때만 양끝이 뾰족하다.
         [SerializeField] private RectTransform hpFillMask;
 
-        // 실드 구간 마스크. HpFillArea와 같은 구조지만 HP 채움 위에 그려지며, 폭과 위치가 모두 움직인다.
+        // 실드 채움 이미지. HP 채움과 같은 구조지만 그 위에 그려지며, 폭과 위치가 모두 움직인다.
         [SerializeField] private RectTransform shieldFillMask;
 
         [SerializeField] private TMP_Text nameLabel;
@@ -54,17 +55,14 @@ namespace Eclipse.View
         // 매핑에 없는 타입이 들어왔을 때 대신 표시하는 아이콘. 경고 로그와 함께 쓰인다.
         [SerializeField] private Sprite fallbackEffectIcon;
 
-        // 프레임 틴트. 이로움(버프·리젠·실드)=청, 해로움(디버프·도트·도발)=적, 넘침(+N)=어두운 중립색.
-        [SerializeField] private Color beneficialFrameColor = new Color32(0x4A, 0x7A, 0xD8, 0xFF);
-        [SerializeField] private Color harmfulFrameColor = new Color32(0xD0, 0x6A, 0x61, 0xFF);
-        [SerializeField] private Color overflowFrameColor = new Color32(0x4A, 0x4A, 0x52, 0xFF);
+        [SerializeField] private UIThemeSO theme;
 
         private readonly CompositeDisposable _bindings = new();
 
-        // 체력 100% 기준 마스크 폭. Awake에서 초기 sizeDelta.x로 캡처해 비율 계산의 기준으로 쓴다.
+        // 체력 100% 기준 채움 폭. Awake에서 초기 sizeDelta.x로 캡처해 비율 계산의 기준으로 쓴다.
         private float _hpFillFullWidth;
 
-        // 바 왼쪽 끝의 실드 마스크 x좌표. 실드 구간을 오른쪽 정렬로 배치할 때의 기준점.
+        // 바 왼쪽 끝의 실드 채움 x좌표. 실드 구간을 오른쪽 정렬로 배치할 때의 기준점.
         private float _shieldFillLeftX;
 
         private void Awake()
@@ -134,7 +132,9 @@ namespace Eclipse.View
                 slot.icon.sprite = LookupIcon(effect.Type);
             }
             if (slot.frame != null)
-                slot.frame.color = IsBeneficial(effect.Type) ? beneficialFrameColor : harmfulFrameColor;
+                slot.frame.color = IsBeneficial(effect.Type)
+                    ? theme.battleEffectBeneficial
+                    : theme.battleEffectHarmful;
             if (slot.turnsLabel != null)
             {
                 // 상시(-1)는 턴 라벨을 숨긴다.
@@ -151,7 +151,7 @@ namespace Eclipse.View
 
             // 아이콘을 끄고 어두운 프레임 중앙에 +N을 적는다.
             if (slot.icon != null) slot.icon.enabled = false;
-            if (slot.frame != null) slot.frame.color = overflowFrameColor;
+            if (slot.frame != null) slot.frame.color = theme.battleEffectOverflow;
             if (slot.turnsLabel != null)
             {
                 slot.turnsLabel.alignment = TextAlignmentOptions.Center;
@@ -176,7 +176,7 @@ namespace Eclipse.View
         private static bool IsBeneficial(EffectType type)
             => type is EffectType.Buff or EffectType.Regen or EffectType.Shield;
 
-        /// <summary>HP 바 채움·실드 구간(마스크 폭)과 "현재/최대 +실드" 숫자 라벨을 함께 갱신한다.</summary>
+        /// <summary>HP 바 채움·실드 구간(채움 폭)과 "현재/최대 +실드" 숫자 라벨을 함께 갱신한다.</summary>
         private void OnHpChanged(int hp, int shield, int maxHp)
         {
             // 바의 눈금은 항상 최대 HP 기준이라 실드가 붙어도 바 길이나 HP 한 칸의 의미가 변하지 않는다.
@@ -205,12 +205,12 @@ namespace Eclipse.View
             shieldFillMask.anchoredPosition = pos;
         }
 
-        /// <summary>마스크 폭을 바 전체 폭 대비 비율로 세팅한다.</summary>
+        /// <summary>채움 폭을 바 전체 폭 대비 비율로 세팅한다.</summary>
         private void SetMaskWidth(RectTransform mask, float fraction)
         {
             if (mask == null) return;
 
-            // 안쪽 Sliced 이미지는 그대로 두고 마스크만 줄인다.
+            // Sliced 이미지라 폭만 바꿔도 양끝 반원이 매번 다시 그려진다.
             var size = mask.sizeDelta;
             size.x = _hpFillFullWidth * fraction;
             mask.sizeDelta = size;

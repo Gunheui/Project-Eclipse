@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Eclipse.Data;
+using Eclipse.Data.Enums;
+using Eclipse.Domain;
 using Eclipse.Presentation;
+using Eclipse.View.Theme;
 using R3;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -25,6 +28,7 @@ namespace Eclipse.View
     public class BattlerView : MonoBehaviour,
         IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IPointerUpHandler
     {
+        [SerializeField] private UIThemeSO theme;
         [SerializeField] private Transform visualRoot;
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private FloatingText floatingTextPrefab;
@@ -49,12 +53,12 @@ namespace Eclipse.View
         private const float HeadAnchorMargin = 0.3f;
         private const float HeadAnchorMaxY = 4f;
 
-        // 유효 타겟 아웃라인. 적 공격 조준=적군 계열 #D06A61, 아군 힐/버프 조준=아군 HP바와 같은 녹색 #4E9B7A
-        // (힐 대상이 공격 대상처럼 보이지 않게). 두께는 월드 단위로 정의한다 — 스프라이트 PPU가
-        // 달라도(아군 315·적 100) 화면상 굵기가 같도록 셰이더에 넘길 때 PPU로 환산한다.
-        private static readonly Color SelectableOutline = new(0.816f, 0.416f, 0.380f, 1f);
-        private static readonly Color AllyOutline = new(0.306f, 0.608f, 0.478f, 1f);
+        // 유효 타겟 아웃라인 두께. 월드 단위로 정의한다 — 스프라이트 PPU가 달라도(아군 315·적 100)
+        // 화면상 굵기가 같도록 셰이더에 넘길 때 PPU로 환산한다.
         private const float SelectableOutlineWorldThickness = 0.03f;
+
+        // 한 대상에게 숫자가 연달아 뜰 때의 간격(초). 앞 숫자가 상승하는 도중 다음 숫자가 뜬다.
+        private const float NumberInterval = 0.35f;
 
         // Eclipse/SpriteOutlineURP2D의 아웃라인 프로퍼티. MaterialPropertyBlock으로 배틀러마다 따로 덮어쓴다.
         private static readonly int OutlineEnabledId = Shader.PropertyToID("_OutlineEnabled");
@@ -76,7 +80,6 @@ namespace Eclipse.View
 
         private Func<int> _speed = () => 1;
         private Vector3 _home;
-        private int _prevHp;
         private bool _facingRight;
 
         // HP바가 매달린 HeadAnchor와 씬에 저작된 기본 높이. 슬롯마다 있는 자식이라 첫 사용 때 이름으로 찾는다.
@@ -87,13 +90,13 @@ namespace Eclipse.View
         // Preserve로 감싸 여러 번 await 가능하게 둔다(매 턴 모든 배틀러의 이 값을 다시 기다리므로).
         private UniTask _animation = UniTask.CompletedTask;
 
-        // 아직 재생하지 못한 타격 이펙트. 같은 턴에 여러 번 맞으면 겹치지 않고 하나씩 나간다.
-        private readonly Queue<EffectSpec> _hitQueue = new();
-        private bool _drainingHits;
+        // 아직 재생하지 못한 표시. 같은 턴에 여러 번 맞거나 틱이 겹쳐도 겹치지 않고 하나씩 나간다.
+        private readonly Queue<(EffectResult Result, EffectSpec Impact, bool Shake)> _displayQueue = new();
+        private bool _draining;
 
         /// <summary>
         /// 이 배틀러를 한 유닛 VM에 연결한다. 이전 구독을 정리하고,
-        /// HP 변화(피격·힐)·행동(시전)·생존을 구독해 스스로 연출하게 한다.
+        /// 피격·틱·행동(시전)·생존을 구독해 스스로 연출하게 한다.
         /// </summary>
         /// <param name="speed">현재 연출 배속(1 또는 2)을 읽는 함수. 트윈 시간을 나눈다.</param>
         /// <param name="onTapped">몸통을 탭했을 때 이 유닛으로 호출된다. null이면 탭이 무시된다.</param>
@@ -111,9 +114,8 @@ namespace Eclipse.View
             if (visualRoot == null) visualRoot = transform;
             _home = visualRoot.localPosition;
             _facingRight = unit.IsAlly;
-            _prevHp = unit.CurrentHp.CurrentValue;
-            _hitQueue.Clear();
-            _drainingHits = false;
+            _displayQueue.Clear();
+            _draining = false;
             if (spriteRenderer != null)
             {
                 spriteRenderer.sprite = unit.BattlerSprite;
@@ -129,18 +131,19 @@ namespace Eclipse.View
                 PositionHeadAnchor(body);
             }
 
-            // HP가 줄면 피격(흔들림+숫자), 늘면 힐(숫자). 구독 즉시 오는 첫 값은 변화 0이라 무시된다.
-            unit.CurrentHp
-                .Subscribe(OnHpChanged)
-                .AddTo(_bindings);
-
             unit.Acted
                 .Subscribe(skill => AddAnimation(PlayCastAsync(skill)))
                 .AddTo(_bindings);
 
-            // 스킬 대상이 되면 피격 이펙트만 재생한다(흔들림·숫자는 HP 변화가 따로 처리).
+            // 흔들림은 맞은 반응이라 피해에만 붙인다. 버프·실드를 받을 때는 흔들리지 않는다.
             unit.Hit
-                .Subscribe(skill => AddAnimation(QueueHitEffect(skill != null ? skill.impactEffect : null)))
+                .Subscribe(h => AddAnimation(QueueDisplay(h.Result,
+                    h.Skill != null ? h.Skill.impactEffect : null,
+                    shake: h.Result.Type == EffectType.Damage)))
+                .AddTo(_bindings);
+
+            unit.Ticked
+                .Subscribe(tick => AddAnimation(QueueDisplay(tick, null, shake: false)))
                 .AddTo(_bindings);
 
             unit.IsAlive
@@ -283,7 +286,7 @@ namespace Eclipse.View
             _mpb.SetFloat(OutlineEnabledId, on ? 1f : 0f);
             if (on)
             {
-                _mpb.SetColor(OutlineColorId, allyTarget ? AllyOutline : SelectableOutline);
+                _mpb.SetColor(OutlineColorId, allyTarget ? theme.battleAlly : theme.battleEnemy);
                 // 셰이더 두께 단위는 소스 텍셀이므로 월드 두께에 PPU를 곱해 환산한다.
                 float ppu = spriteRenderer.sprite != null ? spriteRenderer.sprite.pixelsPerUnit : 100f;
                 _mpb.SetFloat(OutlineThicknessId, SelectableOutlineWorldThickness * ppu);
@@ -291,16 +294,8 @@ namespace Eclipse.View
             spriteRenderer.SetPropertyBlock(_mpb);
         }
 
-        private void OnHpChanged(int hp)
-        {
-            int delta = hp - _prevHp;
-            _prevHp = hp;
-            if (delta < 0) AddAnimation(PlayHitAsync(-delta));
-            else if (delta > 0) SpawnFloatingText(delta, isHeal: true);
-        }
-
         /// <summary>
-        /// 이번 턴의 하위 연출을 합류시킨다. 같은 턴에 여러 신호(시전·피격·HP변화)를 받아도
+        /// 이번 턴의 하위 연출을 합류시킨다. 같은 턴에 여러 신호(시전·피격·틱)를 받아도
         /// 마지막 것이 앞선 것을 덮지 않는다.
         /// </summary>
         private void AddAnimation(UniTask next)
@@ -312,38 +307,84 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// 타격 이펙트를 대기열에 넣는다. 한 스킬이 같은 대상을 여러 번 때리면 이펙트가 연달아 터져야
-        /// 타수가 화면에 보인다. 한 턴의 타격 신호는 동기로 연달아 들어온다.
+        /// 효과 결과 하나를 대기열에 넣는다. 한 턴에 여러 번 맞거나 틱이 겹쳐도 겹치지 않고 하나씩 나가,
+        /// 멀티히트 타수와 도트 개수가 화면에 보인다. 한 턴의 신호는 동기로 연달아 들어온다.
         /// </summary>
+        /// <param name="impact">함께 터뜨릴 타격 이펙트. 틱처럼 없으면 null.</param>
+        /// <param name="shake">이 결과에 몸통이 반응할지.</param>
         /// <returns>
-        /// 대기열을 비우는 재생. 같은 턴의 두 번째 타격부터는 앞선 재생이 끝까지 비우므로 완료된 값이다.
+        /// 대기열을 비우는 재생. 같은 턴의 두 번째부터는 앞선 재생이 끝까지 비우므로 완료된 값이다.
         /// </returns>
-        private UniTask QueueHitEffect(EffectSpec spec)
+        private UniTask QueueDisplay(EffectResult result, EffectSpec impact, bool shake)
         {
-            _hitQueue.Enqueue(spec);
-            return _drainingHits ? UniTask.CompletedTask : DrainHitQueueAsync();
+            _displayQueue.Enqueue((result, impact, shake));
+            return _draining ? UniTask.CompletedTask : DrainQueueAsync();
         }
 
-        /// <summary>대기열이 빌 때까지 타격 이펙트를 하나씩 재생한다.</summary>
-        private async UniTask DrainHitQueueAsync()
+        /// <summary>대기열이 빌 때까지 하나씩 재생한다.</summary>
+        private async UniTask DrainQueueAsync()
         {
-            _drainingHits = true;
+            _draining = true;
             try
             {
-                while (_hitQueue.Count > 0)
-                    await SpawnEffect(_hitQueue.Dequeue());
+                while (_displayQueue.Count > 0)
+                {
+                    var (result, impact, shake) = _displayQueue.Dequeue();
+                    await PlayResultAsync(result, impact, shake);
+                }
             }
             finally
             {
-                _drainingHits = false;
+                _draining = false;
             }
         }
 
-        /// <summary>피격: 데미지 숫자를 띄우고 짧게 흔들린다.</summary>
-        /// <returns>흔들림이 끝나면 완료된다.</returns>
-        private UniTask PlayHitAsync(int amount)
+        /// <summary>
+        /// 효과 결과 하나를 재생한다. 크기가 0인 결과(버프·도발, 최대 HP에서 걸린 리젠)는
+        /// 숫자 없이 이펙트만 나간다.
+        /// </summary>
+        /// <returns>숫자·흔들림·타격 이펙트가 모두 끝나면 완료된다.</returns>
+        private async UniTask PlayResultAsync(EffectResult result, EffectSpec impact, bool shake)
         {
-            SpawnFloatingText(amount, isHeal: false);
+            // 이펙트와 흔들림은 숫자와 나란히 돈다.
+            var reaction = UniTask.WhenAll(
+                SpawnEffect(impact),
+                shake ? PlayShakeAsync() : UniTask.CompletedTask);
+
+            if (result.Amount > 0) await SpawnAmountAsync(result);
+
+            await reaction;
+        }
+
+        /// <summary>숫자 하나를 띄우고 다음 숫자를 위한 간격을 둔다.</summary>
+        /// <returns>다음 숫자를 띄워도 될 때 완료된다.</returns>
+        private UniTask SpawnAmountAsync(EffectResult result)
+        {
+            bool heal = result.Type is EffectType.Heal or EffectType.Regen;
+            var ft = SpawnFloatingTextOrNull();
+            if (ft != null)
+                ft.Show((heal ? "+" : "-") + result.Amount, NumberColor(result), _speed(), result.IsCrit);
+            return UniTask.Delay(TimeSpan.FromSeconds(NumberInterval / _speed()),
+                cancellationToken: this.GetCancellationTokenOnDestroy());
+        }
+
+        /// <summary>숫자 색. 실드가 막아 낸 피해는 종류와 무관하게 실드색으로 알린다.</summary>
+        private Color NumberColor(EffectResult result)
+        {
+            if (result.Shielded) return theme.battleShield;
+            return result.Type switch
+            {
+                EffectType.Heal => theme.battleHeal,
+                EffectType.Dot => theme.battleDot,
+                EffectType.Regen => theme.battleRegen,
+                _ => theme.battleDamage,
+            };
+        }
+
+        /// <summary>피격 반응으로 짧게 흔들린다.</summary>
+        /// <returns>흔들림이 끝나면 완료된다.</returns>
+        private UniTask PlayShakeAsync()
+        {
             float dur = 0.3f / _speed();
             return visualRoot
                 .DOShakePosition(dur, strength: 0.25f, vibrato: 18, randomness: 90, snapping: false, fadeOut: true)
@@ -393,13 +434,14 @@ namespace Eclipse.View
             return player.Play(spec, _speed(), this.GetCancellationTokenOnDestroy());
         }
 
-        private void SpawnFloatingText(int amount, bool isHeal)
+        /// <summary>숫자 하나를 이 배틀러 위치에 만든다.</summary>
+        /// <returns>프리팹이 없거나 씬이 파괴 중이면 null. 호출부는 표시를 건너뛴다.</returns>
+        private FloatingText SpawnFloatingTextOrNull()
         {
-            if (floatingTextPrefab == null) return;
+            if (floatingTextPrefab == null) return null;
             var parent = SpawnParentOrNull();
-            if (parent == null) return;
-            var ft = Instantiate(floatingTextPrefab, visualRoot.position, Quaternion.identity, parent);
-            ft.Show(amount, isHeal, _speed());
+            if (parent == null) return null;
+            return Instantiate(floatingTextPrefab, visualRoot.position, Quaternion.identity, parent);
         }
 
         private void OnDestroy() => _bindings.Dispose();

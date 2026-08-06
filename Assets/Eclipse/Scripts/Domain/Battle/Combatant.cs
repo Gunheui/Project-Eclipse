@@ -88,14 +88,32 @@ namespace Eclipse.Domain
         /// 이번 턴 끝에 지속턴을 깎을 효과 목록을 기록한다. 도트는 ApplyDamage를 거치므로 자기 실드에 먼저 흡수된다.
         /// 도트로 죽은 턴에는 행동하지 못하므로 스킬 쿨도 감소하지 않는다.
         /// </summary>
-        public void OnTurnStart()
+        /// <returns>이번 턴에 터진 도트·리젠 틱을 적용 순서로 담은 목록. 도트도 리젠도 없으면 빈 목록.</returns>
+        public IReadOnlyList<EffectResult> OnTurnStart()
         {
+            var ticks = new List<EffectResult>();
             foreach (var e in _effects)
             {
                 switch (e.Type)
                 {
-                    case EffectType.Dot: ApplyDamage(e.TickAmount); break;
-                    case EffectType.Regen: Heal(e.TickAmount); break;
+                    case EffectType.Dot:
+                    {
+                        // 실드가 막았든 HP가 0에서 멈췄든 들어간 틱량 그대로 싣는다. 실드가 먹었는지는
+                        // 숫자 색만 바꾸므로 얼마를 먹었는지까지는 화면이 알 필요가 없다.
+                        int shieldBefore = ShieldAbsorb;
+                        ApplyDamage(e.TickAmount);
+                        ticks.Add(new EffectResult(EffectType.Dot, this, e.TickAmount,
+                            shielded: ShieldAbsorb < shieldBefore));
+                        break;
+                    }
+                    case EffectType.Regen:
+                    {
+                        // 리젠도 최대 HP에 막히므로 실제로 채운 만큼만 싣는다.
+                        int hpBefore = CurrentHp;
+                        Heal(e.TickAmount);
+                        ticks.Add(new EffectResult(EffectType.Regen, this, CurrentHp - hpBefore));
+                        break;
+                    }
                 }
             }
             _effects.RemoveAll(e => e.IsExpired);
@@ -103,9 +121,10 @@ namespace Eclipse.Domain
             _turnSnapshot.Clear();
             _turnSnapshot.AddRange(_effects);
 
-            if (!IsAlive) return;
+            if (!IsAlive) return ticks;
             foreach (var skill in _skills)
                 skill.ReduceCooldown();
+            return ticks;
         }
 
         /// <summary>

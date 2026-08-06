@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Eclipse.Presentation;
+using Eclipse.View.Theme;
 using R3;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,9 +23,8 @@ namespace Eclipse.View
             public Image portrait;
         }
 
+        [SerializeField] private UIThemeSO theme;
         [SerializeField] private Slot[] slots;
-        [SerializeField] private Color allyTint = new Color(0.306f, 0.608f, 0.478f);  // #4E9B7A
-        [SerializeField] private Color enemyTint = new Color(0.816f, 0.416f, 0.380f); // #D06A61
 
         private readonly CompositeDisposable _bindings = new();
 
@@ -59,7 +59,7 @@ namespace Eclipse.View
                     slot.portrait.sprite = unit.TimelineIcon;
                     slot.portrait.enabled = unit.TimelineIcon != null; // 스프라이트 없는 Image는 흰 박스로 그려진다
                 }
-                if (slot.frame != null) slot.frame.color = unit.IsAlly ? allyTint : enemyTint;
+                if (slot.frame != null) slot.frame.color = unit.IsAlly ? theme.battleAlly : theme.battleEnemy;
             }
         }
 

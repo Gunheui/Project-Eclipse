@@ -53,6 +53,23 @@ namespace Eclipse.View.Theme
         public Sprite roleHealer;
         public Sprite roleSupporter;
 
+        // 전투 화면 색. 데미지 숫자·타겟 아웃라인·타임라인 프레임·상태 아이콘 프레임이 전부 여기서 읽는다.
+        // 아군 힐/버프 조준을 녹색으로 두는 건 힐 대상이 공격 대상처럼 보이지 않게 하려는 것.
+        // battleEffectHarmful은 현재 battleEnemy와 같은 값이지만 축이 달라 별도 토큰으로 둔다.
+        [Header("Battle")]
+        public Color battleDamage = new Color(1f, 0.3500f, 0.3000f);      // #FF594D
+        public Color battleHeal = new Color(0.4000f, 1f, 0.5000f);        // #66FF80
+        public Color battleDot = new Color(0.9412f, 0.5412f, 0.2353f);    // #F08A3C
+        public Color battleRegen = new Color(0.4980f, 0.8784f, 0.6588f);  // #7FE0A8
+        public Color battleShield = new Color(0.7255f, 0.7529f, 0.8078f); // #B9C0CE
+
+        public Color battleAlly = new Color(0.3059f, 0.6078f, 0.4784f);   // #4E9B7A
+        public Color battleEnemy = new Color(0.8157f, 0.4157f, 0.3804f);  // #D06A61
+
+        public Color battleEffectBeneficial = new Color(0.2902f, 0.4784f, 0.8471f); // #4A7AD8
+        public Color battleEffectHarmful = new Color(0.8157f, 0.4157f, 0.3804f);    // #D06A61
+        public Color battleEffectOverflow = new Color(0.2902f, 0.2902f, 0.3216f);   // #4A4A52
+
         [Header("Text")]
         public Color textHigh = new Color(0.1373f, 0.1529f, 0.2392f);        // #23273D
         public Color textMedium = new Color(0.3529f, 0.3804f, 0.5020f);      // #5A6180
