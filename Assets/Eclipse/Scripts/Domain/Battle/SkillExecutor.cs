@@ -71,8 +71,8 @@ namespace Eclipse.Domain
                     case EffectType.Debuff:
                         foreach (var target in targets)
                         {
-                            ((IDamageable)target).ApplyEffect(
-                                StatusEffect.StatModifier(effect.type, effect.affectedStat, effect.value, effect.duration));
+                            ((IDamageable)target).ApplyEffect(StatusEffect.StatModifier(
+                                effect.type, effect.affectedStat, effect.value, effect.duration, skill.Skill));
                             AddOnce(results, new EffectResult(effect.type, target));
                         }
                         break;
@@ -82,7 +82,8 @@ namespace Eclipse.Domain
                         foreach (var target in targets)
                         {
                             var tick = _calc.ComputeTickAmount(actor.EffectiveStats, effect.value * power);
-                            ((IDamageable)target).ApplyEffect(StatusEffect.Periodic(effect.type, tick, effect.duration));
+                            ((IDamageable)target).ApplyEffect(
+                                StatusEffect.Periodic(effect.type, tick, effect.duration, skill.Skill));
                             AddOnce(results, new EffectResult(effect.type, target));
                         }
                         break;
@@ -91,7 +92,8 @@ namespace Eclipse.Domain
                         foreach (var target in targets)
                         {
                             var absorb = _calc.ComputeShield(target.MaxHp, effect.value);
-                            ((IDamageable)target).ApplyEffect(StatusEffect.Shield(absorb, effect.duration));
+                            ((IDamageable)target).ApplyEffect(
+                                StatusEffect.Shield(absorb, effect.duration, skill.Skill));
                             AddOnce(results, new EffectResult(EffectType.Shield, target));
                         }
                         break;
@@ -99,7 +101,7 @@ namespace Eclipse.Domain
                     case EffectType.Taunt:
                         foreach (var target in targets)
                         {
-                            ((IDamageable)target).ApplyEffect(StatusEffect.Taunt(effect.duration));
+                            ((IDamageable)target).ApplyEffect(StatusEffect.Taunt(effect.duration, skill.Skill));
                             AddOnce(results, new EffectResult(EffectType.Taunt, target));
                         }
                         break;

@@ -11,8 +11,8 @@ using UnityEngine.TestTools;
 namespace Eclipse.Tests.View
 {
     /// <summary>
-    /// 유지 이펙트가 턴을 세는 규칙을 관측한다. 이펙트가 걸린 턴의 통지는 세지 않고,
-    /// 「켜 두기」와 「턴마다」가 같은 구간을 덮어야 한다.
+    /// 유지 레이어를 붙든 재생기의 동작을 관측한다. 수명은 배틀러가 정하므로 여기서 보는 것은
+    /// 등록·걷기와 「턴마다」 재생뿐이다.
     /// </summary>
     public class VfxPlayerHoldTests
     {
@@ -37,53 +37,59 @@ namespace Eclipse.Tests.View
         }
 
         [UnityTest]
-        public IEnumerator 켜두기_2턴은_걸린_턴을_세지_않고_세_번째_통지에_걷힌다()
+        public IEnumerator 유지_레이어는_재생_직후_붙들려_있다()
         {
-            var player = Play(VfxHold.Continuous, holdTurns: 2);
+            var player = Play(VfxHold.Continuous);
 
-            Assert.IsTrue(player.HasHold, "시전 직후에는 유지 중이어야 한다");
-            Assert.IsTrue(player.AdvanceTurn(), "걸린 턴의 통지는 세지 않는다");
-            Assert.IsTrue(player.AdvanceTurn(), "첫 턴을 세고도 한 턴 남는다");
-            Assert.IsFalse(player.AdvanceTurn(), "두 턴을 다 세면 걷힌다");
+            Assert.IsTrue(player.HasHold, "유지 레이어는 대기가 끝나도 재생기를 붙든다");
+            Assert.AreEqual(1, player.transform.childCount, "시전 즉시 한 번 재생된다");
             yield return null;
         }
 
         [UnityTest]
-        public IEnumerator 턴마다_2턴은_켜두기와_같은_구간_동안_턴마다_다시_재생된다()
+        public IEnumerator StopHold는_붙든_레이어를_모두_걷는다()
         {
-            var player = Play(VfxHold.EachTurn, holdTurns: 2);
-            var root = player.transform;
-
-            Assert.AreEqual(1, root.childCount, "시전 턴 몫이 한 번 재생된다");
-            player.AdvanceTurn();
-            Assert.AreEqual(2, root.childCount, "걸린 턴의 통지에도 다음 턴 몫은 재생한다");
-            player.AdvanceTurn();
-            Assert.AreEqual(3, root.childCount, "남은 턴마다 다시 재생한다");
-
-            Assert.IsFalse(player.AdvanceTurn(), "두 턴을 다 세면 걷힌다");
-            Assert.AreEqual(3, root.childCount, "걷히는 턴에는 새로 띄우지 않는다");
-            yield return null;
-        }
-
-        [UnityTest]
-        public IEnumerator 유지_중_StopHold는_남은_턴과_무관하게_걷는다()
-        {
-            var player = Play(VfxHold.Continuous, holdTurns: 5);
+            var player = Play(VfxHold.Continuous);
 
             player.StopHold();
 
-            Assert.IsFalse(player.HasHold, "사망·재바인딩에서는 남은 턴을 무시하고 끊는다");
+            Assert.IsFalse(player.HasHold, "출처 효과가 풀리거나 배틀러가 죽으면 남은 것 없이 끊는다");
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator 턴마다는_통지받을_때마다_다시_재생된다()
+        {
+            var player = Play(VfxHold.EachTurn);
+            var root = player.transform;
+
+            Assert.AreEqual(1, root.childCount, "시전 턴 몫이 한 번 재생된다");
+            player.FlashEachTurn();
+            Assert.AreEqual(2, root.childCount, "턴 통지마다 한 번씩 다시 띄운다");
+            player.FlashEachTurn();
+            Assert.AreEqual(3, root.childCount);
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator 켜두기는_통지를_받아도_다시_띄우지_않는다()
+        {
+            var player = Play(VfxHold.Continuous);
+
+            player.FlashEachTurn();
+
+            Assert.AreEqual(1, player.transform.childCount, "켜 둔 인스턴스 하나가 그대로 유지된다");
             yield return null;
         }
 
         /// <summary>유지 레이어 하나짜리 스펙을 새 재생기에 걸고 그 재생기를 돌려준다.</summary>
-        private VfxPlayer Play(VfxHold mode, int holdTurns)
+        private VfxPlayer Play(VfxHold mode)
         {
             var spec = ScriptableObject.CreateInstance<VfxSpec>();
             spec.layers.Add(new VfxLayer
             {
                 prefab = _layerPrefab,
-                holdTurns = holdTurns,
+                holdTurns = 1,
                 holdMode = mode,
                 awaitSeconds = 0f,
             });

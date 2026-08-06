@@ -168,13 +168,10 @@ namespace Eclipse.View
         /// <summary>
         /// 이번 턴에 시작된 배틀러 연출이 모두 끝날 때까지 기다린다. VM 루프가 매 턴 이 함수를 await 한다.
         /// </summary>
-        private async UniTask PlayTurnAnimationAsync(CancellationToken ct)
+        private UniTask PlayTurnAnimationAsync(CancellationToken ct)
         {
             var animations = allyBattlers.Concat(enemyBattlers).Select(b => b.WaitForAnimation());
-            await UniTask.WhenAll(animations).AttachExternalCancellation(ct);
-
-            // 턴 통지는 이번 턴 연출이 다 끝난 뒤에 보낸다. 이 루프는 참가자 한 명의 차례마다 한 번 돈다.
-            foreach (var b in allyBattlers.Concat(enemyBattlers)) b.AdvanceHeldVfx();
+            return UniTask.WhenAll(animations).AttachExternalCancellation(ct);
         }
 
         /// <summary>

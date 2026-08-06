@@ -9,24 +9,21 @@ namespace Eclipse.View
 {
     /// <summary>
     /// VfxSpec 하나를 재생하는 이펙트 인스턴스. 레이어마다 파티클 프리팹을 스폰해 앵커 위치·회전·배율·색·정렬을
-    /// 입히고, 대기 시간이 지나면 방출을 멈춘 뒤 스스로 파괴된다. 유지 턴이 붙은 레이어가 있으면 파괴를 미루고
-    /// 배틀러가 보내는 턴 통지를 받아 센다. SpriteEffectPlayer와 같은 "스폰 후 자기 소멸" 패턴.
+    /// 입히고, 대기 시간이 지나면 방출을 멈춘 뒤 스스로 파괴된다. 유지 레이어가 있으면 파괴를 미루고
+    /// 배틀러가 걷을 때까지 남는다. 수명은 배틀러가 정하므로 이 재생기는 턴을 세지 않는다.
+    /// SpriteEffectPlayer와 같은 "스폰 후 자기 소멸" 패턴.
     /// </summary>
     public class VfxPlayer : MonoBehaviour
     {
         // 방출을 멈춘 뒤 남은 입자가 잦아들 때까지 두는 여유(초). 바로 파괴하면 입자가 뚝 끊긴다.
         private const float FadeGrace = 1f;
 
-        /// <summary>턴을 세는 중인 레이어 하나와 그 인스턴스. EachTurn은 턴마다 새로 스폰하므로 Instance가 비어 있다.</summary>
+        /// <summary>유지 중인 레이어 하나와 그 인스턴스. EachTurn은 턴마다 새로 스폰하므로 Instance가 비어 있다.</summary>
         private class HeldLayer
         {
             public VfxLayer Layer;
             public Vector3 Position;
-            public int Remaining;
             public GameObject Instance;
-
-            // 걸린 턴에는 남은 턴을 깎지 않는다. 첫 통지가 이 표시를 내린다.
-            public bool Fresh = true;
         }
 
         private readonly List<HeldLayer> _held = new();
@@ -34,7 +31,7 @@ namespace Eclipse.View
         // 연출 배속으로 나눌 값. Play에서 세운 뒤 유지 레이어가 턴을 넘겨가며 계속 쓴다.
         private float _div = 1f;
 
-        /// <summary>턴을 세는 레이어가 남아 있는지. false면 이 재생기는 대기가 끝나는 대로 사라진다.</summary>
+        /// <summary>유지 중인 레이어가 남아 있는지. false면 이 재생기는 대기가 끝나는 대로 사라진다.</summary>
         public bool HasHold => _held.Count > 0;
 
         /// <summary>
@@ -58,37 +55,15 @@ namespace Eclipse.View
             if (this != null && _held.Count == 0) Destroy(gameObject, FadeGrace);
         }
 
-        /// <summary>
-        /// 유지 중인 레이어의 남은 턴을 1 줄이고 다 쓴 레이어를 걷는다. EachTurn 레이어는 남아 있는 턴마다 다시 재생한다.
-        /// 이펙트가 걸린 턴의 통지는 세지 않는다 — 도메인 지속 효과도 턴 스냅샷으로 같은 규칙을 쓴다.
-        /// </summary>
-        /// <returns>아직 유지 중이면 true. false면 이 재생기가 파괴 예약된 상태라 호출부가 목록에서 빼야 한다.</returns>
-        public bool AdvanceTurn()
+        /// <summary>「턴마다」 유지 레이어를 한 번씩 다시 터뜨린다. 「켜 두기」 레이어는 그대로 둔다.</summary>
+        public void FlashEachTurn()
         {
-            for (int i = _held.Count - 1; i >= 0; i--)
-            {
-                var hold = _held[i];
-                if (!hold.Fresh) hold.Remaining--;
-                hold.Fresh = false;
-
-                if (hold.Remaining <= 0)
-                {
-                    Retire(hold.Instance);
-                    _held.RemoveAt(i);
-                    continue;
-                }
-
-                // 걷는 판정을 지난 뒤에 재생한다. 걷히는 턴에 한 번 더 띄우지 않는다.
+            foreach (var hold in _held)
                 if (hold.Layer.holdMode == VfxHold.EachTurn) Flash(hold);
-            }
-
-            if (_held.Count > 0) return true;
-            if (this != null) Destroy(gameObject, FadeGrace);
-            return false;
         }
 
         /// <summary>
-        /// 유지 중인 레이어를 전부 걷고 이 재생기를 치운다. 턴을 다 세기 전에 끊어야 할 때(사망·재바인딩) 부른다.
+        /// 유지 중인 레이어를 전부 걷고 이 재생기를 치운다. 출처 효과가 풀렸거나 배틀러가 죽었을 때 부른다.
         /// </summary>
         public void StopHold()
         {
@@ -98,7 +73,7 @@ namespace Eclipse.View
         }
 
         /// <summary>레이어 하나를 재생한다.</summary>
-        /// <returns>유지 턴이 붙은 레이어는 시작 지연만 기다리고, 나머지는 반복과 대기 시간이 끝나면 완료된다.</returns>
+        /// <returns>유지 레이어는 시작 지연만 기다리고, 나머지는 반복과 대기 시간이 끝나면 완료된다.</returns>
         private async UniTask PlayLayer(VfxLayer layer, Func<VfxAnchor, Vector3> anchorAt, CancellationToken ct)
         {
             if (layer.prefab == null) return;
@@ -136,7 +111,7 @@ namespace Eclipse.View
 
         private HeldLayer RegisterHold(VfxLayer layer, Vector3 position)
         {
-            var hold = new HeldLayer { Layer = layer, Position = position, Remaining = layer.holdTurns };
+            var hold = new HeldLayer { Layer = layer, Position = position };
             _held.Add(hold);
             return hold;
         }

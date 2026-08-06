@@ -120,6 +120,8 @@ namespace Eclipse.Presentation
                 // 계산 적용 후(HP 반영) 신호를 흘리면 각 배틀러가 스스로 연출을 시작한다.
                 NotifyActor();
                 _stateChanged.OnNext(Unit.Default);
+                // 턴 종료는 상태 갱신 뒤에 알린다. 먼저 알리면 이번 턴에 풀린 효과의 연출이 한 번 더 나간다.
+                NotifyTurnEnded();
 
                 // 연출이 끝날 때까지 다음 턴을 미룬다.
                 if (playTurnAnimation != null)
@@ -176,6 +178,14 @@ namespace Eclipse.Presentation
 
             foreach (var hit in turn.Hits)
                 Combatants.FirstOrDefault(u => u.Model == hit.Target)?.RaiseHit(turn.Skill, hit);
+        }
+
+        /// <summary> 이번 턴 행동자에 TurnEnded를 발화한다. 스킬을 안 쓴 턴(도트 사망 등)에도 보낸다. </summary>
+        private void NotifyTurnEnded()
+        {
+            var actor = _engine.LastTurn.Actor;
+            if (actor == null) return;
+            Combatants.FirstOrDefault(u => u.Model == actor)?.RaiseTurnEnded();
         }
 
         /// <summary>

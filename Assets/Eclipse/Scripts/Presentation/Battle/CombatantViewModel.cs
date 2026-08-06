@@ -82,6 +82,9 @@ namespace Eclipse.Presentation
         // 자기 턴 시작에 도트·리젠이 터졌음을 알리는 신호. 배틀러가 구독해 틱마다 숫자를 띄운다.
         private readonly Subject<EffectDisplay> _ticked = new();
 
+        // 자기 턴 정산이 끝났음을 알리는 신호. 배틀러가 「턴마다」 유지 이펙트를 다시 터뜨리는 시계로 쓴다.
+        private readonly Subject<Unit> _turnEnded = new();
+
         /// <param name="runEffects">표시 전용 상시 효과(런 버프·저주). 도메인 효과가 아니라 <see cref="AllEffects"/>에만 실린다.</param>
         public CombatantViewModel(Combatant model, Observable<Unit> stateChanged, Sprite battler,
             Sprite timelineIcon, MutationSO mutation, IReadOnlyList<ActiveEffect> runEffects)
@@ -105,6 +108,9 @@ namespace Eclipse.Presentation
             AllEffects = stateChanged
                 .Select(_ => BuildActiveEffects(model.Effects, runEffects))
                 .ToReadOnlyReactiveProperty(BuildActiveEffects(model.Effects, runEffects));
+            EffectSources = stateChanged
+                .Select(_ => BuildEffectSources(model.Effects))
+                .ToReadOnlyReactiveProperty(BuildEffectSources(model.Effects));
             Skills = model.Skills
                 .Select(s => new SkillSlotViewModel(s, stateChanged))
                 .ToList();
@@ -155,6 +161,11 @@ namespace Eclipse.Presentation
         /// </summary>
         public ReadOnlyReactiveProperty<IReadOnlyList<ActiveEffect>> AllEffects { get; }
 
+        /// <summary>
+        /// 지금 이 유닛에 걸려 있는 지속 효과를 건 스킬들. 배틀러가 유지 이펙트를 걷을 시점을 여기서 판단한다. 턴마다 갱신.
+        /// </summary>
+        public ReadOnlyReactiveProperty<IReadOnlyCollection<SkillSO>> EffectSources { get; }
+
         /// <summary> 이 유닛이 행동할 때 사용 스킬과 함께 발화. 배틀러 시전 연출 트리거. </summary>
         public Observable<SkillSO> Acted => _acted;
 
@@ -163,6 +174,9 @@ namespace Eclipse.Presentation
 
         /// <summary> 이 유닛의 턴 시작에 도트·리젠이 터질 때 틱마다 발화. 배틀러 틱 숫자 트리거. </summary>
         public Observable<EffectDisplay> Ticked => _ticked;
+
+        /// <summary> 이 유닛의 턴 정산이 끝날 때 발화. 스킬을 쓰지 않은 턴에도 온다. 「턴마다」 유지 이펙트 트리거. </summary>
+        public Observable<Unit> TurnEnded => _turnEnded;
 
         /// <summary> 이 유닛의 스킬 슬롯들(기본+액티브). 행동자일 때 스킬 버튼으로 쓴다. </summary>
         public IReadOnlyList<SkillSlotViewModel> Skills { get; }
@@ -176,6 +190,9 @@ namespace Eclipse.Presentation
 
         /// <summary> Ticked 신호를 발화한다. 이번 턴 행동자의 틱마다 BattleViewModel이 호출한다. </summary>
         internal void RaiseTicked(EffectResult tick) => _ticked.OnNext(new EffectDisplay(tick));
+
+        /// <summary> TurnEnded 신호를 발화한다. 이번 턴 행동자에 대해 BattleViewModel이 호출한다. </summary>
+        internal void RaiseTurnEnded() => _turnEnded.OnNext(Unit.Default);
 
         /// <summary>
         /// 도메인 효과 목록을 표시 순서로 확정해 변환한다. 해로움(디버프→도트→도발) 먼저,
@@ -191,6 +208,16 @@ namespace Eclipse.Presentation
                 .OrderBy(e => DisplayRank(e.Type))
                 .ThenBy(e => e.RemainingTurns < 0 ? int.MaxValue : e.RemainingTurns)
                 .ToList();
+
+        /// <summary>
+        /// 아직 살아 있는 효과들의 출처 스킬을 모은다. 흡수량이 0이 된 실드는 대상의 다음 턴 정산까지
+        /// 목록에 남으므로 만료된 효과를 걸러 낸다.
+        /// </summary>
+        public static IReadOnlyCollection<SkillSO> BuildEffectSources(IReadOnlyList<StatusEffect> effects)
+            => effects
+                .Where(e => !e.IsExpired && e.Source != null)
+                .Select(e => e.Source)
+                .ToHashSet();
 
         /// <summary> 타입마다 세기를 싣는 필드가 달라 <see cref="ActiveEffect.Magnitude"/> 하나로 모은다. </summary>
         private static float MagnitudeOf(StatusEffect effect) => effect.Type switch
@@ -221,9 +248,11 @@ namespace Eclipse.Presentation
             ShieldAbsorb.Dispose();
             SkillEffects.Dispose();
             AllEffects.Dispose();
+            EffectSources.Dispose();
             _acted.Dispose();
             _hit.Dispose();
             _ticked.Dispose();
+            _turnEnded.Dispose();
             foreach (var slot in Skills) slot.Dispose();
         }
     }

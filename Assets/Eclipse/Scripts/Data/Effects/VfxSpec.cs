@@ -57,10 +57,10 @@ namespace Eclipse.Data
         [Tooltip("이 레이어를 기다릴 시간(초). 프리팹 재생 길이와는 별개로, 턴이 넘어가는 시점을 정한다.")]
         public float awaitSeconds = 0.4f;
 
-        [Tooltip("유지할 턴 수. 0이면 유지하지 않는다.")]
+        [Tooltip("0보다 크면 이 레이어를 유지 이펙트로 쓴다. 유지 기간은 스킬이 건 지속 효과가 정하므로 값의 크기는 쓰이지 않는다.")]
         public int holdTurns;
 
-        [Tooltip("유지 방식. 유지 턴이 0이면 쓰이지 않는다.")]
+        [Tooltip("유지 방식. 유지 이펙트가 아니면 쓰이지 않는다.")]
         public VfxHold holdMode;
     }
 

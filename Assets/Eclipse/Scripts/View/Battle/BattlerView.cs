@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
@@ -97,15 +98,15 @@ namespace Eclipse.View
         private UniTask _animation = UniTask.CompletedTask;
 
         // 아직 재생하지 못한 표시. 같은 턴에 여러 번 맞거나 틱이 겹쳐도 겹치지 않고 하나씩 나간다.
-        private readonly Queue<(EffectDisplay Result, EffectSpec Impact, VfxSpec ImpactVfx, bool Shake)> _displayQueue = new();
+        private readonly Queue<(EffectDisplay Result, SkillSO Skill, bool Shake)> _displayQueue = new();
         private bool _draining;
 
         // 이번 바인딩이 소유한 재생 수명. 다시 바인딩하거나 비울 때 끊어, 옛 재생이 새 바인딩의
         // 대기열과 플래그를 함께 건드리지 못하게 한다.
         private CancellationTokenSource _playbackCts;
 
-        // 턴을 세며 남아 있는 파티클 재생기. AdvanceHeldVfx가 턴을 깎고 만료된 것을 뺀다.
-        private readonly List<VfxPlayer> _heldVfx = new();
+        // 유지 중인 파티클 재생기와 그것을 띄운 스킬. 그 스킬이 건 효과가 다 풀리면 함께 걷는다.
+        private readonly List<(VfxPlayer Player, SkillSO Source)> _heldVfx = new();
 
         private void Awake()
         {
@@ -163,14 +164,22 @@ namespace Eclipse.View
 
             // 흔들림은 맞은 반응이라 피해에만 붙인다. 버프·실드를 받을 때는 흔들리지 않는다.
             unit.Hit
-                .Subscribe(h => AddAnimation(QueueDisplay(h.Result,
-                    h.Skill != null ? h.Skill.impactEffect : null,
-                    h.Skill != null ? h.Skill.impactVfx : null,
+                .Subscribe(h => AddAnimation(QueueDisplay(h.Result, h.Skill,
                     shake: h.Result.Type == EffectType.Damage)))
                 .AddTo(_bindings);
 
             unit.Ticked
-                .Subscribe(tick => AddAnimation(QueueDisplay(tick, null, null, shake: false)))
+                .Subscribe(tick => AddAnimation(QueueDisplay(tick, null, shake: false)))
+                .AddTo(_bindings);
+
+            // 유지 이펙트 정리는 여기 한 곳에서만 한다. 스폰 시점에 대조하면 시전·피격 신호가 상태 갱신보다
+            // 먼저 흘러, 갓 띄운 이펙트가 직전 턴 집합에 없다는 이유로 그 자리에서 걷힌다.
+            unit.EffectSources
+                .Subscribe(CullHeldVfx)
+                .AddTo(_bindings);
+
+            unit.TurnEnded
+                .Subscribe(_ => FlashHeldVfx())
                 .AddTo(_bindings);
 
             unit.IsAlive
@@ -180,18 +189,6 @@ namespace Eclipse.View
 
         /// <summary> 이번 턴 진행 중인 연출이 끝나면 완료된다. 진행 중인 게 없으면 즉시 완료. </summary>
         public UniTask WaitForAnimation() => _animation;
-
-        /// <summary>
-        /// 유지 중인 파티클 이펙트의 남은 턴을 1 줄이고, 다 쓴 것을 정리한다. 전투 화면이 매 턴 부른다.
-        /// </summary>
-        public void AdvanceHeldVfx()
-        {
-            for (int i = _heldVfx.Count - 1; i >= 0; i--)
-            {
-                var player = _heldVfx[i];
-                if (player == null || !player.AdvanceTurn()) _heldVfx.RemoveAt(i);
-            }
-        }
 
         /// <summary>대응 유닛이 없는 빈 배틀러를 숨기고 탭 통지를 끊는다.</summary>
         public void Clear()
@@ -268,9 +265,33 @@ namespace Eclipse.View
         /// <summary>유지 중인 파티클 이펙트를 모두 걷는다. 호출 안전(멱등).</summary>
         private void ClearHeldVfx()
         {
-            foreach (var player in _heldVfx)
+            foreach (var (player, _) in _heldVfx)
                 if (player != null) player.StopHold();
             _heldVfx.Clear();
+        }
+
+        /// <summary>출처 스킬의 효과가 하나도 남지 않은 유지 이펙트를 걷는다. 유닛의 턴 정산마다 호출된다.</summary>
+        /// <param name="liveSources">지금 이 유닛에 걸려 있는 효과들의 출처 스킬.</param>
+        private void CullHeldVfx(IReadOnlyCollection<SkillSO> liveSources)
+            => StopHeldVfx(source => !liveSources.Contains(source));
+
+        /// <summary>조건에 맞는 유지 이펙트를 걷는다. 이미 파괴된 재생기는 조건과 무관하게 함께 뺀다.</summary>
+        private void StopHeldVfx(Func<SkillSO, bool> match)
+        {
+            for (int i = _heldVfx.Count - 1; i >= 0; i--)
+            {
+                var (player, source) = _heldVfx[i];
+                if (player != null && !match(source)) continue;
+                if (player != null) player.StopHold();
+                _heldVfx.RemoveAt(i);
+            }
+        }
+
+        /// <summary>「턴마다」 방식의 유지 이펙트를 한 번씩 다시 터뜨린다. 이 유닛의 턴 정산마다 호출된다.</summary>
+        private void FlashHeldVfx()
+        {
+            foreach (var (player, _) in _heldVfx)
+                if (player != null) player.FlashEachTurn();
         }
 
         /// <summary>
@@ -381,14 +402,14 @@ namespace Eclipse.View
         /// 효과 결과 하나를 대기열에 넣는다. 한 턴에 여러 번 맞거나 틱이 겹쳐도 겹치지 않고 하나씩 나가,
         /// 멀티히트 타수와 도트 개수가 화면에 보인다. 한 턴의 신호는 동기로 연달아 들어온다.
         /// </summary>
-        /// <param name="impact">함께 터뜨릴 타격 이펙트. 틱처럼 없으면 null.</param>
+        /// <param name="skill">이 결과를 낸 스킬. 피격 이펙트를 꺼내고 유지 이펙트의 출처로 쓴다. 틱처럼 없으면 null.</param>
         /// <param name="shake">이 결과에 몸통이 반응할지.</param>
         /// <returns>
         /// 대기열을 비우는 재생. 같은 턴의 두 번째부터는 앞선 재생이 끝까지 비우므로 완료된 값이다.
         /// </returns>
-        private UniTask QueueDisplay(EffectDisplay result, EffectSpec impact, VfxSpec impactVfx, bool shake)
+        private UniTask QueueDisplay(EffectDisplay result, SkillSO skill, bool shake)
         {
-            _displayQueue.Enqueue((result, impact, impactVfx, shake));
+            _displayQueue.Enqueue((result, skill, shake));
             return _draining ? UniTask.CompletedTask : DrainQueueAsync(_playbackCts);
         }
 
@@ -402,8 +423,8 @@ namespace Eclipse.View
             {
                 while (owner == _playbackCts && _displayQueue.Count > 0)
                 {
-                    var (result, impact, impactVfx, shake) = _displayQueue.Dequeue();
-                    await PlayResultAsync(result, impact, impactVfx, shake, ct);
+                    var (result, skill, shake) = _displayQueue.Dequeue();
+                    await PlayResultAsync(result, skill, shake, ct);
                 }
             }
             catch (OperationCanceledException)
@@ -422,13 +443,12 @@ namespace Eclipse.View
         /// 숫자 없이 이펙트만 나간다.
         /// </summary>
         /// <returns>숫자·흔들림·타격 이펙트가 모두 끝나면 완료된다.</returns>
-        private async UniTask PlayResultAsync(EffectDisplay result, EffectSpec impact, VfxSpec impactVfx, bool shake,
-            CancellationToken ct)
+        private async UniTask PlayResultAsync(EffectDisplay result, SkillSO skill, bool shake, CancellationToken ct)
         {
             // 이펙트와 흔들림은 숫자와 나란히 돈다.
             var reaction = UniTask.WhenAll(
-                SpawnEffect(impact),
-                SpawnVfx(impactVfx),
+                SpawnEffect(skill != null ? skill.impactEffect : null),
+                SpawnVfx(skill != null ? skill.impactVfx : null, skill),
                 shake ? PlayShakeAsync(ct) : UniTask.CompletedTask);
 
             if (result.Amount > 0) await SpawnAmountAsync(result, ct);
@@ -476,7 +496,7 @@ namespace Eclipse.View
         {
             var lunge = PlayLungeAsync(ct);
             var effect = SpawnEffect(skill != null ? skill.castEffect : null);
-            var vfx = SpawnVfx(skill != null ? skill.castVfx : null);
+            var vfx = SpawnVfx(skill != null ? skill.castVfx : null, skill);
             return UniTask.WhenAll(lunge, effect, vfx);
         }
 
@@ -516,17 +536,22 @@ namespace Eclipse.View
             return player.Play(spec, _speed(), this.GetCancellationTokenOnDestroy());
         }
 
-        /// <summary>파티클 이펙트 스펙을 스폰해 재생한다. 유지 턴이 있는 스펙은 보유 목록에 남긴다.</summary>
+        /// <summary>파티클 이펙트 스펙을 스폰해 재생한다. 유지 레이어가 있는 스펙은 보유 목록에 남긴다.</summary>
+        /// <param name="source">이 스펙을 띄운 스킬. 유지 이펙트를 걷을 시점의 기준이 된다.</param>
         /// <returns>스펙·프리팹이 없으면 즉시 완료된다. 유지 레이어는 대기에 포함되지 않는다.</returns>
-        private UniTask SpawnVfx(VfxSpec spec)
+        private UniTask SpawnVfx(VfxSpec spec, SkillSO source)
         {
             if (spec == null || vfxPlayerPrefab == null) return UniTask.CompletedTask;
             var parent = SpawnParentOrNull();
             if (parent == null) return UniTask.CompletedTask;
             var player = Instantiate(vfxPlayerPrefab, visualRoot.position, Quaternion.identity, parent);
+            // 재생기는 유지 레이어를 붙들면 스스로 사라지지 않는다. 재바인딩으로 끊기면 안 되므로 파괴 토큰을 쓴다.
             var play = player.Play(spec, _speed(), ResolveAnchor, this.GetCancellationTokenOnDestroy());
             // Play는 첫 대기 전까지 동기로 진행하므로 이 시점에 유지 레이어 등록이 끝나 있다.
-            if (player.HasHold) _heldVfx.Add(player);
+            if (!player.HasHold) return play;
+
+            StopHeldVfx(held => held == source); // 같은 스킬을 다시 걸면 앞의 것과 겹치지 않게 먼저 걷는다
+            _heldVfx.Add((player, source));
             return play;
         }
 

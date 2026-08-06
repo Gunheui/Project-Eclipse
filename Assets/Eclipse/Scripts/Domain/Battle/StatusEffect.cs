@@ -1,4 +1,5 @@
 using System;
+using Eclipse.Data;
 using Eclipse.Data.Enums;
 
 namespace Eclipse.Domain
@@ -33,7 +34,11 @@ namespace Eclipse.Domain
         public bool IsExpired =>
             RemainingTurns == 0 || (Type == EffectType.Shield && RemainingAbsorb <= 0);
 
-        private StatusEffect(EffectType type, StatType stat, float value, int tickAmount, int absorb, int duration)
+        /// <summary> 이 효과를 건 스킬. 유지 이펙트가 이것을 보고 자기 수명을 맞춘다. 스킬 밖에서 만들면 null. </summary>
+        public SkillSO Source { get; }
+
+        private StatusEffect(EffectType type, StatType stat, float value, int tickAmount, int absorb, int duration,
+            SkillSO source)
         {
             Type = type;
             Stat = stat;
@@ -41,36 +46,38 @@ namespace Eclipse.Domain
             TickAmount = tickAmount;
             RemainingAbsorb = absorb;
             RemainingTurns = duration;
+            Source = source;
         }
 
         /// <summary> 스탯을 지속 변경하는 버프·디버프 효과를 만든다(type은 Buff/Debuff만 허용). </summary>
         /// <param name="duration">지속턴(양수) 또는 -1(상시).</param>
-        public static StatusEffect StatModifier(EffectType type, StatType stat, float value, int duration)
+        public static StatusEffect StatModifier(EffectType type, StatType stat, float value, int duration,
+            SkillSO source = null)
         {
             if (type != EffectType.Buff && type != EffectType.Debuff)
                 throw new ArgumentException($"StatModifier는 Buff/Debuff만 허용한다: {type}", nameof(type));
-            return new StatusEffect(type, stat, value, 0, 0, duration);
+            return new StatusEffect(type, stat, value, 0, 0, duration, source);
         }
 
         /// <summary> 매 턴 HP를 변화시키는 도트·리젠 효과를 만든다(type은 Dot/Regen만 허용). </summary>
         /// <param name="duration">지속턴(양수) 또는 -1(상시).</param>
-        public static StatusEffect Periodic(EffectType type, int tickAmount, int duration)
+        public static StatusEffect Periodic(EffectType type, int tickAmount, int duration, SkillSO source = null)
         {
             if (type != EffectType.Dot && type != EffectType.Regen)
                 throw new ArgumentException($"Periodic은 Dot/Regen만 허용한다: {type}", nameof(type));
-            return new StatusEffect(type, StatType.None, 0, tickAmount, 0, duration);
+            return new StatusEffect(type, StatType.None, 0, tickAmount, 0, duration, source);
         }
 
         /// <summary> 피해를 흡수하는 실드 효과를 만든다. </summary>
         /// <param name="absorb">흡수 가능한 총 피해량(1 이상).</param>
         /// <param name="duration">지속턴(양수) 또는 -1(상시).</param>
-        public static StatusEffect Shield(int absorb, int duration)
-            => new StatusEffect(EffectType.Shield, StatType.None, 0, 0, absorb, duration);
+        public static StatusEffect Shield(int absorb, int duration, SkillSO source = null)
+            => new StatusEffect(EffectType.Shield, StatType.None, 0, 0, absorb, duration, source);
 
         /// <summary> 적의 단일-적 공격을 자신에게 끌어오는 도발 효과를 만든다(자기 대상). </summary>
         /// <param name="duration">지속턴(양수) 또는 -1(상시).</param>
-        public static StatusEffect Taunt(int duration)
-            => new StatusEffect(EffectType.Taunt, StatType.None, 0, 0, 0, duration);
+        public static StatusEffect Taunt(int duration, SkillSO source = null)
+            => new StatusEffect(EffectType.Taunt, StatType.None, 0, 0, 0, duration, source);
 
         /// <summary>
         /// 들어온 피해를 실드로 흡수하고, 실드로 다 막지 못한 나머지 피해를 반환한다.
