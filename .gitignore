@@ -27,6 +27,8 @@ Docs/
 [Mm]emoryCaptures/
 [Rr]ecordings/
 .gradle/
+# Burst가 WebGL 빌드 중 리포 루트에 생성하는 산출물 (빌드마다 재생성)
+/Data/
 
 # 안전장치: 에셋 meta는 대응 에셋이 무시될 때만 무시 (공식 Unity.gitignore)
 # ↑ ExternalArt 블록이 파일은 빼고 .meta는 유지하는 규칙과 함께 동작
