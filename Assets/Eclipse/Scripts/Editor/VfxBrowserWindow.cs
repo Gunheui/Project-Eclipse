@@ -18,7 +18,6 @@ namespace Eclipse.EditorTools
 
         // 화면 색을 읽어 일그러뜨리는 셰이더들. 프리뷰 카메라는 2D Renderer의 Camera Sorting Layer Texture 패스를
         // 타지 않아 항상 회색 판으로 렌더된다 — 실제 씬은 그 설정이 켜져 있으면 정상이다.
-        // ponytail: 셰이더 이름 하드코딩 — Scene Color 사용 여부는 셰이더 그래프 밖에서 알 수 없다. 새 팩 추가 시 여기에 더한다.
         static readonly HashSet<string> ScreenWarpShaders = new()
         {
             "Shader Graphs/Slash World",

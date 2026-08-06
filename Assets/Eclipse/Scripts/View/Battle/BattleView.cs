@@ -159,7 +159,8 @@ namespace Eclipse.View
             for (int slot = 0; slot < battlers.Length; slot++)
             {
                 var unit = FindUnit(isAlly, slot);
-                if (unit != null) battlers[slot].Bind(unit, () => _speedMultiplier, OnUnitTapped, OnUnitHovered);
+                if (unit != null)
+                    battlers[slot].Bind(unit, () => _speedMultiplier, FormationBounds, OnUnitTapped, OnUnitHovered);
                 else battlers[slot].Clear();
             }
         }
@@ -171,6 +172,24 @@ namespace Eclipse.View
         {
             var animations = allyBattlers.Concat(enemyBattlers).Select(b => b.WaitForAnimation());
             await UniTask.WhenAll(animations).AttachExternalCancellation(ct);
+
+            // 턴 통지는 이번 턴 연출이 다 끝난 뒤에 보낸다. 이 루프는 참가자 한 명의 차례마다 한 번 돈다.
+            foreach (var b in allyBattlers.Concat(enemyBattlers)) b.AdvanceHeldVfx();
+        }
+
+        /// <summary>
+        /// 한 진영의 배틀러 전체를 두른 범위. 진영 앵커 이펙트가 놓일 자리로 쓴다.
+        /// </summary>
+        /// <param name="ally">아군 진영이면 true.</param>
+        /// <returns>빈 슬롯은 이미 비활성이라 제외된다. 살아 있는 배틀러가 없으면 원점의 빈 범위.</returns>
+        private Bounds FormationBounds(bool ally)
+        {
+            var slots = (ally ? allyBattlers : enemyBattlers).Where(b => b.gameObject.activeSelf).ToList();
+            if (slots.Count == 0) return new Bounds(Vector3.zero, Vector3.zero);
+
+            var bounds = new Bounds(slots[0].transform.position, Vector3.zero);
+            foreach (var b in slots) bounds.Encapsulate(b.transform.position);
+            return bounds;
         }
 
         /// <summary>

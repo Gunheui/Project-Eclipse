@@ -33,6 +33,7 @@ namespace Eclipse.View
         [SerializeField] private SpriteRenderer spriteRenderer;
         [SerializeField] private FloatingText floatingTextPrefab;
         [SerializeField] private SpriteEffectPlayer effectPlayerPrefab;
+        [SerializeField] private VfxPlayer vfxPlayerPrefab;
 
         // 몸통 탭 판정 영역. 배틀러 루트에 두어 연출(흔들림·돌진)로 움직이지 않게 한다.
         [SerializeField] private BoxCollider2D tapArea;
@@ -79,8 +80,12 @@ namespace Eclipse.View
         private Color _baseColor = Color.white;
 
         private Func<int> _speed = () => 1;
+        private Func<bool, Bounds> _formationBounds;
         private Vector3 _home;
         private bool _facingRight;
+
+        // 발밑 앵커의 이 트랜스폼 기준 높이. Bind에서 실루엣 아래끝으로 잡는다.
+        private float _groundLocalY;
 
         // HP바가 매달린 HeadAnchor와 씬에 저작된 기본 높이. 슬롯마다 있는 자식이라 첫 사용 때 이름으로 찾는다.
         private Transform _headAnchor;
@@ -91,26 +96,34 @@ namespace Eclipse.View
         private UniTask _animation = UniTask.CompletedTask;
 
         // 아직 재생하지 못한 표시. 같은 턴에 여러 번 맞거나 틱이 겹쳐도 겹치지 않고 하나씩 나간다.
-        private readonly Queue<(EffectResult Result, EffectSpec Impact, bool Shake)> _displayQueue = new();
+        private readonly Queue<(EffectResult Result, EffectSpec Impact, VfxSpec ImpactVfx, bool Shake)> _displayQueue = new();
         private bool _draining;
+
+        // 턴을 세며 남아 있는 파티클 재생기. AdvanceHeldVfx가 턴을 깎고 만료된 것을 뺀다.
+        private readonly List<VfxPlayer> _heldVfx = new();
 
         /// <summary>
         /// 이 배틀러를 한 유닛 VM에 연결한다. 이전 구독을 정리하고,
         /// 피격·틱·행동(시전)·생존을 구독해 스스로 연출하게 한다.
         /// </summary>
         /// <param name="speed">현재 연출 배속(1 또는 2)을 읽는 함수. 트윈 시간을 나눈다.</param>
+        /// <param name="formationBounds">
+        /// 진영(아군이면 true) 배틀러 전체를 두른 범위를 읽는 함수. 진영 앵커 이펙트가 이 중심에 놓인다.
+        /// </param>
         /// <param name="onTapped">몸통을 탭했을 때 이 유닛으로 호출된다. null이면 탭이 무시된다.</param>
         /// <param name="onHovered">포인터가 올라오거나(true) 벗어날 때(false) 호출된다. 상세 표시용.</param>
-        public void Bind(CombatantViewModel unit, Func<int> speed, Action<CombatantViewModel> onTapped = null,
-            Action<CombatantViewModel, bool> onHovered = null)
+        public void Bind(CombatantViewModel unit, Func<int> speed, Func<bool, Bounds> formationBounds,
+            Action<CombatantViewModel> onTapped = null, Action<CombatantViewModel, bool> onHovered = null)
         {
             _bindings.Clear();
             HideDetail();
+            ClearHeldVfx();
             gameObject.SetActive(true);
             _unit = unit;
             _onTapped = onTapped;
             _onHovered = onHovered;
             _speed = speed ?? (() => 1);
+            _formationBounds = formationBounds;
             if (visualRoot == null) visualRoot = transform;
             _home = visualRoot.localPosition;
             _facingRight = unit.IsAlly;
@@ -129,6 +142,7 @@ namespace Eclipse.View
                 var body = SilhouetteLocalBounds();
                 ResizeTapArea(body);
                 PositionHeadAnchor(body);
+                _groundLocalY = body.min.y;
             }
 
             unit.Acted
@@ -139,11 +153,12 @@ namespace Eclipse.View
             unit.Hit
                 .Subscribe(h => AddAnimation(QueueDisplay(h.Result,
                     h.Skill != null ? h.Skill.impactEffect : null,
+                    h.Skill != null ? h.Skill.impactVfx : null,
                     shake: h.Result.Type == EffectType.Damage)))
                 .AddTo(_bindings);
 
             unit.Ticked
-                .Subscribe(tick => AddAnimation(QueueDisplay(tick, null, shake: false)))
+                .Subscribe(tick => AddAnimation(QueueDisplay(tick, null, null, shake: false)))
                 .AddTo(_bindings);
 
             unit.IsAlive
@@ -154,11 +169,24 @@ namespace Eclipse.View
         /// <summary> 이번 턴 진행 중인 연출이 끝나면 완료된다. 진행 중인 게 없으면 즉시 완료. </summary>
         public UniTask WaitForAnimation() => _animation;
 
+        /// <summary>
+        /// 유지 중인 파티클 이펙트의 남은 턴을 1 줄이고, 다 쓴 것을 정리한다. 전투 화면이 매 턴 부른다.
+        /// </summary>
+        public void AdvanceHeldVfx()
+        {
+            for (int i = _heldVfx.Count - 1; i >= 0; i--)
+            {
+                var player = _heldVfx[i];
+                if (player == null || !player.AdvanceTurn()) _heldVfx.RemoveAt(i);
+            }
+        }
+
         /// <summary>대응 유닛이 없는 빈 배틀러를 숨기고 탭 통지를 끊는다.</summary>
         public void Clear()
         {
             _bindings.Clear();
             HideDetail();
+            ClearHeldVfx();
             _unit = null;
             _onTapped = null;
             _onHovered = null;
@@ -199,7 +227,19 @@ namespace Eclipse.View
             if (spriteRenderer != null) spriteRenderer.enabled = alive;
             if (tapArea != null) tapArea.enabled = alive;
             // 탭 판정을 끄면 포인터가 벗어나는 이벤트가 오지 않는다. 상세가 떠 있으면 여기서 직접 내린다.
-            if (!alive) HideDetail();
+            if (!alive)
+            {
+                HideDetail();
+                ClearHeldVfx(); // 죽은 유닛에 오라가 남지 않게 한다
+            }
+        }
+
+        /// <summary>유지 중인 파티클 이펙트를 모두 걷는다. 호출 안전(멱등).</summary>
+        private void ClearHeldVfx()
+        {
+            foreach (var player in _heldVfx)
+                if (player != null) player.StopHold();
+            _heldVfx.Clear();
         }
 
         /// <summary>
@@ -315,9 +355,9 @@ namespace Eclipse.View
         /// <returns>
         /// 대기열을 비우는 재생. 같은 턴의 두 번째부터는 앞선 재생이 끝까지 비우므로 완료된 값이다.
         /// </returns>
-        private UniTask QueueDisplay(EffectResult result, EffectSpec impact, bool shake)
+        private UniTask QueueDisplay(EffectResult result, EffectSpec impact, VfxSpec impactVfx, bool shake)
         {
-            _displayQueue.Enqueue((result, impact, shake));
+            _displayQueue.Enqueue((result, impact, impactVfx, shake));
             return _draining ? UniTask.CompletedTask : DrainQueueAsync();
         }
 
@@ -329,8 +369,8 @@ namespace Eclipse.View
             {
                 while (_displayQueue.Count > 0)
                 {
-                    var (result, impact, shake) = _displayQueue.Dequeue();
-                    await PlayResultAsync(result, impact, shake);
+                    var (result, impact, impactVfx, shake) = _displayQueue.Dequeue();
+                    await PlayResultAsync(result, impact, impactVfx, shake);
                 }
             }
             finally
@@ -344,11 +384,12 @@ namespace Eclipse.View
         /// 숫자 없이 이펙트만 나간다.
         /// </summary>
         /// <returns>숫자·흔들림·타격 이펙트가 모두 끝나면 완료된다.</returns>
-        private async UniTask PlayResultAsync(EffectResult result, EffectSpec impact, bool shake)
+        private async UniTask PlayResultAsync(EffectResult result, EffectSpec impact, VfxSpec impactVfx, bool shake)
         {
             // 이펙트와 흔들림은 숫자와 나란히 돈다.
             var reaction = UniTask.WhenAll(
                 SpawnEffect(impact),
+                SpawnVfx(impactVfx),
                 shake ? PlayShakeAsync() : UniTask.CompletedTask);
 
             if (result.Amount > 0) await SpawnAmountAsync(result);
@@ -397,7 +438,8 @@ namespace Eclipse.View
         {
             var lunge = PlayLungeAsync();
             var effect = SpawnEffect(skill != null ? skill.castEffect : null);
-            return UniTask.WhenAll(lunge, effect);
+            var vfx = SpawnVfx(skill != null ? skill.castVfx : null);
+            return UniTask.WhenAll(lunge, effect, vfx);
         }
 
         /// <summary>대면 방향으로 살짝 돌진했다 제자리로 돌아간다.</summary>
@@ -434,6 +476,34 @@ namespace Eclipse.View
             return player.Play(spec, _speed(), this.GetCancellationTokenOnDestroy());
         }
 
+        /// <summary>파티클 이펙트 스펙을 스폰해 재생한다. 유지 턴이 있는 스펙은 보유 목록에 남긴다.</summary>
+        /// <returns>스펙·프리팹이 없으면 즉시 완료된다. 유지 레이어는 대기에 포함되지 않는다.</returns>
+        private UniTask SpawnVfx(VfxSpec spec)
+        {
+            if (spec == null || vfxPlayerPrefab == null) return UniTask.CompletedTask;
+            var parent = SpawnParentOrNull();
+            if (parent == null) return UniTask.CompletedTask;
+            var player = Instantiate(vfxPlayerPrefab, visualRoot.position, Quaternion.identity, parent);
+            var play = player.Play(spec, _speed(), ResolveAnchor, this.GetCancellationTokenOnDestroy());
+            // Play는 첫 대기 전까지 동기로 진행하므로 이 시점에 유지 레이어 등록이 끝나 있다.
+            if (player.HasHold) _heldVfx.Add(player);
+            return play;
+        }
+
+        /// <summary>레이어 앵커를 월드 좌표로 푼다.</summary>
+        private Vector3 ResolveAnchor(VfxAnchor anchor) => anchor switch
+        {
+            VfxAnchor.CasterGround => transform.TransformPoint(new Vector3(0f, _groundLocalY, 0f)),
+            VfxAnchor.AllAllies => FormationCenter(true),
+            VfxAnchor.AllEnemies => FormationCenter(false),
+            // 시전자와 대상 모두 신호를 받은 이 배틀러 자신이다(시전은 행동자, 피격은 피해자가 재생한다).
+            _ => visualRoot.position,
+        };
+
+        /// <summary>진영 전체를 두른 범위의 중심. 주입이 없으면 이 배틀러 자리로 대신한다.</summary>
+        private Vector3 FormationCenter(bool ally)
+            => _formationBounds != null ? _formationBounds(ally).center : visualRoot.position;
+
         /// <summary>숫자 하나를 이 배틀러 위치에 만든다.</summary>
         /// <returns>프리팹이 없거나 씬이 파괴 중이면 null. 호출부는 표시를 건너뛴다.</returns>
         private FloatingText SpawnFloatingTextOrNull()
@@ -444,6 +514,10 @@ namespace Eclipse.View
             return Instantiate(floatingTextPrefab, visualRoot.position, Quaternion.identity, parent);
         }
 
-        private void OnDestroy() => _bindings.Dispose();
+        private void OnDestroy()
+        {
+            ClearHeldVfx();
+            _bindings.Dispose();
+        }
     }
 }

@@ -34,5 +34,11 @@ namespace Eclipse.Data
 
         /// <summary> 피격 시 대상 위치에 재생할 이펙트. null이면 연출 없음. </summary>
         public EffectSpec impactEffect;
+
+        /// <summary> 시전 시 재생할 파티클 이펙트. null이면 연출 없음. </summary>
+        public VfxSpec castVfx;
+
+        /// <summary> 피격 시 재생할 파티클 이펙트. null이면 연출 없음. </summary>
+        public VfxSpec impactVfx;
     }
 }

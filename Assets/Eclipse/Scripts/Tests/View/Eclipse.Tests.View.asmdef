@@ -6,7 +6,8 @@
         "UnityEditor.TestRunner",
         "Eclipse.View",
         "VContainer",
-        "UniTask"
+        "UniTask",
+        "Eclipse.Data"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

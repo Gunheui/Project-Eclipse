@@ -32,3 +32,5 @@ MonoBehaviour:
     duration: 2
   castEffect: {fileID: 11400000, guid: e7bd53f5aa05492680cc3378e472da2e, type: 2}
   impactEffect: {fileID: 11400000, guid: d66a5ff2dcbe40a1926e0e1d1bd5f026, type: 2}
+  castVfx: {fileID: 11400000, guid: e2f1916493725439cad6a18dcf7970ef, type: 2}
+  impactVfx: {fileID: 11400000, guid: 4a21abc642aa34f58ab18df1bb3e17e0, type: 2}
