@@ -82,8 +82,8 @@ namespace Eclipse.Presentation
         // 자기 턴 시작에 도트·리젠이 터졌음을 알리는 신호. 배틀러가 구독해 틱마다 숫자를 띄운다.
         private readonly Subject<EffectDisplay> _ticked = new();
 
-        // 자기 턴 정산이 끝났음을 알리는 신호. 배틀러가 「턴마다」 유지 이펙트를 다시 터뜨리는 시계로 쓴다.
-        private readonly Subject<Unit> _turnEnded = new();
+        // 자기 턴 시작 정산이 끝났음을 알리는 신호. 배틀러가 「턴마다」 유지 이펙트를 다시 터뜨리는 시계로 쓴다.
+        private readonly Subject<Unit> _turnStarted = new();
 
         /// <param name="runEffects">표시 전용 상시 효과(런 버프·저주). 도메인 효과가 아니라 <see cref="AllEffects"/>에만 실린다.</param>
         public CombatantViewModel(Combatant model, Observable<Unit> stateChanged, Sprite battler,
@@ -175,8 +175,11 @@ namespace Eclipse.Presentation
         /// <summary> 이 유닛의 턴 시작에 도트·리젠이 터질 때 틱마다 발화. 배틀러 틱 숫자 트리거. </summary>
         public Observable<EffectDisplay> Ticked => _ticked;
 
-        /// <summary> 이 유닛의 턴 정산이 끝날 때 발화. 스킬을 쓰지 않은 턴에도 온다. 「턴마다」 유지 이펙트 트리거. </summary>
-        public Observable<Unit> TurnEnded => _turnEnded;
+        /// <summary>
+        /// 이 유닛의 턴 시작 정산이 끝날 때 발화. 「턴마다」 유지 이펙트 트리거.
+        /// 도트·리젠이 터지고 화면 상태가 갱신된 뒤에 오므로, 이번 턴에 풀린 효과는 이미 걷힌 상태다.
+        /// </summary>
+        public Observable<Unit> TurnStarted => _turnStarted;
 
         /// <summary> 이 유닛의 스킬 슬롯들(기본+액티브). 행동자일 때 스킬 버튼으로 쓴다. </summary>
         public IReadOnlyList<SkillSlotViewModel> Skills { get; }
@@ -191,8 +194,8 @@ namespace Eclipse.Presentation
         /// <summary> Ticked 신호를 발화한다. 이번 턴 행동자의 틱마다 BattleViewModel이 호출한다. </summary>
         internal void RaiseTicked(EffectResult tick) => _ticked.OnNext(new EffectDisplay(tick));
 
-        /// <summary> TurnEnded 신호를 발화한다. 이번 턴 행동자에 대해 BattleViewModel이 호출한다. </summary>
-        internal void RaiseTurnEnded() => _turnEnded.OnNext(Unit.Default);
+        /// <summary> TurnStarted 신호를 발화한다. 이번 턴 행동자에 대해 BattleViewModel이 호출한다. </summary>
+        internal void RaiseTurnStarted() => _turnStarted.OnNext(Unit.Default);
 
         /// <summary>
         /// 도메인 효과 목록을 표시 순서로 확정해 변환한다. 해로움(디버프→도트→도발) 먼저,
@@ -252,7 +255,7 @@ namespace Eclipse.Presentation
             _acted.Dispose();
             _hit.Dispose();
             _ticked.Dispose();
-            _turnEnded.Dispose();
+            _turnStarted.Dispose();
             foreach (var slot in Skills) slot.Dispose();
         }
     }

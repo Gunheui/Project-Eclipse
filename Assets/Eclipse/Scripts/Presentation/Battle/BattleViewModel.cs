@@ -30,7 +30,7 @@ namespace Eclipse.Presentation
         // 조준 UI 후보 산출용(수동 후보). 오토 타겟 정책과 같은 리졸버 인스턴스를 공유한다.
         private readonly TargetResolver _targeting;
 
-        // 뷰가 상태를 다시 읽어야 할 때 발화하는 신호(턴 종료 + 스킬 선택 시). HP·쿨·행동 수·결과가 전부 여기서 파생된다.
+        // 뷰가 상태를 다시 읽어야 할 때 발화하는 신호(턴 시작 정산 후, 턴 진행 후). HP·쿨·행동 수·결과가 전부 여기서 파생된다.
         private readonly Subject<Unit> _stateChanged = new();
 
         private readonly ReactiveProperty<CombatantViewModel> _actingCombatant = new(null);
@@ -120,8 +120,6 @@ namespace Eclipse.Presentation
                 // 계산 적용 후(HP 반영) 신호를 흘리면 각 배틀러가 스스로 연출을 시작한다.
                 NotifyActor();
                 _stateChanged.OnNext(Unit.Default);
-                // 턴 종료는 상태 갱신 뒤에 알린다. 먼저 알리면 이번 턴에 풀린 효과의 연출이 한 번 더 나간다.
-                NotifyTurnEnded();
 
                 // 연출이 끝날 때까지 다음 턴을 미룬다.
                 if (playTurnAnimation != null)
@@ -155,7 +153,7 @@ namespace Eclipse.Presentation
         private void OnInputRequested(ICombatant actor)
             => _actingCombatant.Value = Combatants.FirstOrDefault(u => u.Model == actor);
 
-        /// <summary> 턴 시작에 터진 도트·리젠을 행동자에 발화하고 화면 상태를 갱신한다. </summary>
+        /// <summary> 턴 시작에 터진 도트·리젠을 행동자에 발화하고, 화면 상태를 갱신한 뒤 턴 시작을 알린다. </summary>
         private void OnTurnStarted(ICombatant actor, IReadOnlyList<EffectResult> ticks)
         {
             var vm = Combatants.FirstOrDefault(u => u.Model == actor);
@@ -164,6 +162,9 @@ namespace Eclipse.Presentation
 
             // 숫자를 먼저 띄우고 HP 바를 내린다. 순서가 뒤집히면 바가 먼저 줄어 원인이 안 보인다.
             _stateChanged.OnNext(Unit.Default);
+
+            // 턴 시작은 상태 갱신 뒤에 알린다. 먼저 알리면 이번 턴에 풀린 효과의 연출이 한 번 더 나간다.
+            vm?.RaiseTurnStarted();
         }
 
         /// <summary> 행동자에 Acted(시전)를, 효과 결과마다 대상에 Hit(피격)을 발화한다. </summary>
@@ -178,14 +179,6 @@ namespace Eclipse.Presentation
 
             foreach (var hit in turn.Hits)
                 Combatants.FirstOrDefault(u => u.Model == hit.Target)?.RaiseHit(turn.Skill, hit);
-        }
-
-        /// <summary> 이번 턴 행동자에 TurnEnded를 발화한다. 스킬을 안 쓴 턴(도트 사망 등)에도 보낸다. </summary>
-        private void NotifyTurnEnded()
-        {
-            var actor = _engine.LastTurn.Actor;
-            if (actor == null) return;
-            Combatants.FirstOrDefault(u => u.Model == actor)?.RaiseTurnEnded();
         }
 
         /// <summary>

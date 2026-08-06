@@ -188,6 +188,37 @@ namespace Eclipse.Tests
             return UniTask.CompletedTask;
         });
 
+        // --- 턴 시작 신호 순서: 상태 갱신 뒤, 시전 앞 ---
+
+        [UnityTest]
+        public IEnumerator 턴_시작_신호는_상태_갱신_뒤_시전_앞에_온다() => UniTask.ToCoroutine(() =>
+        {
+            var ally = Ally("아군", 0, S(5000, 300, 0, 200)); // 가장 빠름 → 첫 행동자
+            var enemy = Enemy("적", 0, S(3000, 10, 0, 50));
+            var vm = Vm(ally, enemy, startAuto: false);
+            var allyUnit = vm.Combatants.First(u => u.IsAlly);
+
+            var order = new List<string>();
+            using var subs = new CompositeDisposable();
+            // 파생 프로퍼티는 구독 즉시 현재값을 흘리므로 첫 발화는 건너뛴다.
+            allyUnit.EffectSources.Skip(1).Subscribe(_ => order.Add("상태")).AddTo(subs);
+            allyUnit.TurnStarted.Subscribe(_ => order.Add("턴시작")).AddTo(subs);
+            allyUnit.Acted.Subscribe(_ => order.Add("시전")).AddTo(subs);
+
+            vm.RunBattleAsync(null, CancellationToken.None).Forget(); // 첫 아군 턴 입력 대기까지 진행
+
+            CollectionAssert.AreEqual(new[] { "상태", "턴시작" }, order,
+                "턴 시작은 상태 갱신 뒤에 알린다. 뒤집히면 이번 턴에 풀린 효과에 헛반짝임이 남는다");
+
+            vm.Submit(vm.ActingCombatant.CurrentValue.Skills[0], vm.Combatants.First(u => !u.IsAlly));
+
+            CollectionAssert.AreEqual(new[] { "상태", "턴시작", "시전", "상태" }, order.Take(4).ToList(),
+                "시전 신호는 턴 시작 뒤에 온다");
+
+            vm.Dispose();
+            return UniTask.CompletedTask;
+        });
+
         // --- VM 오토 구동: 강한 파티는 완주해 승리로 끝난다 ---
 
         [UnityTest]

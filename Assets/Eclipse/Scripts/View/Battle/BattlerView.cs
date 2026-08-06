@@ -178,7 +178,7 @@ namespace Eclipse.View
                 .Subscribe(CullHeldVfx)
                 .AddTo(_bindings);
 
-            unit.TurnEnded
+            unit.TurnStarted
                 .Subscribe(_ => FlashHeldVfx())
                 .AddTo(_bindings);
 
@@ -287,7 +287,7 @@ namespace Eclipse.View
             }
         }
 
-        /// <summary>「턴마다」 방식의 유지 이펙트를 한 번씩 다시 터뜨린다. 이 유닛의 턴 정산마다 호출된다.</summary>
+        /// <summary>「턴마다」 방식의 유지 이펙트를 한 번씩 다시 터뜨린다. 이 유닛의 턴 시작 정산마다 호출된다.</summary>
         private void FlashHeldVfx()
         {
             foreach (var (player, _) in _heldVfx)

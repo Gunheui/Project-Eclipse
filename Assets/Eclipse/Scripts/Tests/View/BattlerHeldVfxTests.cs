@@ -131,6 +131,23 @@ namespace Eclipse.Tests.View
             yield return null;
         }
 
+        [UnityTest]
+        public IEnumerator 턴마다_오라는_홀더의_턴_시작마다_다시_터진다()
+        {
+            var eachTurn = BuildSkillWithAura(VfxHold.EachTurn);
+            ((IDamageable)_model).ApplyEffect(StatusEffect.Taunt(3, eachTurn));
+            _unit.RaiseActed(eachTurn);
+            _stateChanged.OnNext(Unit.Default);
+
+            var aura = _field.GetComponentsInChildren<VfxPlayer>(true).Single(p => p.HasHold);
+            Assert.AreEqual(1, aura.transform.childCount, "시전 턴 몫이 한 번 재생된다");
+
+            _unit.RaiseTurnStarted();
+
+            Assert.AreEqual(2, aura.transform.childCount, "자기 턴 시작마다 한 번씩 다시 띄운다");
+            yield return null;
+        }
+
         /// <summary>이 배틀러 밑에서 아직 켜져 있는 오라 수. 걷힌 재생기는 유지 목록을 비우고 사라진다.</summary>
         private int LitAuras()
             => _field.GetComponentsInChildren<VfxPlayer>(true).Count(p => p.HasHold);
@@ -146,7 +163,8 @@ namespace Eclipse.Tests.View
         }
 
         /// <summary>유지 레이어 하나짜리 오라를 시전 이펙트로 물린 스킬.</summary>
-        private SkillSO BuildSkillWithAura()
+        /// <param name="mode">유지 방식. 「턴마다」는 턴 시작 통지를 받을 때마다 다시 스폰된다.</param>
+        private SkillSO BuildSkillWithAura(VfxHold mode = VfxHold.Continuous)
         {
             var layerPrefab = Track(new GameObject("AuraLayer"));
             layerPrefab.SetActive(false);
@@ -156,7 +174,7 @@ namespace Eclipse.Tests.View
             {
                 prefab = layerPrefab,
                 holdTurns = 1,
-                holdMode = VfxHold.Continuous,
+                holdMode = mode,
                 awaitSeconds = 0f,
             });
 
