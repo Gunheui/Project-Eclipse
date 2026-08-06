@@ -5,9 +5,10 @@ using UnityEngine;
 namespace Eclipse.Data
 {
     /// <summary>
-    /// 이펙트를 놓을 기준점. 배틀러가 월드 좌표로 풀며, 진영 두 종류는 전투 화면이 계산해 넘긴다.
+    /// 이펙트를 놓을 기준점. 높이 세 종류는 재생하는 배틀러의 실루엣에서 나오고, 진영 두 종류는
+    /// 시전자 기준 자기 편·상대 편의 범위 중심이다.
     /// </summary>
-    public enum VfxAnchor { Caster, CasterGround, Target, AllAllies, AllEnemies }
+    public enum VfxAnchor { Foot, Center, Overhead, AllAllies, AllEnemies }
 
     /// <summary>
     /// 유지 이펙트를 보여 주는 방식. Continuous는 켜 둔 채로 두고, EachTurn은 턴마다 잠깐씩 다시 재생한다.
@@ -23,7 +24,7 @@ namespace Eclipse.Data
         [Tooltip("재생할 파티클 프리팹.")]
         public GameObject prefab;
 
-        [Tooltip("재생 위치 기준점.")]
+        [Tooltip("재생 위치 기준점. 진영 앵커는 시전용 스펙에만 쓴다. 피격용은 대상마다 재생돼 같은 자리에 겹친다.")]
         public VfxAnchor anchor;
 
         [Tooltip("앵커 기준 오프셋(월드 단위).")]

@@ -84,8 +84,9 @@ namespace Eclipse.View
         private Vector3 _home;
         private bool _facingRight;
 
-        // 발밑 앵커의 이 트랜스폼 기준 높이. Bind에서 실루엣 아래끝으로 잡는다.
+        // 발밑·몸통 앵커의 이 트랜스폼 기준 위치. Bind에서 실루엣 아래끝과 중심으로 잡는다.
         private float _groundLocalY;
+        private Vector3 _bodyCenterLocal;
 
         // HP바가 매달린 HeadAnchor와 씬에 저작된 기본 높이. 슬롯마다 있는 자식이라 첫 사용 때 이름으로 찾는다.
         private Transform _headAnchor;
@@ -143,6 +144,7 @@ namespace Eclipse.View
                 ResizeTapArea(body);
                 PositionHeadAnchor(body);
                 _groundLocalY = body.min.y;
+                _bodyCenterLocal = body.center;
             }
 
             unit.Acted
@@ -490,17 +492,25 @@ namespace Eclipse.View
             return play;
         }
 
-        /// <summary>레이어 앵커를 월드 좌표로 푼다.</summary>
-        private Vector3 ResolveAnchor(VfxAnchor anchor) => anchor switch
+        /// <summary>레이어 앵커를 월드 좌표로 변환한다.</summary>
+        private Vector3 ResolveAnchor(VfxAnchor anchor)
         {
-            VfxAnchor.CasterGround => transform.TransformPoint(new Vector3(0f, _groundLocalY, 0f)),
-            VfxAnchor.AllAllies => FormationCenter(true),
-            VfxAnchor.AllEnemies => FormationCenter(false),
-            // 시전자와 대상 모두 신호를 받은 이 배틀러 자신이다(시전은 행동자, 피격은 피해자가 재생한다).
-            _ => visualRoot.position,
-        };
+            // 전투 정리로 바인딩이 풀린 뒤에도 남아 있던 연출이 부를 수 있다. 그때는 제자리를 준다.
+            if (_unit == null) return visualRoot.position;
+            return anchor switch
+            {
+                VfxAnchor.Foot => transform.TransformPoint(new Vector3(0f, _groundLocalY, 0f)),
+                VfxAnchor.Center => transform.TransformPoint(_bodyCenterLocal),
+                VfxAnchor.Overhead => _headAnchor != null ? _headAnchor.position : visualRoot.position,
+                // 진영 앵커는 시전자 기준이다. 적이 재생해도 AllAllies는 자기 편을 가리킨다.
+                VfxAnchor.AllAllies => FormationCenter(_unit.IsAlly),
+                VfxAnchor.AllEnemies => FormationCenter(!_unit.IsAlly),
+                _ => visualRoot.position,
+            };
+        }
 
-        /// <summary>진영 전체를 두른 범위의 중심. 주입이 없으면 이 배틀러 자리로 대신한다.</summary>
+        /// <summary>한 진영 전체를 두른 범위의 중심. 주입이 없으면 이 배틀러 자리로 대신한다.</summary>
+        /// <param name="ally">화면 기준 아군 진영이면 true.</param>
         private Vector3 FormationCenter(bool ally)
             => _formationBounds != null ? _formationBounds(ally).center : visualRoot.position;
 

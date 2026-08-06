@@ -178,15 +178,13 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// 한 진영의 배틀러 전체를 두른 범위. 진영 앵커 이펙트가 놓일 자리로 쓴다.
+        /// 한 진영의 슬롯 전체를 두른 범위. 진영 앵커 이펙트가 놓일 자리로 쓴다.
         /// </summary>
         /// <param name="ally">아군 진영이면 true.</param>
-        /// <returns>빈 슬롯은 이미 비활성이라 제외된다. 살아 있는 배틀러가 없으면 원점의 빈 범위.</returns>
+        /// <returns>슬롯 앵커가 씬에 고정이라 인원수·생존 여부와 무관하게 일정한 범위.</returns>
         private Bounds FormationBounds(bool ally)
         {
-            var slots = (ally ? allyBattlers : enemyBattlers).Where(b => b.gameObject.activeSelf).ToList();
-            if (slots.Count == 0) return new Bounds(Vector3.zero, Vector3.zero);
-
+            var slots = ally ? allyBattlers : enemyBattlers;
             var bounds = new Bounds(slots[0].transform.position, Vector3.zero);
             foreach (var b in slots) bounds.Encapsulate(b.transform.position);
             return bounds;
