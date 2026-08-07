@@ -22,6 +22,7 @@ namespace Eclipse.Tests.View
         private readonly List<Object> _spawned = new List<Object>();
 
         private Transform _field;
+        private Transform _visual;
         private BattlerView _view;
         private Combatant _model;
         private CombatantViewModel _unit;
@@ -39,10 +40,17 @@ namespace Eclipse.Tests.View
             _unit = new CombatantViewModel(_model, _stateChanged, null, null, 0f, null, null, null);
 
             // 연출은 배틀러의 부모 밑에 스폰되므로 전장 역할을 할 부모가 있어야 한다.
+            // 실제 배틀러는 몸통이 자식이고 대시가 그 자식만 옮긴다. 같은 구조로 세워야 변위 계산이
+            // 실제 경로를 탄다. Awake가 제자리를 잡기 전에 꽂으려고 비활성으로 만들어 둔다.
             var go = Track(new GameObject("Battler"));
+            go.SetActive(false);
             go.transform.SetParent(_field);
+            _visual = new GameObject("Visual").transform;
+            _visual.SetParent(go.transform, false);
             _view = go.AddComponent<BattlerView>();
-            SetPrefab(_view, Track(new GameObject("VfxPlayer")).AddComponent<VfxPlayer>());
+            SetField(_view, "visualRoot", _visual);
+            SetField(_view, "vfxPlayerPrefab", Track(new GameObject("VfxPlayer")).AddComponent<VfxPlayer>());
+            go.SetActive(true);
             _view.Bind(_unit, () => 1, _ => new Bounds());
         }
 
@@ -148,6 +156,20 @@ namespace Eclipse.Tests.View
             yield return null;
         }
 
+        [UnityTest]
+        public IEnumerator 몸통이_대시하면_오라도_따라간다()
+        {
+            ApplyTaunt(duration: 2);
+            _unit.RaiseActed(_skill);
+            var aura = _field.GetComponentsInChildren<VfxPlayer>(true).Single(p => p.HasHold);
+            var instance = aura.transform.GetChild(0);
+
+            _visual.localPosition = new Vector3(3f, 0f, 0f);
+            yield return null;
+
+            Assert.AreEqual(3f, instance.position.x, 0.001f, "발밑 오라가 대시한 몸통을 따라간다");
+        }
+
         /// <summary>이 배틀러 밑에서 아직 켜져 있는 오라 수. 걷힌 재생기는 유지 목록을 비우고 사라진다.</summary>
         private int LitAuras()
             => _field.GetComponentsInChildren<VfxPlayer>(true).Count(p => p.HasHold);
@@ -193,11 +215,11 @@ namespace Eclipse.Tests.View
             return enemy;
         }
 
-        /// <summary>씬에 저작해야 할 재생기 프리팹을 테스트에서 꽂는다.</summary>
-        private static void SetPrefab(BattlerView view, VfxPlayer prefab)
+        /// <summary>씬에 저작해야 할 직렬화 필드를 테스트에서 꽂는다.</summary>
+        private static void SetField(BattlerView view, string name, object value)
             => typeof(BattlerView)
-                .GetField("vfxPlayerPrefab", BindingFlags.Instance | BindingFlags.NonPublic)
-                .SetValue(view, prefab);
+                .GetField(name, BindingFlags.Instance | BindingFlags.NonPublic)
+                .SetValue(view, value);
 
         private T Track<T>(T o) where T : Object
         {

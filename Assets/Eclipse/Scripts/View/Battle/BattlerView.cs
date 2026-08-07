@@ -69,6 +69,10 @@ namespace Eclipse.View
         private const float ReturnDuration = 0.15f;
         private const float MeleeGap = 1.2f;
 
+        // 대시하는 동안 배틀러에 씌우는 정렬 순서. 씬 저작값이 10~13이라 가로지른 앞줄에 묻히지 않고,
+        // 유지 이펙트(15)와 HP바(20)보다는 아래라 HUD가 계속 위에 그려진다.
+        private const int DashSortingOrder = 14;
+
         // Eclipse/SpriteOutlineURP2D의 아웃라인 프로퍼티. MaterialPropertyBlock으로 배틀러마다 따로 덮어쓴다.
         private static readonly int OutlineEnabledId = Shader.PropertyToID("_OutlineEnabled");
         private static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
@@ -95,6 +99,10 @@ namespace Eclipse.View
         private Func<bool, Bounds> _formationBounds;
         private Func<CombatantViewModel, Vector3?> _battlerPosition;
         private Vector3 _home;
+
+        // 씬에 저작된 정렬 순서. 대시가 끝나면 이 값으로 되돌린다. 바인딩마다 다시 읽으면
+        // 시전이 겹쳤을 때 올려 둔 값이 저작값으로 굳는다.
+        private int _baseSortingOrder;
 
         // 이 유닛의 공격 클립에서 무기가 닿는 시점(초). 배속은 재생할 때 나눈다.
         private float _impactTime;
@@ -132,6 +140,7 @@ namespace Eclipse.View
             // 제자리는 씬에 저작된 값 하나뿐이다. 바인딩마다 다시 읽으면 연출 도중 재바인딩됐을 때
             // 어긋난 위치가 제자리로 굳어 이후 흔들림이 그 자리로 돌아간다.
             _home = visualRoot.localPosition;
+            if (spriteRenderer != null) _baseSortingOrder = spriteRenderer.sortingOrder;
         }
 
         // 배속 토글은 View가 들고 있고 알림은 없다. 매 프레임 읽어 애니메이터 전체 속도에 반영한다.
@@ -277,6 +286,7 @@ namespace Eclipse.View
 
             // 취소된 트윈은 중간 위치에서 멈춘다. 다음 바인딩이 그 자리를 쓰지 않게 제자리로 되돌린다.
             if (visualRoot != null) visualRoot.localPosition = _home;
+            RestoreSorting();
             // 공격 도중 끊기면 그 포즈에서 멈춘다. 다음 유닛이 옛 중간 포즈를 물려받지 않게 대기로 되돌린다.
             // 숨은 배틀러에 재생을 걸면 경고만 나고 먹지 않는다. 그쪽은 다시 켤 때 Bind가 대기부터 세운다.
             if (animator != null && animator.runtimeAnimatorController != null && animator.gameObject.activeInHierarchy)
@@ -568,15 +578,23 @@ namespace Eclipse.View
             // 첫 대기 전에 세운다. 전장이 시전 신호 바로 뒤에 이 값을 읽는다.
             var impact = _impact = new UniTaskCompletionSource();
 
-            // 이펙트는 이동·모션과 나란히 간다. 순차로 돌리면 유지 오라 등록이 접근 시간만큼 늦는다.
-            var effects = UniTask.WhenAll(
-                SpawnEffect(skill != null ? skill.castEffect : null),
-                SpawnVfx(skill != null ? skill.castVfx : null, skill));
+            // 접근이 취소되면 아래 대입을 건너뛴다. 마지막 대기가 빈 태스크를 받도록 미리 세운다.
+            var effects = UniTask.CompletedTask;
 
             bool melee = skill != null && skill.melee && targets != null && targets.Count > 0;
             try
             {
-                if (melee) await MoveAsync(ApproachDestination(targets), ApproachDuration, ct);
+                if (melee)
+                {
+                    RaiseDashSorting();
+                    await MoveAsync(ApproachDestination(targets), ApproachDuration, ct);
+                }
+
+                // 접근이 끝난 뒤 띄운다. 이펙트 좌표는 스폰 시점에 굳으므로 먼저 띄우면 출발 자리에 남는다.
+                effects = UniTask.WhenAll(
+                    SpawnEffect(skill != null ? skill.castEffect : null),
+                    SpawnVfx(skill != null ? skill.castVfx : null, skill));
+
                 if (owner == _playbackCts) await PlayAttackAsync(impact, ct);
                 if (melee && owner == _playbackCts) await MoveAsync(_home, ReturnDuration, ct);
             }
@@ -587,8 +605,13 @@ namespace Eclipse.View
             finally
             {
                 CompleteImpact(impact);
-                // 취소로 빠져나가도 몸통이 슬롯 사이에 남지 않게 한다.
-                if (owner == _playbackCts && visualRoot != null) visualRoot.localPosition = _home;
+                // 취소로 빠져나가도 몸통이 슬롯 사이에 남지 않게 한다. 정렬도 같은 조건으로 되돌린다 —
+                // 끊긴 재생이 뒤늦게 되돌리면 이미 시작한 다음 대시의 정렬을 도로 내린다.
+                if (owner == _playbackCts)
+                {
+                    RestoreSorting();
+                    if (visualRoot != null) visualRoot.localPosition = _home;
+                }
             }
 
             await effects;
@@ -616,6 +639,20 @@ namespace Eclipse.View
                 .DOLocalMove(local, duration / _speed())
                 .SetEase(Ease.OutQuad)
                 .ToUniTask(cancellationToken: ct);
+
+        /// <summary>대시하는 동안 이 배틀러를 다른 배틀러보다 위에 그린다.</summary>
+        private void RaiseDashSorting()
+        {
+            // 대입이 아니라 최댓값을 쓴다. 그냥 넣으면 13보다 높게 저작된 배틀러를 오히려 내린다.
+            if (spriteRenderer != null)
+                spriteRenderer.sortingOrder = Mathf.Max(_baseSortingOrder, DashSortingOrder);
+        }
+
+        /// <summary>정렬 순서를 씬 저작값으로 되돌린다. 호출 안전(멱등).</summary>
+        private void RestoreSorting()
+        {
+            if (spriteRenderer != null) spriteRenderer.sortingOrder = _baseSortingOrder;
+        }
 
         /// <summary>
         /// 공격 모션을 한 번 재생하고 무기가 닿는 시점에 타격을 알린다. 공격 상태가 없는 배틀러는 대기 없이 끝난다.
@@ -694,16 +731,28 @@ namespace Eclipse.View
             return play;
         }
 
+        /// <summary>연출로 몸통이 제자리에서 벗어난 거리. 앵커에 더하면 이펙트가 몸통을 따라간다.</summary>
+        private Vector3 VisualOffset()
+        {
+            // 몸통이 따로 없는 배틀러는 루트째 움직여 TransformPoint에 이미 반영돼 있다. 더하면 두 번 센다.
+            if (visualRoot == null || visualRoot == transform) return Vector3.zero;
+            var local = visualRoot.localPosition - _home;
+            // 지역 좌표에서 더한 뒤 변환해도 지금 계층에서는 결과가 같다. 다만 그 식은 몸통이 루트의
+            // 직속 자식이라는 전제에 기대서, 한 단계만 끼어들면 자리 앵커의 1.5배만큼 조용히 어긋난다.
+            return visualRoot.parent != null ? visualRoot.parent.TransformVector(local) : local;
+        }
+
         /// <summary>레이어 앵커를 월드 좌표로 변환한다.</summary>
         private Vector3 ResolveAnchor(VfxAnchor anchor)
         {
             // 전투 정리로 바인딩이 풀린 뒤에도 남아 있던 연출이 부를 수 있다. 그때는 제자리를 준다.
             if (_unit == null) return visualRoot.position;
+            var moved = VisualOffset();
             return anchor switch
             {
-                VfxAnchor.Foot => transform.TransformPoint(new Vector3(0f, _groundLocalY, 0f)),
-                VfxAnchor.Center => transform.TransformPoint(_bodyCenterLocal),
-                VfxAnchor.Overhead => _headAnchor != null ? _headAnchor.position : visualRoot.position,
+                VfxAnchor.Foot => transform.TransformPoint(new Vector3(0f, _groundLocalY, 0f)) + moved,
+                VfxAnchor.Center => transform.TransformPoint(_bodyCenterLocal) + moved,
+                VfxAnchor.Overhead => _headAnchor != null ? _headAnchor.position + moved : visualRoot.position,
                 // 진영 앵커는 시전자 기준이다. 적이 재생해도 AllAllies는 자기 편을 가리킨다.
                 VfxAnchor.AllAllies => FormationCenter(_unit.IsAlly),
                 VfxAnchor.AllEnemies => FormationCenter(!_unit.IsAlly),

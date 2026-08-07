@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
@@ -32,7 +33,7 @@ namespace Eclipse.Tests.View
         {
             foreach (var go in _spawned)
                 if (go != null)
-                    Object.Destroy(go);
+                    UnityEngine.Object.Destroy(go);
             _spawned.Clear();
         }
 
@@ -82,23 +83,47 @@ namespace Eclipse.Tests.View
             yield return null;
         }
 
+        [UnityTest]
+        public IEnumerator 켜둔_레이어만_앵커를_따라간다()
+        {
+            var spec = ScriptableObject.CreateInstance<VfxSpec>();
+            spec.layers.Add(Layer(holdTurns: 1));
+            spec.layers.Add(Layer(holdTurns: 0));
+            var anchor = Vector3.zero;
+            var player = Play(spec, _ => anchor);
+            var held = player.transform.GetChild(0);
+            var once = player.transform.GetChild(1);
+
+            anchor = new Vector3(3f, 0f, 0f);
+            yield return null;
+
+            Assert.AreEqual(3f, held.position.x, 0.001f, "켜 둔 인스턴스는 앵커를 매 프레임 다시 읽는다");
+            Assert.AreEqual(0f, once.position.x, 0.001f, "일회성은 스폰한 자리에 남는다");
+        }
+
         /// <summary>유지 레이어 하나짜리 스펙을 새 재생기에 걸고 그 재생기를 돌려준다.</summary>
         private VfxPlayer Play(VfxHold mode)
         {
             var spec = ScriptableObject.CreateInstance<VfxSpec>();
-            spec.layers.Add(new VfxLayer
-            {
-                prefab = _layerPrefab,
-                holdTurns = 1,
-                holdMode = mode,
-                awaitSeconds = 0f,
-            });
+            spec.layers.Add(Layer(holdTurns: 1, mode));
+            return Play(spec, _ => Vector3.zero);
+        }
 
+        private VfxPlayer Play(VfxSpec spec, Func<VfxAnchor, Vector3> anchorAt)
+        {
             var player = Track(new GameObject("VfxPlayer")).AddComponent<VfxPlayer>();
             // 유지 레이어는 시작 지연이 없으면 등록·재생까지 동기로 끝나 대기 없이 관측할 수 있다.
-            player.Play(spec, 1, _ => Vector3.zero, CancellationToken.None).Forget();
+            player.Play(spec, 1, anchorAt, CancellationToken.None).Forget();
             return player;
         }
+
+        private VfxLayer Layer(int holdTurns, VfxHold mode = VfxHold.Continuous) => new VfxLayer
+        {
+            prefab = _layerPrefab,
+            holdTurns = holdTurns,
+            holdMode = mode,
+            awaitSeconds = 0f,
+        };
 
         private GameObject Track(GameObject go)
         {

@@ -22,7 +22,6 @@ namespace Eclipse.View
         private class HeldLayer
         {
             public VfxLayer Layer;
-            public Vector3 Position;
             public GameObject Instance;
         }
 
@@ -30,6 +29,9 @@ namespace Eclipse.View
 
         // 연출 배속으로 나눌 값. Play에서 세운 뒤 유지 레이어가 턴을 넘겨가며 계속 쓴다.
         private float _div = 1f;
+
+        // 레이어 앵커를 월드 좌표로 바꾸는 함수. 유지 레이어가 살아 있는 동안 매 프레임 다시 부른다.
+        private Func<VfxAnchor, Vector3> _anchorAt;
 
         /// <summary>유지 중인 레이어가 남아 있는지. false면 이 재생기는 대기가 끝나는 대로 사라진다.</summary>
         public bool HasHold => _held.Count > 0;
@@ -39,16 +41,19 @@ namespace Eclipse.View
         /// 않는다 — 최대 10초짜리 프리팹이 턴을 붙잡지 못하게 한다.
         /// </summary>
         /// <param name="speed">연출 배속(1 또는 2). 지연·대기 시간을 나눈다.</param>
-        /// <param name="anchorAt">레이어 앵커를 월드 좌표로 푸는 함수. 배틀러가 넘긴다.</param>
+        /// <param name="anchorAt">
+        /// 레이어 앵커를 월드 좌표로 바꾸는 함수. 배틀러가 넘기며, 유지 레이어가 걷힐 때까지 보관된다.
+        /// </param>
         public async UniTask Play(VfxSpec spec, int speed, Func<VfxAnchor, Vector3> anchorAt, CancellationToken ct)
         {
             _div = Mathf.Max(1, speed);
+            _anchorAt = anchorAt;
 
             if (spec != null && spec.layers != null && spec.layers.Count > 0)
             {
                 var layers = new List<UniTask>(spec.layers.Count);
                 foreach (var layer in spec.layers)
-                    layers.Add(PlayLayer(layer, anchorAt, ct));
+                    layers.Add(PlayLayer(layer, ct));
                 await UniTask.WhenAll(layers);
             }
 
@@ -74,14 +79,12 @@ namespace Eclipse.View
 
         /// <summary>레이어 하나를 재생한다.</summary>
         /// <returns>유지 레이어는 시작 지연만 기다리고, 나머지는 반복과 대기 시간이 끝나면 완료된다.</returns>
-        private async UniTask PlayLayer(VfxLayer layer, Func<VfxAnchor, Vector3> anchorAt, CancellationToken ct)
+        private async UniTask PlayLayer(VfxLayer layer, CancellationToken ct)
         {
             if (layer.prefab == null) return;
 
-            var position = anchorAt(layer.anchor) + new Vector3(layer.offset.x, layer.offset.y, 0f);
-
             // 등록은 지연보다 먼저 한다. 지연 중에 호출부가 HasHold를 읽어도 유지 레이어를 놓치지 않는다.
-            var hold = layer.holdTurns > 0 ? RegisterHold(layer, position) : null;
+            var hold = layer.holdTurns > 0 ? RegisterHold(layer) : null;
 
             if (layer.startDelay > 0f)
             {
@@ -99,7 +102,7 @@ namespace Eclipse.View
             var spawned = new List<GameObject>(repeats);
             for (int i = 0; i < repeats; i++)
             {
-                spawned.Add(Spawn(layer, position));
+                spawned.Add(Spawn(layer, AnchorPosition(layer)));
                 if (i + 1 >= repeats) break;
                 await UniTask.WaitForSeconds(layer.repeatInterval / _div, cancellationToken: ct);
                 if (this == null) return;
@@ -109,19 +112,31 @@ namespace Eclipse.View
             foreach (var go in spawned) StopEmitting(go);
         }
 
-        private HeldLayer RegisterHold(VfxLayer layer, Vector3 position)
+        private HeldLayer RegisterHold(VfxLayer layer)
         {
-            var hold = new HeldLayer { Layer = layer, Position = position };
+            var hold = new HeldLayer { Layer = layer };
             _held.Add(hold);
             return hold;
         }
+
+        /// <summary>켜 둔 인스턴스를 앵커 자리에 다시 붙인다. 배틀러가 대시하거나 흔들려도 따라간다.</summary>
+        private void LateUpdate()
+        {
+            // 배틀러 파괴 가드는 필요 없다. 모든 파괴 경로가 StopHold를 거치고, StopHold는 파괴를
+            // 예약하기 전에 _held를 비운다. 사라진 배틀러의 앵커를 이 루프가 부르는 프레임은 없다.
+            foreach (var hold in _held)
+                if (hold.Instance != null) hold.Instance.transform.position = AnchorPosition(hold.Layer);
+        }
+
+        private Vector3 AnchorPosition(VfxLayer layer)
+            => _anchorAt(layer.anchor) + new Vector3(layer.offset.x, layer.offset.y, 0f);
 
         /// <summary>
         /// 유지 레이어의 이번 턴 몫을 재생한다. Continuous는 인스턴스를 붙들고, EachTurn은 대기가 끝나면 치운다.
         /// </summary>
         private void Flash(HeldLayer hold)
         {
-            var go = Spawn(hold.Layer, hold.Position);
+            var go = Spawn(hold.Layer, AnchorPosition(hold.Layer));
             if (hold.Layer.holdMode == VfxHold.EachTurn) Destroy(go, hold.Layer.awaitSeconds / _div + FadeGrace);
             else hold.Instance = go;
         }
