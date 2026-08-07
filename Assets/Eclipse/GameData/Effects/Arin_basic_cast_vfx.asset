@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee574ae48e5e243528c1248d998cbba8, type: 3}
+  m_Name: Arin_basic_cast_vfx
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.VfxSpec
+  layers:
+  - prefab: {fileID: 3432958286849152088, guid: 87ee7299dd44ed747af24dbb91bcd33b, type: 3}
+    anchor: 0
+    offset: {x: 0, y: 0}
+    startDelay: 0
+    rotation: {x: 0, y: 0, z: 0}
+    scale: 1.5
+    overrideColor: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    sortingOrder: 5
+    repeatCount: 1
+    repeatInterval: 0.15
+    awaitSeconds: 0.4
+    holdTurns: 0
+    holdMode: 0
+  - prefab: {fileID: 856368647163548680, guid: 724d151229932ba47931fcc83c083470, type: 3}
+    anchor: 1
+    offset: {x: 0, y: 0}
+    startDelay: 0.25
+    rotation: {x: 0, y: 0, z: 0}
+    scale: 2.2
+    overrideColor: 1
+    color: {r: 1, g: 0.84705883, b: 0.3019608, a: 1}
+    sortingOrder: 15
+    repeatCount: 1
+    repeatInterval: 0.15
+    awaitSeconds: 0.35
+    holdTurns: 0
+    holdMode: 0

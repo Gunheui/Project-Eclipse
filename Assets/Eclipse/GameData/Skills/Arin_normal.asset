@@ -30,5 +30,8 @@ MonoBehaviour:
     value: 0.5
     affectedStat: 0
     duration: 0
-  castEffect: {fileID: 11400000, guid: 23fa6b4b5b7943799b7254f94bf1b03d, type: 2}
-  impactEffect: {fileID: 11400000, guid: 78e9d4333e5a41eab73c1386073f7c86, type: 2}
+  melee: 0
+  castEffect: {fileID: 0}
+  impactEffect: {fileID: 0}
+  castVfx: {fileID: 11400000, guid: f24aea9af893e4dc1852b47509757746, type: 2}
+  impactVfx: {fileID: 11400000, guid: d1a3237eb980a44978e7f8f9e5723f85, type: 2}

@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee574ae48e5e243528c1248d998cbba8, type: 3}
+  m_Name: Eliana_ultimate_cast_vfx
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.VfxSpec
+  layers:
+  - prefab: {fileID: 3377181292992421420, guid: 48c5715f9603c3842a353516a8baefbb, type: 3}
+    anchor: 0
+    offset: {x: 0, y: 0}
+    startDelay: 0
+    rotation: {x: 0, y: 0, z: 0}
+    scale: 0.2
+    overrideColor: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    sortingOrder: 5
+    repeatCount: 1
+    repeatInterval: 0.15
+    awaitSeconds: 0.5
+    holdTurns: 0
+    holdMode: 0
+  - prefab: {fileID: 3377181292992421420, guid: 48c5715f9603c3842a353516a8baefbb, type: 3}
+    anchor: 4
+    offset: {x: 0, y: 0}
+    startDelay: 0.2
+    rotation: {x: 0, y: 0, z: 0}
+    scale: 0.45
+    overrideColor: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    sortingOrder: 5
+    repeatCount: 1
+    repeatInterval: 0.15
+    awaitSeconds: 0.7
+    holdTurns: 0
+    holdMode: 0

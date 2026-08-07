@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee574ae48e5e243528c1248d998cbba8, type: 3}
+  m_Name: Ria_ultimate_cast_vfx
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.VfxSpec
+  layers:
+  - prefab: {fileID: 3744133877081091469, guid: a2a060732547fe64581bb0cb3c2bdf1d, type: 3}
+    anchor: 0
+    offset: {x: 0, y: 0}
+    startDelay: 0
+    rotation: {x: 0, y: 0, z: 0}
+    scale: 0.2
+    overrideColor: 1
+    color: {r: 0.34901962, g: 0.8509804, b: 0.4, a: 1}
+    sortingOrder: 5
+    repeatCount: 1
+    repeatInterval: 0.15
+    awaitSeconds: 0.6
+    holdTurns: 0
+    holdMode: 0
+  - prefab: {fileID: 161766660727748596, guid: 05ce920d629922a4eb4795ef7494ce5c, type: 3}
+    anchor: 0
+    offset: {x: 0, y: 0}
+    startDelay: 0
+    rotation: {x: 0, y: 0, z: 0}
+    scale: 0.19
+    overrideColor: 1
+    color: {r: 0.34901962, g: 0.8509804, b: 0.4, a: 1}
+    sortingOrder: 5
+    repeatCount: 1
+    repeatInterval: 0.15
+    awaitSeconds: 0.6
+    holdTurns: 0
+    holdMode: 0

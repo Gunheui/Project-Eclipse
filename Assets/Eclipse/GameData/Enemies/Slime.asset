@@ -21,7 +21,7 @@ MonoBehaviour:
     spd: 100
     critRate: 0.05
     critDamage: 1.5
-  basicSkill: {fileID: 11400000, guid: a2e1aef5073874263b71b9a4e6cd83f2, type: 2}
+  basicSkill: {fileID: 11400000, guid: 2fe54e08c8b624d1aa58520fc927e3f3, type: 2}
   normalSkill: {fileID: 0}
   ultimateSkill: {fileID: 0}
   battlerAssetRef: {fileID: 21300000, guid: 930fbaf80c77d4b4db1a042407ba89a5, type: 3}

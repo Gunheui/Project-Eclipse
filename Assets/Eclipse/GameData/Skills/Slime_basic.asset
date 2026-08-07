@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5640282a8b8e413eaa0459e7c3d1c11c, type: 3}
-  m_Name: Enemy_basic
+  m_Name: Slime_basic
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.SkillSO
-  id: enemy_basic
+  id: enemy_slime_basic
   displayName: "\uD560\uD034\uAE30"
   description: "\uC801 \uD558\uB098\uC5D0\uAC8C \uACF5\uACA9\uB825\uC758 150%\uB85C
     \uD53C\uD574\uB97C \uC785\uD78C\uB2E4."
@@ -25,7 +25,7 @@ MonoBehaviour:
     affectedStat: 0
     duration: 0
   melee: 1
-  castEffect: {fileID: 11400000, guid: ef54e92d476c496a9f37f54007365f16, type: 2}
-  impactEffect: {fileID: 11400000, guid: 5f7771e893d8418fac234125a81731cc, type: 2}
-  castVfx: {fileID: 0}
-  impactVfx: {fileID: 0}
+  castEffect: {fileID: 0}
+  impactEffect: {fileID: 0}
+  castVfx: {fileID: 11400000, guid: 9d436bf9dcb0345c2a576ed61d597df3, type: 2}
+  impactVfx: {fileID: 11400000, guid: ab6e6f6fd0a284306ab095bce5b57360, type: 2}

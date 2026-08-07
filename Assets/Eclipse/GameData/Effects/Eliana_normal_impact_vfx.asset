@@ -1,0 +1,43 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee574ae48e5e243528c1248d998cbba8, type: 3}
+  m_Name: Eliana_normal_impact_vfx
+  m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.VfxSpec
+  layers:
+  - prefab: {fileID: 6441873369525384307, guid: 0f3d407feb92ebb49b98d0157de5008a, type: 3}
+    anchor: 1
+    offset: {x: 0, y: 0}
+    startDelay: 0
+    rotation: {x: 0, y: 0, z: 0}
+    scale: 0.16
+    overrideColor: 1
+    color: {r: 0.3529412, g: 0.17254902, b: 0.627451, a: 1}
+    sortingOrder: 15
+    repeatCount: 1
+    repeatInterval: 0.15
+    awaitSeconds: 0.4
+    holdTurns: 0
+    holdMode: 0
+  - prefab: {fileID: 8194992990867289339, guid: 99bc28c0d45f51c4fbac01080b73edc7, type: 3}
+    anchor: 1
+    offset: {x: 0, y: 0}
+    startDelay: 0.3
+    rotation: {x: 0, y: 0, z: 0}
+    scale: 0.31
+    overrideColor: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    sortingOrder: 15
+    repeatCount: 3
+    repeatInterval: 0.12
+    awaitSeconds: 0.5
+    holdTurns: 0
+    holdMode: 0
