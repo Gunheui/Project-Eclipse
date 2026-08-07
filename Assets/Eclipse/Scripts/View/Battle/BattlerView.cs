@@ -100,6 +100,9 @@ namespace Eclipse.View
         private Func<CombatantViewModel, Vector3?> _battlerPosition;
         private Vector3 _home;
 
+        // 저작값을 읽어 뒀는지. 꺼진 채 시작하는 자리표는 Awake보다 ResetPlayback이 먼저 돈다.
+        private bool _authoredCached;
+
         // 씬에 저작된 정렬 순서. 대시가 끝나면 이 값으로 되돌린다. 바인딩마다 다시 읽으면
         // 시전이 겹쳤을 때 올려 둔 값이 저작값으로 굳는다.
         private int _baseSortingOrder;
@@ -134,8 +137,17 @@ namespace Eclipse.View
         // 유지 중인 파티클 재생기와 그것을 띄운 스킬. 그 스킬이 건 효과가 다 풀리면 함께 걷는다.
         private readonly List<(VfxPlayer Player, SkillSO Source)> _heldVfx = new();
 
-        private void Awake()
+        private void Awake() => CacheAuthored();
+
+        /// <summary>
+        /// 씬에 저작된 제자리와 정렬 순서를 한 번만 읽어 둔다. 자리표가 꺼진 채로 시작하는 진영(적·미드보스·
+        /// 보스)은 Bind가 켜기 전에 ResetPlayback이 먼저 도는데, 그때까지 Awake가 돌지 않아 저작값 대신 0이
+        /// 되돌아 쓰인다. 그래서 되돌리기 직전에도 이걸 부른다 — 활성 여부와 무관하게 직렬화 값은 이미 있다.
+        /// </summary>
+        private void CacheAuthored()
         {
+            if (_authoredCached) return;
+            _authoredCached = true;
             if (visualRoot == null) visualRoot = transform;
             // 제자리는 씬에 저작된 값 하나뿐이다. 바인딩마다 다시 읽으면 연출 도중 재바인딩됐을 때
             // 어긋난 위치가 제자리로 굳어 이후 흔들림이 그 자리로 돌아간다.
@@ -166,15 +178,12 @@ namespace Eclipse.View
             Func<CombatantViewModel, Vector3?> battlerPosition = null,
             Action<CombatantViewModel> onTapped = null, Action<CombatantViewModel, bool> onHovered = null)
         {
-            // 켜는 것이 먼저다. 자리표가 꺼진 채로 시작하는 진영(적·미드보스·보스)은 여기서 Awake가 처음 돌아
-            // 제자리와 정렬 순서를 저작값으로 잡는다. 뒤로 미루면 ResetPlayback이 아직 비어 있는 그 값들을
-            // 되돌려 써 씬 저작값이 0으로 지워진다.
-            gameObject.SetActive(true);
             ResetPlayback();
             _bindings.Clear();
             HideDetail();
             // 파괴 토큰과 묶어 씬이 사라질 때도 함께 끊긴다.
             _playbackCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
+            gameObject.SetActive(true);
             _unit = unit;
             _onTapped = onTapped;
             _onHovered = onHovered;
@@ -277,6 +286,8 @@ namespace Eclipse.View
         /// <summary>진행 중인 재생을 끊고 배틀러를 평상 상태로 되돌린다. 호출 안전(멱등).</summary>
         private void ResetPlayback()
         {
+            CacheAuthored();
+
             // 취소는 콜백을 그 자리에서 실행해 대기 중이던 재생을 깨운다. 소유자를 먼저 비워야
             // 깨어난 옛 재생이 자기 차례가 아님을 보고 물러난다.
             var previous = _playbackCts;

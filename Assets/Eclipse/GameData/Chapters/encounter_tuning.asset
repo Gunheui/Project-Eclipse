@@ -15,13 +15,14 @@ MonoBehaviour:
   depths:
   - depth: 1
     allowedPool:
-    - {fileID: 11400000, guid: e5ff1161681544ec6b8eaeb5cfdc8f62, type: 2}
+    - {fileID: 11400000, guid: 0b7faf62b01a4f6f9eee97f8f05b22ee, type: 2}
     minCount: 2
     maxCount: 3
     mutationChance: 0
   - depth: 2
     allowedPool:
-    - {fileID: 11400000, guid: e5ff1161681544ec6b8eaeb5cfdc8f62, type: 2}
+    - {fileID: 11400000, guid: 0b7faf62b01a4f6f9eee97f8f05b22ee, type: 2}
+    - {fileID: 11400000, guid: 2af35d4408874bf8aa546ba5a5ca30c9, type: 2}
     minCount: 2
     maxCount: 3
     mutationChance: 0.15
@@ -35,6 +36,9 @@ MonoBehaviour:
     mutationChance: 0.3
   - depth: 4
     allowedPool:
+    - {fileID: 11400000, guid: 0b7faf62b01a4f6f9eee97f8f05b22ee, type: 2}
+    - {fileID: 11400000, guid: 2af35d4408874bf8aa546ba5a5ca30c9, type: 2}
+    - {fileID: 11400000, guid: eecc1fa5afb2a466b92719ab4f7fb51b, type: 2}
     - {fileID: 11400000, guid: e5ff1161681544ec6b8eaeb5cfdc8f62, type: 2}
     minCount: 3
     maxCount: 4
