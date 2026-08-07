@@ -57,9 +57,6 @@ namespace Eclipse.View
         // 연출 배속(1 또는 2). View 소유 — 계산엔 무관하고 배틀러 연출·턴 대기 시간만 나눈다.
         private int _speedMultiplier = 1;
 
-        // 시전이 시작되고 대상이 맞기까지의 간격(초). 공격 모션에서 무기가 실제로 닿는 지점에 맞춘 값이다.
-        private const float ImpactDelay = 0.6f;
-
         // 조준 모드 상태. 스킬 탭으로 대기 중인 스킬과 그때 계산한 유효 타겟 집합. null이면 조준 중이 아니다.
         private SkillSlotViewModel _pendingSkill;
         private IReadOnlyList<CombatantViewModel> _validTargets;
@@ -149,10 +146,13 @@ namespace Eclipse.View
             => _viewModel.RunBattleAsync(PlayTurnAnimationAsync, ct, WaitForImpactAsync);
 
         /// <summary>
-        /// 시전자가 때리는 순간까지 기다린다. 배속을 아는 곳이 여기뿐이라 나누기도 여기서 한다.
+        /// 시전자가 때리는 순간까지 기다린다. 시전 중이 아닌 배틀러는 완료된 값이라 시전자 하나가 시점을 정한다.
         /// </summary>
         private UniTask WaitForImpactAsync(CancellationToken ct)
-            => UniTask.Delay(TimeSpan.FromSeconds(ImpactDelay / _speedMultiplier), cancellationToken: ct);
+        {
+            var impacts = allyBattlers.Concat(enemyBattlers).Select(b => b.WaitForImpact());
+            return UniTask.WhenAll(impacts).AttachExternalCancellation(ct);
+        }
 
         /// <summary>
         /// 전장 배틀러를 소속·슬롯으로 유닛 VM에 연결한다. 대응 유닛이 없는 앵커는 숨긴다.
@@ -169,7 +169,8 @@ namespace Eclipse.View
             {
                 var unit = FindUnit(isAlly, slot);
                 if (unit != null)
-                    battlers[slot].Bind(unit, () => _speedMultiplier, FormationBounds, OnUnitTapped, OnUnitHovered);
+                    battlers[slot].Bind(unit, () => _speedMultiplier, FormationBounds, BattlerPosition,
+                        OnUnitTapped, OnUnitHovered);
                 else battlers[slot].Clear();
             }
         }
@@ -370,6 +371,10 @@ namespace Eclipse.View
             ExitTargeting();
             _viewModel.Submit(skill, unit);
         }
+
+        /// <summary>유닛이 서 있는 자리. 근접 시전자가 접근 목적지로 쓴다.</summary>
+        /// <returns>대응 배틀러가 없으면 null. 시전자는 진영 중앙으로 대신 간다.</returns>
+        private Vector3? BattlerPosition(CombatantViewModel unit) => FindBattler(unit)?.transform.position;
 
         /// <summary>유닛에 대응하는 배틀러를 소속·슬롯으로 찾는다.</summary>
         /// <returns>대응이 없으면 null(빈 슬롯).</returns>

@@ -13,11 +13,13 @@ namespace Eclipse.Presentation
     public readonly struct BattleUnitEntry
     {
         public BattleUnitEntry(Combatant unit, Sprite battler, RuntimeAnimatorController battlerAnimator,
-            Sprite timelineIcon, MutationSO mutation, IReadOnlyList<ActiveEffect> runEffects)
+            float battlerImpactTime, Sprite timelineIcon, MutationSO mutation,
+            IReadOnlyList<ActiveEffect> runEffects)
         {
             Unit = unit;
             Battler = battler;
             BattlerAnimator = battlerAnimator;
+            BattlerImpactTime = battlerImpactTime;
             TimelineIcon = timelineIcon;
             Mutation = mutation;
             RunEffects = runEffects ?? Array.Empty<ActiveEffect>();
@@ -30,6 +32,9 @@ namespace Eclipse.Presentation
         public Sprite Battler { get; }
 
         public RuntimeAnimatorController BattlerAnimator { get; }
+
+        /// <summary> 공격 모션에서 무기가 닿는 시점(초). 배틀러가 이 시점에 타격을 알린다. </summary>
+        public float BattlerImpactTime { get; }
 
         /// <summary> 턴 순서 타임라인 아이콘(아군 얼굴 크롭·적 배틀러). 없으면 null(해당 칸은 비워 그린다). </summary>
         public Sprite TimelineIcon { get; }

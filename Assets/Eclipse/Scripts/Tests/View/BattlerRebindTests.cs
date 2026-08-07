@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using Cysharp.Threading.Tasks;
 using Eclipse.Data;
 using Eclipse.Data.Enums;
 using Eclipse.Domain;
@@ -38,7 +39,7 @@ namespace Eclipse.Tests.View
 
             _model = Combatant.FromEnemy(BuildEnemy(), 0, new Stats { hp = 100, atk = 10, def = 5, spd = 10 });
             _stateChanged = new Subject<Unit>();
-            _unit = new CombatantViewModel(_model, _stateChanged, null, null, null, null, null);
+            _unit = new CombatantViewModel(_model, _stateChanged, null, null, 0f, null, null, null);
 
             // 연출은 배틀러의 부모 밑에 스폰되므로 전장 역할을 할 부모가 있어야 한다.
             var go = Track(new GameObject("Battler"));
@@ -107,6 +108,32 @@ namespace Eclipse.Tests.View
             yield return null;
         }
 
+        [UnityTest]
+        public IEnumerator 대시_도중_재바인딩은_타격_알림을_종결한다()
+        {
+            Bind();
+            _unit.RaiseActed(MeleeSkill(), new[] { _unit });
+            var impact = _view.WaitForImpact();
+            Assert.IsFalse(impact.Status.IsCompleted(), "접근이 끝나기 전에 때리면 대시가 의미를 잃는다");
+
+            Bind();
+
+            Assert.AreEqual(UniTaskStatus.Succeeded, impact.Status,
+                "대시 도중 방이 바뀌면 알릴 주체가 사라져 전투가 그 자리에 선다");
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator 애니메이터_없는_배틀러는_타격을_즉시_알린다()
+        {
+            Bind();
+            _unit.RaiseActed(null);
+
+            Assert.IsTrue(_view.WaitForImpact().Status.IsCompleted(),
+                "공격 대기가 즉시 끝나는 배틀러가 타격을 안 알리면 그 턴에서 전투가 멈춘다");
+            yield return null;
+        }
+
         private void Bind() => _view.Bind(_unit, () => 1, _ => new Bounds());
 
         /// <summary>이 배틀러가 지금까지 띄운 숫자 수. 상승 연출이 끝나야 사라지므로 그대로 쌓인다.</summary>
@@ -120,6 +147,16 @@ namespace Eclipse.Tests.View
             var go = Track(new GameObject("FloatingText"));
             go.SetActive(false);
             return go.AddComponent<FloatingText>();
+        }
+
+        /// <summary>이동을 켠 스킬. 이 테스트가 보는 건 접근 대기가 열리는지뿐이라 효과는 비워 둔다.</summary>
+        private SkillSO MeleeSkill()
+        {
+            var skill = Track(ScriptableObject.CreateInstance<SkillSO>());
+            skill.id = "test_melee";
+            skill.effects = new List<SkillEffect>();
+            skill.melee = true;
+            return skill;
         }
 
         private EnemySO BuildEnemy()

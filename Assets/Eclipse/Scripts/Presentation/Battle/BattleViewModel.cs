@@ -58,7 +58,7 @@ namespace Eclipse.Presentation
 
             Combatants = all
                 .Select(e => new CombatantViewModel(e.Unit, _stateChanged, e.Battler, e.BattlerAnimator,
-                    e.TimelineIcon, e.Mutation, e.RunEffects))
+                    e.BattlerImpactTime, e.TimelineIcon, e.Mutation, e.RunEffects))
                 .ToList();
 
             ActionCount = _stateChanged
@@ -186,9 +186,17 @@ namespace Eclipse.Presentation
             var turn = _engine.LastTurn;
             if (!turn.UsedSkill) return false;
 
-            Combatants.FirstOrDefault(u => u.Model == turn.Actor)?.RaiseActed(turn.Skill);
+            Combatants.FirstOrDefault(u => u.Model == turn.Actor)?.RaiseActed(turn.Skill, TargetsOf(turn));
             return true;
         }
+
+        /// <summary> 이번 턴에 맞은 대상 유닛. 같은 대상이 여러 번 맞아도 하나로 접는다. </summary>
+        private IReadOnlyList<CombatantViewModel> TargetsOf(TurnResult turn)
+            => turn.Hits
+                .Select(hit => Combatants.FirstOrDefault(u => u.Model == hit.Target))
+                .Where(vm => vm != null)
+                .Distinct()
+                .ToList();
 
         /// <summary> 이번 턴 효과 결과마다 대상에 Hit(피격)을 발화한다. </summary>
         private void NotifyHits()

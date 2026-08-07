@@ -66,6 +66,9 @@ namespace Eclipse.Data
 
         public RuntimeAnimatorController battlerAnimator;
 
+        /// <summary> 공격 모션에서 무기가 닿는 시점(초). 베이커가 프레임 번호를 환산해 굽는다. </summary>
+        public float battlerImpactTime;
+
         /// <summary> 턴 순서 타임라인용 얼굴 아이콘(정사각 크롭). 비면 portraitAssetRef로 폴백. </summary>
         public Sprite faceIconAssetRef;
     }

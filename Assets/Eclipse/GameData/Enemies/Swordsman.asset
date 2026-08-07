@@ -26,4 +26,5 @@ MonoBehaviour:
   ultimateSkill: {fileID: 0}
   battlerAssetRef: {fileID: 21300000, guid: 5f38b08999e3e456b9b71118f6f795ab, type: 3}
   battlerAnimator: {fileID: 22100000, guid: 85e8d73c19e03480896c82f63da8f50b, type: 2}
+  battlerImpactTime: 0.33333334
   faceIconAssetRef: {fileID: 21300000, guid: 08b783c4fb0784a068bbd6b0cdcba7f3, type: 3}

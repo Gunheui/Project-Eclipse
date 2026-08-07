@@ -43,21 +43,23 @@ namespace Eclipse.EditorTools
         /// 유닛 12종. <c>StandingPath</c>는 애니 도입 전의 정지 그림으로, 발 라인을 맞출 기준이다.
         /// 이 기준을 SO의 현재 값에서 읽으면 첫 베이크가 그 값을 애니 프레임으로 바꿔 놓아
         /// 다음 베이크가 자기 자신을 기준 삼고, 해상도를 바꿀 때마다 발 라인이 조금씩 밀린다.
+        /// <c>ImpactFrame</c>은 공격 클립에서 무기가 닿는 프레임 번호(0부터)다. 클립이 13~26프레임으로
+        /// 유닛마다 두 배 차이라 비율 하나로는 못 맞춘다.
         /// </summary>
-        private static readonly (string Folder, string DefinitionPath, string StandingPath)[] Units =
+        private static readonly (string Folder, string DefinitionPath, string StandingPath, int ImpactFrame)[] Units =
         {
-            ("Arin", "Assets/Eclipse/GameData/Characters/Arin.asset", "Assets/Eclipse/Art/Battlers/Arin.png"),
-            ("Eliana", "Assets/Eclipse/GameData/Characters/Eliana.asset", "Assets/Eclipse/Art/Battlers/Eliana.png"),
-            ("Kael", "Assets/Eclipse/GameData/Characters/Kael.asset", "Assets/Eclipse/Art/Battlers/Kael.png"),
-            ("Ria", "Assets/Eclipse/GameData/Characters/Ria.asset", "Assets/Eclipse/Art/Battlers/Ria.png"),
-            ("Selene", "Assets/Eclipse/GameData/Characters/Selene.asset", "Assets/Eclipse/Art/Battlers/Selene.png"),
-            ("Adventurer", "Assets/Eclipse/GameData/Enemies/Swordsman.asset", "Assets/Eclipse/Art/Enemies/Adventurer.png"),
-            ("Barkan", "Assets/Eclipse/GameData/Enemies/Barkan.asset", "Assets/Eclipse/Art/Enemies/Barkan.png"),
-            ("Mirea", "Assets/Eclipse/GameData/Enemies/Mirea.asset", "Assets/Eclipse/Art/Enemies/Mirea.png"),
-            ("Plant", "Assets/Eclipse/GameData/Enemies/Blossom.asset", "Assets/Eclipse/Art/Enemies/Plant.png"),
-            ("Slime", "Assets/Eclipse/GameData/Enemies/Slime.asset", "Assets/Eclipse/Art/Enemies/Slime.png"),
-            ("Spider", "Assets/Eclipse/GameData/Enemies/Spider.asset", "Assets/Eclipse/Art/Enemies/Spider.png"),
-            ("Wolf", "Assets/Eclipse/GameData/Enemies/Hound.asset", "Assets/Eclipse/Art/Enemies/Wolf.png"),
+            ("Arin", "Assets/Eclipse/GameData/Characters/Arin.asset", "Assets/Eclipse/Art/Battlers/Arin.png", 6),
+            ("Eliana", "Assets/Eclipse/GameData/Characters/Eliana.asset", "Assets/Eclipse/Art/Battlers/Eliana.png", 11),
+            ("Kael", "Assets/Eclipse/GameData/Characters/Kael.asset", "Assets/Eclipse/Art/Battlers/Kael.png", 6),
+            ("Ria", "Assets/Eclipse/GameData/Characters/Ria.asset", "Assets/Eclipse/Art/Battlers/Ria.png", 4),
+            ("Selene", "Assets/Eclipse/GameData/Characters/Selene.asset", "Assets/Eclipse/Art/Battlers/Selene.png", 7),
+            ("Adventurer", "Assets/Eclipse/GameData/Enemies/Swordsman.asset", "Assets/Eclipse/Art/Enemies/Adventurer.png", 8),
+            ("Barkan", "Assets/Eclipse/GameData/Enemies/Barkan.asset", "Assets/Eclipse/Art/Enemies/Barkan.png", 10),
+            ("Mirea", "Assets/Eclipse/GameData/Enemies/Mirea.asset", "Assets/Eclipse/Art/Enemies/Mirea.png", 5),
+            ("Plant", "Assets/Eclipse/GameData/Enemies/Blossom.asset", "Assets/Eclipse/Art/Enemies/Plant.png", 9),
+            ("Slime", "Assets/Eclipse/GameData/Enemies/Slime.asset", "Assets/Eclipse/Art/Enemies/Slime.png", 10),
+            ("Spider", "Assets/Eclipse/GameData/Enemies/Spider.asset", "Assets/Eclipse/Art/Enemies/Spider.png", 15),
+            ("Wolf", "Assets/Eclipse/GameData/Enemies/Hound.asset", "Assets/Eclipse/Art/Enemies/Wolf.png", 8),
         };
 
         [MenuItem("Eclipse/배틀러 애니메이션/1. 프레임 임포트 세팅")]
@@ -70,7 +72,7 @@ namespace Eclipse.EditorTools
                 {
                     // 발 라인을 재기 전에 지운다. 잔여 배경이 남아 있으면 그 밑변을 발로 잡는다.
                     int stripped = FramePaths(unit.Folder).Count(StripBackdropAlpha);
-                    float pivotY = ResolvePivotY(unit);
+                    float pivotY = ResolvePivotY(unit.Folder, unit.StandingPath);
                     foreach (string path in FramePaths(unit.Folder))
                         ApplyFrameSettings(path, pivotY);
                     Debug.Log($"[BattlerAnim] {unit.Folder} 피벗 y={pivotY:F4} · 배경 잔여 정리 {stripped}장");
@@ -101,7 +103,7 @@ namespace Eclipse.EditorTools
             foreach (var unit in Units)
             {
                 var aoc = LoadOrCreateOverride(unit.Folder, shared, clips[unit.Folder]);
-                WireDefinition(unit, aoc, clips[unit.Folder].Idle);
+                WireDefinition(unit, aoc, clips[unit.Folder]);
             }
 
             BuildAtlas();
@@ -171,16 +173,16 @@ namespace Eclipse.EditorTools
         /// 애니 프레임의 발 라인을 정지 그림과 같은 높이에 세우는 피벗 y를 구한다.
         /// </summary>
         /// <returns>캔버스 높이에 대한 비율. 정지 그림이 없으면 애니 프레임의 발 라인을 그대로 쓴다.</returns>
-        private static float ResolvePivotY((string Folder, string DefinitionPath, string StandingPath) unit)
+        private static float ResolvePivotY(string folder, string standingPath)
         {
-            string idlePath = FramePaths(unit.Folder).First(p => p.Contains(IdleSuffix));
+            string idlePath = FramePaths(folder).First(p => p.Contains(IdleSuffix));
             float animFoot = AlphaBottomRatio(idlePath, out int animHeight);
 
-            var standing = AssetDatabase.LoadAssetAtPath<Sprite>(unit.StandingPath);
+            var standing = AssetDatabase.LoadAssetAtPath<Sprite>(standingPath);
             if (standing == null) return animFoot;
 
             // 정지 그림에서 발이 원점보다 얼마나 아래인지(월드 단위). 피벗은 비율이라 캔버스 높이를 곱해 환산한다.
-            float standingFoot = AlphaBottomRatio(unit.StandingPath, out _);
+            float standingFoot = AlphaBottomRatio(standingPath, out _);
             float standingPivot = standing.pivot.y / standing.rect.height;
             float footOffset = (standingFoot - standingPivot) * standing.rect.height / standing.pixelsPerUnit;
 
@@ -337,21 +339,33 @@ namespace Eclipse.EditorTools
         /// <summary>
         /// 유닛 정의에 컨트롤러를 연결하고, 기준 그림을 대기 첫 프레임으로 갈아 끼운다.
         /// </summary>
-        /// <param name="idle">이 유닛의 대기 클립. 첫 키의 그림을 기준 그림으로 쓴다.</param>
-        private static void WireDefinition((string Folder, string DefinitionPath, string StandingPath) unit,
-            AnimatorOverrideController aoc, AnimationClip idle)
+        /// <param name="clips">
+        /// 이 유닛의 대기·공격 클립. 대기 첫 키의 그림을 기준 그림으로 쓰고, 공격 프레임 수로 타격 프레임을 검사한다.
+        /// </param>
+        private static void WireDefinition(
+            (string Folder, string DefinitionPath, string StandingPath, int ImpactFrame) unit,
+            AnimatorOverrideController aoc, (AnimationClip Idle, AnimationClip Attack) clips)
         {
+            int frames = SpriteKeys(clips.Attack).Length;
+            if (unit.ImpactFrame < 0 || unit.ImpactFrame >= frames)
+                throw new System.InvalidOperationException(
+                    $"[BattlerAnim] {unit.Folder} 타격 프레임 {unit.ImpactFrame}이 공격 클립 {frames}프레임을 벗어난다.");
+
             var definition = new SerializedObject(AssetDatabase.LoadAssetAtPath<ScriptableObject>(unit.DefinitionPath));
             definition.FindProperty("battlerAnimator").objectReferenceValue = aoc;
             // 실루엣을 재는 기준이 실제로 보이는 그림이어야 탭 영역·HP바·이펙트 앵커가 어긋나지 않는다.
-            definition.FindProperty("battlerAssetRef").objectReferenceValue = FirstFrame(idle);
+            definition.FindProperty("battlerAssetRef").objectReferenceValue = FirstFrame(clips.Idle);
+            // 런타임은 프레임 수를 모른다. 여기서 초로 환산해 두면 fps를 바꿔 다시 구워도 값이 따라온다.
+            definition.FindProperty("battlerImpactTime").floatValue = unit.ImpactFrame / AttackFps;
             definition.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static Sprite FirstFrame(AnimationClip clip)
+        private static Sprite FirstFrame(AnimationClip clip) => SpriteKeys(clip)[0].value as Sprite;
+
+        private static ObjectReferenceKeyframe[] SpriteKeys(AnimationClip clip)
         {
             var binding = EditorCurveBinding.PPtrCurve(string.Empty, typeof(SpriteRenderer), "m_Sprite");
-            return AnimationUtility.GetObjectReferenceCurve(clip, binding)[0].value as Sprite;
+            return AnimationUtility.GetObjectReferenceCurve(clip, binding);
         }
 
         // ── 프레임 조회 ────────────────────────────────────────────────────────

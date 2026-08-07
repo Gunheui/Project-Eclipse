@@ -21,6 +21,8 @@ namespace Eclipse.Tests
     public class BattlerAnimationTests
     {
         private const float AttackSeconds = 1.5f;
+        // 클립 길이보다 짧아야 타격 알림이 모션 도중에 온다.
+        private const float ImpactSeconds = 0.5f;
 
         private readonly List<Object> _spawned = new List<Object>();
 
@@ -34,7 +36,7 @@ namespace Eclipse.Tests
             var model = Combatant.FromEnemy(Track(ScriptableObject.CreateInstance<EnemySO>()), 0,
                 new Stats { hp = 100, atk = 10, def = 5, spd = 10 });
             _stateChanged = new Subject<Unit>();
-            _unit = new CombatantViewModel(model, _stateChanged, null, BuildController(), null, null, null);
+            _unit = new CombatantViewModel(model, _stateChanged, null, BuildController(), ImpactSeconds, null, null, null);
 
             // 연출은 배틀러의 부모 밑에 스폰되므로 전장 역할을 할 부모가 있어야 한다.
             var field = Track(new GameObject("Field"));
@@ -83,6 +85,31 @@ namespace Eclipse.Tests
 
             Assert.AreEqual(UniTaskStatus.Succeeded, pending.Status,
                 "취소가 예외로 새면 그 예외가 턴 루프까지 올라가 전투가 멈춘다");
+        }
+
+        [UnityTest]
+        public IEnumerator 타격_알림은_모션_도중에_온다()
+        {
+            Bind();
+            _unit.RaiseActed(null);
+
+            Assert.IsFalse(_view.WaitForImpact().Status.IsCompleted(),
+                "시전과 함께 알리면 칼을 뽑기도 전에 상대가 피를 흘린다");
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator 모션_대기_중_재바인딩은_타격을_알리고_끝낸다()
+        {
+            Bind();
+            _unit.RaiseActed(null);
+            var impact = _view.WaitForImpact();
+
+            Bind();
+
+            Assert.AreEqual(UniTaskStatus.Succeeded, impact.Status,
+                "알릴 주체가 사라지면 턴 루프가 타격 대기에서 영영 선다");
+            yield return null;
         }
 
         private void Bind() => _view.Bind(_unit, () => 1, _ => new Bounds());

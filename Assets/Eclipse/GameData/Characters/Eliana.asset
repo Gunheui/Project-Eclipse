@@ -34,4 +34,5 @@ MonoBehaviour:
   portraitCardOffsetY: 127
   battlerAssetRef: {fileID: 21300000, guid: 27056b63683334a2896ba06675b2c59d, type: 3}
   battlerAnimator: {fileID: 22100000, guid: 263b8cc17416b458abd4f17224c13b3b, type: 2}
+  battlerImpactTime: 0.45833334
   faceIconAssetRef: {fileID: 21300000, guid: ad54d0a8f7ca54e609c8b10b7d602257, type: 3}

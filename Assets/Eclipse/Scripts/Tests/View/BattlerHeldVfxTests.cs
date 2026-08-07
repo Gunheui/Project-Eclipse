@@ -36,7 +36,7 @@ namespace Eclipse.Tests.View
 
             _model = Combatant.FromEnemy(BuildEnemy(), 0, new Stats { hp = 100, atk = 10, def = 5, spd = 10 });
             _stateChanged = new Subject<Unit>();
-            _unit = new CombatantViewModel(_model, _stateChanged, null, null, null, null, null);
+            _unit = new CombatantViewModel(_model, _stateChanged, null, null, 0f, null, null, null);
 
             // 연출은 배틀러의 부모 밑에 스폰되므로 전장 역할을 할 부모가 있어야 한다.
             var go = Track(new GameObject("Battler"));

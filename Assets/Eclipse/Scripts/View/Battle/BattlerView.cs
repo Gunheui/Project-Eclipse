@@ -63,6 +63,12 @@ namespace Eclipse.View
         // 한 대상에게 숫자가 연달아 뜰 때의 간격(초). 앞 숫자가 상승하는 도중 다음 숫자가 뜬다.
         private const float NumberInterval = 0.35f;
 
+        // 근접 접근·복귀 대시 시간(초)과 대상 앞에서 멈추는 간격(월드 단위).
+        // 자리 조합에 따라 거리가 6~17유닛으로 갈려 시간을 고정하고 감속으로 붙인다.
+        private const float ApproachDuration = 0.2f;
+        private const float ReturnDuration = 0.15f;
+        private const float MeleeGap = 1.2f;
+
         // Eclipse/SpriteOutlineURP2D의 아웃라인 프로퍼티. MaterialPropertyBlock으로 배틀러마다 따로 덮어쓴다.
         private static readonly int OutlineEnabledId = Shader.PropertyToID("_OutlineEnabled");
         private static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
@@ -87,7 +93,15 @@ namespace Eclipse.View
 
         private Func<int> _speed = () => 1;
         private Func<bool, Bounds> _formationBounds;
+        private Func<CombatantViewModel, Vector3?> _battlerPosition;
         private Vector3 _home;
+
+        // 이 유닛의 공격 클립에서 무기가 닿는 시점(초). 배속은 재생할 때 나눈다.
+        private float _impactTime;
+
+        // 이번 시전의 타격 알림. 시전마다 새로 만들고 알린 뒤 비운다 —
+        // 남겨 두면 다음 턴이 옛 알림을 그대로 물려받는다.
+        private UniTaskCompletionSource _impact;
 
         // 발밑·몸통 앵커의 이 트랜스폼 기준 위치. Bind에서 실루엣 아래끝과 중심으로 잡는다.
         private float _groundLocalY;
@@ -134,9 +148,13 @@ namespace Eclipse.View
         /// <param name="formationBounds">
         /// 진영(아군이면 true) 배틀러 전체를 두른 범위를 읽는 함수. 진영 앵커 이펙트가 이 중심에 놓인다.
         /// </param>
+        /// <param name="battlerPosition">
+        /// 유닛이 서 있는 자리를 읽는 함수. 근접 시전자가 접근 목적지로 쓴다. 대응 배틀러가 없으면 null을 돌려준다.
+        /// </param>
         /// <param name="onTapped">몸통을 탭했을 때 이 유닛으로 호출된다. null이면 탭이 무시된다.</param>
         /// <param name="onHovered">포인터가 올라오거나(true) 벗어날 때(false) 호출된다. 상세 표시용.</param>
         public void Bind(CombatantViewModel unit, Func<int> speed, Func<bool, Bounds> formationBounds,
+            Func<CombatantViewModel, Vector3?> battlerPosition = null,
             Action<CombatantViewModel> onTapped = null, Action<CombatantViewModel, bool> onHovered = null)
         {
             ResetPlayback();
@@ -150,6 +168,8 @@ namespace Eclipse.View
             _onHovered = onHovered;
             _speed = speed ?? (() => 1);
             _formationBounds = formationBounds;
+            _battlerPosition = battlerPosition;
+            _impactTime = unit.BattlerImpactTime;
             if (spriteRenderer != null)
             {
                 spriteRenderer.sprite = unit.BattlerSprite;
@@ -169,7 +189,7 @@ namespace Eclipse.View
             }
 
             unit.Acted
-                .Subscribe(skill => AddAnimation(PlayCastAsync(skill, _playbackCts.Token)))
+                .Subscribe(cast => AddAnimation(PlayCastAsync(cast.Skill, cast.Targets, _playbackCts)))
                 .AddTo(_bindings);
 
             // 흔들림은 맞은 반응이라 피해에만 붙인다. 버프·실드를 받을 때는 흔들리지 않는다.
@@ -215,6 +235,21 @@ namespace Eclipse.View
         /// <summary> 이번 턴 진행 중인 연출이 끝나면 완료된다. 진행 중인 게 없으면 즉시 완료. </summary>
         public UniTask WaitForAnimation() => _animation;
 
+        /// <summary> 이 배틀러가 때리는 순간이 오면 완료된다. 시전 중이 아니면 즉시 완료. </summary>
+        public UniTask WaitForImpact() => _impact?.Task ?? UniTask.CompletedTask;
+
+        /// <summary>타격을 기다리는 쪽을 풀어 준다. 알릴 것이 없어도 호출 안전(멱등).</summary>
+        /// <param name="impact">
+        /// 종결할 알림. 끊긴 옛 재생이 한 박자 늦게 깨어나도 자기 것만 건드려, 그사이 시작된 시전의
+        /// 알림을 대신 끝내지 않는다.
+        /// </param>
+        private void CompleteImpact(UniTaskCompletionSource impact)
+        {
+            if (impact == null) return;
+            if (_impact == impact) _impact = null;
+            impact.TrySetResult();
+        }
+
         /// <summary>대응 유닛이 없는 빈 배틀러를 숨기고 탭 통지를 끊는다.</summary>
         public void Clear()
         {
@@ -236,6 +271,9 @@ namespace Eclipse.View
             _playbackCts = null;
             previous?.Cancel();
             previous?.Dispose();
+
+            // 끊긴 재생도 타격은 알리고 끝낸다. 알릴 주체가 사라지면 턴 루프가 그 대기에서 영영 선다.
+            CompleteImpact(_impact);
 
             // 취소된 트윈은 중간 위치에서 멈춘다. 다음 바인딩이 그 자리를 쓰지 않게 제자리로 되돌린다.
             if (visualRoot != null) visualRoot.localPosition = _home;
@@ -519,19 +557,72 @@ namespace Eclipse.View
                 .ToUniTask(cancellationToken: ct);
         }
 
-        /// <summary>시전: 공격 모션과 (있으면) 시전 이펙트를 함께 재생한다.</summary>
-        /// <returns>모션과 이펙트가 모두 끝나면 완료된다.</returns>
-        private UniTask PlayCastAsync(SkillSO skill, CancellationToken ct)
+        /// <summary>시전: 접근·공격 모션·복귀를 차례로 진행하고 시전 이펙트를 나란히 재생한다.</summary>
+        /// <param name="targets">이번 턴에 맞는 대상들. 근접 스킬이면 여기서 접근 목적지를 구한다.</param>
+        /// <param name="owner">이 재생을 시작한 바인딩의 취소 소스. 현재 것과 다르면 물러난다.</param>
+        /// <returns>이동·모션·이펙트가 모두 끝나면 완료된다.</returns>
+        private async UniTask PlayCastAsync(SkillSO skill, IReadOnlyList<CombatantViewModel> targets,
+            CancellationTokenSource owner)
         {
-            var motion = PlayAttackAsync(ct);
-            var effect = SpawnEffect(skill != null ? skill.castEffect : null);
-            var vfx = SpawnVfx(skill != null ? skill.castVfx : null, skill);
-            return UniTask.WhenAll(motion, effect, vfx);
+            var ct = owner.Token;
+            // 첫 대기 전에 세운다. 전장이 시전 신호 바로 뒤에 이 값을 읽는다.
+            var impact = _impact = new UniTaskCompletionSource();
+
+            // 이펙트는 이동·모션과 나란히 간다. 순차로 돌리면 유지 오라 등록이 접근 시간만큼 늦는다.
+            var effects = UniTask.WhenAll(
+                SpawnEffect(skill != null ? skill.castEffect : null),
+                SpawnVfx(skill != null ? skill.castVfx : null, skill));
+
+            bool melee = skill != null && skill.melee && targets != null && targets.Count > 0;
+            try
+            {
+                if (melee) await MoveAsync(ApproachDestination(targets), ApproachDuration, ct);
+                if (owner == _playbackCts) await PlayAttackAsync(impact, ct);
+                if (melee && owner == _playbackCts) await MoveAsync(_home, ReturnDuration, ct);
+            }
+            catch (OperationCanceledException)
+            {
+                // 재바인딩으로 끊긴 재생. 여기서 삼키지 않으면 예외가 턴 루프까지 올라가 전투가 멈춘다.
+            }
+            finally
+            {
+                CompleteImpact(impact);
+                // 취소로 빠져나가도 몸통이 슬롯 사이에 남지 않게 한다.
+                if (owner == _playbackCts && visualRoot != null) visualRoot.localPosition = _home;
+            }
+
+            await effects;
         }
 
-        /// <summary>공격 모션을 한 번 재생한다. 공격 상태가 없는 배틀러는 대기 없이 끝난다.</summary>
+        /// <summary>대상 앞으로 붙는 자리를 이 배틀러의 지역 좌표로 반환한다.</summary>
+        /// <param name="targets">이번 턴에 맞는 대상들. 둘 이상이면 상대 진영 중앙으로 간다.</param>
+        private Vector3 ApproachDestination(IReadOnlyList<CombatantViewModel> targets)
+        {
+            var single = targets.Count == 1 ? _battlerPosition?.Invoke(targets[0]) : null;
+            var world = single ?? FormationCenter(!_unit.IsAlly);
+            // 아군은 오른쪽, 적은 왼쪽을 보고 선다. 대면 방향으로 간격만큼 앞에서 멈춘다.
+            world.x -= _unit.IsAlly ? MeleeGap : -MeleeGap;
+
+            // 트윈은 지역 좌표로 돈다. 슬롯 앵커에 배율이 걸려 있어 월드 거리를 그대로 쓰면 어긋난다.
+            var local = visualRoot.parent != null ? visualRoot.parent.InverseTransformPoint(world) : world;
+            local.z = _home.z;
+            return local;
+        }
+
+        /// <summary>몸통을 한 자리로 옮긴다.</summary>
+        /// <returns>이동이 끝나면 완료된다. 취소되면 트윈만 죽고 대기는 예외 없이 완료된다.</returns>
+        private UniTask MoveAsync(Vector3 local, float duration, CancellationToken ct)
+            => visualRoot
+                .DOLocalMove(local, duration / _speed())
+                .SetEase(Ease.OutQuad)
+                .ToUniTask(cancellationToken: ct);
+
+        /// <summary>
+        /// 공격 모션을 한 번 재생하고 무기가 닿는 시점에 타격을 알린다. 공격 상태가 없는 배틀러는 대기 없이 끝난다.
+        /// </summary>
+        /// <param name="impact">무기가 닿는 시점에 종결할 타격 알림.</param>
         /// <returns>모션이 끝나면 완료된다. 취소되면 예외 없이 완료된다.</returns>
-        private async UniTask PlayAttackAsync(CancellationToken ct)
+        private async UniTask PlayAttackAsync(UniTaskCompletionSource impact, CancellationToken ct)
         {
             if (animator == null || animator.runtimeAnimatorController == null) return;
 
@@ -543,10 +634,16 @@ namespace Eclipse.View
             // 공격 상태가 없는 컨트롤러면 대기 상태가 그대로 잡힌다. 그 길이를 기다리면 엉뚱하게 붙잡는다.
             if (state.shortNameHash != AttackStateId) return;
 
+            // 상태 길이는 클립 원본 길이다. animator.speed가 반영되지 않아 배속으로 나눠야 실제 재생 시간이 된다.
+            int speed = Mathf.Max(1, _speed());
+            // 굽힌 값이 클립보다 길면 모션 끝에 맞춘다. 클립을 갈아 끼우고 다시 굽기 전 상태가 여기 걸린다.
+            float impactSeconds = Mathf.Clamp(_impactTime, 0f, state.length);
             try
             {
-                // 상태 길이는 배속이 이미 반영된 실제 시간이다. 배속으로 또 나누면 모션 중간에 턴이 넘어간다.
-                await UniTask.Delay(TimeSpan.FromSeconds(state.length), cancellationToken: ct);
+                await UniTask.Delay(TimeSpan.FromSeconds(impactSeconds / speed), cancellationToken: ct);
+                CompleteImpact(impact);
+                await UniTask.Delay(TimeSpan.FromSeconds((state.length - impactSeconds) / speed),
+                    cancellationToken: ct);
             }
             catch (OperationCanceledException)
             {

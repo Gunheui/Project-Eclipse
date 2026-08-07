@@ -73,8 +73,9 @@ namespace Eclipse.Presentation
         // 이 VM이 표시하는 도메인 유닛(HP·스킬 상태의 원천). Submit 시 타겟으로 되돌려 넘긴다.
         internal Combatant Model { get; }
 
-        // 자기 턴에 행동했음을 알리는 신호(사용한 스킬 포함). 배틀러가 구독해 시전 연출을 재생한다.
-        private readonly Subject<SkillSO> _acted = new();
+        // 자기 턴에 행동했음을 알리는 신호(사용한 스킬과 이번 턴 대상 포함).
+        // 배틀러가 구독해 시전 연출을 재생하고, 근접이면 대상 자리로 접근한다.
+        private readonly Subject<(SkillSO Skill, IReadOnlyList<CombatantViewModel> Targets)> _acted = new();
 
         // 스킬 대상이 됐음을 알리는 신호(원인 스킬과 결과 포함). 배틀러가 구독해 피격 연출과 숫자를 재생한다.
         private readonly Subject<(SkillSO Skill, EffectDisplay Result)> _hit = new();
@@ -87,12 +88,13 @@ namespace Eclipse.Presentation
 
         /// <param name="runEffects">표시 전용 상시 효과(런 버프·저주). 도메인 효과가 아니라 <see cref="AllEffects"/>에만 실린다.</param>
         public CombatantViewModel(Combatant model, Observable<Unit> stateChanged, Sprite battler,
-            RuntimeAnimatorController battlerAnimator, Sprite timelineIcon, MutationSO mutation,
-            IReadOnlyList<ActiveEffect> runEffects)
+            RuntimeAnimatorController battlerAnimator, float battlerImpactTime, Sprite timelineIcon,
+            MutationSO mutation, IReadOnlyList<ActiveEffect> runEffects)
         {
             Model = model;
             BattlerSprite = battler;
             BattlerAnimator = battlerAnimator;
+            BattlerImpactTime = battlerImpactTime;
             TimelineIcon = timelineIcon;
             Mutation = mutation;
             CurrentHp = stateChanged
@@ -135,6 +137,9 @@ namespace Eclipse.Presentation
 
         public RuntimeAnimatorController BattlerAnimator { get; }
 
+        /// <summary> 공격 모션에서 무기가 닿는 시점(초). 배틀러가 이 시점에 타격을 알린다. </summary>
+        public float BattlerImpactTime { get; }
+
         /// <summary> 턴 순서 타임라인 아이콘. 아군은 얼굴 크롭, 적은 배틀러 스프라이트. </summary>
         public Sprite TimelineIcon { get; }
 
@@ -170,8 +175,8 @@ namespace Eclipse.Presentation
         /// </summary>
         public ReadOnlyReactiveProperty<IReadOnlyCollection<SkillSO>> EffectSources { get; }
 
-        /// <summary> 이 유닛이 행동할 때 사용 스킬과 함께 발화. 배틀러 시전 연출 트리거. </summary>
-        public Observable<SkillSO> Acted => _acted;
+        /// <summary> 이 유닛이 행동할 때 사용 스킬·이번 턴 대상과 함께 발화. 배틀러 시전 연출 트리거. </summary>
+        public Observable<(SkillSO Skill, IReadOnlyList<CombatantViewModel> Targets)> Acted => _acted;
 
         /// <summary> 이 유닛이 스킬 대상이 될 때 원인 스킬·결과와 함께 발화. 배틀러 피격 연출 트리거. </summary>
         public Observable<(SkillSO Skill, EffectDisplay Result)> Hit => _hit;
@@ -189,7 +194,9 @@ namespace Eclipse.Presentation
         public IReadOnlyList<SkillSlotViewModel> Skills { get; }
 
         /// <summary> Acted 신호를 발화한다. 이번 턴 행동자에 대해 BattleViewModel이 호출한다. </summary>
-        internal void RaiseActed(SkillSO skill) => _acted.OnNext(skill);
+        /// <param name="targets">이번 턴에 맞는 대상들. 비우면 대상 없는 신호가 되어 근접 이동이 생략된다.</param>
+        internal void RaiseActed(SkillSO skill, IReadOnlyList<CombatantViewModel> targets = null)
+            => _acted.OnNext((skill, targets ?? Array.Empty<CombatantViewModel>()));
 
         /// <summary> Hit 신호를 발화한다. 이번 턴 효과 결과마다 BattleViewModel이 호출한다. </summary>
         internal void RaiseHit(SkillSO skill, EffectResult result)

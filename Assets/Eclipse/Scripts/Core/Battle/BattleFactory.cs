@@ -64,6 +64,7 @@ namespace Eclipse.Core
                         session.SkillRidersOf(x.slot)),
                     x.owned.Definition.battlerAssetRef,
                     x.owned.Definition.battlerAnimator,
+                    x.owned.Definition.battlerImpactTime,
                     x.owned.Definition.faceIconAssetRef,
                     null,
                     RunEffectsFor(x.slot)))
@@ -75,6 +76,7 @@ namespace Eclipse.Core
                     BuildEnemy(spec, slot),
                     spec.Enemy.battlerAssetRef,
                     spec.Enemy.battlerAnimator,
+                    spec.Enemy.battlerImpactTime,
                     spec.Enemy.faceIconAssetRef,
                     spec.Mutation,
                     curseEffects))
