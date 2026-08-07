@@ -5,6 +5,7 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "Eclipse.Core",
+        "Eclipse.View",
         "Eclipse.Presentation",
         "Eclipse.Service",
         "Eclipse.Domain",

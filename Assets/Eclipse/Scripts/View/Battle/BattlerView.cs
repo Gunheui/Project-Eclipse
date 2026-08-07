@@ -22,7 +22,7 @@ namespace Eclipse.View
 
     /// <summary>
     /// 전장에 세우는 배틀러 하나. 유닛 VM의 스프라이트를 월드 SpriteRenderer로 그리고,
-    /// 자기 상태(HP·행동·생존)를 구독해 스스로 연출한다(피격 흔들림·플로팅 숫자·시전 돌진·사망 숨김).
+    /// 자기 상태(HP·행동·생존)를 구독해 스스로 연출한다(피격 흔들림·플로팅 숫자·시전 모션·사망 숨김).
     /// 조준 모드에서는 몸통 탭으로 대상 선택 입력을 보내고(Bind의 onTapped),
     /// 그 외에는 마우스를 올리거나 꾹 누르는 동안 상세 표시를 요청한다(Bind의 onHovered).
     /// </summary>
@@ -32,6 +32,7 @@ namespace Eclipse.View
         [SerializeField] private UIThemeSO theme;
         [SerializeField] private Transform visualRoot;
         [SerializeField] private SpriteRenderer spriteRenderer;
+        [SerializeField] private Animator animator;
         [SerializeField] private FloatingText floatingTextPrefab;
         [SerializeField] private SpriteEffectPlayer effectPlayerPrefab;
         [SerializeField] private VfxPlayer vfxPlayerPrefab;
@@ -67,6 +68,10 @@ namespace Eclipse.View
         private static readonly int OutlineColorId = Shader.PropertyToID("_OutlineColor");
         private static readonly int OutlineThicknessId = Shader.PropertyToID("_OutlineThickness");
 
+        // 공용 AnimatorController의 상태. 유닛별 오버라이드는 클립만 갈아끼우므로 이름이 공통이다.
+        private static readonly int IdleStateId = Animator.StringToHash("Idle");
+        private static readonly int AttackStateId = Animator.StringToHash("Attack");
+
         private readonly CompositeDisposable _bindings = new();
 
         // 아웃라인 오버라이드 전달용. 첫 사용 때 만들어 재사용한다(머티리얼 인스턴스 복제를 피한다).
@@ -83,7 +88,6 @@ namespace Eclipse.View
         private Func<int> _speed = () => 1;
         private Func<bool, Bounds> _formationBounds;
         private Vector3 _home;
-        private bool _facingRight;
 
         // 발밑·몸통 앵커의 이 트랜스폼 기준 위치. Bind에서 실루엣 아래끝과 중심으로 잡는다.
         private float _groundLocalY;
@@ -112,8 +116,14 @@ namespace Eclipse.View
         {
             if (visualRoot == null) visualRoot = transform;
             // 제자리는 씬에 저작된 값 하나뿐이다. 바인딩마다 다시 읽으면 연출 도중 재바인딩됐을 때
-            // 어긋난 위치가 제자리로 굳어 이후 돌진이 그 자리로 돌아간다.
+            // 어긋난 위치가 제자리로 굳어 이후 흔들림이 그 자리로 돌아간다.
             _home = visualRoot.localPosition;
+        }
+
+        // 배속 토글은 View가 들고 있고 알림은 없다. 매 프레임 읽어 애니메이터 전체 속도에 반영한다.
+        private void Update()
+        {
+            if (animator != null) animator.speed = _speed();
         }
 
         /// <summary>
@@ -140,13 +150,13 @@ namespace Eclipse.View
             _onHovered = onHovered;
             _speed = speed ?? (() => 1);
             _formationBounds = formationBounds;
-            _facingRight = unit.IsAlly;
             if (spriteRenderer != null)
             {
                 spriteRenderer.sprite = unit.BattlerSprite;
-                // 배틀러 원화는 전부 왼쪽을 향한다. 아군만 뒤집어 서로 마주 보게 한다.
-                spriteRenderer.flipX = _facingRight;
+                // 애니 원화는 아군이 오른쪽, 적이 왼쪽을 향해 이미 서로 마주 본다. 뒤집으면 등지고 싸운다.
+                spriteRenderer.flipX = false;
             }
+            BindAnimator(unit.BattlerAnimator);
             _baseColor = unit.Tint;
             SetTargetState(TargetState.None); // 평상시 밝기로 초기화(재바인딩 시 이전 dim 잔상 제거)
             if (spriteRenderer != null && spriteRenderer.sprite != null)
@@ -187,6 +197,21 @@ namespace Eclipse.View
                 .AddTo(_bindings);
         }
 
+        /// <summary>
+        /// 이번 유닛의 오버라이드 컨트롤러를 애니메이터에 꽂고 대기 모션을 돌리기 시작한다.
+        /// </summary>
+        /// <param name="controller">유닛별 AnimatorOverrideController. null이면 정지 그림만 남는다.</param>
+        private void BindAnimator(RuntimeAnimatorController controller)
+        {
+            if (animator == null) return;
+
+            animator.runtimeAnimatorController = controller;
+            if (controller == null) return;
+
+            // 한 방에 같은 적이 여러 마리 서면 대기 호흡이 한 몸처럼 맞아 떨어진다. 시작 위치를 흩어 어긋나게 둔다.
+            animator.Play(IdleStateId, 0, UnityEngine.Random.value);
+        }
+
         /// <summary> 이번 턴 진행 중인 연출이 끝나면 완료된다. 진행 중인 게 없으면 즉시 완료. </summary>
         public UniTask WaitForAnimation() => _animation;
 
@@ -214,6 +239,10 @@ namespace Eclipse.View
 
             // 취소된 트윈은 중간 위치에서 멈춘다. 다음 바인딩이 그 자리를 쓰지 않게 제자리로 되돌린다.
             if (visualRoot != null) visualRoot.localPosition = _home;
+            // 공격 도중 끊기면 그 포즈에서 멈춘다. 다음 유닛이 옛 중간 포즈를 물려받지 않게 대기로 되돌린다.
+            // 숨은 배틀러에 재생을 걸면 경고만 나고 먹지 않는다. 그쪽은 다시 켤 때 Bind가 대기부터 세운다.
+            if (animator != null && animator.runtimeAnimatorController != null && animator.gameObject.activeInHierarchy)
+                animator.Play(IdleStateId, 0, 0f);
             _displayQueue.Clear();
             _draining = false;
             // 남겨 두면 다음 방의 첫 턴이 옛 대기를 그대로 물려받는다.
@@ -490,26 +519,39 @@ namespace Eclipse.View
                 .ToUniTask(cancellationToken: ct);
         }
 
-        /// <summary>시전: 대면 방향 돌진과 (있으면) 시전 이펙트를 함께 재생한다.</summary>
-        /// <returns>둘 다 끝나면 완료된다.</returns>
+        /// <summary>시전: 공격 모션과 (있으면) 시전 이펙트를 함께 재생한다.</summary>
+        /// <returns>모션과 이펙트가 모두 끝나면 완료된다.</returns>
         private UniTask PlayCastAsync(SkillSO skill, CancellationToken ct)
         {
-            var lunge = PlayLungeAsync(ct);
+            var motion = PlayAttackAsync(ct);
             var effect = SpawnEffect(skill != null ? skill.castEffect : null);
             var vfx = SpawnVfx(skill != null ? skill.castVfx : null, skill);
-            return UniTask.WhenAll(lunge, effect, vfx);
+            return UniTask.WhenAll(motion, effect, vfx);
         }
 
-        /// <summary>대면 방향으로 살짝 돌진했다 제자리로 돌아간다.</summary>
-        /// <returns>복귀가 끝나면 완료된다.</returns>
-        private UniTask PlayLungeAsync(CancellationToken ct)
+        /// <summary>공격 모션을 한 번 재생한다. 공격 상태가 없는 배틀러는 대기 없이 끝난다.</summary>
+        /// <returns>모션이 끝나면 완료된다. 취소되면 예외 없이 완료된다.</returns>
+        private async UniTask PlayAttackAsync(CancellationToken ct)
         {
-            float dur = 0.25f / _speed();
-            float lunge = _facingRight ? 0.5f : -0.5f;
-            return DOTween.Sequence()
-                .Append(visualRoot.DOLocalMoveX(_home.x + lunge, dur * 0.4f).SetEase(Ease.OutQuad))
-                .Append(visualRoot.DOLocalMoveX(_home.x, dur * 0.6f).SetEase(Ease.InQuad))
-                .ToUniTask(cancellationToken: ct);
+            if (animator == null || animator.runtimeAnimatorController == null) return;
+
+            animator.Play(AttackStateId, 0, 0f);
+            // Play는 다음 갱신에야 반영된다. 0초를 흘려 지금 상태로 만들어야 아래에서 공격 상태를 읽는다.
+            animator.Update(0f);
+
+            var state = animator.GetCurrentAnimatorStateInfo(0);
+            // 공격 상태가 없는 컨트롤러면 대기 상태가 그대로 잡힌다. 그 길이를 기다리면 엉뚱하게 붙잡는다.
+            if (state.shortNameHash != AttackStateId) return;
+
+            try
+            {
+                // 상태 길이는 배속이 이미 반영된 실제 시간이다. 배속으로 또 나누면 모션 중간에 턴이 넘어간다.
+                await UniTask.Delay(TimeSpan.FromSeconds(state.length), cancellationToken: ct);
+            }
+            catch (OperationCanceledException)
+            {
+                // 재바인딩으로 끊긴 대기. 여기서 삼키지 않으면 예외가 턴 루프까지 올라가 전투가 멈춘다.
+            }
         }
 
         /// <summary>

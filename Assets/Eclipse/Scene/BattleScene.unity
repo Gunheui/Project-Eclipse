@@ -152,6 +152,7 @@ MonoBehaviour:
   theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
   visualRoot: {fileID: 1334129547}
   spriteRenderer: {fileID: 1334129548}
+  animator: {fileID: 1334129549}
   floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
   vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
@@ -495,6 +496,7 @@ MonoBehaviour:
   theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
   visualRoot: {fileID: 1809642859}
   spriteRenderer: {fileID: 1809642860}
+  animator: {fileID: 1809642861}
   floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
   vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
@@ -1033,6 +1035,7 @@ MonoBehaviour:
   theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
   visualRoot: {fileID: 1483048545}
   spriteRenderer: {fileID: 1483048546}
+  animator: {fileID: 1483048547}
   floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
   vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
@@ -1670,6 +1673,7 @@ MonoBehaviour:
   theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
   visualRoot: {fileID: 1033100490}
   spriteRenderer: {fileID: 1033100491}
+  animator: {fileID: 1033100492}
   floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
   vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
@@ -1763,6 +1767,7 @@ GameObject:
   m_Component:
   - component: {fileID: 361273742}
   - component: {fileID: 361273743}
+  - component: {fileID: 361273744}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -1845,6 +1850,28 @@ SpriteRenderer:
   m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
+--- !u!95 &361273744
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 361273741}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &370329860
 GameObject:
   m_ObjectHideFlags: 0
@@ -1890,6 +1917,7 @@ GameObject:
   m_Component:
   - component: {fileID: 389734317}
   - component: {fileID: 389734318}
+  - component: {fileID: 389734319}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -1972,6 +2000,28 @@ SpriteRenderer:
   m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
+--- !u!95 &389734319
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 389734316}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &398216752
 GameObject:
   m_ObjectHideFlags: 0
@@ -2738,6 +2788,7 @@ MonoBehaviour:
   theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
   visualRoot: {fileID: 1637223983}
   spriteRenderer: {fileID: 1637223984}
+  animator: {fileID: 1637223985}
   floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
   vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
@@ -5097,6 +5148,7 @@ MonoBehaviour:
   theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
   visualRoot: {fileID: 361273742}
   spriteRenderer: {fileID: 361273743}
+  animator: {fileID: 361273744}
   floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
   vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
@@ -5158,6 +5210,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1033100490}
   - component: {fileID: 1033100491}
+  - component: {fileID: 1033100492}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -5240,6 +5293,28 @@ SpriteRenderer:
   m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
+--- !u!95 &1033100492
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1033100489}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1132012034
 GameObject:
   m_ObjectHideFlags: 0
@@ -5674,6 +5749,7 @@ MonoBehaviour:
   theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
   visualRoot: {fileID: 389734317}
   spriteRenderer: {fileID: 389734318}
+  animator: {fileID: 389734319}
   floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
   vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
@@ -6021,6 +6097,7 @@ MonoBehaviour:
   theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
   visualRoot: {fileID: 1969793859}
   spriteRenderer: {fileID: 1969793860}
+  animator: {fileID: 1969793861}
   floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
   vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
@@ -6082,6 +6159,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1334129547}
   - component: {fileID: 1334129548}
+  - component: {fileID: 1334129549}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -6164,6 +6242,28 @@ SpriteRenderer:
   m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
+--- !u!95 &1334129549
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1334129546}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1001 &1338399549
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7315,6 +7415,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1483048545}
   - component: {fileID: 1483048546}
+  - component: {fileID: 1483048547}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -7397,6 +7498,28 @@ SpriteRenderer:
   m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
+--- !u!95 &1483048547
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1483048544}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1516624581
 GameObject:
   m_ObjectHideFlags: 0
@@ -8090,6 +8213,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1637223983}
   - component: {fileID: 1637223984}
+  - component: {fileID: 1637223985}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -8172,6 +8296,28 @@ SpriteRenderer:
   m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
+--- !u!95 &1637223985
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1637223982}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1658558355
 GameObject:
   m_ObjectHideFlags: 0
@@ -9098,6 +9244,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1809642859}
   - component: {fileID: 1809642860}
+  - component: {fileID: 1809642861}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -9180,6 +9327,28 @@ SpriteRenderer:
   m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
+--- !u!95 &1809642861
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1809642858}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1825455415
 GameObject:
   m_ObjectHideFlags: 0
@@ -9982,6 +10151,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1969793859}
   - component: {fileID: 1969793860}
+  - component: {fileID: 1969793861}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -10064,6 +10234,28 @@ SpriteRenderer:
   m_WasSpriteAssigned: 0
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
+--- !u!95 &1969793861
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1969793858}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &2000296059
 GameObject:
   m_ObjectHideFlags: 0

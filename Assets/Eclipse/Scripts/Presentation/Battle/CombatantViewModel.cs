@@ -87,10 +87,12 @@ namespace Eclipse.Presentation
 
         /// <param name="runEffects">표시 전용 상시 효과(런 버프·저주). 도메인 효과가 아니라 <see cref="AllEffects"/>에만 실린다.</param>
         public CombatantViewModel(Combatant model, Observable<Unit> stateChanged, Sprite battler,
-            Sprite timelineIcon, MutationSO mutation, IReadOnlyList<ActiveEffect> runEffects)
+            RuntimeAnimatorController battlerAnimator, Sprite timelineIcon, MutationSO mutation,
+            IReadOnlyList<ActiveEffect> runEffects)
         {
             Model = model;
             BattlerSprite = battler;
+            BattlerAnimator = battlerAnimator;
             TimelineIcon = timelineIcon;
             Mutation = mutation;
             CurrentHp = stateChanged
@@ -130,6 +132,8 @@ namespace Eclipse.Presentation
 
         /// <summary> 전장에 세울 배틀러 스프라이트. 없으면 null. </summary>
         public Sprite BattlerSprite { get; }
+
+        public RuntimeAnimatorController BattlerAnimator { get; }
 
         /// <summary> 턴 순서 타임라인 아이콘. 아군은 얼굴 크롭, 적은 배틀러 스프라이트. </summary>
         public Sprite TimelineIcon { get; }

@@ -30,5 +30,10 @@ namespace Eclipse.Data
 
         /// <summary> 전장에 표시할 배틀러 스프라이트. </summary>
         public Sprite battlerAssetRef;
+
+        public RuntimeAnimatorController battlerAnimator;
+
+        /// <summary> 턴 순서 타임라인용 얼굴 아이콘(정사각 크롭). 비면 그 칸은 아이콘 없이 그린다. </summary>
+        public Sprite faceIconAssetRef;
     }
 }

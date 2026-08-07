@@ -57,8 +57,8 @@ namespace Eclipse.Presentation
             var all = allies.Concat(enemies).ToList();
 
             Combatants = all
-                .Select(e => new CombatantViewModel(e.Unit, _stateChanged, e.Battler, e.TimelineIcon,
-                    e.Mutation, e.RunEffects))
+                .Select(e => new CombatantViewModel(e.Unit, _stateChanged, e.Battler, e.BattlerAnimator,
+                    e.TimelineIcon, e.Mutation, e.RunEffects))
                 .ToList();
 
             ActionCount = _stateChanged
@@ -109,7 +109,12 @@ namespace Eclipse.Presentation
         /// </summary>
         /// <param name="playTurnAnimation">이번 턴 배틀러 연출이 끝나면 완료되는 함수(View 제공). null이면 대기 없이 진행.</param>
         /// <param name="ct">외부 취소 토큰(예: 화면 파괴). VM 내부 취소와 묶여 함께 루프를 끊는다.</param>
-        public async UniTask RunBattleAsync(Func<CancellationToken, UniTask> playTurnAnimation, CancellationToken ct)
+        /// <param name="waitForImpact">
+        /// 시전자가 실제로 때리는 순간까지 기다리는 함수(View 제공). 스킬을 쓴 턴에만 호출된다.
+        /// null이면 시전과 피격이 지금처럼 붙어서 나간다.
+        /// </param>
+        public async UniTask RunBattleAsync(Func<CancellationToken, UniTask> playTurnAnimation, CancellationToken ct,
+            Func<CancellationToken, UniTask> waitForImpact = null)
         {
             using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, _cts.Token);
             _outcome = BattleOutcome.Ongoing;
@@ -117,8 +122,15 @@ namespace Eclipse.Presentation
             {
                 _outcome = await _engine.AdvanceTurnAsync(linked.Token);
 
-                // 계산 적용 후(HP 반영) 신호를 흘리면 각 배틀러가 스스로 연출을 시작한다.
-                NotifyActor();
+                // 시전 신호가 먼저 나가 행동자가 공격 모션을 시작한다.
+                bool cast = NotifyCast();
+
+                // 때리는 순간까지 미룬다. 붙여서 내보내면 칼을 뽑기도 전에 상대가 피를 흘린다.
+                if (cast && waitForImpact != null)
+                    await waitForImpact(linked.Token);
+
+                // 피격 신호와 화면 갱신은 함께 나간다. 숫자·흔들림·HP 바·사망 숨김이 한 시점에 오게 한다.
+                NotifyHits();
                 _stateChanged.OnNext(Unit.Default);
 
                 // 연출이 끝날 때까지 다음 턴을 미룬다.
@@ -167,15 +179,22 @@ namespace Eclipse.Presentation
             vm?.RaiseTurnStarted();
         }
 
-        /// <summary> 행동자에 Acted(시전)를, 효과 결과마다 대상에 Hit(피격)을 발화한다. </summary>
-        private void NotifyActor()
+        /// <summary> 행동자에 Acted(시전)를 발화한다. </summary>
+        /// <returns>스킬을 쓴 턴이면 true. 도트 사망처럼 스킬이 없는 턴은 연출이 없어 false다.</returns>
+        private bool NotifyCast()
         {
             var turn = _engine.LastTurn;
-
-            // 스킬을 안 쓴 턴(도트 사망 등)은 연출이 없다.
-            if (!turn.UsedSkill) return;
+            if (!turn.UsedSkill) return false;
 
             Combatants.FirstOrDefault(u => u.Model == turn.Actor)?.RaiseActed(turn.Skill);
+            return true;
+        }
+
+        /// <summary> 이번 턴 효과 결과마다 대상에 Hit(피격)을 발화한다. </summary>
+        private void NotifyHits()
+        {
+            var turn = _engine.LastTurn;
+            if (!turn.UsedSkill) return;
 
             foreach (var hit in turn.Hits)
                 Combatants.FirstOrDefault(u => u.Model == hit.Target)?.RaiseHit(turn.Skill, hit);

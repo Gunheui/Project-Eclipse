@@ -64,6 +64,8 @@ namespace Eclipse.Data
         /// <summary> 전투 씬에 세우는 그림. 월드 스프라이트라 임포트 PPU가 곧 전투 크기가 된다. </summary>
         public Sprite battlerAssetRef;
 
+        public RuntimeAnimatorController battlerAnimator;
+
         /// <summary> 턴 순서 타임라인용 얼굴 아이콘(정사각 크롭). 비면 portraitAssetRef로 폴백. </summary>
         public Sprite faceIconAssetRef;
     }

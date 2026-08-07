@@ -54,8 +54,11 @@ namespace Eclipse.View
         // 방마다 갈리는 뷰모델 구독. Bind에서 다시 채우고 ClearBattle에서 비운다.
         private readonly CompositeDisposable _vmBindings = new();
 
-        // 연출 배속(1 또는 2). View 소유 — 계산엔 무관하고 배틀러 트윈·턴 대기 시간만 나눈다.
+        // 연출 배속(1 또는 2). View 소유 — 계산엔 무관하고 배틀러 연출·턴 대기 시간만 나눈다.
         private int _speedMultiplier = 1;
+
+        // 시전이 시작되고 대상이 맞기까지의 간격(초). 공격 모션에서 무기가 실제로 닿는 지점에 맞춘 값이다.
+        private const float ImpactDelay = 0.6f;
 
         // 조준 모드 상태. 스킬 탭으로 대기 중인 스킬과 그때 계산한 유효 타겟 집합. null이면 조준 중이 아니다.
         private SkillSlotViewModel _pendingSkill;
@@ -143,7 +146,13 @@ namespace Eclipse.View
         /// 바인딩된 전투를 끝까지 구동한다. 매 턴 배틀러 연출이 끝날 때까지 기다린다.
         /// </summary>
         public UniTask RunBoundBattleAsync(CancellationToken ct)
-            => _viewModel.RunBattleAsync(PlayTurnAnimationAsync, ct);
+            => _viewModel.RunBattleAsync(PlayTurnAnimationAsync, ct, WaitForImpactAsync);
+
+        /// <summary>
+        /// 시전자가 때리는 순간까지 기다린다. 배속을 아는 곳이 여기뿐이라 나누기도 여기서 한다.
+        /// </summary>
+        private UniTask WaitForImpactAsync(CancellationToken ct)
+            => UniTask.Delay(TimeSpan.FromSeconds(ImpactDelay / _speedMultiplier), cancellationToken: ct);
 
         /// <summary>
         /// 전장 배틀러를 소속·슬롯으로 유닛 VM에 연결한다. 대응 유닛이 없는 앵커는 숨긴다.

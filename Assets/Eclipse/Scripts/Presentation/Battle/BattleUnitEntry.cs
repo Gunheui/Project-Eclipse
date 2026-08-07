@@ -12,11 +12,12 @@ namespace Eclipse.Presentation
     /// </summary>
     public readonly struct BattleUnitEntry
     {
-        public BattleUnitEntry(Combatant unit, Sprite battler, Sprite timelineIcon, MutationSO mutation,
-            IReadOnlyList<ActiveEffect> runEffects)
+        public BattleUnitEntry(Combatant unit, Sprite battler, RuntimeAnimatorController battlerAnimator,
+            Sprite timelineIcon, MutationSO mutation, IReadOnlyList<ActiveEffect> runEffects)
         {
             Unit = unit;
             Battler = battler;
+            BattlerAnimator = battlerAnimator;
             TimelineIcon = timelineIcon;
             Mutation = mutation;
             RunEffects = runEffects ?? Array.Empty<ActiveEffect>();
@@ -27,6 +28,8 @@ namespace Eclipse.Presentation
 
         /// <summary> 전장 배틀러 스프라이트(아군 초상·적 배틀러). 없으면 null. </summary>
         public Sprite Battler { get; }
+
+        public RuntimeAnimatorController BattlerAnimator { get; }
 
         /// <summary> 턴 순서 타임라인 아이콘(아군 얼굴 크롭·적 배틀러). 없으면 null(해당 칸은 비워 그린다). </summary>
         public Sprite TimelineIcon { get; }

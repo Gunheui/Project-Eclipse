@@ -55,14 +55,15 @@ namespace Eclipse.Core
 
             var enemyParty = enemies.Take(PlayerSave.PartySlotCount).ToList();
 
-            // 유닛과 아트를 함께 만들어 넘긴다. 타임라인 아이콘은 아군=얼굴 크롭, 적=배틀러 스프라이트.
-            // 아군 얼굴이 비면 그 칸은 비워 그린다. 전신 초상으로 폴백하면 데이터 누락이 감춰지기 때문이다.
+            // 유닛과 아트를 함께 만들어 넘긴다. 타임라인 아이콘은 아군·적 모두 얼굴 크롭을 쓴다.
+            // 얼굴이 비면 그 칸은 비워 그린다. 배틀러 스프라이트로 폴백하면 데이터 누락이 감춰지기 때문이다.
             var allyEntries = ownedParty
                 .Select(x => new BattleUnitEntry(
                     Combatant.FromCharacter(x.owned, x.slot, CharacterStats.BuildAllyStats(
                             x.owned.Definition, x.owned.Level, x.owned.AscensionTier, session.BuffsOf(x.slot)),
                         session.SkillRidersOf(x.slot)),
                     x.owned.Definition.battlerAssetRef,
+                    x.owned.Definition.battlerAnimator,
                     x.owned.Definition.faceIconAssetRef,
                     null,
                     RunEffectsFor(x.slot)))
@@ -73,7 +74,8 @@ namespace Eclipse.Core
                 .Select((spec, slot) => new BattleUnitEntry(
                     BuildEnemy(spec, slot),
                     spec.Enemy.battlerAssetRef,
-                    spec.Enemy.battlerAssetRef,
+                    spec.Enemy.battlerAnimator,
+                    spec.Enemy.faceIconAssetRef,
                     spec.Mutation,
                     curseEffects))
                 .ToList();

@@ -38,7 +38,7 @@ namespace Eclipse.Tests.View
 
             _model = Combatant.FromEnemy(BuildEnemy(), 0, new Stats { hp = 100, atk = 10, def = 5, spd = 10 });
             _stateChanged = new Subject<Unit>();
-            _unit = new CombatantViewModel(_model, _stateChanged, null, null, null, null);
+            _unit = new CombatantViewModel(_model, _stateChanged, null, null, null, null, null);
 
             // 연출은 배틀러의 부모 밑에 스폰되므로 전장 역할을 할 부모가 있어야 한다.
             var go = Track(new GameObject("Battler"));
@@ -97,13 +97,13 @@ namespace Eclipse.Tests.View
         {
             Bind();
 
-            // 흔들림·돌진이 배틀러를 옮겨 놓은 상태. 취소된 트윈은 중간 위치에서 그대로 멈춘다.
+            // 흔들림이 배틀러를 옮겨 놓은 상태. 취소된 트윈은 중간 위치에서 그대로 멈춘다.
             _view.transform.localPosition = SlotPosition + new Vector3(0.4f, 0.2f, 0f);
 
             Bind();
 
             Assert.AreEqual(SlotPosition, _view.transform.localPosition,
-                "어긋난 자리를 제자리로 삼으면 이후 돌진이 매번 그 자리로 돌아간다");
+                "어긋난 자리를 제자리로 삼으면 이후 흔들림이 매번 그 자리로 돌아간다");
             yield return null;
         }
 

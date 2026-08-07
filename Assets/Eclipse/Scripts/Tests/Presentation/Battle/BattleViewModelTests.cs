@@ -60,7 +60,7 @@ namespace Eclipse.Tests
 
         // 아트는 스케줄러·엔진과 무관하므로 스프라이트 없이 유닛만 실어 보낸다.
         private static BattleUnitEntry Entry(Combatant unit)
-            => new BattleUnitEntry(unit, null, null, null, null);
+            => new BattleUnitEntry(unit, null, null, null, null, null);
 
         // 엔진·스케줄러·프로바이더를 프로덕션(BattleLifetimeScope)과 같은 구성으로 조립한 VM. 타겟난수는 데미지난수와 분리된 스트림.
         private static BattleViewModel BuildVm(Combatant[] allies, Combatant[] enemies, int seed, bool startAuto)
@@ -236,9 +236,48 @@ namespace Eclipse.Tests
             vm.Dispose();
         });
 
+        // --- 타격 타이밍: 시전 신호가 먼저 나가고, 대기가 끝나야 피격 신호와 화면 갱신이 따라온다 ---
+
+        [UnityTest]
+        public IEnumerator 타격_대기_중에는_시전_신호만_나간다() => UniTask.ToCoroutine(async () =>
+        {
+            var ally = Ally("아군", 0, S(2000, 300, 20, 150));
+            var enemy = Enemy("적", 0, S(1500, 120, 10, 120));
+            var vm = BuildVm(new[] { ally }, new[] { enemy }, seed: 7, startAuto: true);
+
+            var actor = vm.Combatants[0];
+            var target = vm.Combatants[1];
+            int casts = 0;
+            int hits = 0;
+            using var castSub = actor.Acted.Subscribe(_ => casts++);
+            using var hitSub = target.Hit.Subscribe(_ => hits++);
+
+            // 첫 턴만 붙잡고 나머지 턴은 통과시킨다. 실제 시간을 쓰지 않아 확정적으로 돈다.
+            var gate = new UniTaskCompletionSource();
+            bool held = false;
+            var run = vm.RunBattleAsync(null, CancellationToken.None, _ =>
+            {
+                if (held) return UniTask.CompletedTask;
+                held = true;
+                return gate.Task;
+            });
+
+            Assert.AreEqual(1, casts, "시전 신호는 대기보다 먼저 나간다");
+            Assert.AreEqual(0, hits, "피격 신호가 대기 전에 나가면 칼을 뽑기도 전에 상대가 피를 흘린다");
+            Assert.AreEqual(enemy.MaxHp, target.CurrentHp.CurrentValue, "HP 바도 대기 뒤에 내려간다");
+
+            gate.TrySetResult();
+            await run;
+
+            Assert.Greater(hits, 0, "대기가 풀리면 피격 신호가 이어진다");
+            Assert.Less(target.CurrentHp.CurrentValue, enemy.MaxHp);
+
+            vm.Dispose();
+        });
+
         // --- 배속 불변 회귀: 연출 시간이 달라도 같은 시드면 전투 결과가 완전히 동일 ---
-        // 배속이 흐르는 유일한 통로는 RunBattleAsync의 playTurnAnimation(연출 대기)이고, speed는 Domain에
-        // 존재하지 않는다. 같은 전투를 이 연출 콜백만 바꿔 여러 번 돌려 결과 지문이 동일함을 못박는다.
+        // 배속은 RunBattleAsync가 받는 두 대기 함수(연출 대기·타격 대기)로만 흐르고 speed는 Domain에
+        // 존재하지 않는다. 같은 전투를 연출 콜백만 바꿔 여러 번 돌려 결과 지문이 동일함을 못박는다.
 
         // 한 판의 결정적 지문: 최종 결과·행동 수 + 턴마다 찍은 전 유닛 HP 스냅샷.
         private sealed class BattleTrace

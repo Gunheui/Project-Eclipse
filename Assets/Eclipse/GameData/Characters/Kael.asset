@@ -32,5 +32,6 @@ MonoBehaviour:
   portraitFxAssetRef: {fileID: 21300000, guid: c75a815668d44c108bab5fc15cd57d2a, type: 3}
   portraitListOffsetY: -24
   portraitCardOffsetY: -35
-  battlerAssetRef: {fileID: 21300000, guid: da1706bd13b0d41fb9713f71f39fd31f, type: 3}
+  battlerAssetRef: {fileID: 21300000, guid: f8b969494f57a4115af1749d69fe3847, type: 3}
+  battlerAnimator: {fileID: 22100000, guid: 09f5f5957b9c34dc19427e048aa0c0cd, type: 2}
   faceIconAssetRef: {fileID: 21300000, guid: 305043bb71c9c495889871e288cfe7ec, type: 3}
