@@ -16,16 +16,6 @@ namespace Eclipse.EditorTools
             public GameObject Asset;
         }
 
-        // 화면 색을 읽어 일그러뜨리는 셰이더들. 프리뷰 카메라는 2D Renderer의 Camera Sorting Layer Texture 패스를
-        // 타지 않아 항상 회색 판으로 렌더된다 — 실제 씬은 그 설정이 켜져 있으면 정상이다.
-        static readonly HashSet<string> ScreenWarpShaders = new()
-        {
-            "Shader Graphs/Slash World",
-            "Shader Graphs/Orb Warp",
-            "Shader Graphs/Orb Warp Lit",
-            "GAP_SG/ParallaxOcclusion",
-        };
-
         readonly List<Entry> _entries = new();
         string _search = string.Empty;
         Vector2 _listScroll;
@@ -161,9 +151,7 @@ namespace Eclipse.EditorTools
 
                 if (_warpRendererCount > 0)
                     EditorGUILayout.HelpBox(
-                        ScreenWarpSupported()
-                            ? $"화면 왜곡 파티클 {_warpRendererCount}개는 프리뷰에서만 숨겨집니다. 씬에서는 정상 재생됩니다."
-                            : $"화면 왜곡 파티클 {_warpRendererCount}개를 숨겼습니다. Renderer2D의 Camera Sorting Layer Texture가 꺼져 있어 씬에서도 회색 판으로 보이므로, 배치할 때도 함께 끕니다.",
+                        $"화면 왜곡 파티클 {_warpRendererCount}개가 임포트 때 꺼졌습니다. 2D 렌더러가 화면 색을 주지 않아 켜 두면 회색 판으로 보입니다.",
                         MessageType.Info);
 
                 var rect = GUILayoutUtility.GetRect(1, 1, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
@@ -334,37 +322,19 @@ namespace Eclipse.EditorTools
 
             _particles = _instance.GetComponentsInChildren<ParticleSystem>(true);
             _animators = _instance.GetComponentsInChildren<Animator>(true);
-            _warpRendererCount = DisableScreenWarpRenderers(_instance, true);
+            _warpRendererCount = CountScreenWarpRenderers(_instance);
             _loopLength = MeasureLoopLength();
             FrameInstance();
             Restart();
         }
 
-        // 2D Renderer가 화면 색 텍스처를 제공하는 유일한 경로. 꺼져 있으면 왜곡 셰이더는 씬에서도 회색 판이 된다.
-        static bool ScreenWarpSupported()
-        {
-            var pipeline = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline;
-            if (pipeline == null) return true;
-
-            var rendererData = new SerializedObject(pipeline).FindProperty("m_RendererDataList");
-            if (rendererData == null || rendererData.arraySize == 0) return true;
-
-            var renderer = rendererData.GetArrayElementAtIndex(0).objectReferenceValue;
-            if (renderer == null) return true;
-
-            var flag = new SerializedObject(renderer).FindProperty("m_UseCameraSortingLayersTexture");
-            return flag == null || flag.boolValue; // 2D Renderer가 아니면 프로퍼티 자체가 없다
-        }
-
-        static int DisableScreenWarpRenderers(GameObject root, bool hide)
+        // 끄는 것은 임포트가 이미 했다. 여기서는 안내 문구에 쓸 개수만 센다.
+        static int CountScreenWarpRenderers(GameObject root)
         {
             var count = 0;
             foreach (var renderer in root.GetComponentsInChildren<Renderer>(true))
             {
-                var material = renderer.sharedMaterial;
-                if (material == null || material.shader == null) continue;
-                if (!ScreenWarpShaders.Contains(material.shader.name)) continue;
-                renderer.enabled = !hide;
+                if (!ScreenWarpFilter.IsWarpOnly(renderer.sharedMaterial)) continue;
                 count++;
             }
 
@@ -469,7 +439,6 @@ namespace Eclipse.EditorTools
         {
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(_selected.Asset);
             Undo.RegisterCreatedObjectUndo(instance, $"Place {_selected.Name}");
-            if (!ScreenWarpSupported()) DisableScreenWarpRenderers(instance, true);
 
             if (parent != null)
             {
