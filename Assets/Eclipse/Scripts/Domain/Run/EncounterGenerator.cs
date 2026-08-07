@@ -20,6 +20,9 @@ namespace Eclipse.Domain
         /// <summary> 한 방에 나올 수 있는 적의 최대 마리수. 전장 슬롯 수와 같다. </summary>
         public const int MaxEnemiesPerRoom = 4;
 
+        /// <summary> 정예 방에 설 수 있는 최대 마리수. 미드보스 자리표가 3자리다. </summary>
+        public const int MaxEliteEnemiesPerRoom = 3;
+
         // 보스 방 앞에 놓이는 일반 방 개수. 깊이 규칙은 이만큼을 정확히 덮어야 한다.
         private const int NormalDepthCount = BossDepth - 1;
 
@@ -55,8 +58,7 @@ namespace Eclipse.Domain
         /// <param name="depth">방 깊이. 1 이상 <see cref="BossDepth"/> 이하만 허용한다.</param>
         /// <param name="isEliteEncounter">
         /// 이번 전투가 정예인지. 방 배치가 아니라 미드보스 문을 골랐는지가 정하는 값이다.
-        /// 튜닝에 정예 유닛이 있으면 그 유닛을 선봉에 세우고 수하만 굴리며, 없으면 마리수를 상한으로
-        /// 고정하고 전원을 변이·정예로 만든다. 보스 방에서는 무시한다.
+        /// 정예면 전용 유닛을 선봉에 세우고 수하만 굴린다. 보스 방에서는 무시한다.
         /// </param>
         /// <exception cref="ArgumentOutOfRangeException">튜닝에 없는 깊이일 때.</exception>
         public EncounterSpec Generate(int depth, bool isEliteEncounter)
@@ -69,14 +71,13 @@ namespace Eclipse.Domain
                 throw new ArgumentOutOfRangeException(nameof(depth), depth, "튜닝 데이터에 없는 깊이다.");
 
             var rule = _tuning.depths[index];
-            bool fixedElite = isEliteEncounter && _tuning.eliteUnit != null;
-            int count = isEliteEncounter ? (fixedElite ? _tuning.eliteAddCount : rule.maxCount) : RollCount(rule);
+            int count = isEliteEncounter ? _tuning.eliteAddCount : RollCount(rule);
             int mutationThreshold = (int)Math.Round(
                 (isEliteEncounter ? 1f : rule.mutationChance) * ProbabilityScale, MidpointRounding.AwayFromZero);
 
-            var enemies = new List<EnemyInstanceSpec>(fixedElite ? count + 1 : count);
+            var enemies = new List<EnemyInstanceSpec>(isEliteEncounter ? count + 1 : count);
             // 정예 유닛은 스탯을 이미 정예 밴드로 잡아 두므로 변이도 정예 배수도 붙이지 않는다. 배수는 수하만 받는다.
-            if (fixedElite)
+            if (isEliteEncounter)
                 enemies.Add(new EnemyInstanceSpec(_tuning.eliteUnit, null, false));
             for (int i = 0; i < count; i++)
             {
@@ -99,14 +100,9 @@ namespace Eclipse.Domain
             return hit ? _tuning.mutations[_mutationRng.NextInt(_tuning.mutations.Length)] : null;
         }
 
-        /// <summary> 보스 방 편성을 만든다. 보스 1기에 수하를 붙이며, 변이도 정예도 붙지 않는다. </summary>
+        /// <summary> 보스 방 편성을 만든다. 보스 1기뿐이고, 변이도 정예도 붙지 않는다. </summary>
         private EncounterSpec BossEncounter()
-        {
-            var enemies = new List<EnemyInstanceSpec> { new EnemyInstanceSpec(_tuning.boss, null, false) };
-            if (_tuning.bossAdds != null)
-                enemies.AddRange(_tuning.bossAdds.Select(add => new EnemyInstanceSpec(add, null, false)));
-            return new EncounterSpec(enemies);
-        }
+            => new EncounterSpec(new[] { new EnemyInstanceSpec(_tuning.boss, null, false) });
 
         /// <summary>
         /// 튜닝 데이터를 검사하고 잘못된 데가 있으면 예외를 던진다. 잘못된 채로 추첨하면 방마다 다른 곳에서
@@ -137,21 +133,15 @@ namespace Eclipse.Domain
                 throw new ArgumentException("보스가 비어 있다.", nameof(tuning));
             if (depths.Any(d => d.allowedPool.Contains(tuning.boss)))
                 throw new ArgumentException("보스가 일반 깊이 풀에 섞여 있다.", nameof(tuning));
-            if (tuning.bossAdds != null && tuning.bossAdds.Any(add => add == null))
-                throw new ArgumentException("보스 수하에 빈 칸이 있다.", nameof(tuning));
-            if (tuning.bossAdds != null && tuning.bossAdds.Contains(tuning.boss))
-                throw new ArgumentException("보스가 수하로 또 들어가 있다. 보스 방의 보스는 1기다.", nameof(tuning));
-
-            if (tuning.eliteUnit != null)
-            {
-                if (depths.Any(d => d.allowedPool.Contains(tuning.eliteUnit)))
-                    throw new ArgumentException("정예 전용 유닛이 일반 깊이 풀에 섞여 있다.", nameof(tuning));
-                if (tuning.eliteUnit == tuning.boss)
-                    throw new ArgumentException("정예 전용 유닛과 보스가 같은 적이다.", nameof(tuning));
-                if (tuning.eliteAddCount < 0 || tuning.eliteAddCount >= MaxEnemiesPerRoom)
-                    throw new ArgumentException(
-                        $"정예 수하 수가 0 이상 {MaxEnemiesPerRoom - 1} 이하가 아니다.", nameof(tuning));
-            }
+            if (tuning.eliteUnit == null)
+                throw new ArgumentException("정예 전용 유닛이 비어 있다.", nameof(tuning));
+            if (depths.Any(d => d.allowedPool.Contains(tuning.eliteUnit)))
+                throw new ArgumentException("정예 전용 유닛이 일반 깊이 풀에 섞여 있다.", nameof(tuning));
+            if (tuning.eliteUnit == tuning.boss)
+                throw new ArgumentException("정예 전용 유닛과 보스가 같은 적이다.", nameof(tuning));
+            if (tuning.eliteAddCount < 0 || tuning.eliteAddCount >= MaxEliteEnemiesPerRoom)
+                throw new ArgumentException(
+                    $"정예 수하 수가 0 이상 {MaxEliteEnemiesPerRoom - 1} 이하가 아니다.", nameof(tuning));
 
             if (tuning.mutations == null || tuning.mutations.Length == 0 || tuning.mutations.Any(m => m == null))
                 throw new ArgumentException("변이 후보가 비었거나 빈 칸을 포함한다.", nameof(tuning));

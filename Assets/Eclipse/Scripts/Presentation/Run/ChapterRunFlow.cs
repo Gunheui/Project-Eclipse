@@ -106,6 +106,9 @@ namespace Eclipse.Presentation
         /// <summary> EnteringRoom: 정예 미드보스 전투인지. 정예 표기는 방 종류가 아니라 이 값을 읽는다. </summary>
         public bool IsEliteEncounter;
 
+        /// <summary> EnteringRoom: 이번 방 종류. 전투 화면이 적 자리표를 고르는 기준이다. </summary>
+        public RoomKind Kind;
+
         /// <summary> 터미널: 문으로 번 재화. 런 내내 장부에만 쌓였다가 이번 종료에 지급된 블록이다. </summary>
         public IReadOnlyList<RewardEntry> ExploreReward;
 
@@ -331,6 +334,7 @@ namespace Eclipse.Presentation
                 Encounter = encounter,
                 BattleSeed = RunSeed.ForRoomBattle(_session.RunSeed, _session.RoomIndex),
                 IsEliteEncounter = isElite,
+                Kind = room.kind,
             });
         }
 

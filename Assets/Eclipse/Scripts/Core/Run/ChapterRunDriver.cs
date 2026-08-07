@@ -116,7 +116,7 @@ namespace Eclipse.Core
                 backgroundRenderer.sprite = offer.Background;
 
             _battle = _factory.Create(offer.Encounter, offer.BattleSeed, startAuto);
-            battleView.Bind(_battle);
+            battleView.Bind(_battle, offer.Kind, offer.IsEliteEncounter);
             await fader.FadeInAsync();
 
             _battleCts?.Dispose();

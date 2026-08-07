@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Eclipse.Data;
 using Eclipse.Presentation;
 using R3;
 using TMPro;
@@ -21,11 +22,16 @@ namespace Eclipse.View
     {
         [Header("Battlers")]
         [SerializeField] private BattlerView[] allyBattlers;
+        // 적 자리표 3벌. 자리 수도 크기도 씬에 저작돼 있고, 방마다 이 중 한 벌만 쓴다.
         [SerializeField] private BattlerView[] enemyBattlers;
+        [SerializeField] private BattlerView[] midBossBattlers;
+        [SerializeField] private BattlerView[] bossBattlers;
 
         [Header("Unit plates")]
         [SerializeField] private CombatantPlateView[] allyPlates;
         [SerializeField] private CombatantPlateView[] enemyPlates;
+        [SerializeField] private CombatantPlateView[] midBossPlates;
+        [SerializeField] private CombatantPlateView[] bossPlates;
 
         [Header("Skill buttons")]
         [SerializeField] private Button[] skillButtons;
@@ -50,6 +56,10 @@ namespace Eclipse.View
         [SerializeField] private TMP_Text speedLabel;
 
         private BattleViewModel _viewModel;
+
+        // 이번 전투가 쓰는 적 자리표. Bind에서 방 종류로 고른다.
+        private BattlerView[] _enemySlots;
+        private CombatantPlateView[] _enemyPlateSlots;
 
         // 방마다 갈리는 뷰모델 구독. Bind에서 다시 채우고 ClearBattle에서 비운다.
         private readonly CompositeDisposable _vmBindings = new();
@@ -96,10 +106,16 @@ namespace Eclipse.View
         /// <summary>
         /// 새 전투 뷰모델을 HUD 전체에 바인딩한다. 이전 방의 구독은 정리된다.
         /// </summary>
-        public void Bind(BattleViewModel viewModel)
+        /// <param name="kind">이번 방 종류. 적이 설 자리표를 고른다.</param>
+        /// <param name="isEliteEncounter">미드보스 전투인지. 정예 후보 자리라도 문을 회피했으면 false다.</param>
+        /// <exception cref="InvalidOperationException">편성이 자리표보다 많을 때.</exception>
+        public void Bind(BattleViewModel viewModel, RoomKind kind, bool isEliteEncounter)
         {
             _vmBindings.Clear();
             _viewModel = viewModel;
+
+            SelectEnemyFormation(kind, isEliteEncounter);
+            RequireEnemySlots();
 
             BindBattlers();
             BindPlates();
@@ -126,7 +142,9 @@ namespace Eclipse.View
         /// </summary>
         /// <returns>빈 슬롯은 이미 비활성이라 제외된다. <see cref="ClearBattle"/> 뒤에는 빈 목록이다.</returns>
         public IReadOnlyList<Vector3> EnemyPositions()
-            => enemyBattlers.Where(b => b.gameObject.activeSelf).Select(b => b.transform.position).ToList();
+            // 첫 Bind 전에도 부를 수 있어 자리표가 정해지기 전이면 일반 자리표로 읽는다(그때는 전부 비활성이라 빈 목록).
+            => (_enemySlots ?? enemyBattlers).Where(b => b.gameObject.activeSelf)
+                .Select(b => b.transform.position).ToList();
 
         /// <summary> 바인딩을 해제하고 배틀러·플레이트를 비운다. 방 전환 사이(재조립 전)에 부른다. </summary>
         public void ClearBattle()
@@ -135,8 +153,8 @@ namespace Eclipse.View
             _viewModel = null;
             ExitTargeting();
             CloseBuffPanel();
-            foreach (var b in allyBattlers.Concat(enemyBattlers)) b.Clear();
-            foreach (var p in allyPlates.Concat(enemyPlates)) p.Clear();
+            foreach (var b in AllBattlers()) b.Clear();
+            foreach (var p in AllPlates()) p.Clear();
         }
 
         /// <summary>
@@ -150,7 +168,7 @@ namespace Eclipse.View
         /// </summary>
         private UniTask WaitForImpactAsync(CancellationToken ct)
         {
-            var impacts = allyBattlers.Concat(enemyBattlers).Select(b => b.WaitForImpact());
+            var impacts = allyBattlers.Concat(_enemySlots).Select(b => b.WaitForImpact());
             return UniTask.WhenAll(impacts).AttachExternalCancellation(ct);
         }
 
@@ -160,8 +178,36 @@ namespace Eclipse.View
         private void BindBattlers()
         {
             AssignBattlers(allyBattlers, isAlly: true);
-            AssignBattlers(enemyBattlers, isAlly: false);
+            AssignBattlers(_enemySlots, isAlly: false);
         }
+
+        /// <summary>이번 전투가 쓸 적 자리표를 고른다. 보스 방은 정예 여부와 무관하게 보스 자리표다.</summary>
+        private void SelectEnemyFormation(RoomKind kind, bool isEliteEncounter)
+        {
+            if (kind == RoomKind.Boss) (_enemySlots, _enemyPlateSlots) = (bossBattlers, bossPlates);
+            else if (isEliteEncounter) (_enemySlots, _enemyPlateSlots) = (midBossBattlers, midBossPlates);
+            else (_enemySlots, _enemyPlateSlots) = (enemyBattlers, enemyPlates);
+        }
+
+        /// <summary>
+        /// 편성이 자리표에 다 들어가는지 검사한다. 자리 없는 적이 화면에서 조용히 빠진 채 전투가 돌지
+        /// 않도록 배틀러를 하나라도 켜기 전에 끊는다.
+        /// </summary>
+        private void RequireEnemySlots()
+        {
+            foreach (var unit in _viewModel.Combatants)
+                if (!unit.IsAlly && unit.SlotIndex >= _enemySlots.Length)
+                    throw new InvalidOperationException(
+                        $"적 편성이 이 방 자리표의 {_enemySlots.Length}자리를 넘는다(슬롯 {unit.SlotIndex}).");
+        }
+
+        /// <summary>세 자리표의 배틀러 전부. 방이 바뀌면 직전 자리표에 남은 표시까지 걷어야 한다.</summary>
+        private IEnumerable<BattlerView> AllBattlers()
+            => allyBattlers.Concat(enemyBattlers).Concat(midBossBattlers).Concat(bossBattlers);
+
+        /// <summary>세 자리표의 플레이트 전부.</summary>
+        private IEnumerable<CombatantPlateView> AllPlates()
+            => allyPlates.Concat(enemyPlates).Concat(midBossPlates).Concat(bossPlates);
 
         private void AssignBattlers(BattlerView[] battlers, bool isAlly)
         {
@@ -180,7 +226,7 @@ namespace Eclipse.View
         /// </summary>
         private UniTask PlayTurnAnimationAsync(CancellationToken ct)
         {
-            var animations = allyBattlers.Concat(enemyBattlers).Select(b => b.WaitForAnimation());
+            var animations = allyBattlers.Concat(_enemySlots).Select(b => b.WaitForAnimation());
             return UniTask.WhenAll(animations).AttachExternalCancellation(ct);
         }
 
@@ -188,10 +234,10 @@ namespace Eclipse.View
         /// 한 진영의 슬롯 전체를 두른 범위. 진영 앵커 이펙트가 놓일 자리로 쓴다.
         /// </summary>
         /// <param name="ally">아군 진영이면 true.</param>
-        /// <returns>슬롯 앵커가 씬에 고정이라 인원수·생존 여부와 무관하게 일정한 범위.</returns>
+        /// <returns>적은 이번 방 자리표 기준이다. 자리가 씬에 고정이라 인원수·생존 여부와 무관하게 일정하다.</returns>
         private Bounds FormationBounds(bool ally)
         {
-            var slots = ally ? allyBattlers : enemyBattlers;
+            var slots = ally ? allyBattlers : _enemySlots;
             var bounds = new Bounds(slots[0].transform.position, Vector3.zero);
             foreach (var b in slots) bounds.Encapsulate(b.transform.position);
             return bounds;
@@ -203,7 +249,7 @@ namespace Eclipse.View
         private void BindPlates()
         {
             AssignPlates(allyPlates, isAlly: true);
-            AssignPlates(enemyPlates, isAlly: false);
+            AssignPlates(_enemyPlateSlots, isAlly: false);
         }
 
         private void AssignPlates(CombatantPlateView[] plates, bool isAlly)
@@ -380,14 +426,14 @@ namespace Eclipse.View
         /// <returns>대응이 없으면 null(빈 슬롯).</returns>
         private BattlerView FindBattler(CombatantViewModel unit)
         {
-            var battlers = unit.IsAlly ? allyBattlers : enemyBattlers;
+            var battlers = unit.IsAlly ? allyBattlers : _enemySlots;
             return unit.SlotIndex < battlers.Length ? battlers[unit.SlotIndex] : null;
         }
 
         private void HighlightActing(CombatantViewModel unit)
         {
             SetActing(allyPlates, unit);
-            SetActing(enemyPlates, unit);
+            SetActing(_enemyPlateSlots, unit);
         }
 
         private void SetActing(CombatantPlateView[] plates, CombatantViewModel acting)

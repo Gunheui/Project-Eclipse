@@ -166,12 +166,15 @@ namespace Eclipse.View
             Func<CombatantViewModel, Vector3?> battlerPosition = null,
             Action<CombatantViewModel> onTapped = null, Action<CombatantViewModel, bool> onHovered = null)
         {
+            // 켜는 것이 먼저다. 자리표가 꺼진 채로 시작하는 진영(적·미드보스·보스)은 여기서 Awake가 처음 돌아
+            // 제자리와 정렬 순서를 저작값으로 잡는다. 뒤로 미루면 ResetPlayback이 아직 비어 있는 그 값들을
+            // 되돌려 써 씬 저작값이 0으로 지워진다.
+            gameObject.SetActive(true);
             ResetPlayback();
             _bindings.Clear();
             HideDetail();
             // 파괴 토큰과 묶어 씬이 사라질 때도 함께 끊긴다.
             _playbackCts = CancellationTokenSource.CreateLinkedTokenSource(this.GetCancellationTokenOnDestroy());
-            gameObject.SetActive(true);
             _unit = unit;
             _onTapped = onTapped;
             _onHovered = onHovered;
@@ -414,6 +417,8 @@ namespace Eclipse.View
 
         /// <summary>
         /// 탭 영역을 그림이 차지하는 범위에 맞춘다. 유닛마다 크기가 달라 에디터에서 미리 맞출 수 없다.
+        /// 확대된 자리에서는 옆 유닛과 영역이 겹치는데, 누가 잡힐지는 씬에 저작된 자리의 z가 정한다 —
+        /// 앞줄이 카메라에 더 가까워 먼저 잡히고, 그리기 순서와 방향이 같다.
         /// </summary>
         /// <param name="body">이 트랜스폼 기준 실루엣 범위.</param>
         private void ResizeTapArea(Bounds body)
@@ -428,7 +433,8 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// HP바 앵커를 머리 위로 올린다. 씬에 저작된 높이가 하한이라 그보다 작은 유닛의 바는 그 높이에 머문다.
+        /// HP바 앵커를 머리 위 한가운데로 옮기고, 자리 배수와 무관하게 바 크기를 일정하게 유지한다.
+        /// 씬에 저작된 높이가 하한이라 그보다 작은 유닛의 바는 그 높이에 머문다.
         /// </summary>
         /// <param name="body">이 트랜스폼 기준 실루엣 범위.</param>
         private void PositionHeadAnchor(Bounds body)
@@ -441,8 +447,14 @@ namespace Eclipse.View
             }
 
             var pos = _headAnchor.localPosition;
+            // 실루엣이 피벗에서 좌우로 치우친 적이 있어 높이뿐 아니라 가로도 그림 중앙에 맞춘다.
+            pos.x = body.center.x;
             pos.y = Mathf.Clamp(body.max.y + HeadAnchorMargin, _anchorBaseY, HeadAnchorMaxY);
             _headAnchor.localPosition = pos;
+
+            // 주역 자리는 배틀러를 확대해 세운다. 바까지 따라 커지면 이름표가 옆 유닛과 겹치므로 배수를 되돌린다.
+            var scale = transform.localScale;
+            _headAnchor.localScale = new Vector3(1f / scale.x, 1f / scale.y, 1f);
         }
 
         /// <summary>

@@ -58,7 +58,7 @@ namespace Eclipse.Tests
             var tuning = ScriptableObject.CreateInstance<EncounterTuningSO>();
             tuning.depths = depths;
             tuning.boss = Enemy("boss");
-            tuning.bossAdds = new[] { Enemy("add") };
+            tuning.eliteUnit = Enemy("mirea");
             tuning.mutations = new[]
             {
                 Mutation("mut_hp", StatType.Hp, 1.5f),
@@ -209,25 +209,9 @@ namespace Eclipse.Tests
         }
 
         [Test]
-        public void 정예는_마리수_상한_고정에_전원_변이_정예다()
-        {
-            var tuning = FocusedTuning(1, 3, 0f, Enemy("a"));
-            var encounterRng = new FixedRunRandom(0);
-            var enemies = new EncounterGenerator(tuning, encounterRng, new FixedRunRandom(9999, 0))
-                .Generate(1, isEliteEncounter: true).Enemies;
-
-            Assert.AreEqual(3, enemies.Count);
-            Assert.IsTrue(enemies.All(e => e.IsElite));
-            Assert.IsTrue(enemies.All(e => e.Mutation != null), "정예는 변이 확률 100%다");
-            Assert.AreEqual(3, encounterRng.Calls, "마리수가 고정이면 마리수 롤을 소비하지 않는다");
-        }
-
-        [Test]
         public void 정예_전용_유닛은_선봉에_서고_수하만_추첨한다()
         {
             var tuning = FocusedTuning(1, 3, 0f, Enemy("a"));
-            tuning.eliteUnit = Enemy("mirea");
-            tuning.eliteAddCount = 2;
             var encounterRng = new FixedRunRandom(0);
 
             var enemies = new EncounterGenerator(tuning, encounterRng, new FixedRunRandom(9999, 0))
@@ -242,12 +226,13 @@ namespace Eclipse.Tests
         }
 
         [Test]
-        public void 정예_전용_유닛이_겹치거나_수하_수가_범위를_벗어나면_예외()
+        public void 정예_전용_유닛이_비거나_겹치거나_수하_수가_범위를_벗어나면_예외()
         {
+            AssertInvalid(t => t.eliteUnit = null);
             AssertInvalid(t => t.eliteUnit = t.depths[0].allowedPool[0]);
             AssertInvalid(t => t.eliteUnit = t.boss);
-            AssertInvalid(t => { t.eliteUnit = Enemy("mirea"); t.eliteAddCount = -1; });
-            AssertInvalid(t => { t.eliteUnit = Enemy("mirea"); t.eliteAddCount = 4; });   // 선봉 포함 5기가 된다
+            AssertInvalid(t => t.eliteAddCount = -1);
+            AssertInvalid(t => t.eliteAddCount = 3);                                    // 선봉 포함 4기가 된다
         }
 
         [Test]
@@ -260,7 +245,7 @@ namespace Eclipse.Tests
             var enemies = new EncounterGenerator(tuning, encounterRng, mutationRng)
                 .Generate(EncounterGenerator.BossDepth, isEliteEncounter: true).Enemies;
 
-            CollectionAssert.AreEqual(new[] { "boss", "add" }, enemies.Select(e => e.Enemy.id).ToList());
+            CollectionAssert.AreEqual(new[] { "boss" }, enemies.Select(e => e.Enemy.id).ToList());
             Assert.IsTrue(enemies.All(e => e.Mutation == null && !e.IsElite));
             Assert.AreEqual(0, encounterRng.Calls + mutationRng.Calls, "고정 편성은 난수를 쓰지 않는다");
         }
@@ -319,14 +304,6 @@ namespace Eclipse.Tests
         {
             AssertInvalid(t => t.boss = null);
             AssertInvalid(t => t.boss = t.depths[0].allowedPool[0]);
-        }
-
-        [Test]
-        public void 보스_수하가_비었거나_보스와_겹치면_예외()
-        {
-            AssertInvalid(t => t.bossAdds = new EnemySO[] { null });
-            AssertInvalid(t => t.bossAdds = new[] { t.boss });                          // 보스가 2기가 된다
-            AssertInvalid(t => t.bossAdds = t.bossAdds.Append(t.boss).ToArray());
         }
 
         [Test]

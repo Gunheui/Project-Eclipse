@@ -33,11 +33,8 @@ namespace Eclipse.Data
         /// <summary> 일반 방의 깊이별 규칙. 깊이를 빠짐없이 한 번씩 덮어야 한다. </summary>
         public DepthPool[] depths;
 
-        /// <summary> 보스 방의 보스. 일반 풀에는 들어가지 않는다. </summary>
+        /// <summary> 보스 방의 보스. 혼자 서며 일반 풀에는 들어가지 않는다. </summary>
         public EnemySO boss;
-
-        /// <summary> 보스와 함께 나오는 수하. 보스 방 편성은 고정이다. </summary>
-        public EnemySO[] bossAdds;
 
         /// <summary> 변이 후보. 변이가 적중하면 이 중 하나를 균등 선택한다. </summary>
         public MutationSO[] mutations;
@@ -45,13 +42,10 @@ namespace Eclipse.Data
         /// <summary> 정예 인카운터가 받는 전 스탯 배수. </summary>
         public float eliteStatMultiplier = 1.15f;
 
-        /// <summary>
-        /// 정예 방 선봉에 고정으로 서는 적. 비면 정예 방이 깊이 풀 추첨만으로 채워진다.
-        /// 일반 풀·보스와 겹칠 수 없다.
-        /// </summary>
+        /// <summary> 정예 방 선봉에 고정으로 서는 적. 일반 풀·보스와 겹칠 수 없다. </summary>
         public EnemySO eliteUnit;
 
-        /// <summary> 정예 유닛과 함께 나오는 수하 마리수. 선봉까지 세어 전장 슬롯 4칸을 넘길 수 없다. </summary>
+        /// <summary> 정예 유닛과 함께 나오는 수하 마리수. 선봉까지 세어 미드보스 자리표 3칸을 넘길 수 없다. </summary>
         public int eliteAddCount = 2;
     }
 }

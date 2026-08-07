@@ -65,7 +65,7 @@ namespace Eclipse.Tests
                 })
                 .ToArray();
             tuning.boss = Enemy("boss");
-            tuning.bossAdds = new[] { Enemy("add") };
+            tuning.eliteUnit = Enemy("mirea");
             tuning.mutations = new[] { Mutation("mut_hp", StatType.Hp, 1.5f) };
             tuning.eliteStatMultiplier = 1.15f;
             return tuning;
