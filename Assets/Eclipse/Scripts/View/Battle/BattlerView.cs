@@ -84,6 +84,10 @@ namespace Eclipse.View
         private static readonly int HitStateId = Animator.StringToHash("Hit");
         private static readonly int DeadStateId = Animator.StringToHash("Dead");
 
+        // 클립 이름 끝에 붙는 모션 이름. 베이커가 유닛명_모션으로 굽는다.
+        private const string AttackClipSuffix = "_Attack";
+        private const string DeadClipSuffix = "_Dead";
+
         private readonly CompositeDisposable _bindings = new();
 
         // 아웃라인 오버라이드 전달용. 첫 사용 때 만들어 재사용한다(머티리얼 인스턴스 복제를 피한다).
@@ -111,6 +115,11 @@ namespace Eclipse.View
 
         // 이 유닛의 공격 클립에서 무기가 닿는 시점(초). 배속은 재생할 때 나눈다.
         private float _impactTime;
+
+        // 이 유닛의 공격·사망 클립 길이(초). 배정할 때 컨트롤러에서 한 번 읽어 둔다.
+        // 클립이 없으면 0이고, 그때는 그 모션을 기다리지 않는다.
+        private float _attackLength;
+        private float _deathLength;
 
         // 이번 시전의 타격 알림. 시전마다 새로 만들고 알린 뒤 비운다 —
         // 남겨 두면 다음 턴이 옛 알림을 그대로 물려받는다.
@@ -263,10 +272,23 @@ namespace Eclipse.View
             if (animator == null) return;
 
             animator.runtimeAnimatorController = controller;
+            _attackLength = ClipLength(controller, AttackClipSuffix);
+            _deathLength = ClipLength(controller, DeadClipSuffix);
             if (controller == null) return;
 
             // 한 방에 같은 적이 여러 마리 서면 대기 호흡이 한 몸처럼 맞아 떨어진다. 시작 위치를 흩어 어긋나게 둔다.
             animator.Play(IdleStateId, 0, UnityEngine.Random.value);
+        }
+
+        /// <summary>컨트롤러에 걸린 이 유닛의 클립에서 한 모션의 길이를 읽는다.</summary>
+        /// <param name="clipSuffix">클립 이름 끝에 붙는 모션 이름. 베이커가 유닛명_모션으로 굽는다.</param>
+        /// <returns>해당 모션이 없으면 0. 호출부는 그 모션을 기다리지 않는다.</returns>
+        private static float ClipLength(RuntimeAnimatorController controller, string clipSuffix)
+        {
+            if (controller == null) return 0f;
+            // 배열을 읽을 때마다 새로 만들어져서 재생마다 부르지 않고 배정할 때 한 번만 부른다.
+            var clip = controller.animationClips.FirstOrDefault(c => c != null && c.name.EndsWith(clipSuffix));
+            return clip != null ? clip.length : 0f;
         }
 
         /// <summary> 이번 턴 진행 중인 연출이 끝나면 완료된다. 진행 중인 게 없으면 즉시 완료. </summary>
@@ -616,11 +638,8 @@ namespace Eclipse.View
                 animator.gameObject.activeInHierarchy)
             {
                 animator.Play(DeadStateId, 0, 0f);
-                // Play는 다음 갱신에야 반영된다. 0초를 흘려 지금 상태로 만들어야 아래에서 사망 상태를 읽는다.
-                animator.Update(0f);
-                var state = animator.GetCurrentAnimatorStateInfo(0);
-                // 사망 상태가 없는 컨트롤러면 엉뚱한 상태가 잡힌다. 그 길이만큼 배틀러를 세워 두지 않는다.
-                if (state.shortNameHash == DeadStateId) seconds = state.length / Mathf.Max(1, _speed());
+                // 사망 클립이 없는 컨트롤러면 0이 되어 기다리지 않고 바로 숨긴다.
+                seconds = _deathLength / Mathf.Max(1, _speed());
             }
 
             try
@@ -733,22 +752,18 @@ namespace Eclipse.View
             if (animator == null || animator.runtimeAnimatorController == null) return;
 
             animator.Play(AttackStateId, 0, 0f);
-            // Play는 다음 갱신에야 반영된다. 0초를 흘려 지금 상태로 만들어야 아래에서 공격 상태를 읽는다.
-            animator.Update(0f);
+            // 공격 클립이 없는 컨트롤러면 기다릴 길이가 없다. 대기 길이를 대신 기다리면 엉뚱하게 붙잡는다.
+            if (_attackLength <= 0f) return;
 
-            var state = animator.GetCurrentAnimatorStateInfo(0);
-            // 공격 상태가 없는 컨트롤러면 대기 상태가 그대로 잡힌다. 그 길이를 기다리면 엉뚱하게 붙잡는다.
-            if (state.shortNameHash != AttackStateId) return;
-
-            // 상태 길이는 클립 원본 길이다. animator.speed가 반영되지 않아 배속으로 나눠야 실제 재생 시간이 된다.
+            // 클립 길이에는 animator.speed가 반영되지 않아 배속으로 나눠야 실제 재생 시간이 된다.
             int speed = Mathf.Max(1, _speed());
             // 굽힌 값이 클립보다 길면 모션 끝에 맞춘다. 클립을 갈아 끼우고 다시 굽기 전 상태가 여기 걸린다.
-            float impactSeconds = Mathf.Clamp(_impactTime, 0f, state.length);
+            float impactSeconds = Mathf.Clamp(_impactTime, 0f, _attackLength);
             try
             {
                 await UniTask.Delay(TimeSpan.FromSeconds(impactSeconds / speed), cancellationToken: ct);
                 CompleteImpact(impact);
-                await UniTask.Delay(TimeSpan.FromSeconds((state.length - impactSeconds) / speed),
+                await UniTask.Delay(TimeSpan.FromSeconds((_attackLength - impactSeconds) / speed),
                     cancellationToken: ct);
             }
             catch (OperationCanceledException)

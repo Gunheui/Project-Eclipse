@@ -152,10 +152,13 @@ namespace Eclipse.Tests
             // 피격 표시는 대기열을 거쳐 사망보다 늦게 나갈 수 있다. 그 순서를 그대로 만든다.
             _unit.RaiseHit(null, new EffectResult(EffectType.Damage, _model, 10));
 
-            yield return null;
+            // 게임 중에는 플레이어 루프가 애니메이터를 돌려 재생 지시가 반영되지만 에디트 모드에서는
+            // 아무도 돌리지 않는다. 상태를 읽으려면 테스트가 직접 한 번 평가시켜야 한다.
+            _animator.Update(0f);
 
             Assert.AreEqual(Animator.StringToHash("Dead"), _animator.GetCurrentAnimatorStateInfo(0).shortNameHash,
                 "늦은 피격이 사망 모션을 덮으면 배틀러가 죽다 만 자세로 사라진다");
+            yield return null;
         }
 
         private void Bind() => _view.Bind(_unit, () => 1, _ => new Bounds());
