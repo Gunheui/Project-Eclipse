@@ -2,7 +2,10 @@
     "name": "Eclipse.Editor",
     "rootNamespace": "Eclipse.EditorTools",
     "references": [
-        "Eclipse.Data"
+        "Eclipse.Data",
+        "Eclipse.View",
+        "UnityEngine.UI",
+        "Unity.TextMeshPro"
     ],
     "includePlatforms": [
         "Editor"

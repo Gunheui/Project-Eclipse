@@ -86,6 +86,7 @@ GameObject:
   - component: {fileID: 3363948077387404373}
   - component: {fileID: 4884817480998353235}
   - component: {fileID: 7843425929964960225}
+  - component: {fileID: 1904914920683206529}
   m_Layer: 0
   m_Name: OrderBadge
   m_TagString: Untagged
@@ -134,7 +135,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.43137255, g: 0.48235294, b: 0.9490196, a: 1}
+  m_Color: {r: 0.47843137, g: 0.41960785, b: 0.8784314, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -151,6 +152,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &1904914920683206529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 985082314969140906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 0
+  keepAlpha: 0
 --- !u!1 &1035022542447032948
 GameObject:
   m_ObjectHideFlags: 0
@@ -162,6 +178,7 @@ GameObject:
   - component: {fileID: 2157471817441530671}
   - component: {fileID: 874416138358773554}
   - component: {fileID: 5358506835484443228}
+  - component: {fileID: 6832207736588855547}
   m_Layer: 0
   m_Name: CardBg
   m_TagString: Untagged
@@ -209,7 +226,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.98039216, g: 0.9843137, b: 0.99607843, a: 1}
+  m_Color: {r: 0.9843137, g: 0.98039216, b: 0.99607843, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -226,6 +243,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &6832207736588855547
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1035022542447032948}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 6
+  keepAlpha: 0
 --- !u!1 &1801049191936762849
 GameObject:
   m_ObjectHideFlags: 0
@@ -237,6 +269,7 @@ GameObject:
   - component: {fileID: 8993367434654827659}
   - component: {fileID: 98479479958179697}
   - component: {fileID: 4482818269279141542}
+  - component: {fileID: 3745504412435064204}
   m_Layer: 0
   m_Name: RoleIcon
   m_TagString: Untagged
@@ -284,7 +317,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.3529412, g: 0.38039216, b: 0.5019608, a: 1}
+  m_Color: {r: 0.3647059, g: 0.34117648, b: 0.4745098, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -301,6 +334,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &3745504412435064204
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1801049191936762849}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 34
+  keepAlpha: 0
 --- !u!1 &2095488659365381859
 GameObject:
   m_ObjectHideFlags: 0
@@ -863,6 +911,7 @@ GameObject:
   - component: {fileID: 5303562606146400307}
   - component: {fileID: 3948278179502475894}
   - component: {fileID: 4825793532366515938}
+  - component: {fileID: 6952462591790158151}
   m_Layer: 0
   m_Name: Text
   m_TagString: Untagged
@@ -927,7 +976,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontColor: {r: 0.13725491, g: 0.15294118, b: 0.23921569, a: 1}
+  m_fontColor: {r: 0.14117648, g: 0.1254902, b: 0.22745098, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -989,6 +1038,21 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6952462591790158151
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6424967349745636321}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 33
+  keepAlpha: 0
 --- !u!1 &6683442990218155791
 GameObject:
   m_ObjectHideFlags: 0
@@ -1000,6 +1064,7 @@ GameObject:
   - component: {fileID: 917163411169948321}
   - component: {fileID: 361578348037526871}
   - component: {fileID: 6809537472358393611}
+  - component: {fileID: 3965460693987316679}
   m_Layer: 0
   m_Name: RarityFrame
   m_TagString: Untagged
@@ -1047,7 +1112,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.6901961, g: 0.41568628, b: 0.8509804, a: 1}
+  m_Color: {r: 0.6902, g: 0.4157, b: 0.851, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1064,6 +1129,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &3965460693987316679
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6683442990218155791}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 21
+  keepAlpha: 0
 --- !u!1 &7229468997455663692
 GameObject:
   m_ObjectHideFlags: 0
@@ -1075,6 +1155,7 @@ GameObject:
   - component: {fileID: 6072361671272115963}
   - component: {fileID: 3356142678384629584}
   - component: {fileID: 9149353998229391662}
+  - component: {fileID: 7144882479963177137}
   m_Layer: 0
   m_Name: LevelChip
   m_TagString: Untagged
@@ -1123,7 +1204,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9529412, g: 0.95686275, b: 0.9843137, a: 1}
+  m_Color: {r: 0.95849806, g: 0.9519059, b: 0.9836157, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1140,6 +1221,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &7144882479963177137
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7229468997455663692}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 36
+  keepAlpha: 0
 --- !u!1 &7466005588448420226
 GameObject:
   m_ObjectHideFlags: 0
@@ -1151,6 +1247,7 @@ GameObject:
   - component: {fileID: 8177047223648271285}
   - component: {fileID: 5052386992929019587}
   - component: {fileID: 2999927302964288750}
+  - component: {fileID: 7599091481911612415}
   m_Layer: 0
   m_Name: DashedBorder
   m_TagString: Untagged
@@ -1198,7 +1295,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.76862746, g: 0.7882353, b: 0.89411765, a: 1}
+  m_Color: {r: 0.79202354, g: 0.7748549, b: 0.87002355, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1215,6 +1312,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &7599091481911612415
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7466005588448420226}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 37
+  keepAlpha: 0
 --- !u!1 &7657607868153903862
 GameObject:
   m_ObjectHideFlags: 0
@@ -1226,6 +1338,7 @@ GameObject:
   - component: {fileID: 5003038779968073158}
   - component: {fileID: 2110821219602228962}
   - component: {fileID: 363843461587030729}
+  - component: {fileID: 2187200847133369828}
   m_Layer: 0
   m_Name: NameScrim
   m_TagString: Untagged
@@ -1273,7 +1386,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.13725491, g: 0.15294118, b: 0.23921569, a: 0.55}
+  m_Color: {r: 0, g: 0, b: 0, a: 0.55}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1290,6 +1403,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2187200847133369828
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7657607868153903862}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 39
+  keepAlpha: 1
 --- !u!1 &8566361403332015326
 GameObject:
   m_ObjectHideFlags: 0
@@ -1301,6 +1429,7 @@ GameObject:
   - component: {fileID: 7579578806966430432}
   - component: {fileID: 4065568530165076126}
   - component: {fileID: 6606941349997880475}
+  - component: {fileID: 6890841533351583319}
   m_Layer: 0
   m_Name: PlusIcon
   m_TagString: Untagged
@@ -1348,7 +1477,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.654902, g: 0.6745098, b: 0.76862746, a: 1}
+  m_Color: {r: 0.6627451, g: 0.6431373, b: 0.7529412, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -1365,3 +1494,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &6890841533351583319
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8566361403332015326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 35
+  keepAlpha: 0

@@ -330,6 +330,7 @@ GameObject:
   - component: {fileID: 417129385964087189}
   - component: {fileID: 1146886959281052453}
   - component: {fileID: 7998296460825293585}
+  - component: {fileID: 8925385879607534513}
   m_Layer: 0
   m_Name: Card2
   m_TagString: Untagged
@@ -420,10 +421,10 @@ MonoBehaviour:
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.96, g: 0.96, b: 0.996, a: 1}
-    m_PressedColor: {r: 0.924, g: 0.928, b: 0.992, a: 1}
-    m_SelectedColor: {r: 0.96, g: 0.96, b: 0.996, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_HighlightedColor: {r: 0.95849806, g: 0.9519059, b: 0.9836157, a: 1}
+    m_PressedColor: {r: 0.9254902, g: 0.9137255, b: 0.9843137, a: 1}
+    m_SelectedColor: {r: 0.95849806, g: 0.9519059, b: 0.9836157, a: 1}
+    m_DisabledColor: {r: 0.6627451, g: 0.6431373, b: 0.7529412, a: 0.5019608}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
@@ -488,6 +489,25 @@ MonoBehaviour:
   m_FlexibleWidth: 1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &8925385879607534513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2129018764232453353}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1515eb70380a3408d806dad29dd3b0d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedSelectable
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  normal: 5
+  highlighted: 36
+  pressed: 3
+  selected: 36
+  disabled: 35
+  keepAlpha: 1
 --- !u!1 &2213820997744673067
 GameObject:
   m_ObjectHideFlags: 0
@@ -1168,6 +1188,7 @@ GameObject:
   - component: {fileID: 4113535563069350289}
   - component: {fileID: 3858114683357383313}
   - component: {fileID: 8511661258697805074}
+  - component: {fileID: 3356563657801917330}
   m_Layer: 0
   m_Name: Card0
   m_TagString: Untagged
@@ -1258,10 +1279,10 @@ MonoBehaviour:
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.96, g: 0.96, b: 0.996, a: 1}
-    m_PressedColor: {r: 0.924, g: 0.928, b: 0.992, a: 1}
-    m_SelectedColor: {r: 0.96, g: 0.96, b: 0.996, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_HighlightedColor: {r: 0.95849806, g: 0.9519059, b: 0.9836157, a: 1}
+    m_PressedColor: {r: 0.9254902, g: 0.9137255, b: 0.9843137, a: 1}
+    m_SelectedColor: {r: 0.95849806, g: 0.9519059, b: 0.9836157, a: 1}
+    m_DisabledColor: {r: 0.6627451, g: 0.6431373, b: 0.7529412, a: 0.5019608}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
@@ -1326,6 +1347,25 @@ MonoBehaviour:
   m_FlexibleWidth: 1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &3356563657801917330
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3641275896642407782}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1515eb70380a3408d806dad29dd3b0d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedSelectable
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  normal: 5
+  highlighted: 36
+  pressed: 3
+  selected: 36
+  disabled: 35
+  keepAlpha: 1
 --- !u!1 &4834320147530141161
 GameObject:
   m_ObjectHideFlags: 0
@@ -1817,6 +1857,7 @@ GameObject:
   - component: {fileID: 3146697916661088569}
   - component: {fileID: 4405497704408176384}
   - component: {fileID: 1798489392623102741}
+  - component: {fileID: 1427771539134514095}
   m_Layer: 0
   m_Name: Card1
   m_TagString: Untagged
@@ -1907,10 +1948,10 @@ MonoBehaviour:
   m_Transition: 1
   m_Colors:
     m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.96, g: 0.96, b: 0.996, a: 1}
-    m_PressedColor: {r: 0.924, g: 0.928, b: 0.992, a: 1}
-    m_SelectedColor: {r: 0.96, g: 0.96, b: 0.996, a: 1}
-    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_HighlightedColor: {r: 0.95849806, g: 0.9519059, b: 0.9836157, a: 1}
+    m_PressedColor: {r: 0.9254902, g: 0.9137255, b: 0.9843137, a: 1}
+    m_SelectedColor: {r: 0.95849806, g: 0.9519059, b: 0.9836157, a: 1}
+    m_DisabledColor: {r: 0.6627451, g: 0.6431373, b: 0.7529412, a: 0.5019608}
     m_ColorMultiplier: 1
     m_FadeDuration: 0.1
   m_SpriteState:
@@ -1975,6 +2016,25 @@ MonoBehaviour:
   m_FlexibleWidth: 1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &1427771539134514095
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6930300312071360273}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1515eb70380a3408d806dad29dd3b0d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedSelectable
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  normal: 5
+  highlighted: 36
+  pressed: 3
+  selected: 36
+  disabled: 35
+  keepAlpha: 1
 --- !u!1 &7328797332230885042
 GameObject:
   m_ObjectHideFlags: 0
@@ -2440,6 +2500,7 @@ GameObject:
   - component: {fileID: 2437032909682459337}
   - component: {fileID: 5635812969382285995}
   - component: {fileID: 2113689647291946464}
+  - component: {fileID: 4702275990438923686}
   m_Layer: 0
   m_Name: CardPickPopup
   m_TagString: Untagged
@@ -2489,7 +2550,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9529412, g: 0.95686275, b: 0.9843137, a: 0.92}
+  m_Color: {r: 0.95849806, g: 0.9519059, b: 0.9836157, a: 0.92}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -2540,3 +2601,18 @@ MonoBehaviour:
   - {fileID: 5221512205678937252}
   - {fileID: 2966194977821097373}
   - {fileID: 5508334113594481020}
+--- !u!114 &4702275990438923686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9034171112015440302}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 36
+  keepAlpha: 1

@@ -22,6 +22,10 @@ namespace Eclipse.View
         // 게이지 자리보다 좌우로 넓게 그려 두고 넘치는 쪽은 위에 덮인 프레임이 가린다. 그래서 꽉 찼을 때만 양끝이 뾰족하다.
         [SerializeField] private RectTransform hpFillMask;
 
+        // HP 채움 색. 아군은 녹색, 적은 붉은색으로 Bind에서 갈라 칠한다.
+        // 소속이 실행 중에야 정해져 프리팹에 토큰으로 고정할 수 없는 자리다.
+        [SerializeField] private Image hpFill;
+
         // 실드 채움 이미지. HP 채움과 같은 구조지만 그 위에 그려지며, 폭과 위치가 모두 움직인다.
         [SerializeField] private RectTransform shieldFillMask;
 
@@ -86,6 +90,8 @@ namespace Eclipse.View
             _unit = unit;
             _onTapped = onTapped;
             if (nameLabel != null) nameLabel.text = unit.Name;
+            if (hpFill != null && theme != null)
+                hpFill.color = unit.IsAlly ? theme.battleAlly : theme.battleEnemy;
             SetActing(false);
 
             // 실드 구간의 위치가 현재 HP에 연동돼 있어 두 값이 함께 필요하다. 둘 다 같은 턴 신호에서

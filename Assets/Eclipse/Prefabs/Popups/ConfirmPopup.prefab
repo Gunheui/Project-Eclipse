@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2917054103418377654}
   - component: {fileID: 9148310163926107666}
   - component: {fileID: 4380871978619186512}
+  - component: {fileID: 3982803435197265286}
   m_Layer: 0
   m_Name: Body
   m_TagString: Untagged
@@ -76,7 +77,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontColor: {r: 0.13725491, g: 0.15294118, b: 0.23921569, a: 1}
+  m_fontColor: {r: 0.14117648, g: 0.1254902, b: 0.22745098, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -138,6 +139,21 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &3982803435197265286
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2734929421345916788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 33
+  keepAlpha: 0
 --- !u!1 &5296809900059356833
 GameObject:
   m_ObjectHideFlags: 0
@@ -149,6 +165,7 @@ GameObject:
   - component: {fileID: 923951605122752391}
   - component: {fileID: 3873650718587429553}
   - component: {fileID: 132155474216347502}
+  - component: {fileID: 7536186952677545494}
   m_Layer: 0
   m_Name: Title
   m_TagString: Untagged
@@ -213,7 +230,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontColor: {r: 0.13725491, g: 0.15294118, b: 0.23921569, a: 1}
+  m_fontColor: {r: 0.14117648, g: 0.1254902, b: 0.22745098, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -275,6 +292,21 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &7536186952677545494
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5296809900059356833}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 33
+  keepAlpha: 0
 --- !u!1 &7966767676896398335
 GameObject:
   m_ObjectHideFlags: 0
@@ -287,6 +319,7 @@ GameObject:
   - component: {fileID: 5105755541233910794}
   - component: {fileID: 9194737095549530291}
   - component: {fileID: 3737147001940249472}
+  - component: {fileID: 8534618835932162998}
   m_Layer: 0
   m_Name: ConfirmPopup
   m_TagString: Untagged
@@ -338,7 +371,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9529412, g: 0.95686275, b: 0.9843137, a: 0.92156863}
+  m_Color: {r: 0.95849806, g: 0.9519059, b: 0.9836157, a: 0.92156863}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -371,6 +404,21 @@ MonoBehaviour:
   bodyText: {fileID: 4380871978619186512}
   cancelButton: {fileID: 1928500297649457146}
   confirmButton: {fileID: 1535328957966100254}
+--- !u!114 &8534618835932162998
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7966767676896398335}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 36
+  keepAlpha: 1
 --- !u!1001 &6190304363814167879
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -19,7 +19,11 @@ MonoBehaviour:
   primaryDisabled: {r: 0.7607843, g: 0.7607843, b: 0.80784315, a: 1}
   onPrimary: {r: 1, g: 1, b: 1, a: 1}
   surface2: {r: 0.96862745, g: 0.96862745, b: 0.98039216, a: 1}
+  surface1: {r: 0.85913336, g: 0.8662549, b: 0.8860314, a: 1}
   borderDefault: {r: 0.4862745, g: 0.5176471, b: 0.5647059, a: 1}
+  borderStrong: {r: 0.53963923, g: 0.55915296, b: 0.6062118, a: 1}
+  surfaceDark: {r: 0.093333334, g: 0.093333334, b: 0.11529412, a: 1}
+  scrim: {r: 0, g: 0, b: 0, a: 1}
   positiveSubtle: {r: 0.9098, g: 0.9529, b: 0.9333, a: 1}
   onPositiveSubtle: {r: 0.1765, g: 0.4078, b: 0.3176, a: 1}
   dangerSubtle: {r: 0.9843, g: 0.9176, b: 0.9098, a: 1}

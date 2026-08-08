@@ -98,6 +98,7 @@ GameObject:
   - component: {fileID: 1936689200763113074}
   - component: {fileID: 1420086275572815713}
   - component: {fileID: 798871361040418763}
+  - component: {fileID: 231130287892038360}
   m_Layer: 0
   m_Name: MaxLabel
   m_TagString: Untagged
@@ -162,7 +163,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontColor: {r: 0.91, g: 0.66, b: 0.24, a: 1}
+  m_fontColor: {r: 0.9098, g: 0.7216, b: 0.2941, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -244,6 +245,21 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &231130287892038360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 931988776152073777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 22
+  keepAlpha: 0
 --- !u!1 &1206838703121951378
 GameObject:
   m_ObjectHideFlags: 0

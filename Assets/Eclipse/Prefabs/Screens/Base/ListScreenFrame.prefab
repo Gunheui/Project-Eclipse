@@ -74,6 +74,7 @@ GameObject:
   - component: {fileID: 9172981614919490306}
   - component: {fileID: 2907127051315955663}
   - component: {fileID: 1304030838797594473}
+  - component: {fileID: 6720686286642997455}
   m_Layer: 0
   m_Name: Icon
   m_TagString: Untagged
@@ -121,7 +122,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.1373, g: 0.1529, b: 0.2392, a: 1}
+  m_Color: {r: 0.14117648, g: 0.1254902, b: 0.22745098, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -138,6 +139,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &6720686286642997455
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2045347479990058343}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 33
+  keepAlpha: 0
 --- !u!1 &2369439393837212668
 GameObject:
   m_ObjectHideFlags: 0
@@ -151,6 +167,7 @@ GameObject:
   - component: {fileID: 4649677016078310299}
   - component: {fileID: 4601037935798396070}
   - component: {fileID: 7415594642287467212}
+  - component: {fileID: 7218479316494846401}
   m_Layer: 0
   m_Name: Btn_Back
   m_TagString: Untagged
@@ -200,7 +217,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9059, g: 0.9137, b: 0.9882, a: 1}
+  m_Color: {r: 0.9254902, g: 0.9137255, b: 0.9843137, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -281,6 +298,21 @@ MonoBehaviour:
   m_FlexibleWidth: 0
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &7218479316494846401
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2369439393837212668}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 3
+  keepAlpha: 0
 --- !u!1 &2492861061437397045
 GameObject:
   m_ObjectHideFlags: 0
@@ -573,6 +605,7 @@ GameObject:
   - component: {fileID: 1516413714216203729}
   - component: {fileID: 7049757748141499742}
   - component: {fileID: 6078934502420831327}
+  - component: {fileID: 4310528134268671355}
   m_Layer: 0
   m_Name: ListPanel
   m_TagString: Untagged
@@ -622,7 +655,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.98039216, g: 0.9843137, b: 0.99607843, a: 1}
+  m_Color: {r: 0.9843137, g: 0.98039216, b: 0.99607843, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -685,6 +718,21 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &4310528134268671355
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5801982442209447957}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 6
+  keepAlpha: 0
 --- !u!1 &6507917423273739762
 GameObject:
   m_ObjectHideFlags: 0
@@ -696,6 +744,7 @@ GameObject:
   - component: {fileID: 2431122647373448784}
   - component: {fileID: 1600458941054131916}
   - component: {fileID: 3061396369493125214}
+  - component: {fileID: 1511578624445593157}
   m_Layer: 0
   m_Name: ListScreenFrame
   m_TagString: Untagged
@@ -744,7 +793,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9176, g: 0.9255, b: 0.9686, a: 1}
+  m_Color: {r: 0.95849806, g: 0.9519059, b: 0.9836157, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -761,6 +810,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &1511578624445593157
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6507917423273739762}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 36
+  keepAlpha: 0
 --- !u!1 &7141481518225728393
 GameObject:
   m_ObjectHideFlags: 0
@@ -773,6 +837,7 @@ GameObject:
   - component: {fileID: 2037098261862879993}
   - component: {fileID: 6970582210127969494}
   - component: {fileID: 1582346138143631344}
+  - component: {fileID: 7427814024994261154}
   m_Layer: 0
   m_Name: Title
   m_TagString: Untagged
@@ -837,7 +902,7 @@ MonoBehaviour:
   m_fontColor32:
     serializedVersion: 2
     rgba: 4282197795
-  m_fontColor: {r: 0.1373, g: 0.1529, b: 0.2392, a: 1}
+  m_fontColor: {r: 0.14117648, g: 0.1254902, b: 0.22745098, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -919,6 +984,21 @@ MonoBehaviour:
   m_FlexibleWidth: 0
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &7427814024994261154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7141481518225728393}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93be9fd794dab4358b3b0e030faaa094, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.Theme.ThemedGraphic
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  token: 33
+  keepAlpha: 0
 --- !u!1 &8970381893917152039
 GameObject:
   m_ObjectHideFlags: 0

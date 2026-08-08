@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Eclipse.View.Theme
@@ -18,9 +19,17 @@ namespace Eclipse.View.Theme
         public Color primaryDisabled = new Color(0.7804f, 0.7922f, 0.9098f); // #C7CAE8
         public Color onPrimary = Color.white;                               // #FFFFFF
 
+        // 표면과 테두리는 Material 3의 라이트 스킴 톤 계단을 따른다.
+        // surface2 = surface(98), surface1 = surfaceContainerLow(96), borderDefault = outlineVariant 근처,
+        // borderStrong = outlineVariant(80). surfaceDark는 일러스트나 전장 위에 까는 어두운 판이라
+        // 톤이 라이트든 다크든 항상 어둡다. scrim은 tone 0, 즉 검정이며 투명도는 쓰는 자리가 정한다.
         [Header("Surface")]
         public Color surface2 = new Color(0.9804f, 0.9843f, 0.9961f);        // #FAFBFE
+        public Color surface1 = new Color(0.9529f, 0.9569f, 0.9843f);        // #F3F4FB
         public Color borderDefault = new Color(0.8588f, 0.8706f, 0.9412f);   // #DBDEF0
+        public Color borderStrong = new Color(0.7686f, 0.7882f, 0.8941f);    // #C4C9E4
+        public Color surfaceDark = new Color(0.0902f, 0.1020f, 0.1412f);     // #171A24
+        public Color scrim = Color.black;                                    // #000000
 
         [Header("Semantic")]
         public Color positiveSubtle = new Color(0.9098f, 0.9529f, 0.9333f);   // #E8F3EE
@@ -74,5 +83,61 @@ namespace Eclipse.View.Theme
         public Color textHigh = new Color(0.1373f, 0.1529f, 0.2392f);        // #23273D
         public Color textMedium = new Color(0.3529f, 0.3804f, 0.5020f);      // #5A6180
         public Color textDisabled = new Color(0.6549f, 0.6745f, 0.7686f);    // #A7ACC4
+
+        /// <summary>토큰이 가리키는 색을 돌려준다.</summary>
+        /// <exception cref="ArgumentOutOfRangeException">대응 필드가 없는 토큰. 색을 대신 흘려보내지 않는다.</exception>
+        // 필드명 문자열이나 리플렉션으로 잇지 않고 손으로 나열한다. 필드를 리네임해도 컴파일러가 잡아 준다.
+        public Color Resolve(UIThemeToken token) => token switch
+        {
+            UIThemeToken.Primary => primary,
+            UIThemeToken.PrimaryHover => primaryHover,
+            UIThemeToken.PrimaryPressed => primaryPressed,
+            UIThemeToken.PrimarySubtle => primarySubtle,
+            UIThemeToken.PrimaryDisabled => primaryDisabled,
+            UIThemeToken.OnPrimary => onPrimary,
+            UIThemeToken.Surface2 => surface2,
+            UIThemeToken.Surface1 => surface1,
+            UIThemeToken.BorderDefault => borderDefault,
+            UIThemeToken.BorderStrong => borderStrong,
+            UIThemeToken.SurfaceDark => surfaceDark,
+            UIThemeToken.Scrim => scrim,
+            UIThemeToken.PositiveSubtle => positiveSubtle,
+            UIThemeToken.OnPositiveSubtle => onPositiveSubtle,
+            UIThemeToken.DangerSubtle => dangerSubtle,
+            UIThemeToken.OnDangerSubtle => onDangerSubtle,
+            UIThemeToken.CardGradeCommon => cardGradeCommon,
+            UIThemeToken.CardGradeRare => cardGradeRare,
+            UIThemeToken.CardGradeEpic => cardGradeEpic,
+            UIThemeToken.CardGradeUnique => cardGradeUnique,
+            UIThemeToken.OnCardGradeCommon => onCardGradeCommon,
+            UIThemeToken.OnCardGradeRare => onCardGradeRare,
+            UIThemeToken.OnCardGradeEpic => onCardGradeEpic,
+            UIThemeToken.OnCardGradeUnique => onCardGradeUnique,
+            UIThemeToken.RarityR => rarityR,
+            UIThemeToken.RaritySR => raritySR,
+            UIThemeToken.RaritySSR => raritySSR,
+            UIThemeToken.BattleDamage => battleDamage,
+            UIThemeToken.BattleHeal => battleHeal,
+            UIThemeToken.BattleDot => battleDot,
+            UIThemeToken.BattleRegen => battleRegen,
+            UIThemeToken.BattleShield => battleShield,
+            UIThemeToken.BattleAlly => battleAlly,
+            UIThemeToken.BattleEnemy => battleEnemy,
+            UIThemeToken.BattleEffectBeneficial => battleEffectBeneficial,
+            UIThemeToken.BattleEffectHarmful => battleEffectHarmful,
+            UIThemeToken.BattleEffectOverflow => battleEffectOverflow,
+            UIThemeToken.TextHigh => textHigh,
+            UIThemeToken.TextMedium => textMedium,
+            UIThemeToken.TextDisabled => textDisabled,
+            _ => throw new ArgumentOutOfRangeException(nameof(token), token, "UIThemeSO에 대응 필드가 없는 토큰"),
+        };
+
+#if UNITY_EDITOR
+        /// <summary>인스펙터에서 색이 바뀐 직후 발행한다. 에디터 미리보기 갱신이 구독한다.</summary>
+        // 구독자는 Editor 어셈블리에 있어 여기서 직접 부를 수 없다. 알림만 내보내고 갱신은 저쪽이 맡는다.
+        public static event Action<UIThemeSO> Changed;
+
+        private void OnValidate() => Changed?.Invoke(this);
+#endif
     }
 }
