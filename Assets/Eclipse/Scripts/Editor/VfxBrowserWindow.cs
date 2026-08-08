@@ -31,6 +31,9 @@ namespace Eclipse.EditorTools
         float _loopLength = 1f;
         double _lastTick;
 
+        bool _twoD;
+        bool _paused;
+        Vector3 _spin; // 이펙트에 입혀 보는 회전. 정한 값을 VfxLayer.rotation에 그대로 옮긴다.
         float _yaw = 20f;
         float _pitch = 10f;
         float _baseDistance = 6f; // 이펙트 크기에 맞춰 자동 계산한 기준 거리 (맞춤 버튼의 기준)
@@ -57,9 +60,13 @@ namespace Eclipse.EditorTools
             _lastTick = now;
 
             if (_instance == null) return;
-            _time += delta;
-            _pendingDelta += delta;
-            if (_time > _loopLength) Restart();
+            if (!_paused)
+            {
+                _time += delta;
+                _pendingDelta += delta;
+                if (_time > _loopLength) Restart();
+            }
+
             Repaint();
         }
 
@@ -105,6 +112,8 @@ namespace Eclipse.EditorTools
                 _search = GUILayout.TextField(_search, EditorStyles.toolbarSearchField, GUILayout.Width(240));
                 GUILayout.Label($"{_entries.Count}개", EditorStyles.miniLabel);
                 GUILayout.FlexibleSpace();
+                var flat = GUILayout.Toggle(_twoD, "2D", EditorStyles.toolbarButton, GUILayout.Width(34));
+                if (flat != _twoD) SetTwoD(flat);
                 if (GUILayout.Button("새로고침", EditorStyles.toolbarButton, GUILayout.Width(70))) Rescan();
             }
         }
@@ -167,7 +176,18 @@ namespace Eclipse.EditorTools
                     GUILayout.Label($"{zoom:0.0}x", EditorStyles.miniLabel, GUILayout.Width(34));
                     if (GUILayout.Button("맞춤 (F)", GUILayout.Width(60))) FrameInstance();
                     GUILayout.FlexibleSpace();
+                    GUILayout.Label("시점", EditorStyles.miniLabel, GUILayout.Width(28));
+                    EditorGUI.BeginChangeCheck();
+                    var seek = GUILayout.HorizontalSlider(_time, 0f, _loopLength, GUILayout.Width(150));
+                    // 손을 떼자마자 다시 흘러가면 잡은 순간을 볼 수 없다.
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        _paused = true;
+                        SeekTo(seek);
+                    }
+
                     GUILayout.Label($"{_time:0.00}s / {_loopLength:0.00}s", EditorStyles.miniLabel, GUILayout.Width(90));
+                    if (GUILayout.Button(_paused ? "재생" : "멈춤", GUILayout.Width(50))) _paused = !_paused;
                     if (GUILayout.Button("처음부터", GUILayout.Width(70))) Restart();
                     if (GUILayout.Button("정면", GUILayout.Width(50)))
                     {
@@ -177,8 +197,28 @@ namespace Eclipse.EditorTools
                     }
                 }
 
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    GUILayout.Label("이펙트 회전", EditorStyles.miniLabel, GUILayout.Width(64));
+                    EditorGUI.BeginChangeCheck();
+                    _spin = EditorGUILayout.Vector3Field(GUIContent.none, _spin, GUILayout.Width(230));
+                    if (GUILayout.Button("세우기", GUILayout.Width(56))) _spin = new Vector3(-90f, 0f, 0f);
+                    if (GUILayout.Button("되돌리기", GUILayout.Width(66))) _spin = Vector3.zero;
+                    // 눕힌 이펙트는 화면 밖으로 밀려난다. 각도를 건드릴 때마다 다시 잡아 준다.
+                    if (EditorGUI.EndChangeCheck() && _instance != null)
+                    {
+                        _instance.transform.rotation = Quaternion.Euler(_spin);
+                        FrameInstance();
+                    }
+
+                    GUILayout.FlexibleSpace();
+                    GUILayout.Label("이 값을 VfxLayer.rotation에 그대로 넣는다.", EditorStyles.miniLabel);
+                }
+
                 EditorGUILayout.LabelField(
-                    "좌드래그 회전 · 휠클릭 이동 · 우드래그 시점(+WASD/QE) · 휠 확대 · F 맞춤",
+                    _twoD
+                        ? "Shift+드래그 이펙트 회전 · 드래그 이동 · 휠 확대 · F 맞춤"
+                        : "Shift+드래그 이펙트 회전 · 좌드래그 시야 회전 · 휠클릭 이동 · 우드래그 시점(+WASD/QE) · 휠 확대 · F 맞춤",
                     EditorStyles.miniLabel);
 
                 using (new EditorGUILayout.HorizontalScope())
@@ -195,7 +235,9 @@ namespace Eclipse.EditorTools
 
         Quaternion CameraRotation => Quaternion.Euler(_pitch, _yaw, 0f);
 
-        Vector3 CameraPosition => _pivot - CameraRotation * Vector3.forward * _distance;
+        // 직교에서는 물러선 거리가 크기를 바꾸지 않는다. 앞뒤로 긴 이펙트가 카메라 뒤로 넘어가 잘리지 않게 넉넉히 뺀다.
+        Vector3 CameraPosition
+            => _pivot - CameraRotation * Vector3.forward * (_twoD ? Mathf.Max(_distance, 250f) : _distance);
 
         // Scene 뷰와 같은 손버릇: 좌드래그 궤도회전 · 휠클릭 이동 · 우드래그 시점회전(+WASDQE) · 휠 확대 · F 맞춤
         void HandleNavigation(Rect rect)
@@ -231,21 +273,36 @@ namespace Eclipse.EditorTools
             }
         }
 
+        // 정면 직교로 전환한다. 각도를 0으로 눕혀야 이동·플라이스루가 쓰는 CameraRotation이 화면 축과 맞는다.
+        void SetTwoD(bool on)
+        {
+            _twoD = on;
+            _yaw = 0f;
+            _pitch = 0f;
+            // 앞서 돌리고 끌던 피벗과 거리를 그대로 두면 전환한 화면에 이펙트가 엉뚱한 자리에 선다.
+            if (_instance != null) FrameInstance();
+        }
+
         void ApplyDrag(Event e)
         {
             switch (_dragButton)
             {
+                case 0 when e.shift:
+                    Spin(e.delta);
+                    break;
                 case 1 when e.alt:
                     Zoom(-e.delta.x - e.delta.y);
                     break;
-                case 1:
+                case 1 when !_twoD:
                     LookAround(e.delta);
                     break;
                 case 2:
+                case 1:
                     Pan(e.delta);
                     break;
                 default:
-                    Orbit(e.delta);
+                    if (_twoD) Pan(e.delta);
+                    else Orbit(e.delta);
                     break;
             }
         }
@@ -275,6 +332,14 @@ namespace Eclipse.EditorTools
 
             _pivot += CameraRotation * direction * (_distance * 0.06f);
             return true;
+        }
+
+        // 화면 축으로 돌린다. 가로 드래그가 세로축, 세로 드래그가 가로축이다. 결과 각도는 위 필드에 그대로 뜬다.
+        void Spin(Vector2 delta)
+        {
+            _spin.y += delta.x * 0.5f;
+            _spin.x += delta.y * 0.5f;
+            if (_instance != null) _instance.transform.rotation = Quaternion.Euler(_spin);
         }
 
         void Orbit(Vector2 delta)
@@ -341,14 +406,24 @@ namespace Eclipse.EditorTools
             return count;
         }
 
-        void Restart()
+        void Restart() => SeekTo(0f);
+
+        /// <summary>원하는 시점으로 건너뛴다. 뒤로 가려면 처음부터 다시 굴리는 수밖에 없어 매번 다시 세운다.</summary>
+        void SeekTo(float time)
         {
-            _time = 0f;
+            _time = Mathf.Clamp(time, 0f, _loopLength);
             _pendingDelta = 0f;
-            foreach (var ps in _particles) ps.Simulate(0f, false, true, false);
+            foreach (var ps in _particles) ps.Simulate(_time, false, true, false);
+
             foreach (var animator in _animators)
-                if (animator.runtimeAnimatorController != null)
-                    animator.Play(0, 0, 0f);
+            {
+                var controller = animator.runtimeAnimatorController;
+                if (controller == null) continue;
+                var clips = controller.animationClips;
+                var length = clips is { Length: > 0 } ? Mathf.Max(clips[0].length, 0.01f) : 1f;
+                animator.Play(0, 0, _time / length);
+                animator.Update(0f);
+            }
         }
 
         // 파티클은 t=0에 아무것도 없어 크기를 알 수 없다. 중간 시점까지 시뮬레이션한 렌더러 bounds로 카메라 거리를 잡는다.
@@ -369,7 +444,10 @@ namespace Eclipse.EditorTools
                 }
             }
 
-            var size = found ? bounds.size.magnitude : 2f;
+            // 정면 직교에서는 깊이가 화면에 안 보인다. 앞뒤로 긴 이펙트까지 세면 쓸데없이 멀리 물러선다.
+            var size = !found ? 2f
+                : _twoD ? Mathf.Max(bounds.size.x, bounds.size.y)
+                : bounds.size.magnitude;
             _baseDistance = Mathf.Clamp(size * 1.6f, 2f, 80f);
             _distance = _baseDistance;
             _pivot = found ? bounds.center : Vector3.up * 0.5f;
@@ -415,6 +493,10 @@ namespace Eclipse.EditorTools
         {
             if (Event.current.type != EventType.Repaint || _instance == null || _preview == null) return;
 
+            _instance.transform.rotation = Quaternion.Euler(_spin);
+            _preview.camera.orthographic = _twoD;
+            // 직교에서는 거리가 화면 크기를 바꾸지 않으므로, 같은 손잡이로 줌이 되게 시야 높이로 옮겨 준다.
+            if (_twoD) _preview.camera.orthographicSize = Mathf.Max(_distance * 0.5f, 0.01f);
             _preview.camera.transform.rotation = CameraRotation;
             _preview.camera.transform.position = CameraPosition;
 
@@ -439,6 +521,7 @@ namespace Eclipse.EditorTools
         {
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(_selected.Asset);
             Undo.RegisterCreatedObjectUndo(instance, $"Place {_selected.Name}");
+            instance.transform.rotation = Quaternion.Euler(_spin);
 
             if (parent != null)
             {

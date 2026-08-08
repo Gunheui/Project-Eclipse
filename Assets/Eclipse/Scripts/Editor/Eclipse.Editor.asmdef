@@ -1,6 +1,9 @@
 {
     "name": "Eclipse.Editor",
     "rootNamespace": "Eclipse.EditorTools",
+    "references": [
+        "Eclipse.Data"
+    ],
     "includePlatforms": [
         "Editor"
     ]
