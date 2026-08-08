@@ -17,10 +17,10 @@ namespace Eclipse.View
     public class CardPickPopupView : MonoBehaviour, IPopup<BuffCard>
     {
         [SerializeField] private UIThemeSO theme;
+        [SerializeField] private TMP_Text titleLabel;
         [SerializeField] private Button[] cardButtons;
         [SerializeField] private TMP_Text[] cardNames;
         [SerializeField] private TMP_Text[] cardEffects;
-        [SerializeField] private TMP_Text[] cardTargets;
         [SerializeField] private Image[] gradeBadges;
         [SerializeField] private TMP_Text[] gradeLabels;
 
@@ -34,6 +34,10 @@ namespace Eclipse.View
         {
             var candidates = flow.Offer.CurrentValue.Cards;
 
+            // 대상은 세 장이 공유하므로 카드마다 적지 않고 제목 한 줄이 대표한다.
+            if (titleLabel != null && candidates != null && candidates.Count > 0)
+                titleLabel.text = RunTexts.CardPickTitle(candidates[0].Target);
+
             for (int i = 0; i < cardButtons.Length; i++)
             {
                 // 후보보다 카드 칸이 많으면 남는 칸은 끈다.
@@ -46,7 +50,6 @@ namespace Eclipse.View
                 var option = candidates[i];
                 SetText(cardNames, i, option.DisplayName);
                 SetText(cardEffects, i, option.Effect);
-                SetText(cardTargets, i, option.Target);
                 SetText(gradeLabels, i, option.GradeLabel);
                 if (gradeLabels != null && i < gradeLabels.Length)
                     gradeLabels[i].color = TextColorOf(option.Grade);

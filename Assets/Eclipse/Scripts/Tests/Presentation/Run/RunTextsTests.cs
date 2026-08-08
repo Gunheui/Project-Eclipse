@@ -92,6 +92,13 @@ namespace Eclipse.Tests
         }
 
         [Test]
+        public void 제목은_대상_이름을_앞에_달고_저주만_다른_문구를_쓴다()
+        {
+            Assert.AreEqual("아린 버프 카드 선택", RunTexts.CardPickTitle("아린"));
+            Assert.AreEqual("저주 카드 선택", RunTexts.CardPickTitle(RunTexts.EnemyTarget));
+        }
+
+        [Test]
         public void 치명_계열만_퍼센트포인트_단위로_적힌다()
         {
             Assert.AreEqual("치명확률 +6%p",

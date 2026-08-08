@@ -71,6 +71,13 @@ namespace Eclipse.Presentation
         }
 
         /// <summary>
+        /// 3택1 팝업 제목. 대상 파티원 이름을 앞에 붙이고, 붙을 캐릭터가 없는 저주는 다른 문구를 쓴다.
+        /// </summary>
+        /// <param name="target"> 카드가 붙는 대상. <see cref="EnemyTarget"/>이면 저주 픽이다. </param>
+        public static string CardPickTitle(string target)
+            => target == EnemyTarget ? "저주 카드 선택" : $"{target} 버프 카드 선택";
+
+        /// <summary>
         /// 카드 효과 표기. 유니크는 축이 없어 적어 둔 설명을 그대로 쓴다.
         /// 누구에게 붙는지는 <see cref="CardOption.Target"/>이 따로 실으므로 여기 적지 않는다.
         /// </summary>
