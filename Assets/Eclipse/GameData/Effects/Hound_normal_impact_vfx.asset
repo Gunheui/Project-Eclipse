@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ee574ae48e5e243528c1248d998cbba8, type: 3}
-  m_Name: Mirea_cast_vfx
+  m_Name: Hound_normal_impact_vfx
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.VfxSpec
   layers:
-  - prefab: {fileID: 3432958286849152088, guid: 87ee7299dd44ed747af24dbb91bcd33b, type: 3}
-    anchor: 0
+  - prefab: {fileID: 5019633862878468090, guid: 23202d51f0a96974e8bb5da82667079b, type: 3}
+    anchor: 1
     offset: {x: 0, y: 0}
-    startDelay: 0.0
-    rotation: {x: -70, y: 0, z: 0}
-    scale: 1.5
-    overrideColor: 1
-    color: {r: 0.23, g: 0.06, b: 0.29, a: 1}
-    sortingOrder: 5
+    startDelay: 0
+    rotation: {x: 0, y: 0, z: 0}
+    scale: 0.2
+    overrideColor: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    sortingOrder: 15
     repeatCount: 1
     repeatInterval: 0.15
-    awaitSeconds: 0.35
+    awaitSeconds: 0.4
     holdTurns: 0
     holdMode: 0

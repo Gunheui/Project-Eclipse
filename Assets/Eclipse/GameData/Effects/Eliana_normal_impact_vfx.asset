@@ -41,3 +41,17 @@ MonoBehaviour:
     awaitSeconds: 0.5
     holdTurns: 0
     holdMode: 0
+  - prefab: {fileID: 2433282508537954060, guid: 3ef3ae421f71c5c4e97fe12dc2fc6312, type: 3}
+    anchor: 1
+    offset: {x: 0, y: 0}
+    startDelay: 0.15
+    rotation: {x: 0, y: 0, z: 0}
+    scale: 0.28
+    overrideColor: 0
+    color: {r: 1, g: 1, b: 1, a: 1}
+    sortingOrder: 15
+    repeatCount: 1
+    repeatInterval: 0.15
+    awaitSeconds: 0.45
+    holdTurns: 0
+    holdMode: 0

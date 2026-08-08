@@ -17,7 +17,7 @@ MonoBehaviour:
     anchor: 3
     offset: {x: 0, y: 0}
     startDelay: 0
-    rotation: {x: 0, y: 0, z: 0}
+    rotation: {x: -20, y: 0, z: 0}
     scale: 0.52
     overrideColor: 0
     color: {r: 1, g: 1, b: 1, a: 1}
@@ -27,12 +27,12 @@ MonoBehaviour:
     awaitSeconds: 0.6
     holdTurns: 0
     holdMode: 0
-  - prefab: {fileID: 1289543790355709915, guid: b99922c2f59b1a542bdd06ae8bee47ae, type: 3}
+  - prefab: {fileID: 7314526620251459061, guid: ccf28ea29cf499744ac31bab90073aba, type: 3}
     anchor: 1
     offset: {x: 0, y: 0}
     startDelay: 0.15
     rotation: {x: 0, y: 0, z: 0}
-    scale: 0.85
+    scale: 0.176
     overrideColor: 0
     color: {r: 1, g: 1, b: 1, a: 1}
     sortingOrder: 15

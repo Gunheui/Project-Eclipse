@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: Barkan_ultimate_impact_vfx
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.VfxSpec
   layers:
-  - prefab: {fileID: 1116249604692860204, guid: 8a02c4042c68dd244abad8cf394dab42, type: 3}
+  - prefab: {fileID: 1394861032749976878, guid: d377d718b251d974eb1a4d788d2e8854, type: 3}
     anchor: 1
     offset: {x: 0, y: 0}
     startDelay: 0
     rotation: {x: 0, y: 0, z: 0}
-    scale: 0.12
+    scale: 0.14
     overrideColor: 1
     color: {r: 0.3529412, g: 0.17254902, b: 0.627451, a: 1}
     sortingOrder: 15

@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: Arin_normal_cast_vfx
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.VfxSpec
   layers:
-  - prefab: {fileID: 3744133877081091469, guid: a2a060732547fe64581bb0cb3c2bdf1d, type: 3}
+  - prefab: {fileID: 3432958286849152088, guid: 87ee7299dd44ed747af24dbb91bcd33b, type: 3}
     anchor: 0
     offset: {x: 0, y: 0}
     startDelay: 0
-    rotation: {x: 0, y: 0, z: 0}
-    scale: 0.2
+    rotation: {x: -70, y: 0, z: 0}
+    scale: 1.5
     overrideColor: 1
     color: {r: 0.6509804, g: 0.34901962, b: 0.9490196, a: 1}
     sortingOrder: 5

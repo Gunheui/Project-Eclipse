@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ee574ae48e5e243528c1248d998cbba8, type: 3}
-  m_Name: Mirea_cast_vfx
+  m_Name: Barkan_normal_cast_vfx
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.VfxSpec
   layers:
-  - prefab: {fileID: 3432958286849152088, guid: 87ee7299dd44ed747af24dbb91bcd33b, type: 3}
+  - prefab: {fileID: 3377181292992421420, guid: 48c5715f9603c3842a353516a8baefbb, type: 3}
     anchor: 0
     offset: {x: 0, y: 0}
-    startDelay: 0.0
-    rotation: {x: -70, y: 0, z: 0}
-    scale: 1.5
+    startDelay: 0
+    rotation: {x: -20, y: 0, z: 0}
+    scale: 0.51
     overrideColor: 1
-    color: {r: 0.23, g: 0.06, b: 0.29, a: 1}
+    color: {r: 0.3529412, g: 0.17254902, b: 0.627451, a: 1}
     sortingOrder: 5
     repeatCount: 1
     repeatInterval: 0.15
-    awaitSeconds: 0.35
+    awaitSeconds: 0.5
     holdTurns: 0
     holdMode: 0

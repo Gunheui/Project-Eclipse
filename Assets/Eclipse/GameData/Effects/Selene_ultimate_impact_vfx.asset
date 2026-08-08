@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.VfxSpec
   layers:
   - prefab: {fileID: 7155335147208632822, guid: 97c43495f80a3244fad1301dfafbe252, type: 3}
-    anchor: 1
+    anchor: 0
     offset: {x: 0, y: 0}
     startDelay: 0
     rotation: {x: 0, y: 0, z: 0}
-    scale: 0.28
+    scale: 0.65
     overrideColor: 0
     color: {r: 1, g: 1, b: 1, a: 1}
     sortingOrder: 15

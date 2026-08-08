@@ -17,8 +17,8 @@ MonoBehaviour:
     anchor: 0
     offset: {x: 0, y: 0}
     startDelay: 0
-    rotation: {x: 0, y: 0, z: 0}
-    scale: 0.2
+    rotation: {x: -20, y: 0, z: 0}
+    scale: 0.26
     overrideColor: 1
     color: {r: 1, g: 1, b: 1, a: 1}
     sortingOrder: 5

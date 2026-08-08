@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: Ria_ultimate_impact_vfx
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.VfxSpec
   layers:
-  - prefab: {fileID: 176822597162087251, guid: 46009f57772e5e743bec9df57a49ed66, type: 3}
+  - prefab: {fileID: 8915312667134092580, guid: 8a43d9f68490c374a93a9e8085555c02, type: 3}
     anchor: 0
     offset: {x: 0, y: 0}
     startDelay: 0
     rotation: {x: 0, y: 0, z: 0}
-    scale: 0.14
+    scale: 0.184
     overrideColor: 1
     color: {r: 0.34901962, g: 0.8509804, b: 0.4, a: 1}
     sortingOrder: 15
