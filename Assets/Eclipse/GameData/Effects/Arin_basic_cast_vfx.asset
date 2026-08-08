@@ -19,15 +19,15 @@ MonoBehaviour:
     startDelay: 0
     rotation: {x: -70, y: 0, z: 0}
     scale: 1.5
-    overrideColor: 0
-    color: {r: 1, g: 1, b: 1, a: 1}
+    overrideColor: 1
+    color: {r: 0.3529412, g: 0.17254902, b: 0.627451, a: 1}
     sortingOrder: 5
     repeatCount: 1
     repeatInterval: 0.15
     awaitSeconds: 0.4
     holdTurns: 0
     holdMode: 0
-  - prefab: {fileID: 856368647163548680, guid: 724d151229932ba47931fcc83c083470, type: 3}
+  - prefab: {fileID: 5545173171955001552, guid: 7ac879c2caac1ca41b6c438e77d8b25d, type: 3}
     anchor: 1
     offset: {x: 0, y: 0}
     startDelay: 0.25

@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.VfxSpec
   layers:
   - prefab: {fileID: 8915312667134092580, guid: 8a43d9f68490c374a93a9e8085555c02, type: 3}
-    anchor: 0
+    anchor: 1
     offset: {x: 0, y: 0}
+    follow: 0
     startDelay: 0
     rotation: {x: 0, y: 0, z: 0}
     scale: 0.184
@@ -30,6 +31,7 @@ MonoBehaviour:
   - prefab: {fileID: 1141330259687333427, guid: 6718dc24203da53468af9ada8fef7d6d, type: 3}
     anchor: 1
     offset: {x: 0, y: 0}
+    follow: 0
     startDelay: 0.35
     rotation: {x: 0, y: 0, z: 0}
     scale: 0.18

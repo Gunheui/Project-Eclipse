@@ -13,14 +13,16 @@ MonoBehaviour:
   m_Name: Hound_normal_impact_vfx
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.VfxSpec
   layers:
-  - prefab: {fileID: 5019633862878468090, guid: 23202d51f0a96974e8bb5da82667079b, type: 3}
+  - prefab: {fileID: 2444194618582548542, guid: cfba6a5a6f3446f4b8786205b74b3db9, type: 3}
     anchor: 1
     offset: {x: 0, y: 0}
+    follow: 0
     startDelay: 0
-    rotation: {x: 0, y: 0, z: 0}
-    scale: 0.2
-    overrideColor: 0
-    color: {r: 1, g: 1, b: 1, a: 1}
+    rotation: {x: -90, y: 0, z: 0}
+    scale: 1
+    speed: 1.5
+    overrideColor: 1
+    color: {r: 0.85, g: 0.19, b: 0.16, a: 1}
     sortingOrder: 15
     repeatCount: 1
     repeatInterval: 0.15

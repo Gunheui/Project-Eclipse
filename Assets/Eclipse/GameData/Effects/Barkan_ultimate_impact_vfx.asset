@@ -13,31 +13,20 @@ MonoBehaviour:
   m_Name: Barkan_ultimate_impact_vfx
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.VfxSpec
   layers:
-  - prefab: {fileID: 1394861032749976878, guid: d377d718b251d974eb1a4d788d2e8854, type: 3}
+  - prefab: {fileID: 7590532232816823513, guid: e1dfa06b675a1604f9492a6140b13379, type: 3}
     anchor: 1
     offset: {x: 0, y: 0}
+    follow: 0
     startDelay: 0
-    rotation: {x: 0, y: 0, z: 0}
-    scale: 0.14
+    rotation: {x: -90, y: 0, z: 0}
+    scale: 2.2
+    speed: 1
     overrideColor: 1
     color: {r: 0.3529412, g: 0.17254902, b: 0.627451, a: 1}
+    materialTint: {r: 0, g: 0, b: 0, a: 0}
     sortingOrder: 15
     repeatCount: 1
     repeatInterval: 0.15
-    awaitSeconds: 0.45
-    holdTurns: 0
-    holdMode: 0
-  - prefab: {fileID: 447409866740539227, guid: da34d66431c8cd04aa98411a543a83bf, type: 3}
-    anchor: 1
-    offset: {x: 0, y: 0}
-    startDelay: 0.25
-    rotation: {x: 0, y: 0, z: 0}
-    scale: 0.36
-    overrideColor: 1
-    color: {r: 0.3529412, g: 0.17254902, b: 0.627451, a: 1}
-    sortingOrder: 15
-    repeatCount: 3
-    repeatInterval: 0.12
-    awaitSeconds: 0.45
+    awaitSeconds: 0.5
     holdTurns: 0
     holdMode: 0

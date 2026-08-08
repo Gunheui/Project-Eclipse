@@ -678,7 +678,7 @@ namespace Eclipse.View
                     await MoveAsync(ApproachDestination(targets), ApproachDuration, ct);
                 }
 
-                // 접근이 끝난 뒤 띄운다. 이펙트 좌표는 스폰 시점에 굳으므로 먼저 띄우면 출발 자리에 남는다.
+                // 접근이 끝난 뒤 띄운다. 이펙트는 몸통을 따라다니므로 먼저 띄우면 이동 구간 내내 끌려 다닌다.
                 effects = UniTask.WhenAll(
                     SpawnEffect(skill != null ? skill.castEffect : null),
                     SpawnVfx(skill != null ? skill.castVfx : null, skill));
@@ -844,10 +844,17 @@ namespace Eclipse.View
             };
         }
 
-        /// <summary>한 진영 전체를 두른 범위의 중심. 주입이 없으면 이 배틀러 자리로 대신한다.</summary>
+        /// <summary>
+        /// 한 진영 전체를 두른 범위의 가로 중심 × 지면. 높이를 범위 중심으로 잡으면 앞줄과 뒷줄의 중간,
+        /// 곧 몸통 높이가 되어 광역 이펙트가 공중에 뜬다. 주입이 없으면 이 배틀러 자리로 대신한다.
+        /// </summary>
         /// <param name="ally">화면 기준 아군 진영이면 true.</param>
         private Vector3 FormationCenter(bool ally)
-            => _formationBounds != null ? _formationBounds(ally).center : visualRoot.position;
+        {
+            if (_formationBounds == null) return visualRoot.position;
+            var bounds = _formationBounds(ally);
+            return new Vector3(bounds.center.x, bounds.min.y, bounds.center.z);
+        }
 
         /// <summary>숫자 하나를 이 배틀러 위치에 만든다.</summary>
         /// <returns>프리팹이 없거나 씬이 파괴 중이면 null. 호출부는 표시를 건너뛴다.</returns>

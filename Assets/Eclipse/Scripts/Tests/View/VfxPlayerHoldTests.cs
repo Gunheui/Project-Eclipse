@@ -84,21 +84,39 @@ namespace Eclipse.Tests.View
         }
 
         [UnityTest]
-        public IEnumerator 켜둔_레이어만_앵커를_따라간다()
+        public IEnumerator follow를_끈_레이어만_스폰한_자리에_남는다()
         {
             var spec = ScriptableObject.CreateInstance<VfxSpec>();
-            spec.layers.Add(Layer(holdTurns: 1));
             spec.layers.Add(Layer(holdTurns: 0));
+            spec.layers.Add(Layer(holdTurns: 0, follow: false));
             var anchor = Vector3.zero;
             var player = Play(spec, _ => anchor);
-            var held = player.transform.GetChild(0);
-            var once = player.transform.GetChild(1);
+            var following = player.transform.GetChild(0);
+            var pinned = player.transform.GetChild(1);
 
             anchor = new Vector3(3f, 0f, 0f);
             yield return null;
 
-            Assert.AreEqual(3f, held.position.x, 0.001f, "켜 둔 인스턴스는 앵커를 매 프레임 다시 읽는다");
-            Assert.AreEqual(0f, once.position.x, 0.001f, "일회성은 스폰한 자리에 남는다");
+            Assert.AreEqual(3f, following.position.x, 0.001f, "켠 인스턴스는 앵커를 매 프레임 다시 읽는다");
+            Assert.AreEqual(0f, pinned.position.x, 0.001f, "끈 인스턴스는 스폰한 자리에 남는다");
+        }
+
+        [UnityTest]
+        public IEnumerator 배틀러가_사라지면_추적을_멈춘다()
+        {
+            var spec = ScriptableObject.CreateInstance<VfxSpec>();
+            spec.layers.Add(Layer(holdTurns: 0));
+            var anchor = Vector3.zero;
+            using var cts = new CancellationTokenSource();
+            var player = Track(new GameObject("VfxPlayer")).AddComponent<VfxPlayer>();
+            player.Play(spec, 1, _ => anchor, cts.Token).Forget();
+            var once = player.transform.GetChild(0);
+
+            cts.Cancel();
+            anchor = new Vector3(3f, 0f, 0f);
+            yield return null;
+
+            Assert.AreEqual(0f, once.position.x, 0.001f, "취소 뒤에는 앵커를 다시 읽지 않는다");
         }
 
         /// <summary>유지 레이어 하나짜리 스펙을 새 재생기에 걸고 그 재생기를 돌려준다.</summary>
@@ -117,12 +135,13 @@ namespace Eclipse.Tests.View
             return player;
         }
 
-        private VfxLayer Layer(int holdTurns, VfxHold mode = VfxHold.Continuous) => new VfxLayer
+        private VfxLayer Layer(int holdTurns, VfxHold mode = VfxHold.Continuous, bool follow = true) => new VfxLayer
         {
             prefab = _layerPrefab,
             holdTurns = holdTurns,
             holdMode = mode,
             awaitSeconds = 0f,
+            follow = follow,
         };
 
         private GameObject Track(GameObject go)

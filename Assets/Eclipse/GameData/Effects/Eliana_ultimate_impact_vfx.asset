@@ -16,6 +16,7 @@ MonoBehaviour:
   - prefab: {fileID: 3020920808754819069, guid: d860dbff6d19af4448c7d0e478fa5cef, type: 3}
     anchor: 1
     offset: {x: 0, y: 0}
+    follow: 0
     startDelay: 0
     rotation: {x: 90, y: 0, z: 90}
     scale: 0.21
@@ -30,11 +31,12 @@ MonoBehaviour:
   - prefab: {fileID: 1141330259687333427, guid: 6718dc24203da53468af9ada8fef7d6d, type: 3}
     anchor: 0
     offset: {x: 0, y: 0}
+    follow: 0
     startDelay: 0.3
     rotation: {x: 0, y: 0, z: 0}
     scale: 0.15
     overrideColor: 1
-    color: {r: 0.6509804, g: 0.34901962, b: 0.9490196, a: 1}
+    color: {r: 0.3529412, g: 0.17254902, b: 0.627451, a: 1}
     sortingOrder: 15
     repeatCount: 1
     repeatInterval: 0.15
@@ -44,6 +46,7 @@ MonoBehaviour:
   - prefab: {fileID: 6263782476919498309, guid: 1fd2749f2a4056446881dce86ed70c39, type: 3}
     anchor: 1
     offset: {x: 0, y: 0}
+    follow: 0
     startDelay: 0.1
     rotation: {x: 0, y: 0, z: 0}
     scale: 1

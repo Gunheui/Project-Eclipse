@@ -20,7 +20,7 @@ MonoBehaviour:
     rotation: {x: -70, y: 0, z: 0}
     scale: 1.5
     overrideColor: 1
-    color: {r: 0.23, g: 0.06, b: 0.29, a: 1}
+    color: {r: 0.3529412, g: 0.17254902, b: 0.627451, a: 1}
     sortingOrder: 5
     repeatCount: 1
     repeatInterval: 0.15

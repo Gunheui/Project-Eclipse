@@ -16,6 +16,7 @@ MonoBehaviour:
   - prefab: {fileID: 1035977224672214417, guid: 057aa477789506a44bd206e9c5acad19, type: 3}
     anchor: 1
     offset: {x: 0, y: 0}
+    follow: 0
     startDelay: 0
     rotation: {x: 90, y: 0, z: 90}
     scale: 2.6
@@ -30,6 +31,7 @@ MonoBehaviour:
   - prefab: {fileID: 1429954232896169633, guid: 83036083a4ebcd34f98131bd3cf6f4d2, type: 3}
     anchor: 1
     offset: {x: 0, y: 0}
+    follow: 0
     startDelay: 0.12
     rotation: {x: 0, y: 0, z: 0}
     scale: 0.75

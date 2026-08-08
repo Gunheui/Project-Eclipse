@@ -19,8 +19,8 @@ MonoBehaviour:
     startDelay: 0
     rotation: {x: -20, y: 0, z: 0}
     scale: 1.53
-    overrideColor: 0
-    color: {r: 1, g: 1, b: 1, a: 1}
+    overrideColor: 1
+    color: {r: 1, g: 0.90410256, b: 0.3254717, a: 1}
     sortingOrder: 5
     repeatCount: 1
     repeatInterval: 0.15
@@ -33,8 +33,8 @@ MonoBehaviour:
     startDelay: 0.15
     rotation: {x: 0, y: 0, z: 0}
     scale: 0.74
-    overrideColor: 0
-    color: {r: 1, g: 1, b: 1, a: 1}
+    overrideColor: 1
+    color: {r: 1, g: 0.90410256, b: 0.3254717, a: 1}
     sortingOrder: 15
     repeatCount: 1
     repeatInterval: 0.15

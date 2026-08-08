@@ -13,17 +13,20 @@ MonoBehaviour:
   m_Name: Mirea_basic_impact_vfx
   m_EditorClassIdentifier: Eclipse.Data::Eclipse.Data.VfxSpec
   layers:
-  - prefab: {fileID: 8185980177458545945, guid: d167e6eec71d29f42b97cd956671051f, type: 3}
-    anchor: 1
-    offset: {x: 0, y: 0}
+  - prefab: {fileID: 3156866507962234106, guid: 645ebd7cef59b7b40b27c29bf3e99cf2, type: 3}
+    anchor: 0
+    offset: {x: 0.69, y: 0}
+    follow: 0
     startDelay: 0
-    rotation: {x: 0, y: 0, z: 0}
-    scale: 0.11
+    rotation: {x: 0, y: 180, z: 0}
+    scale: 0.17
+    speed: 1
     overrideColor: 0
     color: {r: 1, g: 1, b: 1, a: 1}
+    materialTint: {r: 0.9, g: 0.05, b: 2.2, a: 1}
     sortingOrder: 15
     repeatCount: 1
     repeatInterval: 0.15
-    awaitSeconds: 0.4
+    awaitSeconds: 0.5
     holdTurns: 0
     holdMode: 0

@@ -30,6 +30,9 @@ namespace Eclipse.Data
         [Tooltip("앵커 기준 오프셋(월드 단위).")]
         public Vector2 offset;
 
+        [Tooltip("켜면 앵커를 매 프레임 다시 읽어 배틀러를 따라간다. 끄면 스폰한 자리에 남는다. 피격 이펙트는 꺼 둔다.")]
+        public bool follow = true;
+
         [Tooltip("재생 시작까지의 지연(초). 레이어를 어긋나게 겹칠 때 쓴다.")]
         public float startDelay;
 
@@ -39,11 +42,18 @@ namespace Eclipse.Data
         [Tooltip("프리팹 원본 크기에 곱할 배율.")]
         public float scale = 1f;
 
+        [Tooltip("파티클 재생 속도 배율. 프리팹이 느릿할 때 올린다. 0이면 1로 본다.")]
+        public float speed = 1f;
+
         [Tooltip("파티클 시작색을 아래 색으로 갈아 끼운다. 끄면 프리팹 원본색을 쓴다.")]
         public bool overrideColor;
 
         [Tooltip("갈아 끼울 색.")]
         public Color color = Color.white;
+
+        [Tooltip("렌더러 머티리얼 색에 곱할 틴트. 알파 0이면 쓰지 않는다. 텍스처 색이 진해 파티클 색이 먹지 않는 프리팹(크리스탈 등)을 물들일 때 쓴다. HDR이라 1을 넘겨 원색을 눌러 이길 수 있다.")]
+        [ColorUsage(true, true)]
+        public Color materialTint = Color.clear;
 
         [Tooltip("정렬 순서. 발밑 5, 타격·피격 15가 기준이다.")]
         public int sortingOrder = 15;

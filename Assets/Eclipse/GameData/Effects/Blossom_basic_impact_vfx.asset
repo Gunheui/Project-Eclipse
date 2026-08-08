@@ -16,11 +16,12 @@ MonoBehaviour:
   - prefab: {fileID: 3976021699934970026, guid: f9216f574efbebf448fd75d16170f9ac, type: 3}
     anchor: 1
     offset: {x: 0, y: 0}
+    follow: 0
     startDelay: 0
-    rotation: {x: 0, y: 0, z: 0}
+    rotation: {x: -90, y: 0, z: 0}
     scale: 0.14
-    overrideColor: 0
-    color: {r: 1, g: 1, b: 1, a: 1}
+    overrideColor: 1
+    color: {r: 0.95, g: 0.5, b: 0.75, a: 1}
     sortingOrder: 15
     repeatCount: 1
     repeatInterval: 0.15
