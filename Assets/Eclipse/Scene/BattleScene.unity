@@ -2331,6 +2331,7 @@ GameObject:
   - component: {fileID: 278686847}
   - component: {fileID: 278686848}
   - component: {fileID: 278686846}
+  - component: {fileID: 278686849}
   m_Layer: 0
   m_Name: SkillTooltip
   m_TagString: Untagged
@@ -2385,6 +2386,18 @@ CanvasGroup:
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
+--- !u!114 &278686849
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 278686845}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: abc30ec272da642c38aec2fae20d1134, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.SafeAreaFitter
 --- !u!1 &280098722
 GameObject:
   m_ObjectHideFlags: 0
