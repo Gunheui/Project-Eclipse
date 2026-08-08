@@ -3,6 +3,7 @@
     "rootNamespace": "Eclipse.EditorTools",
     "references": [
         "Eclipse.Data",
+        "Eclipse.Presentation",
         "Eclipse.View",
         "UnityEngine.UI",
         "Unity.TextMeshPro"

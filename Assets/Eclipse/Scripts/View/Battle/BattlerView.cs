@@ -22,7 +22,7 @@ namespace Eclipse.View
 
     /// <summary>
     /// 전장에 세우는 배틀러 하나. 유닛 VM의 스프라이트를 월드 SpriteRenderer로 그리고,
-    /// 자기 상태(HP·행동·생존)를 구독해 스스로 연출한다(피격 흔들림·플로팅 숫자·시전 모션·사망 숨김).
+    /// 자기 상태(HP·행동·생존)를 구독해 스스로 연출한다(피격 모션·플로팅 숫자·시전 모션·사망 모션).
     /// 조준 모드에서는 몸통 탭으로 대상 선택 입력을 보내고(Bind의 onTapped),
     /// 그 외에는 마우스를 올리거나 꾹 누르는 동안 상세 표시를 요청한다(Bind의 onHovered).
     /// </summary>
@@ -37,7 +37,7 @@ namespace Eclipse.View
         [SerializeField] private SpriteEffectPlayer effectPlayerPrefab;
         [SerializeField] private VfxPlayer vfxPlayerPrefab;
 
-        // 몸통 탭 판정 영역. 배틀러 루트에 두어 연출(흔들림·돌진)로 움직이지 않게 한다.
+        // 몸통 탭 판정 영역. 배틀러 루트에 두어 대시 연출로 움직이지 않게 한다.
         [SerializeField] private BoxCollider2D tapArea;
 
         // 탭 영역을 스프라이트보다 이만큼 넓힌다(월드 단위). 손가락 여유.
@@ -81,6 +81,8 @@ namespace Eclipse.View
         // 공용 AnimatorController의 상태. 유닛별 오버라이드는 클립만 갈아끼우므로 이름이 공통이다.
         private static readonly int IdleStateId = Animator.StringToHash("Idle");
         private static readonly int AttackStateId = Animator.StringToHash("Attack");
+        private static readonly int HitStateId = Animator.StringToHash("Hit");
+        private static readonly int DeadStateId = Animator.StringToHash("Dead");
 
         private readonly CompositeDisposable _bindings = new();
 
@@ -127,12 +129,16 @@ namespace Eclipse.View
         private UniTask _animation = UniTask.CompletedTask;
 
         // 아직 재생하지 못한 표시. 같은 턴에 여러 번 맞거나 틱이 겹쳐도 겹치지 않고 하나씩 나간다.
-        private readonly Queue<(EffectDisplay Result, SkillSO Skill, bool Shake)> _displayQueue = new();
+        private readonly Queue<(EffectDisplay Result, SkillSO Skill, bool Hit)> _displayQueue = new();
         private bool _draining;
 
         // 이번 바인딩이 소유한 재생 수명. 다시 바인딩하거나 비울 때 끊어, 옛 재생이 새 바인딩의
         // 대기열과 플래그를 함께 건드리지 못하게 한다.
         private CancellationTokenSource _playbackCts;
+
+        // 사망 신호를 받은 뒤인지. 마지막 일격은 피격과 사망이 같은 턴에 붙어 오는데 피격 표시가
+        // 대기열을 거쳐 한 박자 늦게 나가므로, 이 값이 없으면 늦은 피격이 사망 모션을 덮어쓴다.
+        private bool _dying;
 
         // 유지 중인 파티클 재생기와 그것을 띄운 스킬. 그 스킬이 건 효과가 다 풀리면 함께 걷는다.
         private readonly List<(VfxPlayer Player, SkillSO Source)> _heldVfx = new();
@@ -213,14 +219,14 @@ namespace Eclipse.View
                 .Subscribe(cast => AddAnimation(PlayCastAsync(cast.Skill, cast.Targets, _playbackCts)))
                 .AddTo(_bindings);
 
-            // 흔들림은 맞은 반응이라 피해에만 붙인다. 버프·실드를 받을 때는 흔들리지 않는다.
+            // 피격 모션은 맞은 반응이라 피해에만 붙인다. 버프·실드를 받을 때는 자세가 흐트러지지 않는다.
             unit.Hit
                 .Subscribe(h => AddAnimation(QueueDisplay(h.Result, h.Skill,
-                    shake: h.Result.Type == EffectType.Damage)))
+                    hit: h.Result.Type == EffectType.Damage)))
                 .AddTo(_bindings);
 
             unit.Ticked
-                .Subscribe(tick => AddAnimation(QueueDisplay(tick, null, shake: false)))
+                .Subscribe(tick => AddAnimation(QueueDisplay(tick, null, hit: false)))
                 .AddTo(_bindings);
 
             // 유지 이펙트 정리는 여기 한 곳에서만 한다. 스폰 시점에 대조하면 시전·피격 신호가 상태 갱신보다
@@ -233,8 +239,18 @@ namespace Eclipse.View
                 .Subscribe(_ => FlashHeldVfx())
                 .AddTo(_bindings);
 
+            // 이미 죽은 유닛을 다시 바인딩할 때는 배치 상태라 연출 없이 숨겨야 한다. 현재값을 여기서
+            // 직접 반영하고, 구독은 그 뒤의 전이만 사망 연출로 돌린다.
+            _dying = !unit.IsAlive.CurrentValue;
+            SetAlive(unit.IsAlive.CurrentValue);
             unit.IsAlive
-                .Subscribe(SetAlive)
+                .Skip(1)
+                .Where(alive => !alive)
+                .Subscribe(_ =>
+                {
+                    _dying = true;
+                    AddAnimation(PlayDeathAsync(_playbackCts));
+                })
                 .AddTo(_bindings);
         }
 
@@ -503,13 +519,13 @@ namespace Eclipse.View
         /// 멀티히트 타수와 도트 개수가 화면에 보인다. 한 턴의 신호는 동기로 연달아 들어온다.
         /// </summary>
         /// <param name="skill">이 결과를 낸 스킬. 피격 이펙트를 꺼내고 유지 이펙트의 출처로 쓴다. 틱처럼 없으면 null.</param>
-        /// <param name="shake">이 결과에 몸통이 반응할지.</param>
+        /// <param name="hit">이 결과에 피격 모션을 걸지.</param>
         /// <returns>
         /// 대기열을 비우는 재생. 같은 턴의 두 번째부터는 앞선 재생이 끝까지 비우므로 완료된 값이다.
         /// </returns>
-        private UniTask QueueDisplay(EffectDisplay result, SkillSO skill, bool shake)
+        private UniTask QueueDisplay(EffectDisplay result, SkillSO skill, bool hit)
         {
-            _displayQueue.Enqueue((result, skill, shake));
+            _displayQueue.Enqueue((result, skill, hit));
             return _draining ? UniTask.CompletedTask : DrainQueueAsync(_playbackCts);
         }
 
@@ -523,8 +539,8 @@ namespace Eclipse.View
             {
                 while (owner == _playbackCts && _displayQueue.Count > 0)
                 {
-                    var (result, skill, shake) = _displayQueue.Dequeue();
-                    await PlayResultAsync(result, skill, shake, ct);
+                    var (result, skill, hit) = _displayQueue.Dequeue();
+                    await PlayResultAsync(result, skill, hit, ct);
                 }
             }
             catch (OperationCanceledException)
@@ -542,18 +558,19 @@ namespace Eclipse.View
         /// 효과 결과 하나를 재생한다. 크기가 0인 결과(버프·도발, 최대 HP에서 걸린 리젠)는
         /// 숫자 없이 이펙트만 나간다.
         /// </summary>
-        /// <returns>숫자·흔들림·타격 이펙트가 모두 끝나면 완료된다.</returns>
-        private async UniTask PlayResultAsync(EffectDisplay result, SkillSO skill, bool shake, CancellationToken ct)
+        /// <returns>숫자와 타격 이펙트가 모두 끝나면 완료된다. 피격 모션은 기다리지 않는다.</returns>
+        private async UniTask PlayResultAsync(EffectDisplay result, SkillSO skill, bool hit, CancellationToken ct)
         {
-            // 이펙트와 흔들림은 숫자와 나란히 돈다.
-            var reaction = UniTask.WhenAll(
+            if (hit) PlayHit();
+
+            // 이펙트는 숫자와 나란히 돈다.
+            var effects = UniTask.WhenAll(
                 SpawnEffect(skill != null ? skill.impactEffect : null),
-                SpawnVfx(skill != null ? skill.impactVfx : null, skill),
-                shake ? PlayShakeAsync(ct) : UniTask.CompletedTask);
+                SpawnVfx(skill != null ? skill.impactVfx : null, skill));
 
             if (result.Amount > 0) await SpawnAmountAsync(result, ct);
 
-            await reaction;
+            await effects;
         }
 
         /// <summary>숫자 하나를 띄우고 다음 숫자를 위한 간격을 둔다.</summary>
@@ -580,14 +597,43 @@ namespace Eclipse.View
             };
         }
 
-        /// <summary>피격 반응으로 짧게 흔들린다.</summary>
-        /// <returns>흔들림이 끝나면 완료된다. 취소되면 트윈만 죽고 대기는 예외 없이 완료된다.</returns>
-        private UniTask PlayShakeAsync(CancellationToken ct)
+        /// <summary>피격 모션을 걸어 두고 바로 돌아온다. 사망 신호를 받은 뒤라면 아무것도 하지 않는다.</summary>
+        private void PlayHit()
         {
-            float dur = 0.3f / _speed();
-            return visualRoot
-                .DOShakePosition(dur, strength: 0.25f, vibrato: 18, randomness: 90, snapping: false, fadeOut: true)
-                .ToUniTask(cancellationToken: ct);
+            if (_dying || animator == null || animator.runtimeAnimatorController == null) return;
+            // 클립이 1초를 넘는 유닛이 있어 기다리지 않는다. 턴 박자는 데미지 숫자가 잡고,
+            // 모션은 그 위에서 돌다 대기로 돌아온다.
+            animator.Play(HitStateId, 0, 0f);
+        }
+
+        /// <summary>사망 모션을 끝까지 재생하고 배틀러를 숨긴다.</summary>
+        /// <param name="owner">이 재생을 시작한 바인딩의 취소 소스. 현재 것과 다르면 물러난다.</param>
+        /// <returns>모션이 끝나고 배틀러가 사라지면 완료된다. 취소되면 예외 없이 완료된다.</returns>
+        private async UniTask PlayDeathAsync(CancellationTokenSource owner)
+        {
+            float seconds = 0f;
+            if (animator != null && animator.runtimeAnimatorController != null &&
+                animator.gameObject.activeInHierarchy)
+            {
+                animator.Play(DeadStateId, 0, 0f);
+                // Play는 다음 갱신에야 반영된다. 0초를 흘려 지금 상태로 만들어야 아래에서 사망 상태를 읽는다.
+                animator.Update(0f);
+                var state = animator.GetCurrentAnimatorStateInfo(0);
+                // 사망 상태가 없는 컨트롤러면 엉뚱한 상태가 잡힌다. 그 길이만큼 배틀러를 세워 두지 않는다.
+                if (state.shortNameHash == DeadStateId) seconds = state.length / Mathf.Max(1, _speed());
+            }
+
+            try
+            {
+                if (seconds > 0f) await UniTask.Delay(TimeSpan.FromSeconds(seconds), cancellationToken: owner.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // 재바인딩으로 끊긴 대기. 여기서 삼키지 않으면 예외가 턴 루프까지 올라가 전투가 멈춘다.
+            }
+
+            // 끊긴 재생이 새 바인딩의 배틀러를 대신 숨기지 않게 한다.
+            if (owner == _playbackCts) SetAlive(false);
         }
 
         /// <summary>시전: 접근·공격 모션·복귀를 차례로 진행하고 시전 이펙트를 나란히 재생한다.</summary>

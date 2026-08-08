@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Cysharp.Threading.Tasks;
 using Eclipse.Data;
+using Eclipse.Data.Enums;
 using Eclipse.Domain;
 using Eclipse.Presentation;
 using Eclipse.View;
@@ -15,35 +16,40 @@ using UnityEngine.TestTools;
 namespace Eclipse.Tests
 {
     /// <summary>
-    /// 배틀러가 시전 신호를 공격 클립 길이만큼의 대기로 바꾸는 경로를 관측한다.
+    /// 배틀러가 시전·사망 신호를 클립 길이만큼의 대기로 바꾸는 경로를 관측한다.
     /// 컨트롤러를 메모리에 세워야 해서 에디터 전용 어셈블리에 둔다.
     /// </summary>
     public class BattlerAnimationTests
     {
         private const float AttackSeconds = 1.5f;
+        private const float DeadSeconds = 1f;
         // 클립 길이보다 짧아야 타격 알림이 모션 도중에 온다.
         private const float ImpactSeconds = 0.5f;
 
         private readonly List<Object> _spawned = new List<Object>();
 
         private BattlerView _view;
+        private Animator _animator;
+        private Combatant _model;
         private CombatantViewModel _unit;
         private Subject<Unit> _stateChanged;
 
         [SetUp]
         public void SetUp()
         {
-            var model = Combatant.FromEnemy(Track(ScriptableObject.CreateInstance<EnemySO>()), 0,
+            _model = Combatant.FromEnemy(Track(ScriptableObject.CreateInstance<EnemySO>()), 0,
                 new Stats { hp = 100, atk = 10, def = 5, spd = 10 });
             _stateChanged = new Subject<Unit>();
-            _unit = new CombatantViewModel(model, _stateChanged, null, BuildController(), ImpactSeconds, null, null, null);
+            _unit = new CombatantViewModel(_model, _stateChanged, null, BuildController(), ImpactSeconds, null, null,
+                null);
 
             // 연출은 배틀러의 부모 밑에 스폰되므로 전장 역할을 할 부모가 있어야 한다.
             var field = Track(new GameObject("Field"));
             var go = Track(new GameObject("Battler"));
             go.transform.SetParent(field.transform);
             _view = go.AddComponent<BattlerView>();
-            SetField(_view, "animator", go.AddComponent<Animator>());
+            _animator = go.AddComponent<Animator>();
+            SetField(_view, "animator", _animator);
         }
 
         [TearDown]
@@ -112,6 +118,46 @@ namespace Eclipse.Tests
             yield return null;
         }
 
+        [UnityTest]
+        public IEnumerator 사망은_사망_클립_길이만큼_턴을_붙잡는다()
+        {
+            Bind();
+            _model.ApplyDamage(999);
+            _stateChanged.OnNext(Unit.Default);
+
+            Assert.IsFalse(_view.WaitForAnimation().Status.IsCompleted(),
+                "대기가 바로 끝나면 쓰러지는 도중에 다음 턴이 넘어간다");
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator 이미_죽은_유닛을_다시_바인딩해도_사망_연출은_돌지_않는다()
+        {
+            _model.ApplyDamage(999);
+
+            Bind();
+
+            Assert.IsTrue(_view.WaitForAnimation().Status.IsCompleted(),
+                "배치 상태를 사망 전이로 읽으면 방을 열 때마다 시체가 다시 쓰러진다");
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator 사망_뒤에_빠져나온_피격은_사망_모션을_덮지_않는다()
+        {
+            Bind();
+            _model.ApplyDamage(999);
+            _stateChanged.OnNext(Unit.Default);
+
+            // 피격 표시는 대기열을 거쳐 사망보다 늦게 나갈 수 있다. 그 순서를 그대로 만든다.
+            _unit.RaiseHit(null, new EffectResult(EffectType.Damage, _model, 10));
+
+            yield return null;
+
+            Assert.AreEqual(Animator.StringToHash("Dead"), _animator.GetCurrentAnimatorStateInfo(0).shortNameHash,
+                "늦은 피격이 사망 모션을 덮으면 배틀러가 죽다 만 자세로 사라진다");
+        }
+
         private void Bind() => _view.Bind(_unit, () => 1, _ => new Bounds());
 
         /// <summary>
@@ -124,13 +170,19 @@ namespace Eclipse.Tests
 
             var idle = Track(new AnimationClip { name = "Test_Idle" });
             var attack = Track(new AnimationClip { name = "Test_Attack" });
-            // 길이가 있어야 시전 대기가 실제로 열린다. 어떤 값을 키잉하는지는 이 테스트가 보지 않는다.
+            var hit = Track(new AnimationClip { name = "Test_Hit" });
+            var dead = Track(new AnimationClip { name = "Test_Dead" });
+            // 길이가 있어야 시전·사망 대기가 실제로 열린다. 어떤 값을 키잉하는지는 이 테스트가 보지 않는다.
             attack.SetCurve(string.Empty, typeof(SpriteRenderer), "m_Color.a",
                 AnimationCurve.Linear(0f, 1f, AttackSeconds, 1f));
+            dead.SetCurve(string.Empty, typeof(SpriteRenderer), "m_Color.a",
+                AnimationCurve.Linear(0f, 1f, DeadSeconds, 1f));
 
             var machine = controller.layers[0].stateMachine;
             machine.AddState("Idle").motion = idle;
             machine.AddState("Attack").motion = attack;
+            machine.AddState("Hit").motion = hit;
+            machine.AddState("Dead").motion = dead;
 
             return Track(new AnimatorOverrideController(controller));
         }
