@@ -15,10 +15,10 @@ MonoBehaviour:
   id: enemy_boss_barkan
   displayName: "\uC2EC\uC5F0\uC758 \uC0AC\uB3C4 \uBC14\uB974\uCE78"
   baseStats:
-    hp: 4800
-    atk: 175
-    def: 90
-    spd: 90
+    hp: 7200
+    atk: 220
+    def: 130
+    spd: 110
     critRate: 0.08
     critDamage: 1.6
   basicSkill: {fileID: 11400000, guid: 4beeb6c3a307462da68ed308bb41eaab, type: 2}

@@ -15,7 +15,7 @@ MonoBehaviour:
   layers:
   - prefab: {fileID: 81929307968626167, guid: 0f23029f1b7deac4bb7ff0013f9366b2, type: 3}
     anchor: 1
-    offset: {x: 0, y: 0}
+    offset: {x: 0, y: -1.35}
     follow: 0
     startDelay: 0
     rotation: {x: -90, y: 0, z: 0}

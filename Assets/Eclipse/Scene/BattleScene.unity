@@ -19143,9 +19143,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Eclipse.View::Eclipse.View.CurrencyDropSpawner
   dropPrefab: {fileID: 7921984984777458953, guid: 22841c3a4df4f4d53875d1147576faf3, type: 3}
   currencyIcons:
-  - {fileID: 21300000, guid: 38190622f7804480fbac3cc97f2018a9, type: 3}
-  - {fileID: 21300000, guid: f3274a9dcaf0e4f498090804f289ba59, type: 3}
-  - {fileID: 21300000, guid: b98823d88a23b43f79edbbb350ab1f2b, type: 3}
+  - {fileID: 21300000, guid: 1e13e74e96edc4175a954600ed71adb6, type: 3}
+  - {fileID: 21300000, guid: 78cc7625ff9ea4c138b9d12d3274ab07, type: 3}
+  - {fileID: 21300000, guid: 62f8d879cd89c4098a1e425edd8af0c8, type: 3}
   amountTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
   amountColor: {r: 1, g: 0.87, b: 0.45, a: 1}
   popInDuration: 0.12
