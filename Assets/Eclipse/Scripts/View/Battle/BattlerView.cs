@@ -38,15 +38,7 @@ namespace Eclipse.View
         [SerializeField] private VfxPlayer vfxPlayerPrefab;
 
         // 몸통 탭 판정 영역. 배틀러 루트에 두어 대시 연출로 움직이지 않게 한다.
-        [SerializeField] private BoxCollider2D tapArea;
-
-        // 탭 영역을 스프라이트보다 이만큼 넓힌다(월드 단위). 손가락 여유.
-        private const float TapAreaPadding = 0.15f;
-
-        // 탭 판정의 최대 가로 폭(월드 단위). 아군 초상은 정규화 규격이라 망토·무기까지 폭 3에 가까운데
-        // 앞뒤 줄 자리 간격은 1.5뿐이라, 그대로 두면 앞줄이 뒷줄의 몸통 탭을 가로챈다.
-        // 자리 간격보다 좁게 잘라 서로의 중심을 덮지 않게 한다. 이 값보다 좁은 스프라이트는 그대로 둔다.
-        [SerializeField] private float tapAreaMaxWidth = 1.4f;
+        [SerializeField] private PolygonCollider2D tapArea;
 
         // 선택 불가(Ineligible) 대상 스프라이트에 곱하는 색. 채도는 유지하고 밝기만 낮춰 어둡게 보이게 한다.
         private static readonly Color DimColor = new(0.35f, 0.35f, 0.35f, 1f);
@@ -465,20 +457,41 @@ namespace Eclipse.View
         }
 
         /// <summary>
-        /// 탭 영역을 그림이 차지하는 범위에 맞춘다. 유닛마다 크기가 달라 에디터에서 미리 맞출 수 없다.
-        /// 확대된 자리에서는 옆 유닛과 영역이 겹치는데, 누가 잡힐지는 씬에 저작된 자리의 z가 정한다 —
-        /// 앞줄이 카메라에 더 가까워 먼저 잡히고, 그리기 순서와 방향이 같다.
+        /// 탭 영역을 그림 외곽선에 맞춘다. 사각형으로 감싸면 서로 파고든 배틀러끼리 판정이 겹쳐
+        /// 뒤에 선 유닛을 누를 수 없다. 임포터가 구워 둔 스프라이트 물리 모양을 그대로 옮겨 담아
+        /// 겹치는 자리를 그림이 실제로 겹친 곳으로만 좁힌다. 그 자리에서는 씬에 저작된 z가 앞선
+        /// 배틀러가 잡히고, 그리기 순서와 방향이 같다.
+        /// 물리 모양이 없는 스프라이트는 실루엣 사각형으로 되돌린다.
         /// </summary>
         /// <param name="body">이 트랜스폼 기준 실루엣 범위.</param>
         private void ResizeTapArea(Bounds body)
         {
             if (tapArea == null) return;
 
-            var size = (Vector2)body.size + new Vector2(TapAreaPadding * 2f, TapAreaPadding * 2f);
-            if (tapAreaMaxWidth > 0f) size.x = Mathf.Min(size.x, tapAreaMaxWidth);
+            var sprite = spriteRenderer.sprite;
+            int shapes = sprite.GetPhysicsShapeCount();
+            if (shapes == 0)
+            {
+                tapArea.pathCount = 1;
+                tapArea.SetPath(0, new[]
+                {
+                    new Vector2(body.min.x, body.min.y), new Vector2(body.min.x, body.max.y),
+                    new Vector2(body.max.x, body.max.y), new Vector2(body.max.x, body.min.y)
+                });
+                return;
+            }
 
-            tapArea.size = size;
-            tapArea.offset = body.center;
+            tapArea.pathCount = shapes;
+            var points = new List<Vector2>();
+            for (int i = 0; i < shapes; i++)
+            {
+                sprite.GetPhysicsShape(i, points);
+                // 물리 모양은 스프라이트 로컬 좌표다. 자리 배수를 태워 이 트랜스폼 기준으로 옮긴다.
+                for (int p = 0; p < points.Count; p++)
+                    points[p] = transform.InverseTransformPoint(
+                        spriteRenderer.transform.TransformPoint(points[p]));
+                tapArea.SetPath(i, points);
+            }
         }
 
         /// <summary>

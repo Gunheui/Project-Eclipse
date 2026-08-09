@@ -157,7 +157,6 @@ MonoBehaviour:
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
   vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
   tapArea: {fileID: 25445466}
-  tapAreaMaxWidth: 1.4
 --- !u!4 &25445465
 Transform:
   m_ObjectHideFlags: 0
@@ -175,8 +174,8 @@ Transform:
   - {fileID: 235098730}
   m_Father: {fileID: 1825455416}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!61 &25445466
-BoxCollider2D:
+--- !u!60 &25445466
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -219,8 +218,14 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
+  m_Points:
+    m_Paths:
+    - - {x: 0, y: 1}
+      - {x: -0.95105654, y: 0.30901697}
+      - {x: -0.5877852, y: -0.80901706}
+      - {x: 0.58778536, y: -0.80901694}
+      - {x: 0.9510565, y: 0.30901712}
+  m_UseDelaunayMesh: 1
 --- !u!1 &35311116
 GameObject:
   m_ObjectHideFlags: 0
@@ -889,9 +894,8 @@ MonoBehaviour:
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
   vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
   tapArea: {fileID: 118229269}
-  tapAreaMaxWidth: 1.4
---- !u!61 &118229269
-BoxCollider2D:
+--- !u!60 &118229269
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -934,8 +938,14 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
+  m_Points:
+    m_Paths:
+    - - {x: 0, y: 1}
+      - {x: -0.95105654, y: 0.30901697}
+      - {x: -0.5877852, y: -0.80901706}
+      - {x: 0.58778536, y: -0.80901694}
+      - {x: 0.9510565, y: 0.30901712}
+  m_UseDelaunayMesh: 1
 --- !u!1 &119238710
 GameObject:
   m_ObjectHideFlags: 0
@@ -1580,9 +1590,8 @@ MonoBehaviour:
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
   vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
   tapArea: {fileID: 211906977}
-  tapAreaMaxWidth: 1.4
---- !u!61 &211906977
-BoxCollider2D:
+--- !u!60 &211906977
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -1625,8 +1634,14 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
+  m_Points:
+    m_Paths:
+    - - {x: 0, y: 1}
+      - {x: -0.95105654, y: 0.30901697}
+      - {x: -0.5877852, y: -0.80901706}
+      - {x: 0.58778536, y: -0.80901694}
+      - {x: 0.9510565, y: 0.30901712}
+  m_UseDelaunayMesh: 1
 --- !u!1 &212259818
 GameObject:
   m_ObjectHideFlags: 0
@@ -3167,9 +3182,8 @@ MonoBehaviour:
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
   vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
   tapArea: {fileID: 329805836}
-  tapAreaMaxWidth: 1.4
---- !u!61 &329805836
-BoxCollider2D:
+--- !u!60 &329805836
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -3212,8 +3226,14 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
+  m_Points:
+    m_Paths:
+    - - {x: 0, y: 1}
+      - {x: -0.95105654, y: 0.30901697}
+      - {x: -0.5877852, y: -0.80901706}
+      - {x: 0.58778536, y: -0.80901694}
+      - {x: 0.9510565, y: 0.30901712}
+  m_UseDelaunayMesh: 1
 --- !u!1 &354250226
 GameObject:
   m_ObjectHideFlags: 0
@@ -5015,9 +5035,8 @@ MonoBehaviour:
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
   vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
   tapArea: {fileID: 512440240}
-  tapAreaMaxWidth: 1.4
---- !u!61 &512440240
-BoxCollider2D:
+--- !u!60 &512440240
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -5060,8 +5079,14 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
+  m_Points:
+    m_Paths:
+    - - {x: 0, y: 1}
+      - {x: -0.95105654, y: 0.30901697}
+      - {x: -0.5877852, y: -0.80901706}
+      - {x: 0.58778536, y: -0.80901694}
+      - {x: 0.9510565, y: 0.30901712}
+  m_UseDelaunayMesh: 1
 --- !u!1 &537713980
 GameObject:
   m_ObjectHideFlags: 0
@@ -10595,9 +10620,8 @@ MonoBehaviour:
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
   vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
   tapArea: {fileID: 1024357043}
-  tapAreaMaxWidth: 1.4
---- !u!61 &1024357043
-BoxCollider2D:
+--- !u!60 &1024357043
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -10640,8 +10664,14 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
+  m_Points:
+    m_Paths:
+    - - {x: 0, y: 1}
+      - {x: -0.95105654, y: 0.30901697}
+      - {x: -0.5877852, y: -0.80901706}
+      - {x: 0.58778536, y: -0.80901694}
+      - {x: 0.9510565, y: 0.30901712}
+  m_UseDelaunayMesh: 1
 --- !u!1 &1030158495
 GameObject:
   m_ObjectHideFlags: 0
@@ -12280,9 +12310,8 @@ MonoBehaviour:
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
   vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
   tapArea: {fileID: 1230606755}
-  tapAreaMaxWidth: 1.4
---- !u!61 &1230606755
-BoxCollider2D:
+--- !u!60 &1230606755
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -12325,8 +12354,14 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
+  m_Points:
+    m_Paths:
+    - - {x: 0, y: 1}
+      - {x: -0.95105654, y: 0.30901697}
+      - {x: -0.5877852, y: -0.80901706}
+      - {x: 0.58778536, y: -0.80901694}
+      - {x: 0.9510565, y: 0.30901712}
+  m_UseDelaunayMesh: 1
 --- !u!1 &1234987263
 GameObject:
   m_ObjectHideFlags: 0
@@ -12848,9 +12883,8 @@ MonoBehaviour:
   effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
   vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
   tapArea: {fileID: 1324563529}
-  tapAreaMaxWidth: 1.4
---- !u!61 &1324563529
-BoxCollider2D:
+--- !u!60 &1324563529
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -12893,8 +12927,14 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
+  m_Points:
+    m_Paths:
+    - - {x: 0, y: 1}
+      - {x: -0.95105654, y: 0.30901697}
+      - {x: -0.5877852, y: -0.80901706}
+      - {x: 0.58778536, y: -0.80901694}
+      - {x: 0.9510565, y: 0.30901712}
+  m_UseDelaunayMesh: 1
 --- !u!1 &1334129546
 GameObject:
   m_ObjectHideFlags: 0
@@ -13792,7 +13832,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1394680058}
   - component: {fileID: 1394680060}
-  - component: {fileID: 1394680059}
+  - component: {fileID: 1394680061}
   m_Layer: 0
   m_Name: Battler
   m_TagString: Untagged
@@ -13817,8 +13857,28 @@ Transform:
   - {fileID: 1523383160}
   m_Father: {fileID: 1234987264}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!61 &1394680059
-BoxCollider2D:
+--- !u!114 &1394680060
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1394680057}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28358da34dfab4a50a87625e6b7634c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.BattleBattlerView
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  visualRoot: {fileID: 1580997740}
+  spriteRenderer: {fileID: 1580997742}
+  animator: {fileID: 1580997741}
+  floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
+  effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
+  vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
+  tapArea: {fileID: 1394680061}
+--- !u!60 &1394680061
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -13861,29 +13921,14 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
---- !u!114 &1394680060
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1394680057}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 28358da34dfab4a50a87625e6b7634c5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.BattleBattlerView
-  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
-  visualRoot: {fileID: 1580997740}
-  spriteRenderer: {fileID: 1580997742}
-  animator: {fileID: 1580997741}
-  floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
-  effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
-  vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
-  tapArea: {fileID: 1394680059}
-  tapAreaMaxWidth: 1.4
+  m_Points:
+    m_Paths:
+    - - {x: 0, y: 1}
+      - {x: -0.95105654, y: 0.30901697}
+      - {x: -0.5877852, y: -0.80901706}
+      - {x: 0.58778536, y: -0.80901694}
+      - {x: 0.9510565, y: 0.30901712}
+  m_UseDelaunayMesh: 1
 --- !u!1 &1395089126
 GameObject:
   m_ObjectHideFlags: 0
@@ -14366,7 +14411,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1469677587}
   - component: {fileID: 1469677589}
-  - component: {fileID: 1469677588}
+  - component: {fileID: 1469677590}
   m_Layer: 0
   m_Name: Battler
   m_TagString: Untagged
@@ -14391,8 +14436,28 @@ Transform:
   - {fileID: 1058141912}
   m_Father: {fileID: 1759803599}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!61 &1469677588
-BoxCollider2D:
+--- !u!114 &1469677589
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1469677586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28358da34dfab4a50a87625e6b7634c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.BattleBattlerView
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  visualRoot: {fileID: 1006300718}
+  spriteRenderer: {fileID: 1006300720}
+  animator: {fileID: 1006300719}
+  floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
+  effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
+  vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
+  tapArea: {fileID: 1469677590}
+--- !u!60 &1469677590
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -14435,29 +14500,14 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
---- !u!114 &1469677589
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1469677586}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 28358da34dfab4a50a87625e6b7634c5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.BattleBattlerView
-  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
-  visualRoot: {fileID: 1006300718}
-  spriteRenderer: {fileID: 1006300720}
-  animator: {fileID: 1006300719}
-  floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
-  effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
-  vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
-  tapArea: {fileID: 1469677588}
-  tapAreaMaxWidth: 1.4
+  m_Points:
+    m_Paths:
+    - - {x: 0, y: 1}
+      - {x: -0.95105654, y: 0.30901697}
+      - {x: -0.5877852, y: -0.80901706}
+      - {x: 0.58778536, y: -0.80901694}
+      - {x: 0.9510565, y: 0.30901712}
+  m_UseDelaunayMesh: 1
 --- !u!1 &1481116711
 GameObject:
   m_ObjectHideFlags: 0
@@ -16377,7 +16427,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1639295384}
   - component: {fileID: 1639295386}
-  - component: {fileID: 1639295385}
+  - component: {fileID: 1639295387}
   m_Layer: 0
   m_Name: Battler
   m_TagString: Untagged
@@ -16402,8 +16452,28 @@ Transform:
   - {fileID: 1030158496}
   m_Father: {fileID: 583637175}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!61 &1639295385
-BoxCollider2D:
+--- !u!114 &1639295386
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1639295383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28358da34dfab4a50a87625e6b7634c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.BattleBattlerView
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  visualRoot: {fileID: 496130010}
+  spriteRenderer: {fileID: 496130012}
+  animator: {fileID: 496130011}
+  floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
+  effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
+  vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
+  tapArea: {fileID: 1639295387}
+--- !u!60 &1639295387
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -16446,29 +16516,14 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
---- !u!114 &1639295386
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1639295383}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 28358da34dfab4a50a87625e6b7634c5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.BattleBattlerView
-  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
-  visualRoot: {fileID: 496130010}
-  spriteRenderer: {fileID: 496130012}
-  animator: {fileID: 496130011}
-  floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
-  effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
-  vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
-  tapArea: {fileID: 1639295385}
-  tapAreaMaxWidth: 1.4
+  m_Points:
+    m_Paths:
+    - - {x: 0, y: 1}
+      - {x: -0.95105654, y: 0.30901697}
+      - {x: -0.5877852, y: -0.80901706}
+      - {x: 0.58778536, y: -0.80901694}
+      - {x: 0.9510565, y: 0.30901712}
+  m_UseDelaunayMesh: 1
 --- !u!1 &1641562739
 GameObject:
   m_ObjectHideFlags: 0
@@ -18808,7 +18863,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1840249924}
   - component: {fileID: 1840249926}
-  - component: {fileID: 1840249925}
+  - component: {fileID: 1840249927}
   m_Layer: 0
   m_Name: Battler
   m_TagString: Untagged
@@ -18833,8 +18888,28 @@ Transform:
   - {fileID: 876885879}
   m_Father: {fileID: 1713325945}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!61 &1840249925
-BoxCollider2D:
+--- !u!114 &1840249926
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1840249923}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 28358da34dfab4a50a87625e6b7634c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.BattleBattlerView
+  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
+  visualRoot: {fileID: 321089833}
+  spriteRenderer: {fileID: 321089835}
+  animator: {fileID: 321089834}
+  floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
+  effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
+  vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
+  tapArea: {fileID: 1840249927}
+--- !u!60 &1840249927
+PolygonCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -18877,29 +18952,14 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
---- !u!114 &1840249926
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1840249923}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 28358da34dfab4a50a87625e6b7634c5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Eclipse.View::Eclipse.View.BattleBattlerView
-  theme: {fileID: 11400000, guid: 59a0b6867651f459d8688c1572b8c14e, type: 2}
-  visualRoot: {fileID: 321089833}
-  spriteRenderer: {fileID: 321089835}
-  animator: {fileID: 321089834}
-  floatingTextPrefab: {fileID: 163400960021664379, guid: cc8d609c9a82246a7a7e8cc6c27064c1, type: 3}
-  effectPlayerPrefab: {fileID: 5957612433973315590, guid: d1e2a637355d04bbe9dc1d4f92ff7ee1, type: 3}
-  vfxPlayerPrefab: {fileID: 2404884106317093268, guid: af6c5dab1aa87462fa6e8d141aebb8f0, type: 3}
-  tapArea: {fileID: 1840249925}
-  tapAreaMaxWidth: 1.4
+  m_Points:
+    m_Paths:
+    - - {x: 0, y: 1}
+      - {x: -0.95105654, y: 0.30901697}
+      - {x: -0.5877852, y: -0.80901706}
+      - {x: 0.58778536, y: -0.80901694}
+      - {x: 0.9510565, y: 0.30901712}
+  m_UseDelaunayMesh: 1
 --- !u!1 &1866197849
 GameObject:
   m_ObjectHideFlags: 0
