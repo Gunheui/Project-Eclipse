@@ -152,3 +152,7 @@ Assets/Screenshots.meta
 
 Recordings/
 explain-diff/
+
+# ---- 서명 키 · 배포 비밀 (공개 금지) ----
+*.keystore
+*.jks

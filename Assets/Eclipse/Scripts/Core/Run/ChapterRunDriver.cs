@@ -23,6 +23,7 @@ namespace Eclipse.Core
         [SerializeField] private BattleView battleView;
         [SerializeField] private SpriteRenderer backgroundRenderer;
         [SerializeField] private RoomTransitionFader fader;
+        [SerializeField] private VfxPrewarmer vfxPrewarmer;
         [SerializeField] private WorldDoorPointView doorPoint;
         [SerializeField] private CurrencyDropSpawner dropSpawner;
         [SerializeField] private TMP_Text roomProgressLabel;
@@ -107,6 +108,9 @@ namespace Eclipse.Core
         private async UniTask EnterRoomAsync(RunOffer offer)
         {
             await fader.FadeOutAsync();
+
+            // 화면이 가려진 동안 전투 이펙트 셰이더를 미리 컴파일한다. 첫 진입만 실비용이고 이후는 즉시 반환한다.
+            await vfxPrewarmer.WarmupOnceAsync(this.GetCancellationTokenOnDestroy());
 
             // 페이드 아웃 뒤 이전 전투 파기·문 정리·배경 스왑·재조립.
             battleView.ClearBattle();

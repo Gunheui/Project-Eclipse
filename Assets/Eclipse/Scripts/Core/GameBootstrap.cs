@@ -10,6 +10,13 @@ namespace Eclipse.Core
     /// </summary>
     public class GameBootstrap : MonoBehaviour
     {
+#if UNITY_IOS || UNITY_ANDROID
+        // 모바일은 vSync를 무시하고 targetFrameRate를 따르며, 미설정 시 기본 30fps로 돈다.
+        // WebGL·데스크톱은 브라우저/모니터 vSync에 맡기므로 건드리지 않는다.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void SetTargetFrameRate() => Application.targetFrameRate = 60;
+#endif
+
         private ScreenManager _screenManager;
 
         [Inject]

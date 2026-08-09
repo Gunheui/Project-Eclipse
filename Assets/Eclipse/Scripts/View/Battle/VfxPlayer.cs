@@ -211,7 +211,7 @@ namespace Eclipse.View
         /// </summary>
         // ponytail: material 접근이 인스턴스를 뜨므로 이펙트 하나당 머티리얼 한 벌이 늘어난다. 전투 한 판 분량은
         // 무시할 만하다 — 틴트 쓰는 레이어가 늘어 눈에 띄면 MaterialPropertyBlock으로 바꾼다.
-        private static void ApplyMaterialTint(GameObject go, Color tint)
+        internal static void ApplyMaterialTint(GameObject go, Color tint)
         {
             foreach (var r in go.GetComponentsInChildren<Renderer>(true))
             {
