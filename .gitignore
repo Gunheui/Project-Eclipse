@@ -153,6 +153,9 @@ Assets/Screenshots.meta
 Recordings/
 explain-diff/
 
+# ---- 빌드 도구가 리포 루트에 만드는 임시 산출물 ----
+.utmp/
+
 # ---- 서명 키 · 배포 비밀 (공개 금지) ----
 *.keystore
 *.jks
