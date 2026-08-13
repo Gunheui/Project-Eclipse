@@ -1443,7 +1443,9 @@ MonoBehaviour:
   normal: 0
   highlighted: 1
   pressed: 2
+  selected: 0
   disabled: 4
+  keepAlpha: 0
 --- !u!1 &677278106866537475
 GameObject:
   m_ObjectHideFlags: 0
@@ -2997,7 +2999,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 5321013309264832241, guid: 113c62bd6a7734946a30fe0382a559f7, type: 3}
+  m_Sprite: {fileID: 21300000, guid: d3d55cdb736bc4a4cb536e72becae29e, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -8637,7 +8639,9 @@ MonoBehaviour:
   normal: 0
   highlighted: 1
   pressed: 2
+  selected: 0
   disabled: 4
+  keepAlpha: 0
 --- !u!1 &3736689480682981713
 GameObject:
   m_ObjectHideFlags: 0
@@ -13302,7 +13306,9 @@ MonoBehaviour:
   normal: 0
   highlighted: 1
   pressed: 2
+  selected: 0
   disabled: 4
+  keepAlpha: 0
 --- !u!1 &5522160409884471404
 GameObject:
   m_ObjectHideFlags: 0
@@ -15183,7 +15189,9 @@ MonoBehaviour:
   normal: 0
   highlighted: 1
   pressed: 2
+  selected: 0
   disabled: 4
+  keepAlpha: 0
 --- !u!1 &6520387244634835402
 GameObject:
   m_ObjectHideFlags: 0

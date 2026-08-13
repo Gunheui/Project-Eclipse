@@ -4,9 +4,9 @@
 
 현재 개발 진행 중이고, 챕터 1 프로토타입까지 구현했고, 가챠와 챕터 2~5는 개발 진행 중입니다.
 
-🎬 [플레이 영상](https://youtu.be/lnvDn0QfrFw) · 📄 [기술 문서](./TECH.md)
+🎬 [플레이 영상](https://youtu.be/20YHP-EX6jo) · 📄 [기술 문서](./TECH.md)
 
-[![플레이 영상](https://img.youtube.com/vi/lnvDn0QfrFw/hqdefault.jpg)](https://youtu.be/lnvDn0QfrFw)
+[![플레이 영상](./screenshots/thumbnail.jpg)](https://youtu.be/20YHP-EX6jo)
 
 위 이미지를 클릭하면 플레이 영상이 재생됩니다.
 
