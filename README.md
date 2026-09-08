@@ -2,7 +2,7 @@
 
 수집형 턴제 RPG와 로그라이트를 결합한 2D 모바일 게임입니다.
 
-🎮 [웹에서 플레이](https://gunheui.github.io/eclipse-webgl-build/) / 🎬 [플레이 영상](https://youtu.be/20YHP-EX6jo) / 📄 [기술 문서](./TECH.md)
+🎮 [웹에서 플레이](https://gunheui.github.io/eclipse-webgl-build/) / 🎬 [플레이 영상](https://youtu.be/20YHP-EX6jo)
 
 ![플레이 영상](./screenshots/thumbnail.jpg)
 
@@ -131,4 +131,3 @@ ViewModel이 상태 변경을 스트림으로 전달하고, View는 이를 구�
 | VFX   | Free Slash VFX                      | Asset Store EULA        |
 | 폰트    | Pretendard / Anton                  | SIL OFL                 |
 | 라이브러리 | VContainer / R3 / UniTask / DOTween | MIT 등 OSS / Asset Store |
-
