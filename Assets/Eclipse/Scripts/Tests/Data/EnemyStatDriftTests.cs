@@ -20,7 +20,7 @@ namespace Eclipse.Tests
             ["enemy_blossom"] = 1650,
             ["enemy_spider"] = 900,
             ["enemy_elite_mirea"] = 3200,
-            ["enemy_boss_barkan"] = 4800,
+            ["enemy_boss_barkan"] = 7200,
         };
 
         [Test]

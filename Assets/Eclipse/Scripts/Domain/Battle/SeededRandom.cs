@@ -52,6 +52,18 @@ namespace Eclipse.Domain
             return (int)(product >> 32);
         }
 
+        /// <summary> 시드 하나에서 채널별 독립 시드를 파생한다. 같은 (시드, 채널)이면 항상 같은 값이다. </summary>
+        /// <param name="seed">원본 시드.</param>
+        /// <param name="channel">용도 번호. 한 시드 안에서 서로 달라야 한다.</param>
+        public static int Derive(int seed, int channel)
+        {
+            // 시드를 상위 32비트, 채널을 하위 32비트에 실어 한 워드로 만든 뒤 splitmix64로 섞는다.
+            // XOR로 합치면 안 된다: (시드^A)^B와 (시드^B)^A가 같은 값이라 파생을 두 단 겹쳤을 때
+            // 방·용도가 다른 조합이 같은 시드에 떨어진다.
+            ulong s = ((ulong)(uint)seed << 32) | (uint)channel;
+            return (int)(uint)(SplitMix64(ref s) >> 32);
+        }
+
         private ulong NextUpper32() => NextULong() >> 32;
 
         /// <summary> xorshift128+ 한 스텝 = 64비트 난수 한 개. </summary>

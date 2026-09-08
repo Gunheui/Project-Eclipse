@@ -14,9 +14,9 @@ namespace Eclipse.Domain
 
         /// <summary>
         /// 용도별 난수 시드. 같은 battleSeed면 항상 같은 값(재현 유지).
-        /// 스트림 id를 XOR로 합치기만 한다 — 실제 분산(avalanche)은 SeededRandom 생성자의
-        /// SplitMix64가 담당하므로, 가까운 id(0·1·2)라도 파생 시드는 완전히 갈라진다.
+        /// 전투 시드 자체가 <see cref="RunSeed.ForRoomBattle"/>이 파생한 값이라 파생이 두 단 겹치므로,
+        /// 합성해도 안전한 <see cref="SeededRandom.Derive"/>를 쓴다.
         /// </summary>
-        public static int For(int battleSeed, Stream stream) => battleSeed ^ (int)stream;
+        public static int For(int battleSeed, Stream stream) => SeededRandom.Derive(battleSeed, (int)stream);
     }
 }
